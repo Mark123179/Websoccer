@@ -97,8 +97,7 @@
 }
 
 .mp-panel-heading,
-.mp-subsection-heading,
-.mp-stadium-head {
+.mp-subsection-heading {
     align-items: center;
     display: flex;
     gap: 10px;
@@ -123,7 +122,6 @@
 }
 
 .mp-panel-heading h2,
-.mp-stadium-head h2,
 .mp-subsection-heading h2 {
     color: var(--mp-text);
     font-family: "Bahnschrift", "Franklin Gothic Medium", sans-serif;
@@ -219,6 +217,8 @@
     text-overflow: ellipsis;
     white-space: nowrap;
 }
+
+.mp-player-grade { background: rgba(3, 15, 23, 0.78); color: var(--mp-text); font-family: ui-monospace, "SFMono-Regular", Consolas, monospace; font-size: 8px; line-height: 1.2; padding: 1px 3px; }
 
 .mp-image-fallback {
     align-items: center;
@@ -343,6 +343,11 @@ img[data-image-failed] { visibility: hidden; }
 .mp-form-result--win { background: rgba(48, 242, 156, 0.14); border-color: rgba(48, 242, 156, 0.32); color: var(--mp-green); }
 .mp-form-result--draw { background: rgba(255, 209, 102, 0.12); border-color: rgba(255, 209, 102, 0.28); color: var(--mp-yellow); }
 .mp-form-result--loss { background: rgba(255, 85, 112, 0.12); border-color: rgba(255, 85, 112, 0.28); color: var(--mp-red); }
+.mp-team-form { align-items: center; display: flex; gap: 7px; justify-content: center; margin-top: 5px; min-height: 21px; }
+.mp-team-form .mp-form { gap: 3px; margin: 0; }
+.mp-team-form .mp-form-result { height: 18px; width: 18px; }
+.mp-team-form-label { color: var(--mp-faint); font-size: 9px; letter-spacing: 0.08em; text-transform: uppercase; }
+.mp-form-unavailable { color: var(--mp-faint); font-size: 9px; }
 
 .mp-last-result {
     align-items: center;
@@ -413,10 +418,10 @@ img[data-image-failed] { visibility: hidden; }
 .mp-match-content {
     display: flex;
     flex-direction: column;
-    gap: 13px;
+    gap: 8px;
     height: 100%;
     overflow-y: auto;
-    padding: 23px 28px 100px;
+    padding: 15px 22px 28px;
     scrollbar-color: rgba(34, 230, 255, 0.35) rgba(255, 255, 255, 0.04);
     scrollbar-width: thin;
 }
@@ -453,7 +458,7 @@ img[data-image-failed] { visibility: hidden; }
 .mp-versus {
     align-items: center;
     display: grid;
-    gap: 14px;
+    gap: 10px;
     grid-template-columns: minmax(0, 1fr) 48px minmax(0, 1fr);
     padding: 2px 2% 1px;
 }
@@ -473,18 +478,18 @@ img[data-image-failed] { visibility: hidden; }
     border: 1px solid rgba(188, 231, 238, 0.2);
     border-radius: 50%;
     display: flex;
-    height: 88px;
+    height: 78px;
     justify-content: center;
     overflow: hidden;
     position: relative;
-    width: 88px;
+    width: 78px;
 }
 
 .mp-crest-frame img { object-fit: contain; padding: 8px; }
 .mp-club h2 {
     color: var(--mp-text);
     font-family: "Bahnschrift", "Franklin Gothic Medium", sans-serif;
-    font-size: 22px;
+    font-size: 19px;
     line-height: 1.15;
     margin: 7px 0 0;
     max-width: 100%;
@@ -532,9 +537,9 @@ img[data-image-failed] { visibility: hidden; }
 
 .mp-kit img {
     flex: 0 0 auto;
-    height: 96px;
+    height: 72px;
     object-fit: contain;
-    width: 82px;
+    width: 66px;
 }
 
 .mp-kit--label { color: var(--mp-muted); }
@@ -544,7 +549,7 @@ img[data-image-failed] { visibility: hidden; }
     border-top: 1px solid var(--mp-rule);
     display: grid;
     gap: 1px;
-    grid-template-columns: 1.45fr 1fr 1fr 1fr;
+    grid-template-columns: 1.4fr 1fr 1fr;
     padding: 9px 0;
 }
 
@@ -576,26 +581,9 @@ img[data-image-failed] { visibility: hidden; }
     white-space: nowrap;
 }
 
-.mp-stadium { min-height: 190px; }
-.mp-stadium-head { margin-bottom: 8px; }
-.mp-stadium-head h2 { font-size: 20px; }
-.mp-stadium-panes { display: grid; gap: 12px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
-.mp-stadium-pane { min-width: 0; }
-.mp-stadium-pane-heading { align-items: center; display: flex; gap: 8px; justify-content: space-between; margin-bottom: 5px; min-height: 24px; }
-.mp-stadium-pane-heading h3 { color: var(--mp-muted); font-size: 10px; font-weight: 700; letter-spacing: 0.1em; margin: 0; text-transform: uppercase; }
-.mp-stadium-model-name,
-.mp-stadium-demo-note { color: var(--mp-faint); font-size: 9px; line-height: 1.35; margin: 0 0 5px; }
-.mp-stadium-demo-note { color: var(--mp-yellow); margin: 5px 0 0; }
-
-.mp-stadium-viewport {
-    background: rgba(3, 14, 22, 0.38);
-    border: 1px solid var(--mp-rule);
-    height: 270px;
-    overflow: hidden;
-    position: relative;
-}
-
+.mp-form-stats-photo { background: rgba(3, 14, 22, 0.38); border: 1px solid var(--mp-rule); height: 112px; margin-bottom: 8px; overflow: hidden; position: relative; }
 .mp-stadium-photo { display: block; object-fit: cover; }
+.mp-photo-caption { background: rgba(3, 13, 21, 0.76); bottom: 0; color: var(--mp-text); font-size: 9px; left: 0; padding: 4px 7px; position: absolute; right: 0; }
 .mp-stadium-fallback {
     align-items: center;
     color: var(--mp-faint);
@@ -606,6 +594,30 @@ img[data-image-failed] { visibility: hidden; }
     position: absolute;
 }
 
+.mp-report-layout { align-items: stretch; display: grid; gap: 8px; grid-template-columns: minmax(0, 1.04fr) minmax(0, 0.96fr); }
+.mp-form-stats,
+.mp-model-card { background: rgba(3, 17, 27, 0.36); border: 1px solid var(--mp-rule); min-width: 0; padding: 8px 9px; }
+.mp-report-heading { align-items: flex-start; border-bottom: 1px solid var(--mp-rule); display: flex; gap: 8px; justify-content: space-between; margin-bottom: 4px; padding-bottom: 5px; }
+.mp-report-heading h2 { color: var(--mp-text); font-family: "Bahnschrift", "Franklin Gothic Medium", sans-serif; font-size: 15px; line-height: 1.15; margin: 2px 0 0; }
+.mp-report-teams { display: grid; gap: 8px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.mp-report-team { min-width: 0; }
+.mp-report-team-heading { align-items: flex-start; display: flex; flex-direction: column; gap: 3px; justify-content: space-between; min-width: 0; }
+.mp-report-team-link { align-items: center; color: var(--mp-text); display: inline-flex; gap: 6px; min-width: 0; text-decoration: none; }
+.mp-report-team-link img { flex: 0 0 auto; height: 19px; object-fit: contain; width: 19px; }
+.mp-report-team-link strong { font-size: 11px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mp-report-team-heading time { color: var(--mp-faint); flex: 0 0 auto; font-size: 9px; }
+.mp-report-form { gap: 2px; margin-top: 4px; }
+.mp-report-form .mp-form-result { height: 16px; width: 16px; }
+.mp-report-stats { display: grid; gap: 1px 8px; grid-template-columns: minmax(0, 1fr); margin: 4px 0 0; }
+.mp-report-stats > div { align-items: baseline; border-top: 1px solid rgba(159, 211, 224, 0.08); display: flex; gap: 5px; justify-content: space-between; min-width: 0; padding-top: 3px; }
+.mp-report-stats dt { color: var(--mp-faint); font-size: 9px; line-height: 1.25; }
+.mp-report-stats dd { color: var(--mp-text); font-family: ui-monospace, "SFMono-Regular", Consolas, monospace; font-size: 10px; font-weight: 700; margin: 0; white-space: nowrap; }
+.mp-report-empty { align-items: center; color: var(--mp-faint); display: flex; gap: 8px; min-height: 48px; }
+.mp-report-empty > span { color: var(--mp-cyan); font-size: 18px; }
+.mp-report-empty p { font-size: 10px; line-height: 1.4; margin: 0; }
+.mp-model-card .mp-report-heading { align-items: center; }
+.mp-stadium-model-name { color: var(--mp-faint); font-size: 9px; line-height: 1.3; margin: -2px 0 6px; }
+.mp-model-viewport { background: rgba(3, 14, 22, 0.45); border: 1px solid var(--mp-rule); height: 184px; overflow: hidden; position: relative; }
 .mp-stadium-model-stage { height: 100%; width: 100%; }
 .mp-stadium-model-status {
     align-items: center;
@@ -619,6 +631,15 @@ img[data-image-failed] { visibility: hidden; }
     position: absolute;
 }
 .mp-stadium-model-status[hidden] { display: none; }
+.mp-stadium-demo-note { color: var(--mp-yellow); font-size: 9px; line-height: 1.35; margin: 6px 0 0; }
+.mp-referee-profile { align-items: center; background: rgba(3, 17, 27, 0.36); border: 1px solid var(--mp-rule); display: flex; gap: 13px; margin-top: 12px; padding: 10px 14px; }
+.mp-model-card .mp-referee-profile { background: none; border: 0; border-top: 1px solid var(--mp-rule); gap: 9px; margin-top: 7px; padding: 7px 0 0; }
+.mp-referee-portrait { background: rgba(7, 29, 41, 0.95); border: 1px solid rgba(180, 221, 229, 0.28); border-radius: 50%; flex: 0 0 auto; height: 48px; overflow: hidden; position: relative; width: 48px; }
+.mp-referee-portrait img { height: 100%; object-fit: cover; width: 100%; }
+.mp-referee-info { min-width: 0; }
+.mp-referee-info h2 { color: var(--mp-text); font-family: "Bahnschrift", "Franklin Gothic Medium", sans-serif; font-size: 14px; line-height: 1.2; margin: 2px 0; }
+.mp-referee-info p { color: var(--mp-muted); font-size: 9px; line-height: 1.3; margin: 3px 0 0; }
+.mp-referee-meta { align-items: center; color: var(--mp-faint); display: flex; flex-wrap: wrap; font-size: 9px; gap: 6px 12px; }
 
 .mp-no-fixture {
     align-items: center;
@@ -794,8 +815,8 @@ img[data-image-failed] { visibility: hidden; }
     .match-preview-panel { min-height: 0; }
     .match-preview-panel--scout,
     .match-preview-panel--club { padding: 15px 16px 58px; }
-    .mp-match-content { padding: 18px 16px 50px; }
+    .mp-match-content { padding: 18px 16px 24px; }
     .mp-pitch { height: 380px; }
-    .mp-stadium-viewport { height: 155px; }
+    .mp-model-viewport { height: 170px; }
     .mp-match-facts { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }

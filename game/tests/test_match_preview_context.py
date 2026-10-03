@@ -91,10 +91,12 @@ class MatchPreviewContextTests(SimpleTestCase):
             patch.object(briefing, 'get_form_rows', return_value=[]),
             patch.object(briefing, '_last_report', return_value=last or (None, {}, '')),
             patch.object(briefing.DayWeather.objects, 'filter') as weather,
+            patch.object(briefing.Referee.objects, 'filter') as referees,
             patch.object(briefing.Player.objects, 'in_bulk', return_value={}),
         ):
             squad.return_value.order_by.return_value = list(players)
             weather.return_value.first.return_value = day_weather
+            referees.return_value.order_by.return_value.first.return_value = None
             result = briefing.build_match_preview_context(viewed or self.home, self.fixture)
             if self.fixture:
                 expected = self.away if (viewed or self.home).pk == self.home.pk else self.home
@@ -145,6 +147,37 @@ class MatchPreviewContextTests(SimpleTestCase):
         self.assertEqual(result['weather']['label'], 'Regen')
         self.assertEqual(result['weather']['temperature'], 0)
         self.assertNotIn('is_demo', result['weather'])
+
+    def test_report_stats_preserve_zero_and_do_not_invent_missing_values(self):
+        rows = briefing._report_team_stats({'match_stats': {
+            'away_possession': 48, 'away_shots': 0, 'away_shots_on_target': 0,
+        }}, 'away')
+        self.assertEqual([row['value'] for row in rows], ['48 %', '0', '0', '—'])
+        self.assertEqual(
+            [row['value'] for row in briefing._report_team_stats({}, 'home')],
+            ['—', '—', '—', '—'],
+        )
+
+    def test_referee_profile_keeps_the_persons_own_portrait_and_details(self):
+        ref = NS(name='Test Referee', nationality='Schweiz', level=4,
+                 schlagwort='Ausgewogene Spielleitung', face_url=lambda: '/ref-face.png')
+        profile = briefing._referee_profile(ref, is_demo=True)
+        self.assertEqual(profile['portrait_url'], '/ref-face.png')
+        self.assertEqual(profile['nationality'], 'Schweiz')
+        self.assertEqual(profile['level_label'], 'International')
+        self.assertTrue(profile['is_demo'])
+
+    def test_both_teams_have_form_and_latest_match_stat_blocks(self):
+        result = self.context()
+        self.assertEqual([team['name'] for team in result['form_stats']], ['Heim', 'Gast'])
+        self.assertEqual(len(result['form_stats'][0]['stats']), 4)
+        self.assertIn('home_form', result)
+        self.assertIn('away_form', result)
+
+    def test_lineup_grades_use_report_scale_not_reference_image_scores(self):
+        self.assertEqual(briefing._player(snapshot={'rating': 1.7})['grade_label'], '1,7')
+        self.assertEqual(briefing._player(snapshot={'rating': 8.6})['grade_label'], '')
+        self.assertEqual(briefing._player(snapshot={})['grade_label'], '')
 
     def test_injuries_suspensions_and_unknown_values_are_honest(self):
         hurt = player(1, ws_injury_type='Muskelverletzung', ws_injury_days_remaining=4)

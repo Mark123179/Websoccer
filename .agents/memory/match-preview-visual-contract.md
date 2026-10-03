@@ -32,6 +32,12 @@ Für die visuelle Prüfung hat der Nutzer Dummy-Daten für Trainer, Wetter und S
 
 **How to apply:** Fehlende Daten nur in der Anzeige durch klar gekennzeichnete Testdaten ergänzen, niemals speichern oder in die Simulation übernehmen. Dortmunds Testmodell nicht als das reale Stadion eines anderen Vereins beschriften. Bestehende echte Daten weiterhin verwenden.
 
+Die nächste freigegebene Richtung orientiert sich stärker an der kompakten Fußball-Vorlage: Das 3D-Stadion steht neben „Form & Stats“, die Position des Trainerzitats wird zum Schiedsrichterprofil mit Porträt. Einen „Spiel starten“-Button gibt es nicht. Der Kabinenhintergrund bleibt.
+
+**Why:** Der Nutzer hat diese konkrete Anordnung und die Entfernung des Startbuttons ausdrücklich vorgegeben.
+
+**How to apply:** Die Vorlage als Gestaltungsrichtung übernehmen, nicht deren erfundene Statistiken oder abweichende Notenskala. Beide Teams bekommen klar bezeichnete Form-/Statistikbereiche; das Schiedsrichterporträt gehört zur angezeigten Person.
+
 Der Kabinenhintergrund muss über die ganze Seite reichen, auch hinter den Kalender. Anschließend dürfen die drei Kacheln größer werden.
 
 **Why:** Der Nutzer beanstandet den sichtbaren Beginn des Kabinenfotos unter dem Kalender und verlangt diese Anpassung vor der weiteren Gestaltung.

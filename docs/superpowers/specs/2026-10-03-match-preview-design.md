@@ -45,6 +45,16 @@ der bestehenden Taktikansicht anstelle synthetischer CSS-Markierungen.
 
 ## Prüfung
 
+## Aktualisierte Referenzrichtung
+
+Die jüngste freigegebene Vorlage verlangt kompaktere Teilbereiche und eine
+stärkere Wappen-/Trikot-/Porträt-Hierarchie. Die Kabine samt SAM-Projektion
+bleibt unverändert. Das 3D-Stadion steht neben „Form & Stats“; dort werden
+beide Vereine mit ihrer Form und echten Werten des jeweils letzten
+Spielberichts gezeigt (keine erfundenen Saisonmittelwerte). An der Position
+des Trainerzitats steht das Schiedsrichterprofil mit passendem Porträt.
+Kein Trainerzitat und kein „Spiel starten“-Button.
+
 Gezielte Tests für Wettbewerb und Fixture-Route, Rollenwechsel,
 Snapshot-Aufstellung, Notensortierung, Saisonbindung, Ausfälle, leere
 und teilweise befüllte Zustände. Originalfoto und SAM-Maske unverändert

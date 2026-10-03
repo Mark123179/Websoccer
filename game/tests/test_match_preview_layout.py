@@ -62,9 +62,9 @@ class MatchPreviewLayoutTests(SimpleTestCase):
         self.assertNotIn('foreground.png', html)
         self.assertNotIn('Vorbericht für das Spiel', html)
         self.assertIn('Der Spielplan ist derzeit frei.', html)
-        self.assertIn('match-preview.js?v=preview-11', html)
+        self.assertIn('match-preview.js?v=preview-13', html)
 
-    def test_partial_fixture_keeps_missing_weather_and_referee_visible(self):
+    def test_partial_fixture_handles_missing_reports_and_zero_temperature(self):
         html = render_to_string('game/club_match_preview.html', {
             'competition_name': 'Bundesliga', 'competition_logo': '',
             'preview': {
@@ -73,18 +73,22 @@ class MatchPreviewLayoutTests(SimpleTestCase):
                 'weather': {'label': 'Schnee', 'temperature': 0},
             },
         })
-        self.assertIn('Noch nicht angesetzt', html)
         self.assertIn('Schnee · 0 °C', html)
-        self.assertIn('mp-stadium-panes', html)
+        self.assertIn('Kein aktueller Spielbericht', html)
+        self.assertIn('Kein 3D-Modell verfügbar', html)
 
-    def test_demo_fields_and_model_are_labeled_and_visible_beside_photo(self):
+    def test_reference_layout_has_model_beside_stats_and_referee_portrait(self):
         html = render_to_string('game/club_match_preview.html', {
             'competition_name': 'Bundesliga', 'competition_logo': '',
             'preview': {
                 'has_fixture': True, 'home': {'name': 'Heim'},
                 'away': {'name': 'Gast'}, 'opponent': {'name': 'Gast'},
                 'trainer': {'name': 'Demo-Trainer', 'is_demo': True},
-                'referee': {'name': 'Demo-Referee', 'is_demo': True},
+                'referee': {
+                    'name': 'Demo-Referee', 'is_demo': True,
+                    'portrait_url': '/referee-face.png', 'nationality': 'Schweiz',
+                    'level_label': 'International',
+                },
                 'weather': {'label': 'Sonnig', 'temperature': 18, 'is_demo': True},
                 'stadium': {
                     'name': 'Heimstadion', 'photo_url': '/venue.jpg',
@@ -96,7 +100,15 @@ class MatchPreviewLayoutTests(SimpleTestCase):
         })
         self.assertGreaterEqual(html.count('Testdaten'), 3)
         self.assertIn('Testmodell', html)
-        self.assertIn('mp-stadium-panes', html)
+        self.assertIn('mp-report-layout', html)
+        self.assertIn('Form &amp; Stats', html)
+        self.assertIn('mp-referee-profile', html)
+        self.assertIn('/referee-face.png', html)
+        self.assertIn('Schweiz', html)
+        self.assertIn('International', html)
+        self.assertLess(html.index('mp-form-stats'), html.index('mp-model-card'))
+        self.assertNotIn('SPIEL STARTEN', html.upper())
+        self.assertNotIn('Trainerzitat', html)
         self.assertIn('data-club-stadium-stage', html)
         self.assertIn('club-stadium.js', html)
         self.assertIn('type="importmap"', html)

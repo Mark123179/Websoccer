@@ -15,7 +15,7 @@ from .asset_urls import (
     asset_url, assets_root, club_stadium_url, default_player_url, resolve_stadium_url,
 )
 from .fixture_display import get_form_rows, get_last_match
-from .models import DayWeather, GameSeasonState, Player, PlayerSeasonStat
+from .models import DayWeather, GameSeasonState, Player, PlayerSeasonStat, Referee
 from .tactics import FORMATION_ORDER, FORMATION_PARTS
 from .weather_service import weather_context
 
@@ -86,6 +86,7 @@ def _player(player=None, snapshot=None):
     snapshot = snapshot or {}
     name = snapshot.get('name') or (player.full_name if player else '')
     pid = player.pk if player else _pid(snapshot.get('id'))
+    grade = _grade(snapshot.get('rating'))
     return {
         'id': pid, 'name': name, 'short_name': name.split()[-1] if name else '',
         'portrait_url': (
@@ -95,6 +96,7 @@ def _player(player=None, snapshot=None):
         'url': reverse('player_detail', kwargs={'player_id': player.pk}) if player else '',
         'position': snapshot.get('position') or (player.position if player else ''),
         'number': snapshot.get('shirt_number', player.shirt_number if player else None),
+        'grade_label': f'{grade:.1f}'.replace('.', ',') if grade is not None else '',
     }
 
 
@@ -167,6 +169,46 @@ def _money(value):
     if value >= 1_000_000:
         return f'{value / 1_000_000:.1f}'.replace('.', ',') + ' Mio. €'
     return f'{value:,.0f}'.replace(',', '.') + ' €'
+
+
+def _referee_profile(referee, *, is_demo=False):
+    profile = {
+        'name': referee.name, 'portrait_url': referee.face_url(),
+        'nationality': getattr(referee, 'nationality', ''),
+        'level_label': Referee.LEVEL_LABEL_MAP.get(getattr(referee, 'level', None), ''),
+        'summary': getattr(referee, 'schlagwort', '') or 'Profil aus der Schiedsrichterdatenbank.',
+    }
+    if is_demo:
+        profile['is_demo'] = True
+    return profile
+
+
+def _report_team_stats(report, side):
+    """Display actual last-match stats, never fabricate season averages."""
+    match_stats = report.get('match_stats') or {}
+    result = []
+    for key, label, suffix in (
+        ('possession', 'Ballbesitz', ' %'), ('shots', 'Schüsse', ''),
+        ('shots_on_target', 'Aufs Tor', ''), ('corners', 'Ecken', ''),
+    ):
+        value = match_stats.get(f'{side}_{key}')
+        valid = isinstance(value, (int, float)) and not isinstance(value, bool)
+        if valid and value >= 0 and value != float('inf'):
+            formatted = f'{value:g}'.replace('.', ',') + suffix
+        else:
+            formatted = '—'
+        result.append({'label': label, 'value': formatted})
+    return result
+
+
+def _form_stats(club, last_report):
+    last, report, side = last_report
+    return {
+        'name': club.name, 'url': reverse('club_detail', kwargs={'club_id': club.pk}),
+        'crest_url': _crest(club), 'form': get_form_rows(club, 5),
+        'date_label': _date(last.scheduled_date) if last else '',
+        'stats': _report_team_stats(report, side),
+    }
 
 
 def _season_leaders(opponent, players):
@@ -263,6 +305,7 @@ def build_match_preview_context(club, fixture):
         'referee': None, 'weather': None, 'lineup': [], 'formation_label': '',
         'lineup_date_label': '', 'last_result': None, 'form': [],
         'absences': [], 'spotlights': [], 'news': [],
+        'home_form': [], 'away_form': [], 'form_stats': [],
         'news_url': reverse('club_news', kwargs={'club_id': club.pk}),
         'default_player_url': default_player_url(),
     }
@@ -270,7 +313,7 @@ def build_match_preview_context(club, fixture):
     if fixture:
         referee = fixture.simulated_match.referee if fixture.simulated_match_id else None
         if referee:
-            preview['referee'] = {'name': referee.name, 'portrait_url': referee.face_url()}
+            preview['referee'] = _referee_profile(referee)
         if fixture.scheduled_date:
             weather = DayWeather.objects.filter(sim_day=fixture.scheduled_date).first()
             preview['weather'] = weather_context(weather) if weather else None
@@ -284,8 +327,14 @@ def build_match_preview_context(club, fixture):
                 'is_demo': True,
             }
         if not preview['referee']:
-            preview['referee'] = {
-                'name': 'Max Mustermann', 'portrait_url': '', 'is_demo': True,
+            demo_referee = Referee.objects.filter(
+                fm_uid__in=(98033209, 85133471),
+            ).order_by('pk').first()
+            preview['referee'] = _referee_profile(demo_referee, is_demo=True) if demo_referee else {
+                'name': 'Max Mustermann', 'is_demo': True,
+                'portrait_url': static('game/images/managers/default-manager.png'),
+                'nationality': 'Deutschland', 'level_label': 'Testprofil',
+                'summary': 'Neutrales Schiedsrichter-Testprofil.',
             }
         if not preview['weather']:
             preview['weather'] = {
@@ -304,6 +353,12 @@ def build_match_preview_context(club, fixture):
     players = list(Player.objects.filter(club=opponent).order_by('pk'))
     preview['form'] = get_form_rows(opponent, 5)
     last, report, side = _last_report(opponent)
+    opponent_report = (last, report, side)
+    for team in (home, away):
+        team_report = opponent_report if team.pk == opponent.pk else _last_report(team)
+        team_stats = _form_stats(team, team_report)
+        preview['form_stats'].append(team_stats)
+        preview['home_form' if team.pk == home.pk else 'away_form'] = team_stats['form']
     lineup, last_best = _report_players(report, side)
     preview['lineup'] = lineup
     preview['formation_label'] = _formation_label(report.get(f'{side}_formation', ''))
