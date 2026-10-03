@@ -4,6 +4,8 @@
   if (!root) return;
   const apiUrl = root.dataset.apiUrl;
   const type = root.dataset.storyType;
+  const testMode = root.dataset.testMode === "true";
+  let testRunId = null;
   const INTERVAL = 5000;
   let timer = null;
   let stopped = false;
@@ -118,7 +120,7 @@
       progress.style.transform = `scaleX(${pct / 100})`;
     }
     const status = $("match-status");
-    if (status && data.released) status.textContent = "SPIELBERICHT FREIGEGEBEN";
+    if (status && data.released) status.textContent = testMode ? "TEST ABGESCHLOSSEN" : "SPIELBERICHT FREIGEGEBEN";
     else if (status && data.status === "preparing") status.textContent = "SPIEL WIRD VORBEREITET";
     const subline = $("match-subline");
     if (subline && data.fallback) subline.textContent = "Automatisch gesicherte Live-Erzählung.";
@@ -199,7 +201,7 @@
     container.replaceChildren(...cards);
     setVisible($("conference-empty"), matches.length === 0);
     const note = $("release-note");
-    if (note) note.textContent = data.released ? "Der Spieltag ist freigegeben. Öffne eine Partie, um den vollständigen Spielbericht aufzurufen." : "Endberichte werden erst nach Freigabe des gesamten Spieltags verfügbar.";
+    if (note) note.textContent = testMode ? "Isolierte Testpartien. Reset startet neue Simulationen derselben Mannschaften." : data.released ? "Der Spieltag ist freigegeben. Öffne eine Partie, um den vollständigen Spielbericht aufzurufen." : "Endberichte werden erst nach Freigabe des gesamten Spieltags verfügbar.";
   }
   async function poll() {
     if (stopped) return;
@@ -207,6 +209,11 @@
       const response = await fetch(apiUrl, { credentials: "same-origin", cache: "no-store", headers: { Accept: "application/json" } });
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       const data = await response.json();
+      if (testMode && data.run_id !== testRunId) {
+        testRunId = data.run_id;
+        lastEventOrder = -1;
+        if ($("ticker-events")) $("ticker-events").replaceChildren();
+      }
       connectedOnce = true;
       if (type === "conference") setConnection(true, "round-status");
       if (type === "ticker") updateTicker(data);

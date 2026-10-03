@@ -1,0 +1,36 @@
+{
+  "domain_fingerprints_unchanged": {
+    "Club": "8208805e2217acde35e6884d2801af8334786d03e37b8968a6f645611ef56461",
+    "Player": "d7960f5a13466baa1093af2c66080d2fa26ffb85e2d92d6d4a4dc833b509002c",
+    "TacticSetup": "de5a3ce7d1bb9dfbbe82583761bb934fa6d31ddb26d72b3cb3e5236e8dc591a0",
+    "PlayerStrengthProfile": "34783410f98b26d6102fdbe6aa7ddb08380b9ed03ca8c380c176a0aaf4cbe1b2",
+    "MatchStory": "68ca5e67c243f4bc3bac04b3655b8894b55b123d4678c50900d57c390a4e618c",
+    "MatchEvent": "043853d9b44c847cf16920b8adf3193d6a636da68497ad0a7651de96ef72e589",
+    "MatchStoryRound": "b258c7bac890f069b27b9b88de74b8bc2e65b4179a398b870cd9d034ca8f38f6",
+    "SimulatedMatch": "4ca1f78e32e8995ddd3bf1ed8ecb3f6de098caf58f318edf6f7b7c2922b9c4a9"
+  },
+  "fresh_runs": 2,
+  "matches_per_run": 3,
+  "duration_s": 900,
+  "targeted_tests": {
+    "count": 29,
+    "errors": 0,
+    "failures": 0
+  },
+  "browser": {
+    "verdict": "success",
+    "reload_preserves_start": true,
+    "reset_new_run_same_clubs": true,
+    "goals_filter_excludes_analysis_phase": true,
+    "added_time_order_verified": true,
+    "added_time_method": "Own temporary test session kickoff backdated ~895 seconds; no full 15-minute wall-clock run claimed.",
+    "conference_requests_in_12_seconds": 3,
+    "conference_intervals_ms": [
+      5024,
+      5032
+    ],
+    "conference_per_match_requests": 0,
+    "non_superuser_denied": true,
+    "temporary_accounts_and_sessions_removed": true
+  }
+}

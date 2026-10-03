@@ -26,6 +26,11 @@ body.ls-page {
 body.ls-page::before { content: ""; position: fixed; inset: 0; pointer-events: none; opacity: .12; z-index: 0; background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.16'/%3E%3C/svg%3E"); }
 .ls-shell { position: relative; z-index: 1; width: min(100% - 36px, 1000px); min-height: 100dvh; margin: 0 auto; padding: 0 0 30px; }
 .ls-shell-wide { width: min(100% - 36px, 1180px); }
+.ls-test-panel { margin-top: 18px; padding: 16px; border: 1px solid var(--ls-line); border-radius: var(--ls-radius); }
+.ls-test-panel strong { color: var(--ls-cyan); font-size: 14px; }
+.ls-test-panel p { color: var(--ls-muted); font-size: 12px; line-height: 1.5; margin: 8px 0; }
+.ls-test-panel nav { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0; }
+.ls-test-panel button:focus-visible, .ls-test-panel a:focus-visible { outline: 2px solid var(--ls-cyan); outline-offset: 3px; }
 .ls-topbar { min-height: 72px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(185, 224, 239, .1); }
 .ls-brand { display: inline-flex; align-items: center; gap: 10px; color: var(--ls-text); text-decoration: none; font-size: 12px; letter-spacing: .14em; font-weight: 800; }
 .ls-brand small { display: block; color: var(--ls-faint); font-size: 9px; letter-spacing: .22em; margin-top: 3px; }

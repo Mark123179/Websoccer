@@ -1,5 +1,6 @@
 from django.urls import path
 from . import views_story
+from . import views_story_test
 from .views import (
     claim_club,
     club_detail,
@@ -240,6 +241,12 @@ urlpatterns = [
         name='home'
     ),
     path('kalender/', calendar_view, name='calendar'),
+    path('live/test/', views_story_test.ticker_page, name='story_test_start'),
+    path('live/test/matches/<int:slot>/', views_story_test.ticker_page, name='story_test_ticker'),
+    path('live/test/conference/', views_story_test.conference_page, name='story_test_conference'),
+    path('live/test/reset/', views_story_test.reset, name='story_test_reset'),
+    path('api/live/test/matches/<int:slot>/', views_story_test.ticker_api, name='story_test_ticker_api'),
+    path('api/live/test/conference/', views_story_test.conference_api, name='story_test_conference_api'),
     path('live/matches/<int:sm_id>/', views_story.ticker_page, name='story_ticker'),
     path('live/rounds/<int:round_id>/', views_story.conference_page, name='story_conference'),
     path('api/live/matches/<int:sm_id>/', views_story.ticker_api, name='story_ticker_api'),

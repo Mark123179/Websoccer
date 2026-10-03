@@ -98,6 +98,10 @@
         </form>
 
         {% if request.user.is_superuser %}
+        <a class="creator-mode-button" href="{% url 'story_test_start' %}">
+            <span>Admin-Test</span>
+            <strong>Live-Ticker-Test</strong>
+        </a>
         <a class="creator-mode-button" href="{% url 'creator_index' %}">
             <span>Manager</span>
             <strong>Creator Mode</strong>

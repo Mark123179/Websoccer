@@ -1,0 +1,19 @@
+{% if is_test %}
+<aside class="ls-test-panel" aria-label="Admin-Teststeuerung">
+  <div>
+    <strong>Admin-Test · Bayern gegen Dortmund</strong>
+    <p>Originaltempo · Start {{ test_kickoff|date:"H:i:s" }} · Reload setzt diesen Lauf fort.
+      Nur deine Testsession; keine Auswirkungen auf echte Spiele.</p>
+  </div>
+  <nav aria-label="Testpartien">
+    {% for game in test_games %}<a class="ls-button" href="{{ game.url }}">Partie {{ game.id }}</a>{% endfor %}
+    <a class="ls-button" href="{{ test_conference_url }}">Konferenz</a>
+  </nav>
+  <form action="{{ test_reset_url }}" method="post">
+    {% csrf_token %}
+    <button class="ls-button ls-button-warn" type="submit">Test zurücksetzen · neu simulieren</button>
+  </form>
+  <p>Reset berechnet alle drei Partien neu – gleiche Mannschaften, neue Geschichten.
+    „Nur Tore“ blendet Phasen- und Analysezeilen aus.</p>
+</aside>
+{% endif %}
