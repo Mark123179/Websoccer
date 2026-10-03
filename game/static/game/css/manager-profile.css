@@ -1185,6 +1185,7 @@ img.mp-tlticket-crest {
 .mp-dashboard--trikots > .kit-rack {
     width: calc(100% - 88px - 2px);
     margin-inline: auto;
+    margin-top: 16px;
 }
 
 .mp-tl2 { border-radius: 8px; }

@@ -17,11 +17,12 @@ Datenanforderungen vor einer Umsetzung mit dem Nutzer klären.
 
 Ausdrücklich freigegebene Ausnahmen: Die Kleiderstange muss mittig und
 bündig mit dem oberen Profilbereich stehen; die Haken sollen etwas höher
-liegen, damit sie realistisch an der Stange hängen.
+liegen, damit sie realistisch an der Stange hängen. Der Abstand zum
+Profil-Header muss dem Abstand zwischen Profil-Header und Karriere-Timeline entsprechen.
 
-**Why:** Der Nutzer verlangte diese beiden Korrekturen an der übernommenen Vorlage.
+**Why:** Der Nutzer verlangte diese Korrekturen an der übernommenen Vorlage.
 
-**How to apply:** Nur diese Ausrichtung und Hakenhöhe anpassen; die restliche
+**How to apply:** Nur diese Ausrichtung, den Abstand und die Hakenhöhe anpassen; die restliche
 Gestaltung und das Bewegungsverhalten bleiben nach der Vorlage unverändert.
 
 ## Freigegebener Datenumfang
