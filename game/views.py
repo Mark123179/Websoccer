@@ -4134,31 +4134,34 @@ def club_table(request, club_id):
 
 
 def club_match_preview(request, club_id, fixture_id=None):
+    from .fixture_display import get_next_fixture
+    from .competition_assets import competition_logo_static_path
+
+    club = get_object_or_404(Club.objects.select_related('league'), id=club_id)
     if fixture_id is not None:
         fixture = get_object_or_404(
-            SeasonFixture.objects.select_related('home_club', 'away_club'),
+            SeasonFixture.objects.select_related('home_club', 'away_club', 'league'),
             _db_models.Q(pk=fixture_id) & (
                 _db_models.Q(home_club_id=club_id)
                 | _db_models.Q(away_club_id=club_id)
             ),
         )
-        opponent = (
-            fixture.away_club
-            if fixture.home_club_id == club_id
-            else fixture.home_club
-        )
-        match_date = fixture.scheduled_date.strftime('%d.%m.%Y') if fixture.scheduled_date else 'noch offen'
-        return render_public_club_stub(
-            request,
-            club_id,
-            'Spielvorschau',
-            f'Vorbericht für das Spiel gegen {opponent.name} am {match_date}.',
-        )
-    return render_public_club_stub(
+    else:
+        fixture = get_next_fixture(club)
+
+    competition = fixture.league if fixture else club.league
+    competition_name = competition.name if competition else 'Wettbewerb'
+    return render(
         request,
-        club_id,
-        'Spielvorschau',
-        'Die öffentliche Spielvorschau wird als eigener Matchbereich vorbereitet.',
+        'game/club_match_preview.html',
+        {
+            'club': club,
+            'competition_name': competition_name,
+            'competition_logo': competition_logo_static_path(competition) if competition else '',
+            'game_header': build_game_header(
+                competition_name, 'Spielvorschau', reverse_club_detail(club),
+            ),
+        },
     )
 
 

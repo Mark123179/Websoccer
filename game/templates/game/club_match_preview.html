@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ competition_name }} · Spielvorschau{% endblock %}
+
+{% block body_class %}match-preview-page{% endblock %}
+
+{% block extra_css %}
+    {{ block.super }}
+    <link rel="stylesheet" href="{% static 'game/css/match-preview.css' %}?v=preview-2">
+{% endblock %}
+
+{% block content %}
+<section class="match-preview-scene" aria-label="Spielvorschau">
+    <img class="match-preview-scene__background"
+         src="{% static 'game/images/match-preview/locker-room.jpg' %}"
+         alt=""
+         aria-hidden="true">
+
+    <div class="match-preview-panels">
+        <div class="match-preview-panel" aria-hidden="true"></div>
+        <div class="match-preview-panel match-preview-panel--center">
+            <div class="match-preview-competition">
+                {% if competition_logo %}
+                    <img src="{{ competition_logo }}" alt="">
+                {% endif %}
+                <h1>{{ competition_name }}</h1>
+            </div>
+        </div>
+        <div class="match-preview-panel" aria-hidden="true"></div>
+    </div>
+
+    <img class="match-preview-scene__foreground"
+         src="{% static 'game/images/match-preview/foreground.png' %}"
+         alt=""
+         aria-hidden="true">
+</section>
+{% endblock %}
