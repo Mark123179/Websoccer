@@ -20,3 +20,9 @@ Generativ erzeugte Schwarz-Weiß-Bilder nicht als pixelgenaue Objektsegmentierun
 **Why:** Die KI-Bildbearbeitung lieferte trotz ausdrücklicher Vorgabe ein quadratisches Bild mit veränderten Objektkonturen. Zurückskalieren auf die Originalgröße ließ störende Bodenflächen um die Objekte frei.
 
 **How to apply:** Jede externe Maske gegen die Originalkonturen in vergrößerten Ausschnitten prüfen. Identische Bildabmessungen allein beweisen keine geometrische Übereinstimmung; für exakte Konturen ein Segmentierungsverfahren bevorzugen.
+
+Segmentierung ist ein einmaliger Asset-Aufbereitungsschritt, keine neue App-Laufzeitfunktion.
+
+**Why:** MobileSAM ließ sich mit dem bereits verfügbaren ONNX Runtime lokal auf der CPU betreiben, ohne PyTorch, neue Verbindung oder Änderungen an den App-Abhängigkeiten. Eine fertige statische Maske genügt für die Darstellung.
+
+**How to apply:** Modellgewichte und Experimente außerhalb der App halten. Nur die geprüfte Bildmaske integrieren; das Spiel soll keine Modelle laden oder Konturen bei Seitenaufrufen berechnen.

@@ -1,0 +1,33 @@
+{
+  "method": "MobileSAM ONNX CPU, image-conditioned point and box prompts",
+  "model_source": "https://huggingface.co/Acly/MobileSAM",
+  "source_dimensions": [
+    2752,
+    1536
+  ],
+  "source_sha256": "4ceef6f6141662de68d57748e72759beb7711ad40b140abaab471e0122ce75e5",
+  "objects": {
+    "chair": {
+      "crop": [
+        0,
+        1180,
+        660,
+        1536
+      ],
+      "candidate": 2,
+      "predicted_iou": 0.9832973480224609
+    },
+    "bag": {
+      "crop": [
+        2100,
+        1120,
+        2752,
+        1536
+      ],
+      "candidate": 2,
+      "predicted_iou": 0.9930580854415894
+    }
+  },
+  "app_changed": false,
+  "note": "Predicted IoU is model confidence, not measured ground-truth accuracy. Photograph RGB is unchanged; only panels are masked."
+}

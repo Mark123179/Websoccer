@@ -578,3 +578,31 @@ mtime_ms = 1791043833047
 storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:6e4eaecc-e6c5-4f64-8de5-e8845034f33b/6b419451-b292-4abf-b326-6067f07b587c/52243fd3-c92a-465f-a26c-be7ab7f535a2"
 storage_version_token = "1791043877501348"
 content_type = "image/png"
+
+[[outputs]]
+id = "RDySVJaUcZfbkb4ZVlfHV"
+uri = "file://reports/match-preview-sam/edge-details.png"
+type = "image"
+title = "SAM: Konturen im Detail"
+description = "Oben das Original, unten die Vorschau mit SAM-maskierten Kacheln. Noch nicht in die Website eingebaut."
+logical_id = "0b2c9017-7813-46a9-81bc-d9f1cc11ed16"
+content_hash = "sha256:1ca5af75416f8cdfb41ccd49fb3905afcd65f200da9a19f030ee5975de287ef8"
+size = 1156999
+mtime_ms = 1791044183866
+storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:6e4eaecc-e6c5-4f64-8de5-e8845034f33b/0b2c9017-7813-46a9-81bc-d9f1cc11ed16/2cc95f99-d583-4be2-967a-2b2271e376d9"
+storage_version_token = "1791044222694703"
+content_type = "image/png"
+
+[[outputs]]
+id = "_wsMAKLS_or50iGJGA64h"
+uri = "file://reports/match-preview-sam/scene-preview.jpg"
+type = "image"
+title = "SAM: Gesamtansicht der Kacheln"
+description = "Statische Prüfung des Hintergrunds und der Überlagerung mit der neuen SAM-Maske; keine Browseraufnahme."
+logical_id = "905ea8e3-e9b2-4021-a408-d32679b6ea57"
+content_hash = "sha256:9195fea3e92e025be73f45aeb70f2b61ae7517d72d9debb4e87886b4a17cf558"
+size = 707751
+mtime_ms = 1791044182110
+storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:6e4eaecc-e6c5-4f64-8de5-e8845034f33b/905ea8e3-e9b2-4021-a408-d32679b6ea57/281b001d-11ab-4a39-b261-1f00c60600a3"
+storage_version_token = "1791044223304412"
+content_type = "image/jpeg"
