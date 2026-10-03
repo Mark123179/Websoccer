@@ -1,7 +1,10 @@
 """The empty preview uses the real competition without mutating match data."""
 from types import SimpleNamespace
 from unittest.mock import patch
+from pathlib import Path
 
+from PIL import Image, ImageChops
+from django.conf import settings
 from django.http import HttpResponse
 from django.test import RequestFactory, SimpleTestCase
 from django.template.loader import render_to_string
@@ -58,3 +61,20 @@ class MatchPreviewLayoutTests(SimpleTestCase):
         self.assertNotIn('match-preview-scene__foreground', html)
         self.assertNotIn('foreground.png', html)
         self.assertNotIn('Vorbericht für das Spiel', html)
+
+    def test_sam_mask_preserves_approved_segmentation_and_frame(self):
+        assets = Path(settings.BASE_DIR) / 'game/static/game/images/match-preview'
+        with (
+            Image.open(assets / 'locker-room.png') as photo,
+            Image.open(assets / 'object-mask-sam.png') as objects,
+            Image.open(assets / 'panel-mask-sam.png') as panels,
+        ):
+            self.assertEqual(photo.size, objects.size)
+            self.assertEqual(photo.size, panels.size)
+            self.assertIsNone(ImageChops.difference(
+                panels.getchannel('A'), ImageChops.invert(objects.convert('L')),
+            ).getbbox())
+            for x, y in [(110, 510), (840, 510), (895, 520)]:
+                point = (round(x * photo.width / 1024), round(y * photo.height / 572))
+                self.assertEqual(panels.getchannel('A').getpixel(point), 0)
+            self.assertEqual(panels.getchannel('A').getpixel((photo.width // 2, 100)), 255)

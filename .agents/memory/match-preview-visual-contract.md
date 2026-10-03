@@ -23,6 +23,6 @@ Generativ erzeugte Schwarz-Weiß-Bilder nicht als pixelgenaue Objektsegmentierun
 
 Segmentierung ist ein einmaliger Asset-Aufbereitungsschritt, keine neue App-Laufzeitfunktion.
 
-**Why:** MobileSAM ließ sich mit dem bereits verfügbaren ONNX Runtime lokal auf der CPU betreiben, ohne PyTorch, neue Verbindung oder Änderungen an den App-Abhängigkeiten. Eine fertige statische Maske genügt für die Darstellung.
+**Why:** MobileSAM ließ sich mit dem bereits verfügbaren ONNX Runtime lokal auf der CPU betreiben, ohne PyTorch, neue Verbindung oder Änderungen an den App-Abhängigkeiten. Der Nutzer hat die SAM-Konturen nach der Detailvorschau ausdrücklich zum Einbau freigegeben. Eine fertige statische Maske genügt für die Darstellung.
 
 **How to apply:** Modellgewichte und Experimente außerhalb der App halten. Nur die geprüfte Bildmaske integrieren; das Spiel soll keine Modelle laden oder Konturen bei Seitenaufrufen berechnen.

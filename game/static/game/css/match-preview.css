@@ -39,8 +39,8 @@
     inset: 0;
     z-index: 1;
     /* Mask the cards, never duplicate or cut out the photographed objects. */
-    -webkit-mask-image: url('../images/match-preview/panel-mask.png?v=1');
-    mask-image: url('../images/match-preview/panel-mask.png?v=1');
+    -webkit-mask-image: url('../images/match-preview/panel-mask-sam.png?v=1');
+    mask-image: url('../images/match-preview/panel-mask-sam.png?v=1');
     -webkit-mask-size: cover;
     mask-size: cover;
     -webkit-mask-position: center center;
