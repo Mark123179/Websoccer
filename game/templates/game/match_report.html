@@ -4,11 +4,11 @@
 {% block title %}Spielbericht{% endblock %}
 
 {% block extra_css %}
-    <link rel="stylesheet" href="{% static 'game/css/match_report_v2.css' %}?v=22">
+    <link rel="stylesheet" href="{% static 'game/css/match_report_v2.css' %}?v=23">
     {% if is_admin %}
     <link rel="stylesheet" href="{% static 'game/css/match_report.css' %}?v=13">
     {% endif %}
-    <link rel="stylesheet" href="{% static 'game/css/referee_popup.css' %}?v=2">
+    <link rel="stylesheet" href="{% static 'game/css/referee_popup.css' %}?v=3">
 {% endblock %}
 
 {% block content %}
@@ -46,7 +46,7 @@
                     <svg viewBox="0 0 24 24" fill="none" stroke="var(--faint)" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="9.5" cy="14" r="4.6"></circle><path d="M9.5 9.4h5.8l5.2-1.6v3.5l-6.2 1.9"></path></svg>
                     <span>Schiedsrichter:
                     {% if referee %}
-                        {% if referee.flag_url %}<img src="{{ referee.flag_url }}" alt="{{ referee.nationality }}" class="ref-flag" style="vertical-align:middle;margin:0 3px 1px 4px;">{% endif %}<button class="ref-trigger" type="button">{{ referee.name }}</button>
+                        {% if referee.flag_url %}<img src="{{ referee.flag_url }}" alt="{{ referee.nationality }}" class="ref-flag" style="vertical-align:middle;margin:0 3px 1px 4px;">{% endif %}<button class="ref-trigger" type="button" aria-describedby="ref-popup">{{ referee.name }}</button>
                     {% else %}&ndash;{% endif %}</span>
                 </div>
                 <div class="m">
@@ -112,22 +112,6 @@
 
         {# ══════════════════════════════ ÜBERSICHT ══════════════════════ #}
         <section class="panel" data-tab="uebersicht">
-            {% if report.home_club_id %}
-            <section class="match-stadium"
-                     data-stadium-live-mode
-                     data-scene-url="{% url 'stadium_live_scene' report.home_club_id %}"
-                     data-mode="match" data-camera="match" data-day="false" data-exposure="1"
-                     aria-label="Stadion von {{ report.home_club_name }}">
-                <div data-stadium-stage></div>
-                <canvas aria-label="2D-Ansicht des Heimstadions"></canvas>
-                <header class="live-stage__header">
-                    <span>{{ report.home_club_name }}</span>
-                    <strong>{% if stadium_home_club.stadium %}{{ stadium_home_club.stadium.name }}{% else %}Heimstadion{% endif %}</strong>
-                </header>
-                <p class="live-stage__status" role="status">Stadion wird geladen …</p>
-                <div class="live-stage__help">Ziehen: Kamera · Mausrad: Zoom · Doppelklick: zurücksetzen</div>
-            </section>
-            {% endif %}
             <div class="ov-grid">
 
                 <section class="card mod-momentum">
@@ -938,9 +922,8 @@
 
 {% if referee %}
 {# ── Schiedsrichter-Popup ─────────────────────────────────────────────── #}
-<div class="ref-overlay is-hidden" id="ref-overlay" role="dialog" aria-modal="true" aria-labelledby="ref-modal-name">
+<div class="ref-popup is-hidden" id="ref-popup" role="tooltip" aria-hidden="true" aria-labelledby="ref-modal-name">
   <div class="ref-modal">
-    <button class="ref-close" id="ref-close-btn" aria-label="Schließen">&#x2715;</button>
 
     <div class="ref-head">
       <div class="ref-cutout">
@@ -1025,8 +1008,6 @@
 </div>
 {% endif %}
 
-<script type="importmap">{"imports":{"three":"{% static 'stadium_editor/stage/vendor/three.module.js' %}","three/addons/":"{% static 'stadium_editor/stage/vendor/addons/' %}"}}</script>
-<script src="{% static 'game/js/match_report_v2.js' %}?v=6"></script>
-{% include 'stadium_editor/_live_mode_script.html' %}
-{% if referee %}<script src="{% static 'game/js/referee_popup.js' %}?v=1"></script>{% endif %}
+<script src="{% static 'game/js/match_report_v2.js' %}?v=7"></script>
+{% if referee %}<script src="{% static 'game/js/referee_popup.js' %}?v=2"></script>{% endif %}
 {% endblock %}

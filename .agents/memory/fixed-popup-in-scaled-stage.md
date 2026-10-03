@@ -16,3 +16,15 @@ description: Warum Hover-Popups (z. B. Wetter-Karte) per JS an document.body por
 - `pointer-events: none` auf dem Popup verhindert Hover-Flackern.
 - CSS-`:hover`-Fallback beibehalten (no-JS). Globales `focusout` auf den Trigger-Selektor begrenzen, sonst schließt jedes Fokusereignis das Popup.
 - Debug: `?wxdebug=N` öffnet das N-te Popup ohne Hover (für Screenshots).
+
+## Schiedsrichterprofil im Spielbericht
+
+Das Schiedsrichterprofil soll wie das Wetter als unmittelbare Hover-Karte
+erscheinen, nicht als Klickdialog mit abgedunkeltem Hintergrund.
+
+**Why:** Der Nutzer verlangte ausdrücklich ein Popup „direkt ohne Klick nur
+beim Hovern“ wie beim Wetter.
+
+**How to apply:** Diese Interaktion beibehalten; Tastaturfokus darf die
+Informationskarte ebenfalls öffnen. Keine modale Sperre oder Klickpflicht
+für dieses Profil wieder einführen, solange der Nutzer nichts anderes verlangt.
