@@ -17,6 +17,7 @@ from .blueprints.v2.dortmund_preview import load_preview
 from .image_validation import InvalidImageData, normalize_design_payload
 from .models import StadiumDesign, StadiumGeometry
 from .contracts import geometry_blocks, visible_blocks
+from .surroundings import with_dortmund_mapped_trees
 from .live_scene import (
     LiveSceneError,
     build_live_scene,
@@ -39,7 +40,7 @@ def _geometry_payload(stadium, geometry):
     trusted = {block['id']: block for block in geometry_blocks(payload)}
     for position, block in enumerate(payload['blocks']):
         block.update(trusted[block.get('id', position)])
-    return payload
+    return with_dortmund_mapped_trees(payload, club_id=stadium.club_id)
 
 
 @login_required(login_url='/auth/login/')

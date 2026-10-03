@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import {buildConcept, warpShell, ROOF_NAMES, SHELL_NAMES} from './dortmund_concept.js?v=49';
 import {previewSupportsMaterial, sourceOpaqueColor} from './dortmund_source_materials.js';
 import {addReconstructedFacade, reconstructedFacadeVisible, sourceFacadePreviewColor} from './dortmund_reconstructed_facade.js?v=2';
-import {buildDortmundSurroundings} from './dortmund_surroundings.js?v=50';
+import {buildDortmundSurroundings} from './dortmund_surroundings.js?v=51';
 
 const ASSET_BASE = new URL('./dortmund_original/', import.meta.url);
 const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
@@ -35,8 +35,9 @@ export async function mountDortmundScene({element, onStatus, surroundings, frame
   renderer.domElement.setAttribute('aria-label', 'Drehbarer Unity-Mesh-Auszug des Signal Iduna Parks mit vereinfachten Materialien und konzeptioneller Erweiterung');
   element.replaceChildren(renderer.domElement);
   const scene = new THREE.Scene();
-  scene.background = new THREE.Color('#162225');
-  scene.fog = new THREE.Fog('#162225', 850, 1800);
+  const nightEnvironment = '#030b0d';
+  scene.background = new THREE.Color(nightEnvironment);
+  scene.fog = new THREE.Fog(nightEnvironment, 850, 1800);
   const world = new THREE.Group();
   scene.add(world);
   scene.add(new THREE.HemisphereLight(0xe7f1f2, 0x344045, 1.35));
@@ -261,7 +262,12 @@ export async function mountDortmundScene({element, onStatus, surroundings, frame
           azimuth = Number(orbit.azimuth) * Math.PI / 180 + .88;
           elevation = clamp(Number(orbit.elevation) * Math.PI / 180, .15, 1.35);
         }
-        if (typeof day === 'boolean') scene.background.set(day ? '#8aa8b5' : '#162225');
+         // Daylight remains a subtle tint; the map environment must retain its dark neon contrast.
+         if (typeof day === 'boolean') {
+           const environmentColor = day ? '#081719' : nightEnvironment;
+           scene.background.set(environmentColor);
+           scene.fog.color.set(environmentColor);
+         }
         if (typeof floodlight === 'boolean') sun.intensity = floodlight ? 2 : 1.5;
         render();
         return Promise.resolve();

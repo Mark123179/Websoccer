@@ -190,6 +190,19 @@ class DortmundEditorIntegrationTests(TestCase):
         self.assertNotContains(response, 'id="btnExpand"')
         self.assertNotContains(response, 'data-de-amount="20000"')
 
+    def test_shared_editor_payload_adds_mapped_trees_without_saving_geometry(self):
+        row = StadiumGeometry.objects.get(stadium=self.stadium)
+        before = json.loads(json.dumps(row.geometry))
+        self.client.force_login(self.user)
+        response = self.client.get(reverse('stadium_editor_geometry'))
+        self.assertEqual(response.status_code, 200)
+        environment = response.json()['surroundings']
+        self.assertEqual(len(environment['trees']), 248)
+        self.assertIn('OpenStreetMap (ODbL)', environment['treeSource'])
+        row.refresh_from_db()
+        self.assertEqual(row.geometry, before)
+        self.assertEqual(self.stadium.capacity_total, 1000)
+
     def test_admin_sees_preview_but_not_an_order_button(self):
         self.user.is_staff = True
         self.user.save(update_fields=['is_staff'])
@@ -311,7 +324,7 @@ class StadiumEditorTests(TestCase):
         self.assertContains(response, 'Blaupause: OpenStreetMap-Daten (ODbL)')
         self.assertContains(
             response,
-            'stadium_editor/editor.js?v=50',
+            'stadium_editor/editor.js?v=51',
         )
         editor_js = (
             Path(__file__).resolve().parent / 'static' / 'stadium_editor' / 'editor.js'

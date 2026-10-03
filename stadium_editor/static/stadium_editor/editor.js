@@ -157,6 +157,7 @@ function editorBackground(){
     .filter(building => Array.isArray(building.poly));
   return {
     source: live.source || legacy.source || '',
+    treeSource: legacy.treeSource || live.treeSource || '',
     green: legacy.green || live.green || [],
     water: legacy.water || live.water || [],
     roads: legacy.roads || live.roads || [],
@@ -352,6 +353,7 @@ function renderBase(){
   }
   // Gebäude
   for(const g of bg.buildings || []){ path(g); ctx.closePath(); ctx.strokeStyle='rgba(34,230,255,.4)'; ctx.lineWidth=1; ctx.stroke(); }
+  drawTrees(ctx, w2s);
   drawPitch(ctx, w2s, 1);
 }
 function drawPitch(ctx, toScreen, alpha){
