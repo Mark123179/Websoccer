@@ -21,8 +21,7 @@
     position: relative;
 }
 
-.match-preview-scene__background,
-.match-preview-scene__foreground {
+.match-preview-scene__background {
     height: 100%;
     inset: 0;
     object-fit: cover;
@@ -33,6 +32,21 @@
 
 .match-preview-scene__background {
     z-index: 0;
+}
+
+.match-preview-content {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    /* Mask the cards, never duplicate or cut out the photographed objects. */
+    -webkit-mask-image: url('../images/match-preview/panel-mask.png?v=1');
+    mask-image: url('../images/match-preview/panel-mask.png?v=1');
+    -webkit-mask-size: cover;
+    mask-size: cover;
+    -webkit-mask-position: center center;
+    mask-position: center center;
+    -webkit-mask-repeat: no-repeat;
+    mask-repeat: no-repeat;
 }
 
 .match-preview-panels {
@@ -81,11 +95,6 @@
     overflow-wrap: anywhere;
     text-shadow: 0 2px 12px rgba(0, 0, 0, 0.48);
     text-transform: uppercase;
-}
-
-.match-preview-scene__foreground {
-    pointer-events: none;
-    z-index: 2;
 }
 
 @media (max-width: 767px) {

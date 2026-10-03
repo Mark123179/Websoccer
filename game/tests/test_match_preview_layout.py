@@ -53,5 +53,8 @@ class MatchPreviewLayoutTests(SimpleTestCase):
         })
         self.assertEqual(html.count('class="match-preview-panel'), 4)  # container + 3 panels
         self.assertIn('<h1>Bundesliga</h1>', html)
-        self.assertIn('match-preview-scene__foreground', html)
+        self.assertIn('match-preview-content', html)
+        self.assertIn('locker-room.png', html)
+        self.assertNotIn('match-preview-scene__foreground', html)
+        self.assertNotIn('foreground.png', html)
         self.assertNotIn('Vorbericht für das Spiel', html)
