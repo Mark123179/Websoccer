@@ -43,3 +43,10 @@ empty oauth2 credential is used (401). Working agent-bash push:
 The `origin` remote URL is `https://oauth2:@github.com/Mark123179/Websoccer` (empty token).
 This is the configured state — Replit's GitHub OAuth token expired/was rotated.
 Do not try to restore the OAuth token; use the PAT-based push workflow above instead.
+
+## Credential helpers require a remote URL without embedded credentials
+For PAT pushes, strip the HTTPS userinfo from the remote URL in memory, then use a temporary credential helper that reads the selected existing token environment variable. Do not put token values in command arguments, logs, or persistent Git configuration.
+
+**Why:** An origin URL with an embedded empty OAuth password can bypass the intended helper; changing helpers alone then keeps failing authentication.
+
+**How to apply:** Derive a credential-free URL from the current origin rather than guessing the repository. Pass it to push with a command-local helper and `GIT_TERMINAL_PROMPT=0`. After an explicit-URL push, fetch the pushed branch into the origin tracking ref if needed so the workspace does not keep showing already-pushed commits as outgoing.
