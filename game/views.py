@@ -7571,8 +7571,11 @@ def manager_profile(request):
         ('last_login', 'Letzte Anmeldung'),
     )
 
+    from .manager_kit_reference import reference_kits
+
     return render(request, 'game/manager_profile.html', {
         'tab': tab,
+        'kits_json': reference_kits() if tab == 'trikots' else [],
         'timeline_events': timeline_events,
         'game_header': build_game_header(
             f'Manager · {manager_name}',

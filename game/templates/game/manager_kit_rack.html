@@ -1,0 +1,8 @@
+<div class="kit-rack" style="box-sizing: content-box">
+  <div id="kit-stage">
+    <div id="kit-load">TRIKOTS WERDEN AUFGEHÄNGT…</div>
+    {% load static %}<img id="kit-bar" src="{% static 'game/images/kits/rack-bar.png' %}" alt="">
+  </div>
+</div>
+{{ kits_json|json_script:"kit-data" }}
+<script type="module" src="{% static 'game/js/manager-trikots.js' %}?v=2"></script>
