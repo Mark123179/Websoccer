@@ -122,3 +122,4 @@
 - [Stadion-Kachel](club-stadium-presentation.md) — Automatische statt manueller Drehung; transparentes Modell über dem ursprünglichen Kachelhintergrund.
 - [Kleiderstangen-Vorlage](manager-kit-rack-handoff.md) — Managerprofil-Trikots strikt 1:1 übernehmen; Unklarheiten direkt melden, übriges Profil nicht ändern.
 - [Live-Ticker timing](live-ticker-timing.md) — v4-Zeiten unverändert übernehmen; Elfmeterschießen ergänzt das Gesamtbudget um 14 Sekunden Rahmen.
+- [Verifikationsbelege](verification-evidence.md) — Parität braucht identische Startbedingungen; Baseline-Tests und Diagnosezahlen nicht ohne Kontrollläufe interpretieren.

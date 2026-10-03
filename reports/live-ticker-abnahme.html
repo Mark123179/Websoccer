@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="de"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Live-Ticker – Abnahme</title>
+<title>Live-Ticker – korrigierter Prüfbericht</title>
 <style>
 body{max-width:900px;margin:40px auto;padding:0 24px;background:#071019;color:#e4edf5;font:16px/1.65 system-ui,sans-serif}
 h1,h2{line-height:1.2}h1{font-size:32px}h2{margin-top:32px;font-size:22px;color:#67d4eb}
@@ -8,7 +8,7 @@ table{border-collapse:collapse;width:100%}th,td{padding:10px;border-bottom:1px s
 code,pre{font:13px/1.6 ui-monospace,monospace;background:#101d2b}pre{padding:16px;white-space:pre-wrap;overflow-wrap:anywhere}
 .ok{color:#83d5a9}.warn{color:#f1c87d}.muted{color:#a6b9ca}
 </style>
-<h1>Live-Ticker – Abnahme</h1><p class="muted">Stand: 3. Oktober 2026 · Entwicklung, kein Produktions-Publish</p>
+<h1>Live-Ticker – korrigierter Prüfbericht</h1><p class="muted">Stand: 3. Oktober 2026 · Entwicklung, kein Produktions-Publish · mit kontrollierten Baseline-Vergleichen</p>
 <h2>Implementierter Ablauf</h2>
 <ul>
 <li>Einmaliger v4-Erzählaufbau mit dauerhaftem Snapshot, geordneten Zeilen, vollständigen Beat-Metadaten, Offsets, Dauern, Memory, Segmenten und Issues.</li>
@@ -27,23 +27,26 @@ code,pre{font:13px/1.6 ui-monospace,monospace;background:#101d2b}pre{padding:16p
 <h2>Unveränderte Engine</h2>
 <p class="ok">24 vollständige Vorher/Nachher-Berichte sind bytegleich nach Abzug ausschließlich des neuen segment_log. Die RNG-Zustände sind ebenfalls identisch.</p>
 <p>Feste Seeds 71000–71011, jeweils Liga und Pokal; enthalten sind ein Verlängerungs- und ein Elfmeterschießfall. Vergleich schließt Tore, Ereignisse, Summen und sämtliche Spielernoten ein. Jeder Bericht wurde mit SHA-256 protokolliert.</p>
+<p>Nach der Rückfrage erneut gegen den tatsächlichen Baseline-Commit geprüft: 24/24 Berichte und RNG-Zustände identisch. Alle 14 Dateien der eingefrorenen Erzähler-Baseline sind weiterhin bytegleich zum gelieferten Archiv.</p>
 <pre>Baseline: 2a967d34d86d13fdd0028718a1d44bff5af86d92
-git show BASELINE:game/match_engine.py &gt; /tmp/engine-before.py
+git show 2a967d34d86d13fdd0028718a1d44bff5af86d92:game/match_engine.py &gt; /tmp/engine-before.py
 python scripts/check_live_ticker_engine_parity.py --before /tmp/engine-before.py
 checks: 24
 passed: true</pre>
-<h2>20-Saisons-Regression</h2>
-<table><tr><th>Metrik</th><th>Vorher</th><th>Nachher</th><th>Abweichung</th></tr>
-<tr><td>Tore/Spiel</td><td>3,29542</td><td>3,30253</td><td>0,22 %</td></tr>
-<tr><td>Heimsiege</td><td>0,40556</td><td>0,39943</td><td>1,51 %</td></tr>
-<tr><td>Unentschieden</td><td>0,22418</td><td>0,22573</td><td>0,69 %</td></tr>
-<tr><td>Auswärtssiege</td><td>0,36732</td><td>0,37549</td><td>2,22 %</td></tr>
-<tr><td>Gelbe Karten/Spiel</td><td>2,84641</td><td>2,88807</td><td>1,46 %</td></tr>
-<tr><td>Verletzungen/Spiel</td><td>0,18971</td><td>0,19395</td><td>2,24 %</td></tr>
-<tr><td>Spearman</td><td>0,90958</td><td>0,95395</td><td>4,88 %</td></tr>
-<tr><td>Pearson xGD</td><td>0,64897</td><td>0,63313</td><td>2,44 %</td></tr></table>
-<p class="ok">Alle acht Laufvergleichs-Metriken liegen innerhalb 5 %.</p>
-<p class="warn">Der neue Multi-Seed-Lauf selbst meldet Pearson xGD (8,1 %) und Verletzungen (9,8 %) als instabil. Diese Warnungen werden nicht verschwiegen; sie sind vom bytegleichen festen Engine-Vergleich getrennt.</p>
+<h2>Kontrollierter 20-Saisons-Vergleich</h2>
+<p class="warn">Die frühere Prozenttabelle war kein kontrollierter Paritätsnachweis: Sie verglich 10 Saisons aus dem Lauf 20261003_095318 mit 20 Saisons aus 20261003_103312. Beide verwendeten dieselben sechs lokalen Seeds, setzten aber den globalen Python-Zufallszustand der Engine nicht identisch. Die alte Aussage zur Unverändertheit wird daher durch den folgenden kontrollierten Vergleich ersetzt.</p>
+<p>Baseline und aktueller Stand: jeweils 20 Saisons für jeden Seed aus [1, 7, 21, 42, 99, 2026]; zusätzlich globales <code>random.seed(271828)</code> vor dem gesamten Lauf. 6.120 Spiele pro Seed, somit 36.720 Spiele je Stand.</p>
+<table><tr><th>Metrik, Median der sechs Seeds</th><th>Vorher = Nachher</th><th>Abweichung</th></tr>
+<tr><td>Tore/Spiel</td><td>3,302777</td><td>0 %</td></tr>
+<tr><td>Heimsiege</td><td>0,400164</td><td>0 %</td></tr>
+<tr><td>Unentschieden</td><td>0,221814</td><td>0 %</td></tr>
+<tr><td>Auswärtssiege</td><td>0,378022</td><td>0 %</td></tr>
+<tr><td>Gelbe Karten/Spiel</td><td>2,868873</td><td>0 %</td></tr>
+<tr><td>Verletzungen/Spiel</td><td>0,195180</td><td>0 %</td></tr>
+<tr><td>Spearman</td><td>0,937561</td><td>0 %</td></tr>
+<tr><td>Pearson xGD</td><td>0,611306</td><td>0 %</td></tr></table>
+<p class="ok">Nicht nur die Mediane, sondern alle Einzelwerte aller sechs Seeds sowie seeds_stability.json und metrics.json sind bytegleich. summary.json ist nach Ausschluss ausschließlich von elapsed_s und ms_per_game fachlich identisch.</p>
+<p class="warn">Unterschiede zwischen verschiedenen Seeds bleiben ein Verteilungs-/Stabilitätsbefund, kein Vorher/Nachher-Drift. Die Stabilitätswarnungen innerhalb des kontrollierten Laufs bestehen identisch auf beiden Ständen.</p>
 <h2>Historischer Backfill</h2>
 <pre>SUMMARY {
   'matches': 201, 'lines': 28428, 'issues': 289,
@@ -52,10 +55,37 @@ passed: true</pre>
 }
 Erzählerabbrüche: 0
 Historische Spiele: weiterhin freigegeben</pre>
-<p class="warn">Die 206 Kernzahlenmeldungen betreffen inkonsistente historische Eingangsdaten; Original-Prüfung und Brücken-Prüfung können dasselbe Problem getrennt melden. Die 83 Akteurmeldungen betreffen aktive Spieler bzw. Wechselketten. Weder Engine-Formeln noch historische Ergebnisse wurden dafür umgeschrieben.</p>
+<p>206 Meldungen = 103 Originalprüfer-Meldungen + 103 Brücken-Meldungen. Für jede der 103 betroffenen Teamseiten ist die Doppelmeldung belegt. Betroffen sind 70 von 201 Spielen (34,8 %), nicht 206 verschiedene Spiele.</p>
+<table><tr><th>Zahlentyp</th><th>Betroffene Spiele</th><th>Betroffene Teamseiten</th></tr>
+<tr><td>Schüsse</td><td>0</td><td>0</td></tr>
+<tr><td>Schüsse aufs Tor</td><td>9</td><td>9</td></tr>
+<tr><td>Ecken</td><td>0</td><td>0</td></tr>
+<tr><td>Karten</td><td>61</td><td>94</td></tr>
+<tr><td>Tore</td><td>0</td><td>0</td></tr></table>
+<p>Keine fehlenden oder NULL-Schuss-aufs-Tor-Felder in diesen 201 Spielen. Die Karten- und Schuss-aufs-Tor-Gruppen sind disjunkt.</p>
+<p><strong>Karten:</strong> In 53 betroffenen Spielen fehlt card_events, in einem ist es leer; in sieben fehlen rote Karten in card_events, obwohl sie in dismissal_events vorhanden sind. Kein yellow_red-Eintrag in den abweichenden Kartenlisten. Beispiel Spiel 1, Heim: zwei gelbe Karten in match_stats, keine Kartenereignisse, erzählt null Karten.</p>
+<p><strong>Schüsse aufs Tor:</strong> Fünf Spiele haben weniger gespeicherte Schüsse aufs Tor als Nicht-Eigentore: 197, 201, 210, 213, 245. Beispiel 197, Heim: erwartet ein Schuss aufs Tor, zwei Tore vorhanden, erzählt zwei Schüsse aufs Tor.</p>
+<p class="warn"><strong>Vier weitere Spiele haben konsistente Eingaben, aber einen Fehler in der unveränderten v4-Baseline.</strong> Direkte erneute Erzeugung ohne Persistenzbrücke bestätigt jeweils denselben Fehler:</p>
+<table><tr><th>Spiel / Seite</th><th>Schüsse</th><th>Tore</th><th>Schüsse aufs Tor erwartet</th><th>Original v4 erzählt = gespeichert</th></tr>
+<tr><td>237 / Heim</td><td>12</td><td>1</td><td>5</td><td>4</td></tr>
+<tr><td>239 / Auswärts</td><td>17</td><td>2</td><td>7</td><td>6</td></tr>
+<tr><td>242 / Heim</td><td>8</td><td>1</td><td>4</td><td>3</td></tr>
+<tr><td>244 / Heim</td><td>10</td><td>1</td><td>5</td><td>4</td></tr></table>
+<p class="warn">Eine Einschränkung des Abnahmekriteriums auf konsistente Eingangsdaten genügt daher nicht: Diese vier Fälle erfüllen diese Voraussetzung und verletzen die Kernzahlen trotzdem. Referenzabnahme bestanden bedeutet nicht fehlerfreie Kernzahlen für alle historischen Spiele. Keine stille Angleichung und keine Änderung am eingefrorenen Paket wurden vorgenommen.</p>
+<p>Die 83 zusätzlichen Akteurmeldungen sind von dieser Zahlentyp-Auswertung getrennt. Historische Ergebnisse und Engine-Formeln blieben unverändert.</p>
 <h2>Automatisierte Prüfung</h2>
 <p>21 Live-Ticker-Abnahmetests bestanden. Der zusätzliche Block für Freundschaftsspiele, Turnier-Service und -Ansichten, Pokal und Berichtswappen bestanden ebenfalls. Ein im Gesamtblock aufgedeckter Verlängerungs-Arrayfehler wurde korrigiert und anschließend gezielt grün nachgeprüft. Django-Systemprüfung, Migrationsabgleich, JavaScript-Syntax und Diff-Prüfung sind sauber.</p>
-<p class="warn">Vollständige Projektsuite: 1471 Tests, 485 Errors, 9 Failures. Nicht geänderte Bereiche enthalten fehlende EconomyParameter-/Auktions-Seed-Fixtures und veraltete DataSource-Testfelder. Die Gesamtsuite ist ausdrücklich nicht als grün abgenommen.</p>
+<table><tr><th>Vollständiger Testlauf</th><th>Tests</th><th>Errors</th><th>Failures</th></tr>
+<tr><td>Früherer Lauf während der Implementierung, normale Testdatenbank</td><td>1471</td><td>485</td><td>9</td></tr>
+<tr><td>Erneuter aktueller Workflow-Lauf, dieselbe normale Testdatenbank</td><td>1479</td><td>485</td><td>9</td></tr>
+<tr><td>Baseline 2a967d34, frische isolierte PostgreSQL-Testdatenbank</td><td>1444</td><td>1</td><td>0</td></tr>
+<tr><td>Baseline 2a967d34, dieselbe isolierte Testdatenbank erneut mit keepdb</td><td>1444</td><td>1</td><td>0</td></tr>
+<tr><td>Aktueller Stand, frische isolierte PostgreSQL-Testdatenbank</td><td>1479</td><td>0</td><td>0</td></tr></table>
+<p class="ok">Aktueller Stand: vollständige Suite auf einer frischen isolierten Testdatenbank bestanden. Die Baseline hat ausschließlich den Syntaxfehler im damals nicht importierbaren Turnier-Testmodul; der aktuelle Stand behebt diesen und enthält zusätzliche Ticker-Tests.</p>
+<p class="warn">Die frühere pauschale Zuordnung der 485 Errors zu vorbestehenden Codefehlern war unbelegt und wird zurückgenommen. Sie wurden auf der isolierten Baseline weder frisch noch beim zweiten keepdb-Lauf reproduziert. Auch keepdb allein ist somit nicht als Ursache belegt.</p>
+<p>Unabhängig von den Tests wurden die Seed-Bestände read-only geprüft: normale Workflow-Testdatenbank = 0 DataSource, 0 EconomyParameter, 0 ShowAuctionPreset; frische aktuelle sowie Baseline-Testdatenbank jeweils = 5 / 77 / 5. Fehlende Seeds erklären die dort beobachteten fehlenden Parameter und den DataSource-create-Pfad mit veraltetem url-Feld. Wann genau die normale Testdatenbank diesen Zustand erhielt, wurde nicht rekonstruiert.</p>
+<h2>Verlängerungs-Arrayfehler</h2>
+<p>Der Fehler lag ausschließlich in der Integration für die Momentum-Darstellung, in game.views._build_match_momentum: Die Schleife wurde auf 120 Minuten erweitert, aber das Kurvenarray blieb zunächst 91 Einträge lang. Korrektur: last_minute + 1 Einträge. Weder Django-Erzählbrücke noch Engine-Segment-Log noch eingefrorenes v4-Paket waren betroffen. Der Engine-Paritätslauf wurde nach der Korrektur ausgeführt und bei dieser Nachprüfung nochmals wiederholt.</p>
 <h2>Browserabnahme</h2>
 <p class="ok">Ein fokussierter Durchlauf bestanden: Zeitfortsetzung nach Reload, alle drei Filter, Analyse/Phase trotz visible=false, Konferenz ohne Request-Fanout, Fehler/Wiederverbindung, Ergebnissperre vor Freigabe, Bericht und gespeicherter Ticker nach Freigabe, 403 für unberechtigte Admin-Aktion, mobile Ansicht und Polling-Stopp.</p>
 <p>Browserbelege: Live-Ticker, Live-Konferenz, Mobilansicht, gespeicherter Berichtsticker sowie Ausfall-/Wiederverbindungszustand. Temporäre Testkonten, Vereine, Runden und Spiele wurden entfernt; keine bestehenden Daten oder globalen Overrides geändert.</p>
