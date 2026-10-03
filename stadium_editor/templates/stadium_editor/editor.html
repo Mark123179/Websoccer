@@ -6,7 +6,7 @@
 {% block body_class %}stadium-editor-page{% endblock %}
 
 {% block extra_css %}
-{% if is_dortmund_editor %}<link rel="stylesheet" href="{% static 'stadium_editor/dortmund_editor.css' %}?v=6">{% endif %}
+{% if is_dortmund_editor %}<link rel="stylesheet" href="{% static 'stadium_editor/dortmund_editor.css' %}?v=7">{% endif %}
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;700&family=IBM+Plex+Sans:wght@400;500;600;700&family=Oswald:wght@400;500;600&family=Cinzel:wght@600&family=Anton&family=Bebas+Neue&family=Archivo+Black&family=Germania+One&family=Permanent+Marker&display=swap" rel="stylesheet">
 <style>
@@ -350,6 +350,7 @@
       <strong id="deSceneStatus" role="status">Unity-Mesh-Auszug wird geladen …</strong>
        <span id="deSceneData">Bestand · Mesh-Auszug + rekonstruierte Gegenseite</span>
       <span>{{ completed_expansion_count }} fertiggestellte Ausbauaufträge im aktuellen Platzbestand berücksichtigt · 3D-Original ist kein vermessener Nachbau dieser Arbeiten.</span>
+      <small>Umfeld: dieselben Kartendaten wie in 2D · © OpenStreetMap-Mitwirkende (ODbL). Gebäudehöhen und Baumformen sind schematisch; nur vorhandene Kartenobjekte werden dargestellt.</small>
        <small>Bestand: ausgewählte Unity-Meshes, vier repräsentative Texturen und vereinfachte Materialien – kein Unity-Originalrender. Originale NoDraw-Außenwände sind nur in der Bestandsvorschau an die separat gezeichnete Rekonstruktion angeglichen; das ist keine belegte Unity-Originalfarbe oder -Fassade. Die gespeicherten Materialwerte bleiben unverändert, die exakte Unity-Shaderwirkung ist ungeklärt. Grau: schematischer Ausbau · Farbbänder: 2D-Gestaltung. Ausbauschritte sind keine vermessenen Plätze. Dach aus = Präsentationsschnitt.</small>
     </div>
     <div id="deSceneFallback" class="de-scene-fallback" hidden>
@@ -400,5 +401,5 @@ window.STADIUM_EDITOR = {
 };
 </script>
 <script src="{% static 'stadium_editor/expansion_geometry.js' %}?v=35"></script>
-<script src="{% static 'stadium_editor/editor.js' %}?v=49"></script>
+<script src="{% static 'stadium_editor/editor.js' %}?v=50"></script>
 {% endblock %}

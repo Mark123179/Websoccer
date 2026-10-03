@@ -151,13 +151,17 @@ const s2w = (px,py) => [(px-CX)/SC, (CY-py)/SC];
 function editorBackground(){
   const legacy = D?.bg || {};
   const live = D?.surroundings || {};
+  const buildings = (legacy.buildings || live.buildings || [])
+    .map(building => ({poly: Array.isArray(building) ? building : building.poly,
+      height: Array.isArray(building) ? 9 : (building.h ?? 9)}))
+    .filter(building => Array.isArray(building.poly));
   return {
+    source: live.source || legacy.source || '',
     green: legacy.green || live.green || [],
     water: legacy.water || live.water || [],
     roads: legacy.roads || live.roads || [],
-    buildings: (legacy.buildings || live.buildings || [])
-      .map(building => Array.isArray(building) ? building : building.poly)
-      .filter(Array.isArray),
+    buildings: buildings.map(building => building.poly),
+    buildingHeights: buildings.map(building => building.height),
     trees: legacy.trees || live.trees || [],
   };
 }
@@ -1186,6 +1190,8 @@ async function ensureThreeStage(){
       const {mountDortmundScene} = await import(editorModuleUrl('./dortmund_editor_scene.js'));
       const mounted = await mountDortmundScene({
         element: host,
+        surroundings: editorBackground(),
+        frame: D.meta,
         onStatus: text => { const node = document.getElementById('deSceneStatus'); if(node) node.textContent = text; },
       });
       stageAdapter = mounted;

@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import {buildConcept, warpShell, ROOF_NAMES, SHELL_NAMES} from './dortmund_concept.js?v=49';
 import {previewSupportsMaterial, sourceOpaqueColor} from './dortmund_source_materials.js';
 import {addReconstructedFacade, reconstructedFacadeVisible, sourceFacadePreviewColor} from './dortmund_reconstructed_facade.js?v=2';
+import {buildDortmundSurroundings} from './dortmund_surroundings.js?v=50';
 
 const ASSET_BASE = new URL('./dortmund_original/', import.meta.url);
 const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
@@ -19,7 +20,7 @@ const shade = name => {
 const url = file => new URL(file, ASSET_BASE).href;
 const sideOrder = ['NORD', 'SUED', 'OST', 'WEST'];
 
-export async function mountDortmundScene({element, onStatus}) {
+export async function mountDortmundScene({element, onStatus, surroundings, frame: editorFrame}) {
   if (!window.WebGLRenderingContext) throw new Error('WebGL ist auf diesem Gerät nicht verfügbar.');
   let renderer;
   try {
@@ -45,7 +46,7 @@ export async function mountDortmundScene({element, onStatus}) {
   const camera = new THREE.PerspectiveCamera(42, 1, 1, 2400);
   const target = new THREE.Vector3(0, 25, 0);
   let azimuth = .88, elevation = .56, distance = 490;
-  let frame = 0, disposed = false, concept = null, colorBands = null, facade = null, roofOn = true;
+  let frame = 0, disposed = false, concept = null, colorBands = null, facade = null, environment = null, roofOn = true;
   let lastWeights = '', lastColors = '';
   const geometries = [], textures = [], materials = new Map(), facadeMaterials = new Map();
   const facadeSourceParts = [], roof = [], shell = [];
@@ -91,6 +92,7 @@ export async function mountDortmundScene({element, onStatus}) {
     controls.removeEventListener('wheel', wheel);
     if (concept) concept.dispose();
     facade?.dispose();
+    environment?.dispose();
     if (colorBands) {
       colorBands.traverse(object => { object.geometry?.dispose(); object.material?.dispose(); });
     }
@@ -102,6 +104,8 @@ export async function mountDortmundScene({element, onStatus}) {
     if (controls.parentNode === element) element.removeChild(controls);
   };
   try {
+    environment = buildDortmundSurroundings(THREE, surroundings, editorFrame);
+    scene.add(environment.group);
     const [manifestResponse, binaryResponse] = await Promise.all([
       fetch(url('manifest.json')), fetch(url('geometry.bin')),
     ]);
