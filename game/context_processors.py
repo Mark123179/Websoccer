@@ -54,13 +54,18 @@ def _stadium_asset_url(club):
     return resolve_stadium_url(_STADIUM_ASSETS.get(club.fm_inside_id, ''))
 
 
-def _build_global_calendar(club, calendar_offset):
+def _build_global_calendar(club, calendar_offset, live_rounds=None):
     today = date.today()
     game_date = today + timedelta(days=calendar_offset)
     window_start = game_date - timedelta(days=3)
     window_end   = game_date + timedelta(days=3)
 
     fixtures_by_date = {}
+    from .story_release import active_rounds
+    if live_rounds is None:
+        live_rounds = list(active_rounds())
+    locked_league_keys = {r.key for r in live_rounds if r.key.startswith('league:')}
+    locked_cup_keys = {r.key for r in live_rounds if r.key.startswith('cup:')}
 
     if club is not None:
         # Alle Partien des Vereins im 7-Tage-Fenster, ohne U21-Ligen
@@ -87,7 +92,8 @@ def _build_global_calendar(club, calendar_offset):
             home_club_of_fixture = f.home_club
             fixture_stadium = _stadium_asset_url(home_club_of_fixture)
 
-            if f.is_played and f.home_goals is not None and f.away_goals is not None:
+            if (f.is_played and f.home_goals is not None and f.away_goals is not None
+                    and f'league:{f.league_id}:{f.season}:{f.matchday}' not in locked_league_keys):
                 result = f'{f.home_goals}:{f.away_goals}'
             else:
                 result = ''
@@ -142,7 +148,8 @@ def _build_global_calendar(club, calendar_offset):
             cup_comp   = cf.cup_round.cup_season.competition
             comp_name  = cup_comp.name
 
-            if cf.status == CupFixture.STATUS_PLAYED and cf.home_goals_90 is not None:
+            if (cf.status == CupFixture.STATUS_PLAYED and cf.home_goals_90 is not None
+                    and f'cup:{cf.cup_round_id}' not in locked_cup_keys):
                 h = (cf.home_goals_90 or 0) + (cf.home_goals_et or 0)
                 a = (cf.away_goals_90 or 0) + (cf.away_goals_et or 0)
                 suffix = ''
@@ -275,7 +282,8 @@ def current_manager(request):
             'profile_image': profile_image_url,
             'nationality_flag': nationality_flag_url,
         },
-        'global_calendar': _build_global_calendar(club, calendar_offset),
+        'global_calendar': _build_global_calendar(
+            club, calendar_offset, getattr(request, '_story_active_rounds', None)),
         'default_player_url': _dp_url(),
     }
 

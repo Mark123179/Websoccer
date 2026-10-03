@@ -149,6 +149,7 @@ MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'game.story_middleware.StoryReleaseMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'game.middleware.ManagerTransferBanMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',

@@ -80,6 +80,9 @@ class Command(BaseCommand):
             )
 
         to_play = list(qs) if force else [f for f in qs if not f.is_played]
+        from game.story_release import league_round
+        from game.match_story.django_bridge import tactic_snapshot, simulation_story
+        story_round = league_round(league, season, matchday) if to_play and not dry_run else None
         skipped = [f for f in qs if f.is_played and not force]
 
         if skipped:
@@ -149,7 +152,7 @@ class Command(BaseCommand):
                     f"xG {data['home_xg']:.2f}/{data['away_xg']:.2f}  "
                     f"Schüsse {ms.get('home_shots',0)}/{ms.get('away_shots',0)}  "
                     f"[{mode}]")
-                results.append((fixture, data, hg, ag))
+                results.append((fixture, data, hg, ag, tactic_snapshot(home, away)))
             except Exception as exc:
                 errors.append((fixture, str(exc)))
                 out(self.style.WARNING(
@@ -166,7 +169,7 @@ class Command(BaseCommand):
 
         # ── DB-Schreiben in einer Transaktion ─────────────────────────────────
         with transaction.atomic():
-            for fixture, data, hg, ag in results:
+            for fixture, data, hg, ag, snapshot in results:
                 # 1. SimulatedMatch erstellen (alten ggf. ersetzen)
                 old_match_no = None
                 if fixture.simulated_match_id:
@@ -185,6 +188,9 @@ class Command(BaseCommand):
                     home_goals=hg,
                     away_goals=ag,
                     report_data=data,
+                    match_type='liga',
+                    story_round=story_round, story_source_key=str(fixture.pk),
+                    story_tactic_snapshot=snapshot,
                 )
                 try:
                     from game.referee_service import pick_referee
@@ -200,6 +206,7 @@ class Command(BaseCommand):
                     pass
 
                 # 2. SeasonFixture aktualisieren
+                simulation_story(sm)
                 fixture.home_goals    = hg
                 fixture.away_goals    = ag
                 fixture.is_played     = True

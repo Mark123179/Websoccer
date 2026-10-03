@@ -1,0 +1,36 @@
+{% load static %}
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#03070c">
+  <title>Ergebnisse gesperrt · Websoccer</title>
+  <link rel="stylesheet" href="{% static 'game/css/live_story.css' %}?v=2">
+</head>
+<body class="ls-page">
+  <main class="ls-shell ls-locked-shell">
+    <header class="ls-topbar">
+      <a class="ls-brand" href="/" aria-label="Websoccer Übersicht"><span class="ls-brand-mark">W</span><span>WEBSOCCER <small>ERGEBNISSCHUTZ</small></span></a>
+    </header>
+    <section class="ls-locked-hero">
+      <span class="ls-lock-mark" aria-hidden="true"></span>
+      <span class="ls-overline">ERGEBNISSE NOCH NICHT FREIGEGEBEN</span>
+      <h1>Der Spieltag<br><em>bleibt unter Verschluss.</em></h1>
+      <p>Die Endergebnisse und Spielberichte werden erst sichtbar, wenn alle Begegnungen sicher bereitstehen.</p>
+      <div class="ls-lock-stamp"><span class="ls-live-dot"></span> SPIELTAG GESPERRT</div>
+    </section>
+    <section class="ls-content ls-locked-rounds">
+      <div class="ls-section-head"><div><span class="ls-overline">SPIELTAGE</span><h2>Live verfolgen</h2></div></div>
+      <nav class="ls-round-list" aria-label="Verfügbare Spieltage">
+        {% for round in rounds %}
+        <a class="ls-round-link" href="{{ round.url }}"><span class="ls-round-index">{{ forloop.counter|stringformat:"02d" }}</span><span>{{ round.label }}</span><span class="ls-round-arrow" aria-hidden="true">↗</span></a>
+        {% empty %}
+        <p class="ls-empty">Zurzeit sind keine Spieltage verfügbar.</p>
+        {% endfor %}
+      </nav>
+    </section>
+    <footer class="ls-footer"><span>Websoccer · Ergebnisse mit fairer Verzögerung</span><a href="/">Zur Übersicht</a></footer>
+  </main>
+</body>
+</html>

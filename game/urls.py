@@ -1,4 +1,5 @@
 from django.urls import path
+from . import views_story
 from .views import (
     claim_club,
     club_detail,
@@ -239,6 +240,11 @@ urlpatterns = [
         name='home'
     ),
     path('kalender/', calendar_view, name='calendar'),
+    path('live/matches/<int:sm_id>/', views_story.ticker_page, name='story_ticker'),
+    path('live/rounds/<int:round_id>/', views_story.conference_page, name='story_conference'),
+    path('api/live/matches/<int:sm_id>/', views_story.ticker_api, name='story_ticker_api'),
+    path('api/live/rounds/<int:round_id>/', views_story.conference_api, name='story_conference_api'),
+    path('live/admin/', views_story.admin_action, name='story_admin_action'),
 
     path(
         'clubs/',

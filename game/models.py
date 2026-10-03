@@ -5642,6 +5642,12 @@ class SimulatedMatch(models.Model):
         default=dict,
         help_text='Vollständiger Spielbericht als JSON (Tore, Stats, Spieler).',
     )
+    story_round = models.ForeignKey(
+        'game.MatchStoryRound', null=True, blank=True, on_delete=models.PROTECT,
+        related_name='matches',
+    )
+    story_source_key = models.CharField(max_length=80, blank=True)
+    story_tactic_snapshot = models.JSONField(default=dict)
     match_type = models.CharField(
         max_length=20,
         choices=MATCH_TYPE_CHOICES,
@@ -8076,4 +8082,7 @@ from game.transfer_v2.models import (  # noqa: E402,F401
     TransferRecord, TransferRecordPlayer, YouthLevyPayment, TransferReport,
     TransferLock, PendingTransfer, ClubPartnership, RumorNews,
     PositionBarometer, SellOnClause, BuybackClause,
+)
+from game.models_story import (  # noqa: E402,F401
+    StorySettings, MatchStoryRound, MatchStory, MatchEvent, StoryAudit,
 )

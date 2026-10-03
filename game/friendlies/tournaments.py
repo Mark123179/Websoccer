@@ -496,9 +496,17 @@ def advance_tournament(tournament_id):
         return 0
     matches = CommunityTournamentMatch.objects.filter(round__phase__tournament=tournament)
     changed = 0
-    for match in matches.select_related('friendly_fixture', 'home_entry', 'away_entry'):
+    from game.models import MatchStoryRound
+    from game.story_release import round_is_released, release_enabled
+    story_rounds = {r.key: r for r in MatchStoryRound.objects.filter(tournament_id=tournament.pk)}
+    enabled = release_enabled() if story_rounds else True
+    for match in matches.select_related(
+            'friendly_fixture__simulated_match__story_round', 'home_entry', 'away_entry'):
         fixture = match.friendly_fixture
         if match.counted:
+            continue
+        barrier = story_rounds.get(f'tournament:{match.round_id}')
+        if barrier and not round_is_released(barrier, enabled=enabled):
             continue
         if not match.home_entry_id or not match.away_entry_id:
             match.status = FriendlyFixture.STATUS_NOT_PLAYED
@@ -521,6 +529,10 @@ def advance_tournament(tournament_id):
         if not fixture or fixture.status not in (
                 FriendlyFixture.STATUS_PLAYED, FriendlyFixture.STATUS_NOT_PLAYED):
             continue
+        if fixture.simulated_match_id:
+            story_round = fixture.simulated_match.story_round
+            if story_round and not round_is_released(story_round, enabled=enabled):
+                continue
         if fixture.simulated_match_id:
             match.home_goals = fixture.simulated_match.home_goals
             match.away_goals = fixture.simulated_match.away_goals

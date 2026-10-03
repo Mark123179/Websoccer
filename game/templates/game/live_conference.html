@@ -1,0 +1,70 @@
+{% load static %}
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#03070c">
+  <title>Live-Konferenz · {{ round_label }}</title>
+  <link rel="stylesheet" href="{% static 'game/css/live_story.css' %}?v=2">
+</head>
+<body class="ls-page">
+  <main class="ls-shell ls-shell-wide" data-story-type="conference" data-api-url="{{ api_url }}" data-round-id="{{ round_id }}">
+    <header class="ls-topbar">
+      <a class="ls-brand" href="/" aria-label="Websoccer Übersicht"><span class="ls-brand-mark">W</span><span>WEBSOCCER <small>LIVE STORY</small></span></a>
+      <span class="ls-round-tag">KONFERENZ <b>{{ round_label }}</b></span>
+    </header>
+    <section class="ls-matchhead ls-conference-head">
+      <div class="ls-kicker"><span class="ls-live-dot" id="live-dot"></span><span id="round-status">SPIELTAG WIRD SYNCHRONISIERT</span><span class="ls-clock" id="round-clock">—</span></div>
+      <h1>Alle Plätze.<br><em>Ein Spieltag.</em></h1>
+      <p class="ls-subline" id="round-subline">Ein gemeinsamer Live-Datenstrom für die gesamte Konferenz.</p>
+      <div class="ls-round-progress"><span id="pending-count">—</span><span>Spiele in Vorbereitung</span><span class="ls-round-lock" id="round-lock">ERGEBNISSE GESPERRT</span></div>
+    </section>
+    <section class="ls-content">
+      <div class="ls-section-head">
+        <div><span class="ls-overline">SPIELTAG</span><h2>Die Konferenz</h2></div>
+        <span class="ls-match-count" id="match-count">— Partien</span>
+      </div>
+      <div class="ls-alert" id="conference-alert" role="status" hidden></div>
+      <div class="ls-match-grid" id="conference-matches" aria-live="polite">
+        <div class="ls-match-skeleton"></div><div class="ls-match-skeleton"></div><div class="ls-match-skeleton"></div>
+      </div>
+      <p class="ls-empty" id="conference-empty" hidden>Für diesen Spieltag sind noch keine Partien verfügbar.</p>
+      <p class="ls-release-note" id="release-note">Endberichte werden erst nach Freigabe des gesamten Spieltags verfügbar.</p>
+    </section>
+    {% if is_admin %}
+    <details class="ls-admin">
+      <summary>Administration · Ergebnisfreigabe</summary>
+      <div class="ls-admin-grid">
+        <section class="ls-admin-body">
+          <h3>Spieltagssperre</h3>
+          <p>Freigabe nur nach Prüfung aller generierten Spielberichte umschalten.</p>
+          <form method="post" action="{{ admin_url }}" onsubmit="return window.confirm('Ergebnisfreigabe für diesen Spieltag aktivieren?');">
+            {% csrf_token %}<input type="hidden" name="confirmed" value="yes"><input type="hidden" name="action" value="round_override"><input type="hidden" name="round_id" value="{{ round_id }}"><input type="hidden" name="enabled" value="true">
+            <button class="ls-button" type="submit">Freigabe einschalten</button>
+          </form>
+          <form method="post" action="{{ admin_url }}" onsubmit="return window.confirm('Ergebnisfreigabe für diesen Spieltag sperren?');">
+            {% csrf_token %}<input type="hidden" name="confirmed" value="yes"><input type="hidden" name="action" value="round_override"><input type="hidden" name="round_id" value="{{ round_id }}"><input type="hidden" name="enabled" value="false">
+            <button class="ls-button ls-button-muted" type="submit">Freigabe sperren</button>
+          </form>
+        </section>
+        <section class="ls-admin-body">
+          <h3>Globale Freigabe</h3>
+          <p>Die globale Sperre wirkt auf alle Spieltage.</p>
+          <form method="post" action="{{ admin_url }}" onsubmit="return window.confirm('Globale Ergebnisfreigabe aktivieren?');">
+            {% csrf_token %}<input type="hidden" name="confirmed" value="yes"><input type="hidden" name="action" value="global_override"><input type="hidden" name="enabled" value="true">
+            <button class="ls-button" type="submit">Global aktivieren</button>
+          </form>
+          <form method="post" action="{{ admin_url }}" onsubmit="return window.confirm('Globale Ergebnisfreigabe sperren?');">
+            {% csrf_token %}<input type="hidden" name="confirmed" value="yes"><input type="hidden" name="action" value="global_override"><input type="hidden" name="enabled" value="false">
+            <button class="ls-button ls-button-muted" type="submit">Global sperren</button>
+          </form>
+        </section>
+      </div>
+    </details>
+    {% endif %}
+    <footer class="ls-footer"><span>Websoccer · Spieltag in Echtzeit</span><a href="/" class="ls-home-link">Zur Übersicht</a></footer>
+  </main>
+  <script src="{% static 'game/js/live_story.js' %}?v=2" defer></script>
+</body>
+</html>

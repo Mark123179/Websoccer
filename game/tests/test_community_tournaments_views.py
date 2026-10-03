@@ -15,39 +15,12 @@ from django.utils import timezone
 from game.models import (
     Club, CommunityTournament, CommunityTournamentApplication,
     CommunityTournamentEntry, FriendlyFixture, League, ManagerProfile,
+    CommunityTournamentStanding, CommunityTournamentPhase,
+    CommunityTournamentRound, CommunityTournamentMatch,
 )
 
 
 class CommunityTournamentViewsTests(TestCase):
-    def setUp(self):
-        self.user = get_user_model().objects.create_user(
-            username="tour-manager", password="password")
-        self.profile = ManagerProfile.objects.get(user=self.user)
-        self.profile.name = "Tour Manager"
-        self.profile.save(update_fields=["name"])
-        league = League.objects.create(name="Testliga", country="DE")
-        self.club = Club.objects.create(name="Organizer FC", short_name="ORG",
-                                        league=league, founded_year=1900, budget=0,
-                                        managed_by=self.profile)
-        self.other_user = get_user_model().objects.create_user(
-            username="other-manager", password="password")
-        other_profile = ManagerProfile.objects.get(user=self.other_user)
-        other_profile.name = "Other Manager"
-        other_profile.save(update_fields=["name"])
-        self.other = Club.objects.create(name="Other FC", short_name="OTH",
-                                         league=league, founded_year=1901, budget=0,
-                                         managed_by=other_profile)
-        self.ai = Club.objects.create(name="Computer FC", short_name="CPU",
-                                      league=league, founded_year=1902, budget=0)
-        self.client.login(username="tour-manager", password="password")
-
-    def _schedule(self, count):
-        start = timezone.now() + timedelta(days=2)
-        return [(start + timedelta(days=i)).strftime("%Y-%m-%dT%H:%M")
-                for i in range(count)]
-
-    def _create(self, **extra):
-        data = {
     def setUp(self):
         self.user = get_user_model().objects.create_user(
             username="tour-manager", password="password")
@@ -280,7 +253,7 @@ class CommunityTournamentViewsTests(TestCase):
                     response = self.client.get(
                         reverse("management_friendlies"), {"tab": tab})
                 self.assertLessEqual(
-                    len(queries), maximum,
+                    len(queries), maximum + 1,  # one shared fail-closed release query
                     f"{tab} used {len(queries)} queries:\n"
                     + "\n".join(query["sql"] for query in queries.captured_queries),
                 )
@@ -477,24 +450,3 @@ class CommunityTournamentViewsTests(TestCase):
         self.assertContains(large_page, "Gruppe D")
         self.assertContains(large_page, "Runde 8")
         self.assertEqual(len(large_queries), len(small_queries))
-        }
-        listing = self.client.get(reverse("management_friendlies"), params)
-        self.assertIn(
-            f"?tab=tournaments&squad=pro&tournament={tournament.pk}"
-            "&tournament_status=abgeschlossen"
-            "&amp;tournament_participation=all&amp;q=Search+%26+Find",
-            listing.content.decode())
-
-        detail = self.client.get(
-            reverse("management_friendlies"), {**params, "tournament": tournament.pk})
-        detail_body = detail.content.decode()
-        self.assertIn(
-            "?tab=tournaments&squad=pro"
-            "&tournament_status=abgeschlossen"
-            "&amp;tournament_participation=all&amp;q=Search+%26+Find",
-            detail_body)
-        self.assertIn(
-            "?tab=tournaments&squad=youth"
-            "&tournament_status=abgeschlossen"
-            "&amp;tournament_participation=all&amp;q=Search+%26+Find",
-            detail_body)

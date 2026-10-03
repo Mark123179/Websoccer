@@ -782,6 +782,9 @@ def simulate_matchday(league, season: str, matchday: int) -> dict:
 
     results = []
     errors  = []
+    from .story_release import league_round
+    from .match_story.django_bridge import tactic_snapshot, simulation_story
+    story_round = league_round(league, season, matchday) if to_play else None
 
     # ── Tageswetter (global, ein Wurf pro Sim-Tag; nie sim-blockierend) ──────
     _matchday_weather = None
@@ -807,12 +810,12 @@ def simulate_matchday(league, season: str, matchday: int) -> dict:
             )
             hg   = data['home_goals']
             ag   = data['away_goals']
-            results.append((fixture, data, hg, ag))
+            results.append((fixture, data, hg, ag, tactic_snapshot(home, away)))
         except Exception as exc:
             errors.append((home.short_name or home.name, away.short_name or away.name, str(exc)))
 
     with transaction.atomic():
-        for fixture, data, hg, ag in results:
+        for fixture, data, hg, ag, snapshot in results:
             old_match_no = None
             if fixture.simulated_match_id:
                 old_sm = fixture.simulated_match
@@ -831,6 +834,8 @@ def simulate_matchday(league, season: str, matchday: int) -> dict:
                 away_goals=ag,
                 report_data=data,
                 match_type='liga',
+                story_round=story_round, story_source_key=str(fixture.pk),
+                story_tactic_snapshot=snapshot,
             )
             try:
                 from .referee_service import pick_referee
@@ -844,6 +849,7 @@ def simulate_matchday(league, season: str, matchday: int) -> dict:
                 sm.save(update_fields=['referee'])
             except Exception:
                 pass
+            simulation_story(sm)
             fixture.home_goals      = hg
             fixture.away_goals      = ag
             fixture.is_played       = True
@@ -887,7 +893,7 @@ def simulate_matchday(league, season: str, matchday: int) -> dict:
             from .records.engine import rebuild_for_club
             affected_club_ids = {
                 club_id
-                for fixture, _, _, _ in results
+                for fixture, _, _, _, _ in results
                 for club_id in (fixture.home_club_id, fixture.away_club_id)
             }
             for club_id in sorted(affected_club_ids):
@@ -941,7 +947,7 @@ def simulate_matchday(league, season: str, matchday: int) -> dict:
     return {
         'simulated': [
             (f.home_club.short_name, f'{hg}:{ag}', f.away_club.short_name)
-            for f, _, hg, ag in results
+            for f, _, hg, ag, _ in results
         ],
         'skipped': [
             (f.home_club.short_name, f'{f.home_goals}:{f.away_goals}', f.away_club.short_name)
@@ -969,6 +975,12 @@ def close_matchday(league, season: str) -> dict:
         raise ValueError(
             f'Spieltag {state.current_matchday} wurde noch nicht simuliert — bitte erst simulieren.'
         )
+    from .models import MatchStoryRound
+    from .story_release import round_is_released
+    story_round = MatchStoryRound.objects.filter(
+        key=f'league:{league.pk}:{season}:{state.current_matchday}').first()
+    if story_round and not round_is_released(story_round):
+        raise ValueError('Der Spieltag ist noch live. Abschluss erst nach Ergebnisfreigabe.')
 
     closed_matchday = state.current_matchday
     max_md = _max_matchday(league, season)

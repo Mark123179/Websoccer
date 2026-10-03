@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="de"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Live-Ticker – Abnahme</title>
+<style>
+body{max-width:900px;margin:40px auto;padding:0 24px;background:#071019;color:#e4edf5;font:16px/1.65 system-ui,sans-serif}
+h1,h2{line-height:1.2}h1{font-size:32px}h2{margin-top:32px;font-size:22px;color:#67d4eb}
+table{border-collapse:collapse;width:100%}th,td{padding:10px;border-bottom:1px solid #293849;text-align:left}
+code,pre{font:13px/1.6 ui-monospace,monospace;background:#101d2b}pre{padding:16px;white-space:pre-wrap;overflow-wrap:anywhere}
+.ok{color:#83d5a9}.warn{color:#f1c87d}.muted{color:#a6b9ca}
+</style>
+<h1>Live-Ticker – Abnahme</h1><p class="muted">Stand: 3. Oktober 2026 · Entwicklung, kein Produktions-Publish</p>
+<h2>Implementierter Ablauf</h2>
+<ul>
+<li>Einmaliger v4-Erzählaufbau mit dauerhaftem Snapshot, geordneten Zeilen, vollständigen Beat-Metadaten, Offsets, Dauern, Memory, Segmenten und Issues.</li>
+<li>Serverzeit-Freigabe über offset_s; Ausgabe ausschließlich nach order. Null-Dauer-, Analyse- und Phasenzeilen bleiben enthalten.</li>
+<li>Gemeinsame Barriere je Liga-/Pokal-/Turnierrunde; unabhängige gewöhnliche Freundschaftsspiele. Fehlende Geschichten verhindern eine vorzeitige Freigabe.</li>
+<li>HTML-/API-Ergebnisschutz einschließlich öffentlicher Ansichten, Admin-Zugriff, Kalender und Benachrichtigungen; protokollierte, bestätigte Admin-Overrides.</li>
+<li>Ein aggregierter Konferenz-Request je Polling-Takt, sichtbare Fehler/Wiederverbindung, kein Zeitreset; Ende des Pollings nach Freigabe.</li>
+<li>Neue Momentum-Kurven lesen beobachtete Segmentdaten einschließlich Verlängerung; Tor-Marker bleiben auf der Schützenseite.</li>
+</ul>
+<h2>Harte Referenzabnahme</h2>
+<table><tr><th>Referenz</th><th>Dauer</th><th>Erlaubte Engine-Issues</th><th>Kernzahlen / Neuaufbau</th></tr>
+<tr><td>114</td><td>900 s</td><td>1</td><td class="ok">Exakt / identisch</td></tr>
+<tr><td>179</td><td>900 s</td><td>0</td><td class="ok">Exakt / identisch</td></tr>
+<tr><td>6</td><td>1310 s</td><td>5</td><td class="ok">Exakt / identisch</td></tr></table>
+<p>Alle drei wurden tatsächlich erneut erzeugt, nicht zweimal aus derselben gespeicherten Geschichte gelesen. Keine unbekannten Issues und keine Kernzahlenabweichung in den Referenzen. Ein zusätzlicher Test bestätigt den Einfluss der Match-ID auf den Seed. Das eingefrorene Paket ist bytegleich übernommen.</p>
+<h2>Unveränderte Engine</h2>
+<p class="ok">24 vollständige Vorher/Nachher-Berichte sind bytegleich nach Abzug ausschließlich des neuen segment_log. Die RNG-Zustände sind ebenfalls identisch.</p>
+<p>Feste Seeds 71000–71011, jeweils Liga und Pokal; enthalten sind ein Verlängerungs- und ein Elfmeterschießfall. Vergleich schließt Tore, Ereignisse, Summen und sämtliche Spielernoten ein. Jeder Bericht wurde mit SHA-256 protokolliert.</p>
+<pre>Baseline: 2a967d34d86d13fdd0028718a1d44bff5af86d92
+git show BASELINE:game/match_engine.py &gt; /tmp/engine-before.py
+python scripts/check_live_ticker_engine_parity.py --before /tmp/engine-before.py
+checks: 24
+passed: true</pre>
+<h2>20-Saisons-Regression</h2>
+<table><tr><th>Metrik</th><th>Vorher</th><th>Nachher</th><th>Abweichung</th></tr>
+<tr><td>Tore/Spiel</td><td>3,29542</td><td>3,30253</td><td>0,22 %</td></tr>
+<tr><td>Heimsiege</td><td>0,40556</td><td>0,39943</td><td>1,51 %</td></tr>
+<tr><td>Unentschieden</td><td>0,22418</td><td>0,22573</td><td>0,69 %</td></tr>
+<tr><td>Auswärtssiege</td><td>0,36732</td><td>0,37549</td><td>2,22 %</td></tr>
+<tr><td>Gelbe Karten/Spiel</td><td>2,84641</td><td>2,88807</td><td>1,46 %</td></tr>
+<tr><td>Verletzungen/Spiel</td><td>0,18971</td><td>0,19395</td><td>2,24 %</td></tr>
+<tr><td>Spearman</td><td>0,90958</td><td>0,95395</td><td>4,88 %</td></tr>
+<tr><td>Pearson xGD</td><td>0,64897</td><td>0,63313</td><td>2,44 %</td></tr></table>
+<p class="ok">Alle acht Laufvergleichs-Metriken liegen innerhalb 5 %.</p>
+<p class="warn">Der neue Multi-Seed-Lauf selbst meldet Pearson xGD (8,1 %) und Verletzungen (9,8 %) als instabil. Diese Warnungen werden nicht verschwiegen; sie sind vom bytegleichen festen Engine-Vergleich getrennt.</p>
+<h2>Historischer Backfill</h2>
+<pre>SUMMARY {
+  'matches': 201, 'lines': 28428, 'issues': 289,
+  'diagnostics': 289, 'core_issues': 206,
+  'engine_actor_issues': 83
+}
+Erzählerabbrüche: 0
+Historische Spiele: weiterhin freigegeben</pre>
+<p class="warn">Die 206 Kernzahlenmeldungen betreffen inkonsistente historische Eingangsdaten; Original-Prüfung und Brücken-Prüfung können dasselbe Problem getrennt melden. Die 83 Akteurmeldungen betreffen aktive Spieler bzw. Wechselketten. Weder Engine-Formeln noch historische Ergebnisse wurden dafür umgeschrieben.</p>
+<h2>Automatisierte Prüfung</h2>
+<p>21 Live-Ticker-Abnahmetests bestanden. Der zusätzliche Block für Freundschaftsspiele, Turnier-Service und -Ansichten, Pokal und Berichtswappen bestanden ebenfalls. Ein im Gesamtblock aufgedeckter Verlängerungs-Arrayfehler wurde korrigiert und anschließend gezielt grün nachgeprüft. Django-Systemprüfung, Migrationsabgleich, JavaScript-Syntax und Diff-Prüfung sind sauber.</p>
+<p class="warn">Vollständige Projektsuite: 1471 Tests, 485 Errors, 9 Failures. Nicht geänderte Bereiche enthalten fehlende EconomyParameter-/Auktions-Seed-Fixtures und veraltete DataSource-Testfelder. Die Gesamtsuite ist ausdrücklich nicht als grün abgenommen.</p>
+<h2>Browserabnahme</h2>
+<p class="ok">Ein fokussierter Durchlauf bestanden: Zeitfortsetzung nach Reload, alle drei Filter, Analyse/Phase trotz visible=false, Konferenz ohne Request-Fanout, Fehler/Wiederverbindung, Ergebnissperre vor Freigabe, Bericht und gespeicherter Ticker nach Freigabe, 403 für unberechtigte Admin-Aktion, mobile Ansicht und Polling-Stopp.</p>
+<p>Browserbelege: Live-Ticker, Live-Konferenz, Mobilansicht, gespeicherter Berichtsticker sowie Ausfall-/Wiederverbindungszustand. Temporäre Testkonten, Vereine, Runden und Spiele wurden entfernt; keine bestehenden Daten oder globalen Overrides geändert.</p>
+<p class="muted">Bekannte fehlende Portraitdateien und bestehender WebGL-Fallback des Testbrowsers gehören nicht zur Ticker-Abnahme. Stadion- und Schiedsrichterimplementierung wurden nicht neu aufgebaut.</p>
+</html>

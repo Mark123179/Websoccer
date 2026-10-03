@@ -4879,10 +4879,9 @@ def _build_combined_events(data, home_subs_enriched, away_subs_enriched, name_lo
         })
 
     # ── Narrative Events (Schüsse, Ecken, Fouls, Spielfluss) ─────────────────
-    try:
-        narrative = _generate_narrative_events(data)
-    except Exception:
-        narrative = []
+    # Narration is generated once by frozen v4 and read from MatchEvent.
+    # The legacy fallback contains real incidents only, never invented lines.
+    narrative = []
 
     # Keine Dopplungen bei Minuten mit echten Events (echte Events haben Vorrang)
     real_minutes = {e['minute'] for e in raw}
@@ -5253,7 +5252,7 @@ _POSSESSION_DRIFT_WEIGHT = 0.35
 _GOAL_PULSE = {0: 0.50, 1: 0.28, 2: 0.12}
 
 
-def _build_match_momentum(combined_events, match_stats=None, rc=None):
+def _build_match_momentum(combined_events, match_stats=None, rc=None, segment_log=None):
     """Leitet eine Druckkurve (−1..1 je Minute) aus den echten Ticker-Events
     ab (Ableitung, kein separates Datenmodell vorhanden). Positiv = Heimteam-
     Druck, negativ = Auswärtsteam-Druck.
@@ -5292,19 +5291,39 @@ def _build_match_momentum(combined_events, match_stats=None, rc=None):
     a_poss = _num(ms.get('away_possession'), 100.0 - h_poss)
     possession_drift = ((h_poss - a_poss) / 100.0) * _POSSESSION_DRIFT_WEIGHT
 
-    impulse = [possession_drift] * 91
+    last_minute = max(90, max((int(s['minute_to']) for s in (segment_log or [])), default=90))
+    impulse = [possession_drift] * (last_minute + 1)
+    if segment_log:
+        # Observe actual segment stats; don't synthesize shot timelines.
+        for segment in segment_log:
+            def pressure(side):
+                stats = segment.get(side) or {}
+                return (
+                    _num(stats.get('shots')) + 1.4 * _num(stats.get('shots_on_target'))
+                    + .7 * _num(stats.get('corners')) + .15 * sum(
+                        _num(stats.get(f'attacks_{z}')) for z in ('left', 'center', 'right'))
+                    + .35 * _num(stats.get('pressing_ball_wins'))
+                    - .25 * _num(stats.get('pressing_bypassed'))
+                )
+            start = max(0, int(segment['minute_from']))
+            end = min(last_minute, int(segment['minute_to']))
+            length = max(1, end - start)
+            for minute in range(start + 1, end + 1):
+                impulse[minute] += (pressure('home') - pressure('away')) / length
     goal_points = []  # [(minute, sign)] für den Tor-Impuls unten
     for evt in (combined_events or []):
         team = evt.get('team')
         if team not in ('home', 'away'):
             continue
-        minute = max(0, min(90, int(evt.get('minute') or 0)))
+        minute = max(0, min(last_minute, int(evt.get('minute') or 0)))
         sign = 1.0 if team == 'home' else -1.0
         etype = evt.get('type')
         if etype == 'goal':
             # Kein Beitrag zur Basiskurve — nur als Marker für den Impuls
             # nach der Normalisierung gemerkt.
             goal_points.append((minute, sign))
+            continue
+        elif segment_log:
             continue
         elif etype == 'card':
             w = _MOMENTUM_CARD_WEIGHTS.get(evt.get('card_type'), -4.0)
@@ -5328,8 +5347,8 @@ def _build_match_momentum(combined_events, match_stats=None, rc=None):
             continue
         impulse[minute] += sign * w
 
-    curve, val = [0.0] * 91, 0.0
-    for m in range(91):
+    curve, val = [0.0] * (last_minute + 1), 0.0
+    for m in range(last_minute + 1):
         val = val * 0.90 + impulse[m]
         curve[m] = val
 
@@ -5354,9 +5373,20 @@ def _build_match_momentum(combined_events, match_stats=None, rc=None):
     for gm, gsign in goal_points:
         for offset, frac in _GOAL_PULSE.items():
             idx = gm + offset
-            if idx > 90:
+            if idx > last_minute:
                 continue
             norm[idx] = max(-1.0, min(1.0, norm[idx] + gsign * frac))
+    # Don't place a goal marker on the opponent's side after strong pressure
+    # or nearby opposite-team goals. Same-minute goals on both sides cannot
+    # truthfully have a single sign and are intentionally left unchanged.
+    goal_sides = {}
+    for minute, side in goal_points:
+        goal_sides.setdefault(minute, set()).add(side)
+    for minute, sides in goal_sides.items():
+        if len(sides) == 1:
+            side = next(iter(sides))
+            if norm[minute] * side < .15:
+                norm[minute] = side * .15
 
     return [round(v, 3) for v in norm]
 
@@ -5455,6 +5485,7 @@ def _build_v2_report_extras(report_data, rc, club_home_id=None):
     away_short = report_data.get('away_club_short', away_name)
     momentum = _build_match_momentum(
         rc.get('combined_events'), report_data.get('match_stats'), rc,
+        segment_log=report_data.get('segment_log'),
     )
     momentum_markers = _build_momentum_markers(rc.get('combined_events'))
 
@@ -5626,6 +5657,11 @@ def club_match_report(request, club_id):
             else:
                 data = simulate_match(club, opponent, weather=_probe_weather)
             _gss_sim = GameSeasonState.objects.only('current_season').first()
+            from .match_story.django_bridge import tactic_snapshot, simulation_story
+            from .story_release import ensure_round
+            import uuid
+            _probe_round = ensure_round(
+                f'probe:{uuid.uuid4()}', ['probe'], [club.pk, opponent.pk], 'Testspiel')
             sm = SimulatedMatch.create_numbered(
                 _gss_sim.current_season if _gss_sim else '0',
                 home_club=club,
@@ -5634,6 +5670,8 @@ def club_match_report(request, club_id):
                 away_goals=data['away_goals'],
                 report_data=data,
                 match_type=match_type,
+                story_round=_probe_round, story_source_key='probe',
+                story_tactic_snapshot=tactic_snapshot(club, opponent),
             )
             try:
                 from .referee_service import pick_referee
@@ -5648,6 +5686,7 @@ def club_match_report(request, club_id):
                 pass
             try:
                 from .season_service import write_simulated_match_stats
+                simulation_story(sm)
                 write_simulated_match_stats(sm, data)
             except Exception:
                 pass

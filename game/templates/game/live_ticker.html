@@ -1,0 +1,61 @@
+{% load static %}
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#03070c">
+  <title>Live-Ticker · {{ home_name }} – {{ away_name }}</title>
+  <link rel="stylesheet" href="{% static 'game/css/live_story.css' %}?v=2">
+</head>
+<body class="ls-page">
+  <main class="ls-shell" data-story-type="ticker" data-api-url="{{ api_url }}" data-match-id="{{ match_id }}">
+    <header class="ls-topbar">
+      <a class="ls-brand" href="/" aria-label="Websoccer Übersicht"><span class="ls-brand-mark">W</span><span>WEBSOCCER <small>LIVE STORY</small></span></a>
+      {% if conference_url %}<a class="ls-back" href="{{ conference_url }}">Konferenz <span aria-hidden="true">↗</span></a>{% endif %}
+    </header>
+
+    <section class="ls-matchhead" aria-labelledby="match-heading">
+      <div class="ls-kicker"><span class="ls-live-dot" id="live-dot"></span><span id="match-status">VERBINDUNG WIRD HERGESTELLT</span><span class="ls-clock" id="match-clock">—</span></div>
+      <h1 id="match-heading"><span>{{ home_name }}</span><span class="ls-score" id="match-score">0:0</span><span>{{ away_name }}</span></h1>
+      <p class="ls-subline" id="match-subline">Ereignisse werden live synchronisiert.</p>
+      <div class="ls-progress" aria-hidden="true"><span id="match-progress"></span></div>
+    </section>
+
+    <section class="ls-content">
+      <div class="ls-section-head">
+        <div><span class="ls-overline">SPIELVERLAUF</span><h2>Der Ticker</h2></div>
+        <div class="ls-filter" role="group" aria-label="Ereignisse filtern">
+          <button type="button" class="is-active" data-filter="all" aria-pressed="true">Alle</button>
+          <button type="button" data-filter="chances" aria-pressed="false">Tore &amp; Chancen</button>
+          <button type="button" data-filter="goals" aria-pressed="false">Nur Tore</button>
+        </div>
+      </div>
+      <div class="ls-alert" id="ticker-alert" role="status" hidden></div>
+      <ol class="ls-events" id="ticker-events" aria-live="polite">
+        <li class="ls-event ls-skeleton"><span></span><div><i></i><i></i></div></li>
+        <li class="ls-event ls-skeleton"><span></span><div><i></i><i></i></div></li>
+        <li class="ls-event ls-skeleton"><span></span><div><i></i><i></i></div></li>
+      </ol>
+      <p class="ls-empty" id="ticker-empty" hidden>Noch keine Ereignisse. Der Anpfiff steht unmittelbar bevor.</p>
+      <div class="ls-report" id="report-link" hidden></div>
+    </section>
+
+    {% if is_admin %}
+    <details class="ls-admin">
+      <summary>Administration · Story neu aufbauen</summary>
+      <div class="ls-admin-body">
+        <p>Erzeugt die Match-Story erneut. Diese Aktion ist nur für Administratoren verfügbar.</p>
+        <form method="post" action="{{ admin_url }}" onsubmit="return window.confirm('Match-Story für dieses Spiel wirklich neu aufbauen?');">
+          {% csrf_token %}
+          <input type="hidden" name="confirmed" value="yes"><input type="hidden" name="action" value="rebuild"><input type="hidden" name="match_id" value="{{ match_id }}">
+          <button class="ls-button ls-button-warn" type="submit">Story neu aufbauen</button>
+        </form>
+      </div>
+    </details>
+    {% endif %}
+    <footer class="ls-footer"><span>Websoccer · Spieltag in Echtzeit</span><a href="{{ report_url }}" id="report-fallback" hidden>Spielbericht öffnen</a></footer>
+  </main>
+  <script src="{% static 'game/js/live_story.js' %}?v=2" defer></script>
+</body>
+</html>

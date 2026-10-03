@@ -232,6 +232,8 @@ def simulate_fixture(fixture_id):
         fixture.save(update_fields=[
             'status', 'simulation_claimed_at', 'simulation_claim',
         ])
+    from game.story_release import friendly_round, refresh_barrier
+    story_round = friendly_round(fixture)
     clubs = _clubs_for_fixture(fixture)
     if len(clubs) != 2:
         FriendlyFixture.objects.filter(
@@ -244,6 +246,7 @@ def simulate_fixture(fixture_id):
             simulation_claimed_at=None,
             simulation_claim=None,
         )
+        refresh_barrier(story_round.pk, fixture.pk)
         return FriendlyFixture.objects.get(pk=fixture.pk)
     if min(get_squad(c, fixture.squad_scope).count() for c in clubs) < 11:
         FriendlyFixture.objects.filter(
@@ -256,6 +259,7 @@ def simulate_fixture(fixture_id):
             simulation_claimed_at=None,
             simulation_claim=None,
         )
+        refresh_barrier(story_round.pk, fixture.pk)
         return FriendlyFixture.objects.get(pk=fixture.pk)
     home, away = (
         [clubs[1], clubs[0]]
@@ -264,6 +268,7 @@ def simulate_fixture(fixture_id):
     )
     from game.match_engine import simulate_match
     from game.weather_service import roll_weather
+    from game.match_story.django_bridge import tactic_snapshot, simulation_story
 
     try:
         weather_type, temperature = roll_weather(fixture.kickoff_at.date())
@@ -285,7 +290,10 @@ def simulate_fixture(fixture_id):
                 season=fixture.season, home_club=home, away_club=away,
                 home_goals=report.get('home_goals', 0),
                 away_goals=report.get('away_goals', 0),
-                report_data=report, match_type='freundschaft', referee=referee)
+                report_data=report, match_type='freundschaft', referee=referee,
+                story_round=story_round, story_source_key=str(fixture.pk),
+                story_tactic_snapshot=tactic_snapshot(
+                    home, away, context='freundschaft', squad_scope=fixture.squad_scope))
             updated = FriendlyFixture.objects.filter(
                 pk=fixture.pk,
                 status=FriendlyFixture.STATUS_RUNNING,
@@ -304,12 +312,8 @@ def simulate_fixture(fixture_id):
             if not updated:
                 match.delete()
             else:
-                _notify_after_commit(
-                    [home, away],
-                    'Freundschaftsspiel beendet',
-                    f'{home.name} {report.get("home_goals", 0)}:'
-                    f'{report.get("away_goals", 0)} {away.name}',
-                )
+                simulation_story(match)
+                # Result-bearing notifications are sent only after round release.
     except Exception as exc:
         attempts = fixture.simulation_attempts + 1
         terminal = attempts >= 3
@@ -334,6 +338,8 @@ def simulate_fixture(fixture_id):
             ),
             simulation_last_error=str(exc)[:500],
         )
+        if terminal:
+            refresh_barrier(story_round.pk, fixture.pk)
         raise
     return FriendlyFixture.objects.get(pk=fixture.pk)
 
@@ -390,6 +396,8 @@ def _jsonable(value):
 
 def run_tick(now=None):
     now = now or timezone.now()
+    from game.story_publication import publish_due_results
+    publish_due_results(now)
     FriendlyFixture.objects.filter(
         status=FriendlyFixture.STATUS_RUNNING,
         simulation_claimed_at__lt=now - timedelta(minutes=15),

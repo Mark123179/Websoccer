@@ -508,3 +508,17 @@ mtime_ms = 1791016046111
 storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:6e4eaecc-e6c5-4f64-8de5-e8845034f33b/6e6e5d4c-d766-4344-b525-2aba00af8c3a/9d78170f-dcf2-470b-b8a5-64b8151a6120"
 storage_version_token = "1791016185136515"
 content_type = "image/png"
+
+[[outputs]]
+id = "Or-7BWULFHK2zdfsrtcCN"
+uri = "file://reports/live-ticker-abnahme.html"
+type = "html"
+title = "Live-Ticker – Abnahmebericht"
+description = "Referenzabnahme, bitgleicher Engine-Vergleich, 20-Saisons-Regression, Backfill, Browserprüfung und offen dokumentierte Altdaten-/Gesamttest-Probleme."
+logical_id = "08039999-f40c-440c-a7ed-e49730ea35f9"
+content_hash = "sha256:b6c22bc5335ef4bf3395f77841c41e17fb6df65bd96e1720a937b6153745c342"
+size = 6290
+mtime_ms = 1791025136554
+storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:6e4eaecc-e6c5-4f64-8de5-e8845034f33b/08039999-f40c-440c-a7ed-e49730ea35f9/47ee8f93-a585-4e2e-96ea-c41a0c7f3469"
+storage_version_token = "1791025253179244"
+content_type = "text/html"

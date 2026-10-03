@@ -398,7 +398,11 @@ def simulate_cup_fixture(fixture) -> object:
         )
     except Exception:
         pass
+    from .story_release import cup_round
+    from .match_story.django_bridge import tactic_snapshot, simulation_story
+    story_round = cup_round(fixture)
     data = simulate_ko_match(fixture.home_club, fixture.away_club, weather=_cup_weather)
+    snapshot = tactic_snapshot(fixture.home_club, fixture.away_club)
 
     winner_id = data.get('winner_club_id')
     decided_by = data.get('decided_by', 'regular_time')
@@ -424,6 +428,8 @@ def simulate_cup_fixture(fixture) -> object:
             away_goals=data['away_goals'],
             report_data=data,
             match_type='pokal',
+            story_round=story_round, story_source_key=str(fixture.pk),
+            story_tactic_snapshot=snapshot,
         )
         try:
             from .referee_service import pick_referee
@@ -438,6 +444,7 @@ def simulate_cup_fixture(fixture) -> object:
             pass
 
         # Kanonische Pipeline — Stats, Verletzungen, Frische, Karten.
+        simulation_story(sm)
         # Fehler hier brechen die Transaktion: kein teilweise-persistierter Zustand.
         write_simulated_match_stats(sm, data)
 
@@ -610,6 +617,11 @@ def advance_cup_round(cup_round) -> object | None:
     wurde. Nach erfolgreichem Fortschritt werden die Pokalprämien der
     Pokalsaison synchronisiert (fehlertolerant, idempotent).
     """
+    from .models import MatchStoryRound
+    from .story_release import round_is_released
+    story_round = MatchStoryRound.objects.filter(key=f'cup:{cup_round.pk}').first()
+    if story_round and not round_is_released(story_round):
+        raise CupServiceError('Die Pokalrunde ist noch live. Fortschritt erst nach Ergebnisfreigabe.')
     result = _advance_cup_round_locked(cup_round)
 
     # ── Finanz-Hook: Pokalprämien buchen (Spec Kap. 8.1) ──────────────────────

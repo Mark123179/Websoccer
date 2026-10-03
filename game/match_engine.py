@@ -1021,6 +1021,14 @@ def _segment_team_stats(goals: int, comp: dict, seg_len: int) -> dict:
     }
 
 
+# Observational only: no new draws, rounding or changes to accumulated stats.
+SEGMENT_LOG_KEYS = (
+    'shots', 'shots_on_target', 'corners', 'fouls', 'yellow',
+    'pressing_ball_wins', 'pressing_bypassed',
+    'attacks_left', 'attacks_center', 'attacks_right',
+)
+
+
 def _set_piece_xg(
     n_corners: int,
     n_fouls: int,
@@ -1464,6 +1472,7 @@ def _simulate_match_minutes(
     a_dismissal_events: list[dict] = []
     plan_active_segments: dict[str, dict] = {'home': {}, 'away': {}}
     plan_seg_stats: dict[str, dict] = {'home': {}, 'away': {}}
+    segment_log: list[dict] = []
     last_plan: dict[str, Optional[str]] = {'home': None, 'away': None}
     goals_while_plan: dict = {
         'home_for': 0, 'home_against': 0,
@@ -1643,6 +1652,13 @@ def _simulate_match_minutes(
         a_seg_stats = _segment_team_stats(ag, a_comp, seg_len)
         _add_segment_stats(h_stats_total, h_seg_stats, h_comp, home_poss,       seg_len, h_red_seg)
         _add_segment_stats(a_stats_total, a_seg_stats, a_comp, 100 - home_poss, seg_len, a_red_seg)
+        segment_log.append({
+            'minute_from': minute - 1, 'minute_to': end_min,
+            'home': {k: h_seg_stats[k] for k in SEGMENT_LOG_KEYS},
+            'away': {k: a_seg_stats[k] for k in SEGMENT_LOG_KEYS},
+            'active_plan_home': h_plan, 'active_plan_away': a_plan,
+            'possession_home': home_poss,
+        })
 
         # ── Set-Piece xG-Pfade (Ecken · Freistöße · Foulelfmeter) ────────────
         _h_sp = home_team.get('set_piece_attrs') or {}
@@ -1757,6 +1773,7 @@ def _simulate_match_minutes(
         'away_zone_strengths': a_zone,
         'simulation_mode': 'minutes',
         'segment_minutes': seg_min,
+        'segment_log': segment_log,
         'plan_activations': plan_activations,
         'condition_debug': {
             'plan_activations': plan_activations,
@@ -2450,6 +2467,7 @@ def _simulate_extra_time_minutes(
     a_dismissal_events: list[dict] = []
     h_red_et = 0
     a_red_et = 0
+    segment_log: list[dict] = []
 
     seg_min = max(1, int(segment_minutes or 5))
     for minute in range(91, 121, seg_min):
@@ -2516,6 +2534,13 @@ def _simulate_extra_time_minutes(
         # ── Set-Piece xG-Pfade in der Verlängerung (Ecken · Freistöße · Foulelfmeter) ─
         h_et_seg_stats = _segment_team_stats(hg, h_comp, seg_len)
         a_et_seg_stats = _segment_team_stats(ag, a_comp, seg_len)
+        segment_log.append({
+            'minute_from': minute - 1, 'minute_to': end_min,
+            'home': {k: h_et_seg_stats[k] for k in SEGMENT_LOG_KEYS},
+            'away': {k: a_et_seg_stats[k] for k in SEGMENT_LOG_KEYS},
+            'active_plan_home': h_plan, 'active_plan_away': a_plan,
+            'possession_home': None,
+        })
         _h_sp_et = home_team.get('set_piece_attrs') or {}
         _a_sp_et = away_team.get('set_piece_attrs') or {}
         _h_sp_xg_et = _set_piece_xg(h_et_seg_stats['corners'], h_et_seg_stats['fouls'], _h_sp_et, _a_sp_et)
@@ -2620,6 +2645,7 @@ def _simulate_extra_time_minutes(
         'home_xg_et':    round(h_xg_total, 4),
         'away_xg_et':    round(a_xg_total, 4),
         'goal_events_et':       sorted(events, key=lambda e: e['minute']),
+        'segment_log': segment_log,
         'sp_near_miss_events_et': sp_near_miss_events,
         'et_dismissal_events':  h_dismissal_events + a_dismissal_events,
         'h_gk_str_override':    h_gk_str_override,
@@ -3265,6 +3291,7 @@ def simulate_match(
         'goal_events':          sim['goal_events'],
         'sp_near_miss_events':  list(sim.get('sp_near_miss_events', [])),
         'match_stats':          sim['match_stats'],
+        'segment_log':          sim.get('segment_log', []),
         # ── Spieler-Rows (reich angereichert, ORM-Daten) ─────────────────────
         'home_players': h_players,
         'away_players': a_players,
@@ -3386,6 +3413,7 @@ def simulate_match(
                 }
 
             # Tore/Events aus VL in den Report integrieren
+            result['segment_log'].extend(et.get('segment_log', []))
             result['home_goals']    = et['home_goals']
             result['away_goals']    = et['away_goals']
             result['home_goals_et'] = et['home_goals_et']
