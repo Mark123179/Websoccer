@@ -36,3 +36,10 @@ Vereinsnews-Vorschauen müssen das ausdrücklich ausgewählte Kartenmotiv übern
 **Why:** Der Nutzer erwartet das „entsprechend ausgewählte“ Spielerbild oder Vereinswappen, nicht ein unabhängig gewähltes Vorschaubild.
 
 **How to apply:** Diese Bildtreue bei jeder neuen News-Vorschau und bei Änderungen der vollständigen News-Ansicht erhalten; fehlende Referenzen ehrlich als fehlend behandeln.
+
+## Ausrichtung des Übersichtslinks
+Der News-Übersichtslink soll linksbündig am Textrand der Kachel stehen und darf weder von Kloppo noch vom Notizknopf verdeckt werden.
+
+**Why:** Der Nutzer hat ausdrücklich erneut „links bündig der Kachel“ verlangt, nachdem sein Screenshot weiterhin den verdeckten, rechtsbündigen Link zeigte.
+
+**How to apply:** Die vom Nutzer tatsächlich geöffnete Ansicht prüfen; eine korrekte Entwicklungsansicht allein erklärt keine abweichende Aufnahme einer anderen ausgelieferten Version.
