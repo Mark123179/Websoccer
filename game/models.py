@@ -1464,6 +1464,7 @@ class ClubNewsItem(models.Model):
             'date': self.published_at.strftime('%d.%m.%Y'),
             'views': self.views_count,
             'isNew': self.is_new,
+            'isSocial': self.is_social,
             'img': self.img_path or None,
             'imgH': self.img_height,
             'card': self.card_data,

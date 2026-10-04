@@ -9,6 +9,10 @@ var _d = window.VN_DATA || {};
 var SEASON   = _d.season  || 1;
 var ART      = _d.art     || [];
 var SOCIAL   = _d.social  || [];
+var TOP      = _d.top     || [];
+var INITIAL  = _d.initial_item || null;
+var ARCHIVE  = _d.archive || {};
+var archiveLoading=false, archiveError='', removedNews={};
 var P        = _d.players || {};
 var VN_CLUB_ID     = _d.club_id     || 0;
 var VN_PUBLISH_URL = _d.publish_url || '';
@@ -92,8 +96,22 @@ function outletOf(n){return OUTLETS.find(function(o){return o.n===n;})||OUTLETS[
 function ha(h,a){var x=parseInt(h.slice(1),16);return'rgba('+(x>>16&255)+','+(x>>8&255)+','+(x&255)+','+a+')';}
 function markTc(hex){var x=parseInt(hex.slice(1),16);var l=.299*(x>>16&255)+.587*(x>>8&255)+.114*(x&255);return l>150?'#03141b':'#fff';}
 function fmtViews(v){if(!v)return'Neu';return v>=1000?(v/1000).toFixed(1).replace('.',',')+' Aufrufe':v+' Aufrufe';}
-function ALL(){return state.published.concat(ART);}
-function findArt(id){return ALL().concat(SOCIAL).find(function(a){return a.id===id;});}
+function uniqueNews(items){
+  var seen={};
+  return items.filter(function(a){
+    if(removedNews[a.id]||seen[a.id])return false;
+    seen[a.id]=true;return true;
+  });
+}
+function ALL(){return uniqueNews(state.published.concat(ART));}
+function findArt(id){return ALL().concat(SOCIAL,TOP,INITIAL?[INITIAL]:[]).find(function(a){return a.id===id;});}
+function archiveHTML(){
+  if(!ARCHIVE.art_cursor&&!ARCHIVE.social_cursor)return'';
+  return'<div style="text-align:center;padding:24px 0">'+
+    '<button class="btn-hero-soft" onclick="App.loadMore()"'+(archiveLoading?' disabled':'')+'>'+
+    (archiveLoading?'Beiträge werden geladen …':'Weitere Beiträge laden')+'</button>'+
+    '<div role="status" aria-live="polite" style="margin-top:10px">'+esc(archiveError)+'</div></div>';
+}
 function bgFor(a){
   var hue=a.card&&a.card.accent;
   if(typeof hue!=='string'||!/^#[0-9a-fA-F]{6}$/.test(hue))hue=katC(a.kat);
@@ -169,7 +187,7 @@ function homeHTML(){
   }
   var feat=all[0];
   var fa=cardArt(feat);
-  var top=all.concat(SOCIAL).slice().sort(function(x,y){return(y.views||0)-(x.views||0);}).slice(0,10);
+  var top=uniqueNews(all.concat(SOCIAL,TOP)).sort(function(x,y){return(y.views||0)-(x.views||0);}).slice(0,10);
   var fans=all.filter(function(a){return a.kat==='Fans';}).concat(SOCIAL);
 
   var h='<div class="vn-billboard">';
@@ -196,6 +214,9 @@ function homeHTML(){
     h+='<h3 class="vn-row-title" style="margin-bottom:4px">Fans &amp; Medien</h3>'+
       '<span class="vn-row-sub">Beiträge deiner Fans und Social News, in denen dein Verein erwähnt wird</span>'+
       '<div class="vn-row">'+fans.map(cardHTML).join('')+'</div>';
+  }
+  if(all.length>7){
+    h+='<h3 class="vn-row-title">Weitere Vereinsnews</h3><div class="vn-row">'+all.slice(7).map(cardHTML).join('')+'</div>';
   }
   return h;
 }
@@ -452,7 +473,7 @@ var PLAY_SVG='<svg viewBox="0 0 24 24" style="width:13px;height:13px" fill="curr
 
 /* ── Render ── */
 function render(){
-  var total=ALL().length;
+  var total=typeof ARCHIVE.total_art==='number'?ARCHIVE.total_art:ALL().length;
   var h='<div class="vn-head"><div class="vn-brand">'+N_SVG_BIG+
     '<div><h1 class="vn-title">VEREINS<b>N</b>EWS</h1>'+
     '<span class="vn-sub">'+total+' Beiträge · Saison '+SEASON+' · Ausstrahlung über '+OUTLETS.length+' Blätter</span></div></div>';
@@ -464,7 +485,7 @@ function render(){
     }
   }
   h+='</div>';
-  if(state.view==='home')h+=homeHTML();
+  if(state.view==='home')h+=homeHTML()+archiveHTML();
   if(state.view==='article')h+=articleHTML(state.art);
   if(state.view==='editor')h+=editorHTML();
   document.getElementById('vereinsnews-app').innerHTML=h;
@@ -472,6 +493,40 @@ function render(){
 
 /* ── App-API ── */
 window.App={
+  loadMore:function(){
+    if(archiveLoading||!ARCHIVE.url)return Promise.resolve();
+    var kinds=['art','social'].filter(function(k){return !!ARCHIVE[k+'_cursor'];});
+    if(!kinds.length)return Promise.resolve();
+    archiveLoading=true;archiveError='';render();
+    return Promise.all(kinds.map(function(kind){
+      var url=ARCHIVE.url+'?kind='+kind+'&cursor='+encodeURIComponent(ARCHIVE[kind+'_cursor']);
+      return fetch(url,{headers:{'Accept':'application/json'}}).then(function(r){
+        if(!r.ok)throw new Error('archive');
+        return r.json();
+      }).then(function(page){
+        if(!Array.isArray(page.items)||typeof page.next_cursor!=='string')throw new Error('archive');
+        return{kind:kind,page:page};
+      });
+    })).then(function(pages){
+      pages.forEach(function(result){
+        if(result.kind==='art')ART=uniqueNews(ART.concat(result.page.items));
+        else SOCIAL=uniqueNews(SOCIAL.concat(result.page.items));
+        ARCHIVE[result.kind+'_cursor']=result.page.next_cursor;
+      });
+    }).catch(function(){
+      archiveError='Beiträge konnten nicht geladen werden. Bitte erneut versuchen.';
+    }).then(function(){
+      archiveLoading=false;
+      if(state.view==='home')render();
+    });
+  },
+  openArchived:function(id){
+    if(!ARCHIVE.url||!/^db_[0-9]+$/.test(id))return Promise.resolve();
+    return fetch(ARCHIVE.url+'?article='+encodeURIComponent(id.slice(3)),{headers:{'Accept':'application/json'}})
+      .then(function(r){if(!r.ok)throw new Error('article');return r.json();})
+      .then(function(d){INITIAL=d.article;window.App.open(id);})
+      .catch(function(){alert('Der Artikel konnte nicht geladen werden. Bitte erneut versuchen.');});
+  },
   open:function(id){var a=findArt(id);if(a){state.view='article';state.art=a;render();window.scrollTo(0,0);}},
   goHome:function(){state.view='home';render();window.scrollTo(0,0);},
   goEditor:function(){
@@ -499,7 +554,13 @@ window.App={
       .then(function(r){return r.json();})
       .then(function(d){
         if(d.ok){
+          var deleted=findArt(artId);
+          if(deleted&&!deleted.isSocial&&typeof ARCHIVE.total_art==='number')ARCHIVE.total_art=Math.max(0,ARCHIVE.total_art-1);
+          removedNews[artId]=true;
           ART=ART.filter(function(a){return a.id!==artId;});
+          SOCIAL=SOCIAL.filter(function(a){return a.id!==artId;});
+          TOP=TOP.filter(function(a){return a.id!==artId;});
+          if(INITIAL&&INITIAL.id===artId)INITIAL=null;
           state.published=state.published.filter(function(a){return a.id!==artId;});
           state.view='home';render();window.scrollTo(0,0);
         }else{alert(d.error||'Fehler beim Löschen.');}
@@ -542,6 +603,7 @@ window.App={
       body:JSON.stringify(payload)
     }).then(function(r){return r.json();}).then(function(data){
       if(data.ok){
+        if(typeof ARCHIVE.total_art==='number')ARCHIVE.total_art++;
         state.published.unshift(data.article);
         state.view='home';render();window.scrollTo(0,0);
       }else{
@@ -555,6 +617,6 @@ window.App={
 // URL-Hash → Artikel direkt öffnen (z. B. aus Übersicht verlinkt)
 (function(){
   var id=_d.initial_article||window.location.hash.slice(1);
-  if(id){var a=findArt(id);if(a){state.view='article';state.art=a;}}
+  if(id){var a=findArt(id);if(a){state.view='article';state.art=a;}else{App.openArchived(id);}}
 })();
 render();

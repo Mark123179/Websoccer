@@ -72,6 +72,7 @@
 - [Scouting-Pool seeding](scouting-pool-seeding.md) — seed_scouting_pool fills clubless SCOUTABLE pool players (POOLSEED-<ISO>- prefix) so Pool>=COUNTRY_THRESHOLD(50) flips a country to scoutable; needs own PlayerStrengthProfile + keep base<84/pot<=85; GB catalog name "England" maps to GB-ENG not GB.
 - [Vereinsnews data wiring](vereinsnews-data-wiring.md) — last_match via get_last_match() not matchday order; scorers=[min,name]; MOTM from report_data; Player.age is stored IntegerField.
 - [News image compatibility](news-image-compatibility.md) — new upload restrictions must not erase historical images; validate and escape display sources separately.
+- [News archive pagination](news-archive-pagination.md) — separate article/social limits prevent starvation; stable cursors handle publication and deletion between loads.
 - [Merge marker detection](merge-marker-detection.md) — decorative equals-sign comment separators can be mistaken for unresolved merge markers.
 - [Screenshot below-the-fold verification](screenshot-below-fold-verification.md) — screenshot tool has no scroll param and no browser-use/playwright/selenium in env; verify below-fold layout via Django test client HTML fetch + DOM-order checks instead.
 - [Match-report data backfill vs template bug](match-report-data-backfill.md) — empty shirt-number badges/Auslastung were unrun idempotent seed commands (assign_shirt_numbers, seed_club_profiles), not template bugs; check DB population before assuming pipeline is broken.

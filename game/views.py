@@ -6068,13 +6068,25 @@ def club_news(request, club_id, news_id=None):
     from django.templatetags.static import static as _static
     from .competition_assets import competition_logo_static_path
     from .news_images import news_article_dicts
+    from .news_archive import archive_page, archive_query
 
     club = get_object_or_404(Club.objects.select_related('league'), id=club_id)
 
-    news_items = list(ClubNewsItem.objects.filter(club=club).order_by('-published_at', '-id'))
-    articles = news_article_dicts(news_items, club, externalize_legacy=True)
-    art_items = [article for item, article in zip(news_items, articles) if not item.is_social]
-    social_items = [article for item, article in zip(news_items, articles) if item.is_social]
+    art_page = archive_page(club, 'art')
+    social_page = archive_page(club, 'social')
+    art_items = art_page['items']
+    social_items = social_page['items']
+    top_items = news_article_dicts(
+        archive_query(club).order_by('-views_count', '-published_at', '-pk')[:10],
+        club, externalize_legacy=True)
+    initial_item = None
+    if news_id is not None:
+        initial_item = next(
+            (a for a in art_items + social_items + top_items if a['pk'] == news_id), None)
+        if initial_item is None:
+            initial_item = news_article_dicts(
+                [get_object_or_404(archive_query(club), pk=news_id)],
+                club, externalize_legacy=True)[0]
 
     season_num = 1
     if club.league_id:
@@ -6310,6 +6322,14 @@ def club_news(request, club_id, news_id=None):
         'season':      season_num,
         'art':         art_items,
         'social':      social_items,
+        'top':         top_items,
+        'initial_item': initial_item,
+        'archive': {
+            'url': reverse('club_news_data', args=[club.id]),
+            'art_cursor': art_page['next_cursor'],
+            'social_cursor': social_page['next_cursor'],
+            'total_art': archive_query(club).filter(is_social=False).count(),
+        },
         'players':     players_dict,
         'club_id':     club.id,
         'publish_url': reverse('club_news_publish', args=[club.id]),

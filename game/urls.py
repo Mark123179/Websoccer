@@ -2,6 +2,7 @@ from django.urls import path
 from . import views_story
 from . import views_story_test
 from .views_news_images import club_news_legacy_image
+from .news_archive import club_news_data
 from .views import (
     claim_club,
     club_detail,
@@ -328,6 +329,11 @@ urlpatterns = [
         'clubs/<int:club_id>/news/',
         club_news,
         name='club_news'
+    ),
+    path(
+        'clubs/<int:club_id>/news/data/',
+        club_news_data,
+        name='club_news_data'
     ),
 
     path(
