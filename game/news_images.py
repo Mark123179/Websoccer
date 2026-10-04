@@ -1,4 +1,4 @@
-"""Read-only card-motif images shared by compact club-news previews."""
+"""Read-only card-motif images shared by club-news previews and full articles."""
 
 from django.templatetags.static import static
 
@@ -65,3 +65,13 @@ def resolve_news_images(news, club):
             image = item.thumbnail_static_path or item.img_path
         images[item.pk] = news_image_url(image)
     return images
+
+
+def news_article_dicts(news, club):
+    """Serialize articles with resolved images, without changing saved card data."""
+    news = list(news)
+    images = resolve_news_images(news, club)
+    return [
+        dict(item.to_vn_dict(), cardImageUrl=images[item.pk])
+        for item in news
+    ]

@@ -6064,15 +6064,17 @@ def match_report_by_id(request, sm_id):
     })
 
 
-def club_news(request, club_id):
+def club_news(request, club_id, news_id=None):
     from django.templatetags.static import static as _static
     from .competition_assets import competition_logo_static_path
+    from .news_images import news_article_dicts
 
     club = get_object_or_404(Club.objects.select_related('league'), id=club_id)
 
-    news_qs = ClubNewsItem.objects.filter(club=club).order_by('-published_at', '-id')
-    art_items    = [n.to_vn_dict() for n in news_qs.filter(is_social=False)]
-    social_items = [n.to_vn_dict() for n in news_qs.filter(is_social=True)]
+    news_items = list(ClubNewsItem.objects.filter(club=club).order_by('-published_at', '-id'))
+    articles = news_article_dicts(news_items, club)
+    art_items = [article for item, article in zip(news_items, articles) if not item.is_social]
+    social_items = [article for item, article in zip(news_items, articles) if item.is_social]
 
     season_num = 1
     if club.league_id:
@@ -6327,6 +6329,7 @@ def club_news(request, club_id):
         'delete_url_base': f'/clubs/{club.id}/news/',
     }
 
+    vn_data['initial_article'] = f'db_{news_id}' if news_id is not None else ''
     import json as _json
     return render(request, 'game/club_news.html', {
         'club':         club,
@@ -6394,7 +6397,8 @@ def club_news_publish(request, club_id):
         blocks=body.get('blocks') or [],
         published_by=request.user,
     )
-    return JsonResponse({'ok': True, 'article': item.to_vn_dict()})
+    from .news_images import news_article_dicts
+    return JsonResponse({'ok': True, 'article': news_article_dicts([item], club)[0]})
 
 
 @login_required
@@ -6450,14 +6454,8 @@ def public_manager_profile(request, username):
 
 
 def club_news_detail(request, club_id, news_id):
-    club = get_object_or_404(Club.objects.select_related('league'), id=club_id)
-    news_item = get_object_or_404(ClubNewsItem, club=club, id=news_id)
-    return render_public_club_stub(
-        request,
-        club_id,
-        news_item.title,
-        f'Meldung vom {news_item.published_at:%d.%m.%Y}.',
-    )
+    get_object_or_404(ClubNewsItem, club_id=club_id, id=news_id)
+    return club_news(request, club_id, news_id=news_id)
 
 
 def render_public_club_stub(request, club_id, title, copy):
