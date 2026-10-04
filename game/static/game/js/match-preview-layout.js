@@ -80,6 +80,8 @@
         [".mp-absence-list li", "absence", "Ausfall"],
         [".mp-absence-group", "absence-group", "Ausfälle / Sperren"],
         [".mp-absence-heading", "absence-heading", "Ausfälle · Überschrift", "text"],
+        [".mp-injuries > .mp-inline-empty", "injury-empty", "Ausfälle · Hinweis", "text"],
+        [".mp-suspensions > .mp-inline-empty", "suspension-empty", "Sperren · Hinweis", "text"],
         [".mp-competition", "competition", "Wettbewerb"],
         [".mp-competition-logo", "competition-logo", "Wettbewerbslogo"],
         [".mp-competition > div", "competition-text", "Wettbewerb · Beschriftung"],
@@ -133,7 +135,7 @@
         [".mp-news-item", "news-item", "Nachricht"],
         [".mp-subsection-heading", "subheading", "Abschnittsüberschrift", "text"],
     ];
-    const items = [], byId = new Map();
+    const items = [], byId = new Map(), baselineSizes = new Map();
     specs.forEach(([selector, prefix, label, kind]) => {
         canvas.querySelectorAll(selector).forEach((node, index) => {
             if (node.dataset.mpLayoutItem) return;
@@ -181,7 +183,7 @@
     }
     document.body.append(selection);
     let editing = false, free = false, selected = null, baseline = null, draft = null;
-    let gesture = null, raf = 0, openingDraft = "";
+    let gesture = null, raf = 0, openingDraft = "", baselineRefHeight = 0;
 
     const parentOf = item => item.parent?.node || canvas;
     const dimensions = item => {
@@ -195,6 +197,9 @@
         const scale = canvasRect.width / (canvas.offsetWidth || 1);
         const layout = empty();
         items.forEach(item => {
+            baselineSizes.set(item.id, {
+                width: item.node.offsetWidth, height: item.node.offsetHeight,
+            });
             const rect = rects.get(item.id);
             const parentRect = item.parent ? rects.get(item.parent.id) : canvasRect;
             const parent = parentOf(item), size = dimensions(item);
@@ -244,8 +249,8 @@
         root.classList.remove("mp-layout-free");
         free = false;
     }
-    function repairDetails(layout) {
-        if (!detailPatch || layout.detailPatch >= detailPatch) return;
+    function repairInitialDetails(layout) {
+        if (!detailPatch || layout.detailPatch >= 1) return;
         // Preserve the user's away-kit geometry and all group positions.
         // Only the matching home kit, form placement and broken detail subtree change.
         const home = byId.get("home-kit-0"), away = byId.get("away-kit-0");
@@ -292,6 +297,122 @@
                 paint(item, layout.nodes[item.id]);
             });
         }
+        layout.detailPatch = 1;
+    }
+    function repairDetails(layout) {
+        repairInitialDetails(layout);
+        if (detailPatch < 2 || layout.detailPatch >= 2) return;
+        // The heading is absolute in free mode: the empty-state text must
+        // be positioned too, rather than flowing back underneath it.
+        for (const empty of items.filter(item => /^(injury|suspension)-empty-/.test(item.id))) {
+            const headingNode = empty.parent?.node.querySelector(".mp-absence-heading");
+            const heading = byId.get(headingNode?.dataset.mpLayoutItem);
+            if (!heading) continue;
+            const h = layout.nodes[heading.id], e = layout.nodes[empty.id];
+            const size = dimensions(empty);
+            e.y = h.y + (Math.max(h.height / 100 * size.height,
+                heading.node.scrollHeight) + 6) / size.height * 100;
+            paint(empty, e);
+        }
+        const referee = byId.get("referee-0");
+        if (referee && baselineRefHeight) {
+            const portrait = byId.get("referee-photo-0");
+            const portraitSize = portrait && {
+                width: portrait.node.offsetWidth, height: portrait.node.offsetHeight,
+            };
+            const frame = layout.nodes[referee.id];
+            frame.height = Math.max(baselineRefHeight, (portraitSize?.height || 0) + 8) /
+                dimensions(referee).height * 100;
+            paint(referee, frame);
+            items.forEach(item => {
+                let parent = item.parent;
+                while (parent && parent !== referee) parent = parent.parent;
+                if (parent !== referee) return;
+                layout.nodes[item.id] = clone(baseline.nodes[item.id]);
+                paint(item, layout.nodes[item.id]);
+            });
+            if (portraitSize) {
+                const p = layout.nodes[portrait.id], size = dimensions(portrait);
+                p.width = portraitSize.width / size.width * 100;
+                p.height = portraitSize.height / size.height * 100;
+                paint(portrait, p);
+            }
+            // Move only this footer, and only as much as necessary.
+            // Never reduce the portrait or overwrite the user's kits.
+            const panel = referee.node.closest(".match-preview-panel");
+            const weather = byId.get("weather-0");
+            if (panel) {
+                const panelRect = panel.getBoundingClientRect();
+                const refRect = referee.node.getBoundingClientRect();
+                const scale = refRect.height / referee.node.offsetHeight || 1;
+                const descendants = [referee.node, ...referee.node.querySelectorAll("h2, dt, dd")];
+                const bottom = Math.max(...descendants.map(node => node.getBoundingClientRect().bottom));
+                const needed = Math.max(0, bottom - panelRect.bottom + 4 * scale);
+                const available = weather ? Math.max(0, refRect.top -
+                    weather.node.getBoundingClientRect().bottom - 4 * scale) : needed;
+                frame.y -= Math.min(needed, available) / scale /
+                    dimensions(referee).height * 100;
+                paint(referee, frame);
+            }
+        }
+        layout.detailPatch = 2;
+    }
+    function expandFooter(layout) {
+        if (detailPatch < 3 || layout.detailPatch >= detailPatch) return;
+        const restoreChildren = group => {
+            items.forEach(item => {
+                let parent = item.parent;
+                while (parent && parent !== group) parent = parent.parent;
+                if (parent !== group) return;
+                layout.nodes[item.id] = clone(baseline.nodes[item.id]);
+                if (/^(weather-scene|referee-photo)-/.test(item.id)) {
+                    const natural = baselineSizes.get(item.id), size = dimensions(item);
+                    layout.nodes[item.id].width = natural.width / size.width * 100;
+                    layout.nodes[item.id].height = natural.height / size.height * 100;
+                }
+                paint(item, layout.nodes[item.id]);
+            });
+        };
+        const stack = (anchor, groups) => {
+            if (!anchor || !groups.length) return;
+            const anchorRect = anchor.node.getBoundingClientRect();
+            const scale = anchorRect.width / anchor.node.offsetWidth || 1;
+            const panel = anchor.node.closest(".match-preview-panel");
+            const total = groups.reduce((height, group) =>
+                height + baselineSizes.get(group.id).height * scale, 0) +
+                (groups.length - 1) * 8 * scale;
+            const preferred = anchorRect.bottom + 12 * scale;
+            const available = panel ? panel.getBoundingClientRect().bottom - 12 * scale - total : preferred;
+            let top = Math.max(anchorRect.bottom + 6 * scale, Math.min(preferred, available));
+            groups.forEach(group => {
+                const size = dimensions(group), parent = parentOf(group);
+                const parentRect = parent.getBoundingClientRect(), frame = layout.nodes[group.id];
+                frame.y = ((top - parentRect.top) / scale - parent.clientTop) / size.height * 100;
+                frame.height = baselineSizes.get(group.id).height / size.height * 100;
+                paint(group, frame);
+                restoreChildren(group);
+                top += baselineSizes.get(group.id).height * scale + 8 * scale;
+            });
+        };
+        stack(byId.get("venue-photo-0"), ["absence-group-0", "absence-group-1"]
+            .map(id => byId.get(id)).filter(Boolean));
+        const viewport = byId.get("model-viewport-0"), note = byId.get("model-note-0");
+        let rightAnchor = viewport;
+        if (viewport && note) {
+            const v = viewport.node.getBoundingClientRect(), n = note.node.getBoundingClientRect();
+            if (n.left >= v.left && n.right <= v.right + 1 && n.top >= v.bottom - 1) {
+                // The note must follow the elevated image, not occupy the
+                // old image's footer space and push the larger profile down.
+                const scale = v.width / viewport.node.offsetWidth || 1;
+                const parent = parentOf(note), size = dimensions(note);
+                layout.nodes[note.id].y = ((v.bottom + 6 * scale -
+                    parent.getBoundingClientRect().top) / scale - parent.clientTop) /
+                    size.height * 100;
+                paint(note, layout.nodes[note.id]);
+                rightAnchor = note;
+            }
+        }
+        stack(rightAnchor, ["weather-0", "referee-0"].map(id => byId.get(id)).filter(Boolean));
         layout.detailPatch = detailPatch;
     }
     function updateSelection() {
@@ -527,12 +648,14 @@
     // The ordinary approved page stays in normal flow unless a saved override exists.
     requestAnimationFrame(() => {
         if (!baseline) baseline = captureBaseline();
+        baselineRefHeight = byId.get("referee-0")?.node.offsetHeight || 0;
         if (saved && !free) {
             items.forEach(item => {
                 if (!saved.nodes[item.id]) saved.nodes[item.id] = clone(baseline.nodes[item.id]);
             });
             useFree(saved);
             repairDetails(saved);
+            expandFooter(saved);
         }
     });
 })();

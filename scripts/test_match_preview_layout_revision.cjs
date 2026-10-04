@@ -71,7 +71,7 @@ const layout = {version: 1, detailPatch: 0, nodes: {
     "venue-0": {...frame, y: 5},
 }};
 const originalAway = JSON.stringify(layout.nodes["away-kit-0"]);
-const repairSource = source.slice(source.indexOf("function repairDetails("),
+const repairSource = source.slice(source.indexOf("function repairInitialDetails("),
     source.indexOf("function updateSelection("));
 vm.runInNewContext(repairSource + "repairDetails(layout);", {
     layout, byId: kitItems, detailPatch: 1, dimensions: record => record.size,
@@ -88,3 +88,69 @@ assert.ok(layout.nodes["away-form-0"].y >
     layout.nodes["away-kit-0"].y + layout.nodes["away-kit-0"].height);
 assert.equal(layout.detailPatch, 1);
 console.log("Detail repair: away kit untouched, home matches actual size, crest above, form below.");
+
+const parent = {node: {querySelector: () => ({
+    dataset: {mpLayoutItem: "absence-heading-1"},
+})}};
+const empty = {id: "suspension-empty-0", parent, size: {width: 200, height: 100}};
+const heading = {id: "absence-heading-1", node: {scrollHeight: 24}};
+const footerItems = new Map([[empty.id, empty], [heading.id, heading]]);
+const secondPatch = {version: 1, detailPatch: 1, nodes: {
+    "suspension-empty-0": {...frame, y: 0},
+    "absence-heading-1": {...frame, y: 5, height: 20},
+    "away-kit-0": {...layout.nodes["away-kit-0"]},
+    "home-kit-0": {...layout.nodes["home-kit-0"]},
+    "model-0": {...frame, x: 12, y: 34},
+}};
+const unchanged = JSON.stringify([
+    secondPatch.nodes["away-kit-0"], secondPatch.nodes["home-kit-0"],
+    secondPatch.nodes["model-0"],
+]);
+vm.runInNewContext(repairSource + "repairDetails(layout);", {
+    layout: secondPatch, byId: footerItems, detailPatch: 2,
+    dimensions: record => record.size, paint: () => {},
+    items: [empty], baselineRefHeight: 0,
+});
+assert.equal(secondPatch.nodes[empty.id].y, 35);
+assert.equal(secondPatch.detailPatch, 2);
+assert.equal(JSON.stringify([
+    secondPatch.nodes["away-kit-0"], secondPatch.nodes["home-kit-0"],
+    secondPatch.nodes["model-0"],
+]), unchanged);
+console.log("Footer repair: clear heading gap, existing kit/model geometry preserved.");
+
+const column = {
+    clientTop: 0, getBoundingClientRect: () => ({top: 0}),
+};
+const photo = {id: "venue-photo-0", node: {
+    offsetWidth: 200,
+    getBoundingClientRect: () => ({left: 0, right: 200, top: 100, bottom: 200, width: 200}),
+    closest: () => ({getBoundingClientRect: () => ({bottom: 500})}),
+}};
+const injuries = {id: "absence-group-0", parent: {node: column}};
+const suspensions = {id: "absence-group-1", parent: {node: column}};
+const expanded = {detailPatch: 2, nodes: {
+    [photo.id]: {...frame, y: -20},
+    [injuries.id]: {...frame}, [suspensions.id]: {...frame},
+    "model-viewport-0": {...frame, y: -15},
+}};
+const pictureFrames = JSON.stringify([
+    expanded.nodes[photo.id], expanded.nodes["model-viewport-0"],
+]);
+vm.runInNewContext(repairSource + "expandFooter(layout);", {
+    layout: expanded, detailPatch: 3,
+    byId: new Map([[photo.id, photo], [injuries.id, injuries], [suspensions.id, suspensions]]),
+    items: [], baselineSizes: new Map([
+        [injuries.id, {height: 60}], [suspensions.id, {height: 30}],
+    ]),
+    parentOf: item => item.parent.node,
+    dimensions: () => ({width: 200, height: 400}),
+    paint: () => {},
+});
+assert.equal(expanded.nodes[injuries.id].y, 53);
+assert.equal(expanded.nodes[suspensions.id].y, 70);
+assert.equal(expanded.detailPatch, 3);
+assert.equal(JSON.stringify([
+    expanded.nodes[photo.id], expanded.nodes["model-viewport-0"],
+]), pictureFrames);
+console.log("Expanded footer: follows elevated picture, preserves both picture frames.");

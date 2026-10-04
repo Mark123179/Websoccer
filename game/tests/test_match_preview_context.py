@@ -75,16 +75,20 @@ class MatchPreviewImageTests(SimpleTestCase):
 
 
 class MatchPreviewContextTests(SimpleTestCase):
-    def test_referee_ratings_use_real_values_without_inventing_missing_fields(self):
-        referee = NS(name='Test', nationality='', level=4, schlagwort='',
-                     quote=17, karten_tendenz=8, spielfluss_tendenz=13,
-                     face_url=lambda: '/referee.png')
-        result = briefing._referee_profile(referee)
-        self.assertEqual([rating['value'] for rating in result['ratings']], [17, 8, 13])
-        del referee.quote
-        del referee.karten_tendenz
-        del referee.spielfluss_tendenz
-        self.assertEqual(briefing._referee_profile(referee)['ratings'], [])
+    def test_referee_descriptions_match_the_profile_buckets(self):
+        referee = briefing.Referee(name='Test', quote=17, karten_tendenz=8)
+        for flow, expected in (
+            (7, ['Kartenfreudig', 'Pfeift viel ab']),
+            (8, ['Ausgewogen', 'Ausgewogen']),
+            (13, ['Ausgewogen', 'Ausgewogen']),
+            (14, ['Nachsichtig', 'Lässt laufen']),
+        ):
+            referee.spielfluss_tendenz = flow
+            result = briefing._referee_profile(referee)
+            self.assertEqual([rating['text'] for rating in result['ratings']], expected)
+            self.assertTrue(all('value' not in rating for rating in result['ratings']))
+        missing = NS(name='Test', face_url=lambda: '', level=4)
+        self.assertEqual(briefing._referee_profile(missing)['ratings'], [])
 
     def setUp(self):
         self.home = club(2, 'Heim', 915)

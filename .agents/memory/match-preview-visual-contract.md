@@ -50,11 +50,17 @@ Beim Bereinigen der Nutzeranordnung keine Trikots, Wappen, Wetter, Schiedsrichte
 
 **How to apply:** Die gewünschte große Darstellung und die Anordnung getrennt von Typografiekorrekturen behandeln. Innenbereiche strukturell behalten, aber ohne eigene Kachelhintergründe, Rahmen und unnötige Bildpolster darstellen.
 
-Das vom Nutzer angepasste Gladbach-Trikot ist die Größenreferenz für Bayern; es selbst nicht wieder zurücksetzen. Bayern bleibt hinter dem Wappen, Formzeilen gehören unter die Trikots. Wetter darf breiter sein, und vorhandene Schiedsrichterwerte sollen angezeigt werden.
+Das vom Nutzer angepasste Gladbach-Trikot ist die Größenreferenz für Bayern; es selbst nicht wieder zurücksetzen. Bayern bleibt hinter dem Wappen, Formzeilen gehören unter die Trikots. Wetter darf breiter sein. Schiedsrichtermerkmale als dieselben Worte wie im Profil zeigen („Ausgewogen“, „Nachsichtig“ usw.), nicht als Zahlen wie „13/20“.
 
-**Why:** Der Nutzer hat das Gladbach-Trikot selbst angepasst und dessen Größe ausdrücklich als richtig bezeichnet.
+**Why:** Der Nutzer hat das Gladbach-Trikot selbst angepasst und dessen Größe ausdrücklich als richtig bezeichnet. Die numerischen Schiedsrichterwerte hat er ausdrücklich abgelehnt und die Profilworte verlangt.
 
 **How to apply:** Private Layoutkorrekturen gezielt anwenden statt die gesamte Anordnung neu aufzubauen. Schiedsrichter-Unterelemente müssen gemeinsam erfasst werden, sonst überlappt Metatext, wenn die separat positionierte Namenszeile aus dem normalen Textfluss fällt.
+
+Vom Nutzer höher gesetzte Stadionbilder bleiben dort. Der frei gewordene Platz darunter gehört Wetter, Ausfällen, Sperren und Schiedsrichter. Foto und 3D-Stadion sollen „auf Augenhöhe“ wirken, ausdrücklich ohne die Position des 3D-Elements zu verändern.
+
+**Why:** Der Nutzer hat die Bilder selbst höher gesetzt und eine optische Höhenkorrektur innerhalb der 3D-Darstellung statt einer Elementverschiebung verlangt.
+
+**How to apply:** Die gespeicherten Foto- und 3D-Bildrahmen unverändert lassen; nur Footerbereiche darunter neu verteilen. Höhenabgleich des Modells über die Vorschau-Kameraprojektion vornehmen, nicht durch Verschieben des Canvas oder Ändern anderer Stadionansichten.
 
 Der Nutzer will die Spielvorschau selbst anordnen: Elemente verschieben, ziehen und ihre Größe ändern, ausdrücklich „Direkt in der Spielvorschau“, nicht auf einer separaten Designfläche.
 

@@ -23,7 +23,7 @@ const sideOrder = ['NORD', 'SUED', 'OST', 'WEST'];
 export async function mountDortmundScene({
   element, onStatus = () => {}, surroundings, frame: editorFrame,
   includeSurroundings = true, interactive = true, autoRotate = false, compact = false,
-  transparentBackground = false, compactZoom = 1,
+  transparentBackground = false, compactZoom = 1, verticalFraming = 0,
 }) {
   if (!window.WebGLRenderingContext) throw new Error('WebGL ist auf diesem Gerät nicht verfügbar.');
   let renderer;
@@ -103,6 +103,10 @@ export async function mountDortmundScene({
     if (!width || !height) return;
     renderer.setSize(width, height, false);
     camera.aspect = width / height;
+    // Shift projection, not the canvas or model: shared viewers stay unchanged.
+    if (verticalFraming) camera.setViewOffset(width, height, 0,
+      height * clamp(verticalFraming, -0.25, 0.25), width, height);
+    else camera.clearViewOffset();
     camera.updateProjectionMatrix();
     if (compact) fitCompactCamera();
     if (!animationActive) render();
