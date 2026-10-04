@@ -62,7 +62,7 @@ class MatchPreviewLayoutTests(SimpleTestCase):
         self.assertNotIn('foreground.png', html)
         self.assertNotIn('Vorbericht für das Spiel', html)
         self.assertIn('Der Spielplan ist derzeit frei.', html)
-        self.assertIn('match-preview.js?v=preview-13', html)
+        self.assertIn('match-preview.js?v=preview-15', html)
 
     def test_partial_fixture_handles_missing_reports_and_zero_temperature(self):
         html = render_to_string('game/club_match_preview.html', {
@@ -122,6 +122,31 @@ class MatchPreviewLayoutTests(SimpleTestCase):
         self.assertIn('../images/backgrounds/spielfeld.png', css)
         self.assertIn('height: 380px;', css)
         self.assertNotIn('.mp-pitch::before', css)
+
+    def test_personal_layout_tools_are_wired_without_game_mutation_controls(self):
+        html = render_to_string('game/club_match_preview.html', {
+            'competition_name': 'Bundesliga', 'preview': {},
+            'request': SimpleNamespace(user=SimpleNamespace(pk=42)),
+        })
+        self.assertIn('data-layout-owner="42"', html)
+        self.assertIn('match-preview-layout.css?v=layout-2', html)
+        self.assertIn('match-preview-layout.js?v=layout-2', html)
+        for name in ('open', 'tools', 'select', 'parent', 'x', 'y', 'width', 'height',
+                     'font', 'visible', 'front', 'back', 'save', 'cancel', 'reset', 'status'):
+            self.assertIn(f'id="mp-layout-{name}"', html)
+        self.assertIn('in diesem Browser gespeichert', html)
+        self.assertIn('keine Änderung der Aufstellung', html)
+
+    def test_layout_editor_has_independent_handles_and_only_local_storage(self):
+        js = Path('game/static/game/js/match-preview-layout.js').read_text()
+        css = Path('game/static/game/css/match-preview-layout.css').read_text()
+        self.assertIn('localStorage.setItem', js)
+        self.assertIn('root.dataset.layoutOwner', js)
+        self.assertIn('setPointerCapture', js)
+        self.assertIn('["n", "ne", "e", "se", "s", "sw", "w", "nw"]', js)
+        self.assertNotIn('fetch(', js)
+        self.assertNotIn('XMLHttpRequest', js)
+        self.assertIn('mp-layout-editing', css)
 
     def test_pitch_coordinates_are_unlocalized_and_snapshot_text_is_escaped(self):
         html = render_to_string('game/club_match_preview.html', {

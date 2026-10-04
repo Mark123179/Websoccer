@@ -38,6 +38,12 @@ Die nächste freigegebene Richtung orientiert sich stärker an der kompakten Fu�
 
 **How to apply:** Die Vorlage als Gestaltungsrichtung übernehmen, nicht deren erfundene Statistiken oder abweichende Notenskala. Beide Teams bekommen klar bezeichnete Form-/Statistikbereiche; das Schiedsrichterporträt gehört zur angezeigten Person.
 
+Der Nutzer will die Spielvorschau selbst anordnen: Elemente verschieben, ziehen und ihre Größe ändern, ausdrücklich „Direkt in der Spielvorschau“, nicht auf einer separaten Designfläche.
+
+**Why:** Der Nutzer hat den Bearbeitungsort ausdrücklich gewählt und möchte die Anordnung selbst bearbeiten.
+
+**How to apply:** Persönliche Darstellungsanpassung als optionalen Modus anbieten; die freigegebene Standardansicht und Spieldaten bleiben unverändert. Die erste Speicherlösung ist bewusst browserlokal und pro Nutzer getrennt, nicht das neue globale Layout aller Manager. Für geräteübergreifende oder globale Übernahme ist eine separate ausdrückliche Entscheidung nötig.
+
 Der Kabinenhintergrund muss über die ganze Seite reichen, auch hinter den Kalender. Anschließend dürfen die drei Kacheln größer werden.
 
 **Why:** Der Nutzer beanstandet den sichtbaren Beginn des Kabinenfotos unter dem Kalender und verlangt diese Anpassung vor der weiteren Gestaltung.

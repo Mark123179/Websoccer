@@ -55,6 +55,21 @@ Spielberichts gezeigt (keine erfundenen Saisonmittelwerte). An der Position
 des Trainerzitats steht das Schiedsrichterprofil mit passendem Porträt.
 Kein Trainerzitat und kein „Spiel starten“-Button.
 
+## Persönlicher Layoutmodus
+
+Direkt in der Spielvorschau können Gruppen und einzelne Gestaltungselemente
+ausgewählt, gezogen und über acht Griffe oder Zahlenfelder skaliert werden.
+Die Position wird unabhängig von der Game-Stage-Skalierung berechnet.
+Textgröße, Sichtbarkeit und Ebenenreihenfolge sind ebenfalls bearbeitbar.
+Hierarchische Gruppen bleiben zusammen; Daten und Links werden nicht geklont.
+
+Speichern übernimmt die Darstellung browserlokal, getrennt nach Nutzer.
+Abbrechen stellt den zuletzt gespeicherten Zustand wieder her.
+Standardlayout ist zunächst ein Entwurf und wird erst durch Speichern
+übernommen. Im Editiermodus wird die Objektmaske vorübergehend deaktiviert,
+damit verdeckte Elemente erreichbar bleiben; in der normalen Ansicht bleibt
+die freigegebene Maskierung erhalten. Keine Schreibzugriffe auf Spieldaten.
+
 Gezielte Tests für Wettbewerb und Fixture-Route, Rollenwechsel,
 Snapshot-Aufstellung, Notensortierung, Saisonbindung, Ausfälle, leere
 und teilweise befüllte Zustände. Originalfoto und SAM-Maske unverändert
