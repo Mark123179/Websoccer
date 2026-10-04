@@ -36,7 +36,13 @@ Die nächste freigegebene Richtung orientiert sich stärker an der kompakten Fu�
 
 **Why:** Der Nutzer hat diese konkrete Anordnung und die Entfernung des Startbuttons ausdrücklich vorgegeben.
 
-**How to apply:** Die Vorlage als Gestaltungsrichtung übernehmen, nicht deren erfundene Statistiken oder abweichende Notenskala. Beide Teams bekommen klar bezeichnete Form-/Statistikbereiche; das Schiedsrichterporträt gehört zur angezeigten Person.
+**How to apply:** Die Vorlage als Gestaltungsrichtung übernehmen, nicht deren erfundene Statistiken oder abweichende Notenskala. Das Schiedsrichterporträt gehört zur angezeigten Person. Die später bestätigte Nutzeranordnung unten hat Vorrang vor dem ursprünglichen Statistikblock.
+
+Die eigene Anordnung des Nutzers ist bestätigt: „Passt jetzt von der Anordnung“. Sein Screenshot ist Grundlage für die nachfolgende Symmetrie- und Schriftgrößenkorrektur; keine frei erfundene neue Komposition.
+
+**Why:** Der Nutzer hat ausdrücklich nur Position und Anordnung übernommen und anschließend optische Bereinigung verlangt. Alles unten rechts in der rechten Kachel darf weg, Sperren gehören unter Ausfälle, Wetter als bestehende Animation so groß wie der Schiedsrichter.
+
+**How to apply:** Foto und Modell nebeneinander, Ausfälle/Sperren unter dem Foto, Wetter/Schiedsrichter unter dem Modell; rechte Spielergruppen als 2×2-Anordnung mit News darunter. Den verschobenen kleinen Form-/Statistikblock entfernen. Bestehende Wetteranimation wiederverwenden, nicht durch eine neue Grafik ersetzen. Bei Überarbeitung gespeicherte Altanordnungen sichern, bevor neue Geometrie gespeichert wird.
 
 Der Nutzer will die Spielvorschau selbst anordnen: Elemente verschieben, ziehen und ihre Größe ändern, ausdrücklich „Direkt in der Spielvorschau“, nicht auf einer separaten Designfläche.
 

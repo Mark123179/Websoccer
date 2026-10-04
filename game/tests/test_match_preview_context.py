@@ -187,11 +187,14 @@ class MatchPreviewContextTests(SimpleTestCase):
         self.assertEqual([row['kind'] for row in result['absences']], ['injury', 'suspension'])
         self.assertEqual(result['absences'][0]['duration'], '4 Tage')
         self.assertEqual(result['absences'][1]['player']['id'], 2)
+        self.assertEqual([row['player']['id'] for row in result['injuries']], [1])
+        self.assertEqual([row['player']['id'] for row in result['suspensions']], [2])
         self.assertEqual(result['spotlights'][-1]['player']['id'], 1)
         self.assertTrue(result['referee']['is_demo'])
         self.assertTrue(result['weather']['is_demo'])
         self.assertTrue(result['trainer']['is_demo'])
         self.assertEqual(result['weather']['temperature'], 18)
+        self.assertEqual(result['weather']['type'], 'normal')
 
     def test_future_referee_is_not_borrowed_from_last_match(self):
         result = self.context()

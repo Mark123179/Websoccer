@@ -456,10 +456,10 @@ img[data-image-failed] { visibility: hidden; }
 }
 
 .mp-versus {
-    align-items: center;
+    align-items: start;
     display: grid;
-    gap: 10px;
-    grid-template-columns: minmax(0, 1fr) 48px minmax(0, 1fr);
+    gap: 8px;
+    grid-template-columns: minmax(0, 1fr) minmax(108px, 0.42fr) minmax(0, 1fr);
     padding: 2px 2% 1px;
 }
 
@@ -489,9 +489,9 @@ img[data-image-failed] { visibility: hidden; }
 .mp-club h2 {
     color: var(--mp-text);
     font-family: "Bahnschrift", "Franklin Gothic Medium", sans-serif;
-    font-size: 19px;
+    font-size: clamp(14px, 1.15vw, 19px);
     line-height: 1.15;
-    margin: 7px 0 0;
+    margin: 0 0 7px;
     max-width: 100%;
     overflow-wrap: anywhere;
 }
@@ -500,17 +500,15 @@ img[data-image-failed] { visibility: hidden; }
     align-items: center;
     color: var(--mp-cyan);
     display: flex;
+    flex-direction: column;
+    gap: 12px;
     justify-content: center;
+    padding-top: 88px;
+    text-align: center;
 }
 
 .mp-versus-mark::before,
-.mp-versus-mark::after {
-    background: linear-gradient(90deg, transparent, rgba(34, 230, 255, 0.45), transparent);
-    content: "";
-    height: 1px;
-    position: absolute;
-    width: 38px;
-}
+.mp-versus-mark::after { content: none; }
 
 .mp-versus-mark span {
     background: rgba(3, 17, 27, 0.9);
@@ -518,9 +516,29 @@ img[data-image-failed] { visibility: hidden; }
     border-radius: 50%;
     font-family: ui-monospace, "SFMono-Regular", Consolas, monospace;
     font-size: 9px;
-    padding: 11px 7px;
+    padding: 10px 7px;
     position: relative;
 }
+
+.mp-kickoff {
+    border-top: 1px solid var(--mp-rule);
+    color: var(--mp-muted);
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding-top: 7px;
+    width: 100%;
+}
+
+.mp-kickoff small,
+.mp-home-venue small {
+    color: var(--mp-cyan);
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+}
+
+.mp-kickoff strong { color: var(--mp-text); font-size: 12px; line-height: 1.3; }
 
 .mp-kit {
     align-items: center;
@@ -528,7 +546,7 @@ img[data-image-failed] { visibility: hidden; }
     display: flex;
     flex-direction: column;
     font-size: 12px;
-    gap: 5px;
+    gap: 3px;
     justify-content: center;
     margin-top: 4px;
     min-height: 22px;
@@ -537,36 +555,25 @@ img[data-image-failed] { visibility: hidden; }
 
 .mp-kit img {
     flex: 0 0 auto;
-    height: 72px;
+    height: 102px;
     object-fit: contain;
-    width: 66px;
+    width: 90px;
 }
 
 .mp-kit--label { color: var(--mp-muted); }
 
-.mp-match-facts {
-    border-bottom: 1px solid var(--mp-rule);
+.mp-home-venue {
     border-top: 1px solid var(--mp-rule);
-    display: grid;
-    gap: 1px;
-    grid-template-columns: 1.4fr 1fr 1fr;
-    padding: 9px 0;
-}
-
-.mp-fact {
-    align-items: flex-start;
     display: flex;
-    gap: 8px;
-    min-width: 0;
-    padding: 3px 7px;
+    flex-direction: column;
+    gap: 2px;
+    margin-top: 7px;
+    padding-top: 6px;
+    text-align: center;
+    width: 100%;
 }
-
-.mp-fact + .mp-fact { border-left: 1px solid var(--mp-rule); }
-.mp-fact-symbol { color: var(--mp-cyan); flex: 0 0 auto; font-size: 15px; line-height: 1.1; }
-.mp-fact > span:last-child { display: flex; flex-direction: column; min-width: 0; }
-.mp-fact small { color: var(--mp-faint); font-size: 11px; letter-spacing: 0.09em; text-transform: uppercase; }
-.mp-fact strong { color: var(--mp-text); font-size: 14px; line-height: 1.35; overflow-wrap: anywhere; }
-.mp-fact em { color: var(--mp-muted); font-size: 12px; font-style: normal; line-height: 1.3; }
+.mp-home-venue strong { color: var(--mp-text); font-size: 12px; line-height: 1.3; }
+.mp-home-venue > span { color: var(--mp-muted); font-size: 11px; line-height: 1.3; }
 .mp-demo-badge {
     align-items: center;
     border: 1px solid rgba(255, 209, 102, 0.38);
@@ -581,7 +588,7 @@ img[data-image-failed] { visibility: hidden; }
     white-space: nowrap;
 }
 
-.mp-form-stats-photo { background: rgba(3, 14, 22, 0.38); border: 1px solid var(--mp-rule); height: 112px; margin-bottom: 8px; overflow: hidden; position: relative; }
+.mp-form-stats-photo { aspect-ratio: 16 / 9; background: rgba(3, 14, 22, 0.38); border: 1px solid var(--mp-rule); margin-bottom: 8px; overflow: hidden; position: relative; width: 100%; }
 .mp-stadium-photo { display: block; object-fit: cover; }
 .mp-photo-caption { background: rgba(3, 13, 21, 0.76); bottom: 0; color: var(--mp-text); font-size: 9px; left: 0; padding: 4px 7px; position: absolute; right: 0; }
 .mp-stadium-fallback {
@@ -594,30 +601,25 @@ img[data-image-failed] { visibility: hidden; }
     position: absolute;
 }
 
-.mp-report-layout { align-items: stretch; display: grid; gap: 8px; grid-template-columns: minmax(0, 1.04fr) minmax(0, 0.96fr); }
+.mp-report-layout { align-items: stretch; display: grid; gap: 10px; grid-template-columns: repeat(2, minmax(0, 1fr)); margin-top: 10px; }
 .mp-form-stats,
 .mp-model-card { background: rgba(3, 17, 27, 0.36); border: 1px solid var(--mp-rule); min-width: 0; padding: 8px 9px; }
+.mp-stadium-absence,
+.mp-absence-group { overflow: visible; }
+.mp-absence-group { border-top: 1px solid var(--mp-rule); padding: 6px 1px 3px; }
+.mp-absence-heading { align-items: center; display: flex; justify-content: space-between; }
+.mp-absence-heading h2 { color: var(--mp-cyan); font-family: "Bahnschrift", "Franklin Gothic Medium", sans-serif; font-size: 11px; letter-spacing: 0.1em; margin: 0; text-transform: uppercase; }
+.mp-absence-group .mp-absence-list { margin-top: 3px; }
+.mp-absence-group .mp-absence-list li { gap: 7px; padding: 3px 0; }
+.mp-absence-group .mp-absence-copy a,
+.mp-absence-group .mp-absence-copy > span { font-size: 14px; }
+.mp-absence-group .mp-absence-copy small { font-size: 11px; }
+.mp-absence-group .mp-inline-empty { font-size: 11px; margin-top: 4px; }
 .mp-report-heading { align-items: flex-start; border-bottom: 1px solid var(--mp-rule); display: flex; gap: 8px; justify-content: space-between; margin-bottom: 4px; padding-bottom: 5px; }
 .mp-report-heading h2 { color: var(--mp-text); font-family: "Bahnschrift", "Franklin Gothic Medium", sans-serif; font-size: 15px; line-height: 1.15; margin: 2px 0 0; }
-.mp-report-teams { display: grid; gap: 8px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
-.mp-report-team { min-width: 0; }
-.mp-report-team-heading { align-items: flex-start; display: flex; flex-direction: column; gap: 3px; justify-content: space-between; min-width: 0; }
-.mp-report-team-link { align-items: center; color: var(--mp-text); display: inline-flex; gap: 6px; min-width: 0; text-decoration: none; }
-.mp-report-team-link img { flex: 0 0 auto; height: 19px; object-fit: contain; width: 19px; }
-.mp-report-team-link strong { font-size: 11px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.mp-report-team-heading time { color: var(--mp-faint); flex: 0 0 auto; font-size: 9px; }
-.mp-report-form { gap: 2px; margin-top: 4px; }
-.mp-report-form .mp-form-result { height: 16px; width: 16px; }
-.mp-report-stats { display: grid; gap: 1px 8px; grid-template-columns: minmax(0, 1fr); margin: 4px 0 0; }
-.mp-report-stats > div { align-items: baseline; border-top: 1px solid rgba(159, 211, 224, 0.08); display: flex; gap: 5px; justify-content: space-between; min-width: 0; padding-top: 3px; }
-.mp-report-stats dt { color: var(--mp-faint); font-size: 9px; line-height: 1.25; }
-.mp-report-stats dd { color: var(--mp-text); font-family: ui-monospace, "SFMono-Regular", Consolas, monospace; font-size: 10px; font-weight: 700; margin: 0; white-space: nowrap; }
-.mp-report-empty { align-items: center; color: var(--mp-faint); display: flex; gap: 8px; min-height: 48px; }
-.mp-report-empty > span { color: var(--mp-cyan); font-size: 18px; }
-.mp-report-empty p { font-size: 10px; line-height: 1.4; margin: 0; }
 .mp-model-card .mp-report-heading { align-items: center; }
 .mp-stadium-model-name { color: var(--mp-faint); font-size: 9px; line-height: 1.3; margin: -2px 0 6px; }
-.mp-model-viewport { background: rgba(3, 14, 22, 0.45); border: 1px solid var(--mp-rule); height: 184px; overflow: hidden; position: relative; }
+.mp-model-viewport { aspect-ratio: 16 / 9; background: rgba(3, 14, 22, 0.45); border: 1px solid var(--mp-rule); height: auto; overflow: hidden; position: relative; width: 100%; }
 .mp-stadium-model-stage { height: 100%; width: 100%; }
 .mp-stadium-model-status {
     align-items: center;
@@ -631,9 +633,25 @@ img[data-image-failed] { visibility: hidden; }
     position: absolute;
 }
 .mp-stadium-model-status[hidden] { display: none; }
-.mp-stadium-demo-note { color: var(--mp-yellow); font-size: 9px; line-height: 1.35; margin: 6px 0 0; }
-.mp-referee-profile { align-items: center; background: rgba(3, 17, 27, 0.36); border: 1px solid var(--mp-rule); display: flex; gap: 13px; margin-top: 12px; padding: 10px 14px; }
-.mp-model-card .mp-referee-profile { background: none; border: 0; border-top: 1px solid var(--mp-rule); gap: 9px; margin-top: 7px; padding: 7px 0 0; }
+.mp-stadium-demo-note { color: var(--mp-yellow); font-size: 10px; line-height: 1.35; margin: 6px 0 0; }
+.mp-model-overlay { align-items: flex-start; background: rgba(3, 14, 22, 0.78); border: 0; border-bottom: 1px solid var(--mp-rule); gap: 8px; left: 8px; margin: 0; padding: 7px 8px 6px; pointer-events: none; position: absolute; right: 8px; top: 8px; z-index: 4; }
+.mp-model-overlay h2 { color: var(--mp-text); font-family: "Bahnschrift", "Franklin Gothic Medium", sans-serif; font-size: 13px; line-height: 1.2; margin: 2px 0 0; }
+.mp-model-overlay .mp-stadium-model-name { color: var(--mp-muted); font-size: 10px; line-height: 1.25; margin: 2px 0 0; }
+.match-preview-scene.mp-layout-editing .mp-model-overlay { pointer-events: auto; }
+.mp-weather-profile,
+.mp-referee-profile { align-items: center; display: flex; gap: 10px; min-width: 0; }
+.mp-weather-profile { border-top: 1px solid var(--mp-rule); margin-top: 8px; min-height: 55px; padding-top: 7px; }
+.mp-weather-animation { align-items: center; background: rgba(5, 19, 29, 0.72); border: 1px solid rgba(180, 221, 229, 0.28); border-radius: 50%; display: flex; flex: 0 0 48px; height: 48px; justify-content: center; overflow: hidden; width: 48px; }
+.mp-weather-animation .wx-scene { border-radius: 50%; height: 48px; overflow: hidden; width: 48px; }
+.mp-weather-animation .wxs-tag { display: none; }
+.mp-weather-animation .wxs-grass { height: 7px; }
+.mp-weather-animation .wxs-sun,
+.mp-weather-animation .wxs-heatsun { height: 18px; left: 48%; top: 14%; width: 18px; }
+.mp-weather-animation--empty { color: var(--mp-faint); font: 12px ui-monospace, "SFMono-Regular", Consolas, monospace; }
+.mp-weather-info { align-items: flex-start; display: flex; flex: 1; flex-direction: column; gap: 3px; min-width: 0; }
+.mp-weather-info strong { color: var(--mp-text); font-size: 12px; line-height: 1.3; }
+.mp-weather-info .mp-demo-badge { font-size: 8px; padding: 2px 5px; }
+.mp-model-card > .mp-referee-profile { border-top: 1px solid var(--mp-rule); gap: 10px; margin-top: 5px; padding: 7px 0 0; }
 .mp-referee-portrait { background: rgba(7, 29, 41, 0.95); border: 1px solid rgba(180, 221, 229, 0.28); border-radius: 50%; flex: 0 0 auto; height: 48px; overflow: hidden; position: relative; width: 48px; }
 .mp-referee-portrait img { height: 100%; object-fit: cover; width: 100%; }
 .mp-referee-info { min-width: 0; }
@@ -682,24 +700,28 @@ img[data-image-failed] { visibility: hidden; }
 .mp-heading-link {
     align-items: center;
     display: inline-flex;
-    font-size: 9px;
+    font-size: 10px;
     gap: 5px;
     white-space: nowrap;
 }
 
-.mp-spotlights { display: flex; flex-direction: column; }
+.mp-spotlights { display: grid; gap: 0 8px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.mp-spotlights > .mp-inline-empty { grid-column: 1 / -1; }
 .mp-spotlight {
     border-bottom: 1px solid var(--mp-rule);
-    padding: 11px 0 10px;
+    min-width: 0;
+    padding: 8px 5px;
 }
+.mp-spotlight:nth-child(odd) { border-right: 1px solid var(--mp-rule); }
 
 .mp-spotlight-label {
     color: var(--mp-cyan);
     display: block;
-    font-size: 12px;
+    font-size: 11px;
     font-weight: 700;
-    letter-spacing: 0.11em;
-    margin-bottom: 7px;
+    letter-spacing: 0.08em;
+    line-height: 1.25;
+    margin-bottom: 5px;
     text-transform: uppercase;
 }
 
@@ -707,18 +729,19 @@ img[data-image-failed] { visibility: hidden; }
     align-items: center;
     color: var(--mp-text);
     display: flex;
-    gap: 9px;
+    gap: 6px;
     text-decoration: none;
 }
 
-.mp-avatar--spotlight { height: 64px; width: 64px; }
-.mp-spotlight-copy strong { font-size: 17px; line-height: 1.3; overflow-wrap: anywhere; }
+.mp-avatar--spotlight { height: 48px; width: 48px; }
+.mp-spotlight-copy strong { font-size: 14px; line-height: 1.2; overflow-wrap: break-word; word-break: normal; }
+.mp-spotlight-copy small { font-size: 10px; line-height: 1.2; }
 .mp-spotlight-value {
     color: var(--mp-green);
     display: block;
     font-family: ui-monospace, "SFMono-Regular", Consolas, monospace;
-    font-size: 14px;
-    margin: 5px 0 0 73px;
+    font-size: 11px;
+    margin: 3px 0 0 52px;
 }
 
 .mp-spotlight-empty {
@@ -791,9 +814,6 @@ img[data-image-failed] { visibility: hidden; }
     .match-preview-panel--scout,
     .match-preview-panel--club { padding-left: 12px; padding-right: 12px; }
     .mp-match-content { padding-left: 18px; padding-right: 18px; }
-    .mp-match-facts { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-    .mp-fact:nth-child(3) { border-left: 0; }
-    .mp-fact:nth-child(n + 3) { border-top: 1px solid var(--mp-rule); padding-top: 7px; }
 }
 
 @media (max-width: 767px) {
@@ -817,6 +837,7 @@ img[data-image-failed] { visibility: hidden; }
     .match-preview-panel--club { padding: 15px 16px 58px; }
     .mp-match-content { padding: 18px 16px 24px; }
     .mp-pitch { height: 380px; }
-    .mp-model-viewport { height: 170px; }
-    .mp-match-facts { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .mp-versus { grid-template-columns: minmax(0, 1fr) 96px minmax(0, 1fr); }
+    .mp-versus-mark { padding-top: 82px; }
+    .mp-report-layout { grid-template-columns: minmax(0, 1fr); }
 }

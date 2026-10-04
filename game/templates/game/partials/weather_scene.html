@@ -1,0 +1,32 @@
+{% comment %}
+Shared animated match-weather scene. wx is the weather_context() display dict.
+{% endcomment %}
+<span class="wx-scene{% if wx.type == 'sunny' %} wx-scene--normal{% else %} wx-scene--{{ wx.type }}{% endif %}" aria-hidden="true">
+    {% if wx.type == 'normal' or wx.type == 'sunny' %}
+    <i class="wxs-glow"></i><i class="wxs-sun"></i><i class="wxs-mist wxs-mist--a"></i><i class="wxs-mist wxs-mist--b"></i>
+    {% elif wx.type == 'regen' %}
+    <i class="wxs-cloud wxs-cloud--a"></i><i class="wxs-cloud wxs-cloud--b"></i><i class="wxs-cloud wxs-cloud--c"></i>
+    {% for _ in "0123456789" %}<i class="wxs-rf"></i>{% endfor %}
+    {% for _ in "01234567" %}<i class="wxs-rn"></i>{% endfor %}
+    <i class="wxs-puddle wxs-puddle--a"></i><i class="wxs-puddle wxs-puddle--b"></i>
+    {% elif wx.type == 'wind' %}
+    <i class="wxs-mist wxs-mist--w"></i>
+    {% for _ in "0123456" %}<i class="wxs-streak"></i>{% endfor %}
+    {% for _ in "012" %}<i class="wxs-leaf"></i>{% endfor %}
+    {% elif wx.type == 'nebel' %}
+    <i class="wxs-fogsun"></i><i class="wxs-shaft wxs-shaft--a"></i><i class="wxs-shaft wxs-shaft--b"></i>
+    {% for _ in "0123" %}<i class="wxs-fogband"></i>{% endfor %}
+    {% elif wx.type == 'hitze' %}
+    <i class="wxs-glow wxs-glow--heat"></i><i class="wxs-heatsun"></i>
+    {% for _ in "012345678" %}<i class="wxs-wave"></i>{% endfor %}
+    <i class="wxs-haze"></i>
+    {% elif wx.type == 'schnee' %}
+    <i class="wxs-glow wxs-glow--snow"></i>
+    {% for _ in "0123456789" %}<i class="wxs-sf"></i>{% endfor %}
+    {% for _ in "012345" %}<i class="wxs-sn"></i>{% endfor %}
+    <i class="wxs-drift wxs-drift--a"></i><i class="wxs-drift wxs-drift--b"></i>
+    {% endif %}
+    <i class="wxs-grass"></i>
+    <i class="wxs-vignette"></i>
+    <b class="wxs-tag">Spieltag-Wetter</b>
+</span>

@@ -8,6 +8,8 @@
     if (!root || !canvas || !open || !tools) return;
 
     const key = `fm:match-preview:layout:1:${root.dataset.layoutOwner || "guest"}`;
+    const revision = Number(root.dataset.layoutRevision) || 1;
+    const backupKey = `${key}:before-revision-${revision}`;
     const $ = name => document.getElementById(`mp-layout-${name}`);
     const status = message => { $("status").textContent = message; };
     const clone = value => JSON.parse(JSON.stringify(value));
@@ -33,14 +35,21 @@
             });
             nodes[id] = frame;
         });
-        return {version: 1, nodes};
+        return {version: 1, revision: Number.isInteger(raw.revision) ? raw.revision : 1, nodes};
     };
-    let saved = null, storageError = "";
+    let saved = null, previousLayout = null, storageError = "";
     try {
         const value = localStorage.getItem(key);
         if (value) {
             saved = clean(JSON.parse(value));
             if (!saved) storageError = "Das gespeicherte Layout ist ungültig. Standardansicht geladen.";
+            else if (saved.revision !== revision) {
+                // Approved screenshot-derived composition replaces old geometry,
+                // not the stored original. Back it up before the next explicit save.
+                previousLayout = value;
+                saved = null;
+                storageError = "Die abgestimmte Anordnung ist geladen. Dein bisheriger Entwurf bleibt gesichert.";
+            }
         }
     } catch {
         storageError = "Der Browserspeicher ist nicht verfügbar. Änderungen können nicht gespeichert werden.";
@@ -66,6 +75,8 @@
         [".mp-subsection .mp-form", "opponent-form", "Gegner · Form"],
         [".mp-last-result", "last-result", "Letztes Ergebnis"],
         [".mp-absence-list li", "absence", "Ausfall"],
+        [".mp-absence-group", "absence-group", "Ausfälle / Sperren"],
+        [".mp-absence-heading", "absence-heading", "Ausfälle · Überschrift", "text"],
         [".mp-competition", "competition", "Wettbewerb"],
         [".mp-competition-logo", "competition-logo", "Wettbewerbslogo"],
         [".mp-competition > div", "competition-text", "Wettbewerb · Beschriftung"],
@@ -83,9 +94,12 @@
         [".mp-club--home .mp-team-form", "home-form", "Heim · Form"],
         [".mp-club--away .mp-team-form", "away-form", "Auswärts · Form"],
         [".mp-versus-mark", "versus", "VS-Zeichen"],
+        [".mp-versus-mark > span", "versus-symbol", "VS · Beschriftung", "text"],
+        [".mp-kickoff", "kickoff", "Anstoß"],
+        [".mp-home-venue", "venue", "Austragungsort", "text"],
         [".mp-match-facts", "facts", "Spieldetails"],
         [".mp-fact", "fact", "Spieldetail"],
-        [".mp-form-stats", "stats", "Foto / Form & Stats"],
+        [".mp-form-stats", "stats", "Stadionfoto / Ausfälle"],
         [".mp-form-stats-photo", "venue-photo", "Stadionfoto"],
         [".mp-form-stats .mp-report-heading", "stats-heading", "Statistiküberschrift", "text"],
         [".mp-report-team", "team-stats", "Mannschaft · Statistik"],
@@ -101,6 +115,9 @@
         [".mp-referee-portrait", "referee-photo", "Schiedsrichter · Porträt"],
         [".mp-referee-info", "referee-info", "Schiedsrichter · Angaben", "text"],
         [".mp-referee-info h2", "referee-name", "Schiedsrichter · Name", "text"],
+        [".mp-weather-profile", "weather", "Wetterprofil"],
+        [".mp-weather-animation", "weather-scene", "Wetter · Animation"],
+        [".mp-weather-info", "weather-info", "Wetter · Angaben", "text"],
         [".mp-spotlight", "spotlight", "Spieler im Fokus"],
         [".mp-spotlight-label", "spotlight-title", "Fokus · Überschrift", "text"],
         [".mp-avatar--spotlight", "spotlight-photo", "Fokus · Porträt"],
@@ -165,7 +182,7 @@
         const parent = parentOf(item);
         return {width: parent.clientWidth || 1, height: parent.clientHeight || 1};
     };
-    const empty = () => ({version: 1, nodes: Object.create(null)});
+    const empty = () => ({version: 1, revision, nodes: Object.create(null)});
     function captureBaseline() {
         const rects = new Map(items.map(item => [item.id, item.node.getBoundingClientRect()]));
         const canvasRect = canvas.getBoundingClientRect();
@@ -295,7 +312,9 @@
         try {
             const value = clean(draft);
             if (!value) throw new Error("Invalid layout");
+            if (previousLayout) localStorage.setItem(backupKey, previousLayout);
             localStorage.setItem(key, JSON.stringify(value));
+            previousLayout = null;
             saved = value;
             storageError = "";
             close(true);

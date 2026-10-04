@@ -62,7 +62,7 @@ class MatchPreviewLayoutTests(SimpleTestCase):
         self.assertNotIn('foreground.png', html)
         self.assertNotIn('Vorbericht für das Spiel', html)
         self.assertIn('Der Spielplan ist derzeit frei.', html)
-        self.assertIn('match-preview.js?v=preview-15', html)
+        self.assertIn('match-preview.js?v=preview-17', html)
 
     def test_partial_fixture_handles_missing_reports_and_zero_temperature(self):
         html = render_to_string('game/club_match_preview.html', {
@@ -74,10 +74,11 @@ class MatchPreviewLayoutTests(SimpleTestCase):
             },
         })
         self.assertIn('Schnee · 0 °C', html)
-        self.assertIn('Kein aktueller Spielbericht', html)
+        self.assertIn('Keine verletzungsbedingten Ausfälle', html)
+        self.assertIn('Keine Sperren', html)
         self.assertIn('Kein 3D-Modell verfügbar', html)
 
-    def test_reference_layout_has_model_beside_stats_and_referee_portrait(self):
+    def test_approved_arrangement_has_model_beside_photo_and_inline_weather(self):
         html = render_to_string('game/club_match_preview.html', {
             'competition_name': 'Bundesliga', 'competition_logo': '',
             'preview': {
@@ -101,7 +102,10 @@ class MatchPreviewLayoutTests(SimpleTestCase):
         self.assertGreaterEqual(html.count('Testdaten'), 3)
         self.assertIn('Testmodell', html)
         self.assertIn('mp-report-layout', html)
-        self.assertIn('Form &amp; Stats', html)
+        self.assertNotIn('Form &amp; Stats', html)
+        self.assertNotIn('mp-report-stats', html)
+        self.assertIn('mp-weather-animation', html)
+        self.assertIn('mp-suspensions-title', html)
         self.assertIn('mp-referee-profile', html)
         self.assertIn('/referee-face.png', html)
         self.assertIn('Schweiz', html)
@@ -129,8 +133,9 @@ class MatchPreviewLayoutTests(SimpleTestCase):
             'request': SimpleNamespace(user=SimpleNamespace(pk=42)),
         })
         self.assertIn('data-layout-owner="42"', html)
-        self.assertIn('match-preview-layout.css?v=layout-2', html)
-        self.assertIn('match-preview-layout.js?v=layout-2', html)
+        self.assertIn('match-preview-layout.css?v=layout-4', html)
+        self.assertIn('match-preview-layout.js?v=layout-4', html)
+        self.assertIn('data-layout-revision="2"', html)
         for name in ('open', 'tools', 'select', 'parent', 'x', 'y', 'width', 'height',
                      'font', 'visible', 'front', 'back', 'save', 'cancel', 'reset', 'status'):
             self.assertIn(f'id="mp-layout-{name}"', html)
@@ -147,6 +152,42 @@ class MatchPreviewLayoutTests(SimpleTestCase):
         self.assertNotIn('fetch(', js)
         self.assertNotIn('XMLHttpRequest', js)
         self.assertIn('mp-layout-editing', css)
+
+    def test_injuries_and_suspensions_render_in_separate_ordered_blocks(self):
+        html = render_to_string('game/club_match_preview.html', {
+            'competition_name': 'Bundesliga', 'preview': {
+                'has_fixture': True,
+                'home': {'name': 'Heim'}, 'away': {'name': 'Gast'}, 'opponent': {'name': 'Gast'},
+                'injuries': [{'player': {'name': 'Verletzter Testspieler'},
+                             'reason': 'Muskel', 'duration': '4 Tage'}],
+                'suspensions': [{'player': {'name': 'Gesperrter Testspieler'},
+                                'reason': 'Rot', 'duration': '2 Spiele'}],
+            },
+        })
+        self.assertLess(html.index('mp-injuries-title'), html.index('Verletzter Testspieler'))
+        self.assertLess(html.index('Verletzter Testspieler'), html.index('mp-suspensions-title'))
+        self.assertLess(html.index('mp-suspensions-title'), html.index('Gesperrter Testspieler'))
+        self.assertEqual(html.count('Verletzter Testspieler'), 1)
+        self.assertEqual(html.count('Gesperrter Testspieler'), 1)
+
+    def test_preview_reuses_all_six_existing_weather_animations_and_zero_degrees(self):
+        for kind, marker in (
+            ('normal', 'wxs-sun'), ('regen', 'wxs-rf'), ('wind', 'wxs-streak'),
+            ('nebel', 'wxs-fogband'), ('hitze', 'wxs-heatsun'), ('schnee', 'wxs-sf'),
+        ):
+            with self.subTest(kind=kind):
+                wx = {'type': kind, 'label': 'Prognose', 'temperature': 0}
+                html = render_to_string('game/club_match_preview.html', {
+                    'competition_name': 'Bundesliga',
+                    'preview': {'has_fixture': True, 'weather': wx,
+                                'home': {'name': 'Heim'}, 'away': {'name': 'Gast'},
+                                'opponent': {'name': 'Gast'}},
+                })
+                popup = render_to_string('game/partials/weather_icon.html', {'wx': wx})
+                for rendered in (html, popup):
+                    self.assertIn(f'wx-scene--{kind}', rendered)
+                    self.assertIn(marker, rendered)
+                self.assertIn('0 °C', html)
 
     def test_pitch_coordinates_are_unlocalized_and_snapshot_text_is_escaped(self):
         html = render_to_string('game/club_match_preview.html', {

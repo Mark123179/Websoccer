@@ -304,7 +304,7 @@ def build_match_preview_context(club, fixture):
         'stadium': _stadium(home), 'trainer': _trainer(opponent),
         'referee': None, 'weather': None, 'lineup': [], 'formation_label': '',
         'lineup_date_label': '', 'last_result': None, 'form': [],
-        'absences': [], 'spotlights': [], 'news': [],
+        'absences': [], 'injuries': [], 'suspensions': [], 'spotlights': [], 'news': [],
         'home_form': [], 'away_form': [], 'form_stats': [],
         'news_url': reverse('club_news', kwargs={'club_id': club.pk}),
         'default_player_url': default_player_url(),
@@ -338,8 +338,8 @@ def build_match_preview_context(club, fixture):
             }
         if not preview['weather']:
             preview['weather'] = {
-                'label': 'Sonnig', 'temperature': 18, 'type': 'sunny',
-                'icon_class': 'sunny', 'is_demo': True,
+                'label': 'Sonnig', 'temperature': 18, 'type': 'normal',
+                'icon_class': 'normal', 'is_demo': True,
             }
     preview['news'] = [
         {'title': item.title, 'date_label': _date(item.published_at),
@@ -381,14 +381,18 @@ def build_match_preview_context(club, fixture):
     })
     for player in players:
         if player.is_ws_injured:
-            preview['absences'].append({
+            absence = {
                 'player': _player(player), 'kind': 'injury',
                 'reason': player.ws_injury_type, 'duration': f'{player.ws_injury_days_remaining} Tage',
-            })
+            }
+            preview['absences'].append(absence)
+            preview['injuries'].append(absence)
         if player.is_ws_suspended:
-            preview['absences'].append({
+            absence = {
                 'player': _player(player), 'kind': 'suspension',
                 'reason': player.ws_suspension_reason,
                 'duration': f'{player.ws_suspension_matches_remaining} Spiel(e)',
-            })
+            }
+            preview['absences'].append(absence)
+            preview['suspensions'].append(absence)
     return preview
