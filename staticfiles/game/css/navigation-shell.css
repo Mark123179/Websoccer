@@ -100,6 +100,14 @@
         padding: 0;
         gap: 0;
     }
+    html[data-nav-state="collapsed"] .nav-logout-form {
+        padding: 0;
+    }
+    html[data-nav-state="collapsed"] .nav-logout-btn {
+        display: flex;
+        align-items: center;
+        color: var(--cyan);
+    }
     html[data-nav-state="collapsed"] .nav-shell-action-icon { display: block; }
     html[data-nav-state="collapsed"] .creator-mode-button { margin-top: 0; }
     html[data-nav-state="collapsed"] .navbar [data-nav-label]::after {
