@@ -1,5 +1,8 @@
 # Eigene News-Bilder
 
+Für die ausdrückliche Bereinigung verwaister Uploads mit Vorschau und
+Wiederherstellungsschutz siehe [News-Bildbereinigung](news-image-cleanup.md).
+
 Neue Veröffentlichungen speichern validierte PNG-, JPEG-, GIF- und WebP-Dateien
 im bestehenden Django-Medienbackend unter `news-images/`. Im News-JSON stehen
 nur URLs. Kartenbild und Bildbausteine nutzen denselben Ablauf. Externe Bild-URLs
