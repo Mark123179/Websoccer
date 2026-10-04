@@ -29,3 +29,10 @@ description: How last_match, scorers, MOTM, player stats are wired from DB into 
 - `Player.age` is an IntegerField (stored, not computed from DOB).
 
 **Why:** The discrepancy between "2:2 vs Mainz" in editor and "3:1 Wolfsburg" on Spielbericht was caused by `order_by('-matchday')` vs. `get_last_match()`'s date comparison. Always use `get_last_match()` as single source of truth.
+
+## Ausgewählte Kartenmotive
+Vereinsnews-Vorschauen müssen das ausdrücklich ausgewählte Kartenmotiv übernehmen. Bei einem Spielermotiv zählt die gespeicherte Identität auch nach einem Vereinswechsel; ein fehlender Spieler darf nicht durch einen beliebigen heutigen Kaderspieler ersetzt werden.
+
+**Why:** Der Nutzer erwartet das „entsprechend ausgewählte“ Spielerbild oder Vereinswappen, nicht ein unabhängig gewähltes Vorschaubild.
+
+**How to apply:** Diese Bildtreue bei jeder neuen News-Vorschau und bei Änderungen der vollständigen News-Ansicht erhalten; fehlende Referenzen ehrlich als fehlend behandeln.

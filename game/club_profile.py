@@ -407,14 +407,17 @@ def build_partner_club(public_profile):
 
 
 def build_news(club):
+    from .news_images import resolve_news_images
+
     news = list(club.public_news.all()[:3])
+    images = resolve_news_images(news, club)
     if news:
         return [
             {
                 'id': str(item.id),
                 'title': item.title,
                 'dateLabel': item.published_at.strftime('%d.%m.%Y'),
-                'thumbnailUrl': item.thumbnail_static_path,
+                'thumbnailUrl': images[item.pk],
                 'url': reverse('club_news_detail', kwargs={
                     'club_id': club.id,
                     'news_id': item.id,

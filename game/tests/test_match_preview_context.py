@@ -251,7 +251,7 @@ class MatchPreviewContextTests(SimpleTestCase):
     def test_real_opponent_news_is_linked_without_display_only_examples(self):
         self.away.public_news.filter.return_value.order_by.return_value.__getitem__.return_value = [
             NS(pk=91, title='Echte Gast-News', published_at=date(2026, 10, 3),
-               thumbnail_static_path='/opponent-news.png'),
+               thumbnail_static_path='/opponent-news.png', card_data=None, img_path=''),
         ]
         result = self.context()
         self.assertEqual(result['news'][0]['title'], 'Echte Gast-News')
@@ -264,6 +264,17 @@ class MatchPreviewContextTests(SimpleTestCase):
         self.assertEqual(result['news'], [])
         self.assertEqual(result['news_url'], '')
         self.home.public_news.filter.assert_not_called()
+
+    @override_settings(ASSETS_BASE_URL='/assets/')
+    def test_selected_news_crest_uses_opponent_not_managers_club(self):
+        self.away.crest_static_path = '/assets/clubs/logos/907_club.png'
+        self.away.public_news.filter.return_value.order_by.return_value.__getitem__.return_value = [
+            NS(pk=92, title='Wappen-News', published_at=date(2026, 10, 3),
+               thumbnail_static_path='', card_data={'motiv': 'wappen'}, img_path=''),
+        ]
+        result = self.context()
+        self.assertEqual(result['news'][0]['thumbnail_url'], '/assets/clubs/logos/907_club.png')
+        self.assertIn('/3/', result['news'][0]['url'])
 
     @override_settings(MEDIA_URL='/media/')
     def test_trainer_is_responsible_manager_with_real_uploaded_portrait(self):

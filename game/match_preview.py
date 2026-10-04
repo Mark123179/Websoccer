@@ -327,15 +327,18 @@ def build_match_preview_context(club, fixture):
     if not opponent:
         return preview
     players = list(Player.objects.filter(club=opponent).order_by('pk'))
+    from .news_images import resolve_news_images
+    news = list(opponent.public_news.filter(published_at__lte=timezone.localdate())
+                .order_by('-published_at', '-pk')[:2])
+    news_images = resolve_news_images(news, opponent)
     preview['news'] = [
         {'title': item.title, 'date_label': _date(item.published_at),
          'url': reverse('club_news_detail', kwargs={'club_id': opponent.pk, 'news_id': item.pk}),
-         'thumbnail_url': _image(item.thumbnail_static_path),
+         'thumbnail_url': news_images[item.pk],
          'category': getattr(item, 'category', '') or 'Vereinsnews',
          'author': getattr(item, 'outlet', '') or 'Vereinsredaktion',
          'is_new': bool(getattr(item, 'is_new', False))}
-        for item in opponent.public_news.filter(published_at__lte=timezone.localdate())
-        .order_by('-published_at', '-pk')[:2]
+        for item in news
     ]
     preview['form'] = get_form_rows(opponent, 5)
     last, report, side = _last_report(opponent)
