@@ -7,12 +7,12 @@
 
 {% block extra_css %}
     {{ block.super }}
-    <link rel="stylesheet" href="{% static 'game/css/match-preview.css' %}?v=preview-23">
-    <link rel="stylesheet" href="{% static 'game/css/match-preview-layout.css' %}?v=layout-11">
+    <link rel="stylesheet" href="{% static 'game/css/match-preview.css' %}?v=preview-24">
+    <link rel="stylesheet" href="{% static 'game/css/match-preview-layout.css' %}?v=layout-12">
 {% endblock %}
 
 {% block content %}
-<section class="match-preview-scene" aria-label="Spielvorschau" data-layout-owner="{{ request.user.pk|default:'guest'|unlocalize }}" data-layout-revision="3" data-layout-detail-patch="3">
+<section class="match-preview-scene" aria-label="Spielvorschau" data-layout-owner="{{ request.user.pk|default:'guest'|unlocalize }}" data-layout-revision="3" data-layout-detail-patch="4">
     <div class="match-preview-content" aria-label="Spielinformationen">
         <div class="match-preview-panels">
             <section class="match-preview-panel match-preview-panel--scout" aria-labelledby="mp-scout-title">
@@ -280,21 +280,27 @@
                 </div>
 
                 <section class="mp-news" aria-labelledby="mp-news-title">
-                    <div class="mp-subsection-heading"><div><span class="mp-eyebrow">{{ club.name }}</span><h2 id="mp-news-title">Vereinsnews</h2></div>{% if preview.news_url %}<a class="mp-heading-link" href="{{ preview.news_url }}">Alle <span aria-hidden="true">↗</span></a>{% endif %}</div>
+                    <div class="mp-subsection-heading"><div><span class="mp-eyebrow">{{ preview.opponent.name|default:"Gegner" }}</span><h2 id="mp-news-title">Vereinsnews</h2></div>{% if preview.news_url %}<a class="mp-heading-link" href="{{ preview.news_url }}">Alle <span aria-hidden="true">↗</span></a>{% endif %}</div>
                     {% if preview.news %}
                         <div class="mp-news-list">
                             {% for item in preview.news %}
-                                {% if item.url %}<a class="mp-news-item" href="{{ item.url }}">{% else %}<div class="mp-news-item">{% endif %}
-                                    {% if item.thumbnail_url %}
-                                        <span class="mp-news-thumb"><img src="{{ item.thumbnail_url }}" alt="" loading="lazy" data-fallback-image><span class="mp-image-fallback" data-image-fallback aria-hidden="true">NEWS</span></span>
-                                    {% else %}<span class="mp-news-thumb mp-news-thumb--empty" aria-hidden="true">NEWS</span>{% endif %}
-                                    <span class="mp-news-copy"><small>{{ item.date_label|default:"Vereinsnews" }}</small><strong>{{ item.title|default:"Meldung ohne Titel" }}</strong></span>
-                                    <span class="mp-inline-arrow" aria-hidden="true">↗</span>
-                                {% if item.url %}</a>{% else %}</div>{% endif %}
+                                {% if item.url %}<a class="mp-news-item" href="{{ item.url }}">{% else %}<article class="mp-news-item">{% endif %}
+                                    <span class="mp-news-thumb">
+                                        {% if item.thumbnail_url %}<img src="{{ item.thumbnail_url }}" alt="" loading="lazy" data-fallback-image><span class="mp-image-fallback" data-image-fallback aria-hidden="true">NEWS</span>{% endif %}
+                                    </span>
+                                    <span class="mp-news-shade" aria-hidden="true"></span>
+                                    <span class="mp-news-new">NEU</span>
+                                    <span class="mp-news-copy">
+                                        {% if item.is_demo %}<small class="mp-news-demo-label">Beispiele / Testdaten</small>{% endif %}
+                                        <small class="mp-news-category">{{ item.category|default:"Vereinsnews" }}</small>
+                                        <strong>{{ item.title|default:"Meldung ohne Titel" }}</strong>
+                                        <span class="mp-news-meta"><time>{{ item.date_label|default:"Vereinsnews" }}</time><span class="mp-news-author-mark" aria-hidden="true">VR</span><span>{{ item.author|default:"Vereinsredaktion" }}</span></span>
+                                    </span>
+                                {% if item.url %}</a>{% else %}</article>{% endif %}
                             {% endfor %}
                         </div>
                     {% else %}
-                        <div class="mp-news-empty"><span aria-hidden="true">—</span><p>Für den Verein liegen aktuell keine Meldungen vor.</p></div>
+                        <div class="mp-news-empty"><span aria-hidden="true">—</span><p>Ohne feststehenden Gegner sind keine Vereinsnews verfügbar.</p></div>
                     {% endif %}
                 </section>
             </section>
@@ -362,8 +368,8 @@
 
 {% block extra_js %}
     {{ block.super }}
-    <script src="{% static 'game/js/match-preview.js' %}?v=preview-23" defer></script>
-    <script src="{% static 'game/js/match-preview-layout.js' %}?v=layout-11" defer></script>
+    <script src="{% static 'game/js/match-preview.js' %}?v=preview-24" defer></script>
+    <script src="{% static 'game/js/match-preview-layout.js' %}?v=layout-12" defer></script>
     {% if preview.stadium.model_available and preview.stadium.model_scene_url %}
         <script type="importmap">{"imports":{"three":"{% static 'stadium_editor/stage/vendor/three.module.js' %}"}}</script>
         <script src="{% static 'game/js/club-stadium.js' %}?v=5" data-scene-url="{{ preview.stadium.model_scene_url }}" defer></script>

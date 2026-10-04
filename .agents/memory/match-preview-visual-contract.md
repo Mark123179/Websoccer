@@ -14,6 +14,12 @@ Die Spielvorschau soll folgende Inhalte zeigen:
 - Wettbewerb, Spieltag, Verein X gegen Verein Y, Ort, Datum, Uhrzeit, Stadionname, Wetter und Schiedsrichter.
 - Letzte Aufstellung des Gegners auf einem Spielfeld mit Spielerbildern, Trainer mit Profilbild, letztes Gegnerergebnis samt Wappen, Form sowie verletzte und gesperrte Gegner inklusive Namen.
 - Letzte Vereinsnews; Top-Torjäger, Notenbester, bester Spieler des letzten Spiels mit Note und wertvollster Spieler, jeweils mit Spielerbild.
+
+Vereinsnews in der Spielvorschau gehören immer zum Gegner, nicht zum eigenen Verein. Die angeforderten zwei Dummy-News dienen nur zur Visualisierung einer fertigen Spielvorschau, im Stil der Vereinsnews-Bildkacheln und ohne Löschen-Button.
+
+**Why:** Der Nutzer braucht hier keine eigenen Vereinsnews und hat ausdrücklich erklärt: „Sind jetzt nur Dummies zum Visualisieren einer fertigen Spielvorschau.“
+
+**How to apply:** Vereinsname und Newslinks nach Gegnerrolle auflösen, auch bei Auswärtsspielen. Beispielmeldungen nur als Präsentationsdaten behandeln, niemals echte News oder Transfers daraus erzeugen.
 - Stadionfoto, 3D-Stadionmodell und die beiden Heim-/Auswärtstrikots, die die Teams tatsächlich in dieser Begegnung verwenden.
 
 **Why:** Der Nutzer gibt die Informationsanforderungen vor, lässt die Gestaltung frei und verlangt ausdrücklich die Qualität eines AAA-Managers.

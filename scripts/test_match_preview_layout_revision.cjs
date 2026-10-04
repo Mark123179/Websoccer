@@ -154,3 +154,28 @@ assert.equal(JSON.stringify([
     expanded.nodes[photo.id], expanded.nodes["model-viewport-0"],
 ]), pictureFrames);
 console.log("Expanded footer: follows elevated picture, preserves both picture frames.");
+
+const news = {id: "news-0"};
+const newsLayout = {detailPatch: 3, nodes: {
+    "news-0": {...frame, y: 55, height: 4},
+    "venue-photo-0": {...frame, y: -20},
+    "model-viewport-0": {...frame, y: -15},
+    "referee-0": {...frame, y: 73, font: 18},
+}};
+const kept = JSON.stringify([
+    newsLayout.nodes["venue-photo-0"], newsLayout.nodes["model-viewport-0"],
+    newsLayout.nodes["referee-0"],
+]);
+vm.runInNewContext(repairSource + "expandFooter(layout); expandNews(layout);", {
+    layout: newsLayout, detailPatch: 4, byId: new Map([[news.id, news]]),
+    items: [], baselineSizes: new Map([[news.id, {height: 220}]]),
+    dimensions: () => ({height: 600}), paint: () => {},
+});
+assert.equal(newsLayout.detailPatch, 4);
+assert.equal(newsLayout.nodes[news.id].y, 55);
+assert.ok(Math.abs(newsLayout.nodes[news.id].height - 220 / 6) < 0.001);
+assert.equal(JSON.stringify([
+    newsLayout.nodes["venue-photo-0"], newsLayout.nodes["model-viewport-0"],
+    newsLayout.nodes["referee-0"],
+]), kept);
+console.log("News repair: news area enlarged, existing pictures and footer untouched.");

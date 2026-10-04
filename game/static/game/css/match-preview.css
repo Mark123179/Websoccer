@@ -767,37 +767,133 @@ img[data-image-failed] { visibility: hidden; }
 .mp-avatar--empty { align-items: center; color: var(--mp-faint); display: flex; justify-content: center; }
 .mp-news { border-top: 1px solid var(--mp-rule); margin-top: 12px; padding-top: 14px; }
 .mp-news .mp-subsection-heading { align-items: flex-end; margin-bottom: 8px; }
-.mp-news-list { display: flex; flex-direction: column; }
+.mp-news-list { display: grid; gap: 8px; grid-template-columns: minmax(0, 1fr); }
 
 .mp-news-item {
-    align-items: center;
-    border-top: 1px solid var(--mp-rule);
+    align-items: flex-end;
+    aspect-ratio: 2.1 / 1;
+    background: #06131c;
+    border: 1px solid rgba(189, 226, 234, 0.16);
+    border-radius: 4px;
     color: var(--mp-text);
     display: flex;
-    gap: 9px;
+    isolation: isolate;
     min-width: 0;
-    padding: 9px 0;
-    text-decoration: none;
-}
-
-.mp-news-thumb {
-    align-items: center;
-    background: rgba(10, 46, 59, 0.7);
-    color: var(--mp-cyan);
-    display: flex;
-    flex: 0 0 auto;
-    height: 42px;
-    justify-content: center;
     overflow: hidden;
+    padding: 9px 10px 8px;
     position: relative;
-    width: 54px;
+    text-decoration: none;
+    transition: transform 160ms ease;
 }
 
-.mp-news-thumb--empty { font-family: ui-monospace, "SFMono-Regular", Consolas, monospace; font-size: 8px; }
-.mp-news-copy strong { font-size: 14px; line-height: 1.32; }
+.mp-news-item:hover { border-color: rgba(229, 9, 20, 0.76); transform: translateY(-1px); }
+.mp-news-item--demo { cursor: default; }
+.mp-news-thumb,
+.mp-news-thumb img {
+    inset: 0;
+    position: absolute;
+}
+.mp-news-thumb { background: center 42% / cover no-repeat url("../images/backgrounds/stadium-hero-night.jpg"); z-index: -2; }
+.mp-news-thumb img { height: 100%; object-fit: cover; width: 100%; }
+.mp-news-shade {
+    background: linear-gradient(180deg, rgba(2, 8, 14, 0.05) 15%, rgba(2, 8, 14, 0.25) 38%, rgba(2, 8, 14, 0.94) 100%);
+    inset: 0;
+    pointer-events: none;
+    position: absolute;
+    z-index: -1;
+}
+.mp-news-new {
+    align-self: flex-start;
+    background: #e50914;
+    border-radius: 3px;
+    box-shadow: 0 3px 12px rgba(229, 9, 20, 0.28);
+    color: #fff;
+    font-size: 9px;
+    font-weight: 900;
+    letter-spacing: 0.08em;
+    line-height: 1;
+    padding: 4px 7px;
+    position: absolute;
+    left: 9px;
+    top: 8px;
+}
+.mp-news-copy {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    gap: 3px;
+    min-width: 0;
+}
+.mp-news-copy .mp-news-category {
+    color: var(--mp-cyan);
+    font-size: 9px;
+    font-weight: 900;
+    letter-spacing: 0.075em;
+    line-height: 1.1;
+    overflow-wrap: anywhere;
+    text-transform: uppercase;
+}
+.mp-news-copy strong {
+    color: #f4fbff;
+    font-family: "Bahnschrift", "Franklin Gothic Medium", sans-serif;
+    font-size: 14px;
+    font-weight: 900;
+    letter-spacing: 0.015em;
+    line-height: 1.12;
+    overflow-wrap: anywhere;
+    text-transform: uppercase;
+    text-shadow: 0 1px 8px rgba(0, 0, 0, 0.7);
+}
+.mp-news-meta {
+    align-items: center;
+    color: rgba(244, 251, 255, 0.8);
+    display: flex;
+    flex-wrap: wrap;
+    font-size: 9px;
+    font-weight: 700;
+    gap: 3px 6px;
+    line-height: 1.1;
+    margin-top: 3px;
+    min-width: 0;
+}
+.mp-news-meta time { color: rgba(244, 251, 255, 0.66); }
+.mp-news-author-mark {
+    align-items: center;
+    background: #e50914;
+    border-radius: 3px;
+    color: #fff;
+    display: inline-flex;
+    flex: 0 0 auto;
+    font-size: 8px;
+    font-weight: 900;
+    height: 17px;
+    justify-content: center;
+    letter-spacing: -0.03em;
+    width: 17px;
+}
+.mp-news-demo-note,
+.mp-news-copy .mp-news-demo-label {
+    color: var(--mp-faint);
+    font-size: 8px;
+    font-weight: 700;
+    letter-spacing: 0.025em;
+    line-height: 1.25;
+}
+.mp-news-demo-note { margin: -3px 0 7px; }
+.mp-news-copy .mp-news-demo-label { color: var(--mp-yellow); }
 .mp-news-empty { align-items: center; border-top: 1px solid var(--mp-rule); color: var(--mp-faint); display: flex; gap: 9px; padding: 12px 0; }
 .mp-news-empty > span { color: var(--mp-cyan); font-size: 18px; }
 .mp-news-empty p { font-size: 14px; line-height: 1.4; margin: 0; }
+
+@media (max-width: 1050px) and (min-width: 768px) {
+    .mp-news-copy strong { font-size: 12px; }
+    .mp-news-meta { font-size: 8px; }
+}
+
+@media (max-width: 767px) {
+    .mp-news-item { aspect-ratio: 2.45 / 1; }
+    .mp-news-copy strong { font-size: 15px; }
+}
 
 .mp-visually-hidden {
     clip: rect(0, 0, 0, 0);

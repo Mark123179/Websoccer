@@ -224,10 +224,37 @@ class MatchPreviewContextTests(SimpleTestCase):
 
     def test_news_query_is_latest_published_news_not_pinned_sort_order(self):
         self.context()
-        self.home.public_news.filter.assert_called_once()
-        self.home.public_news.filter.return_value.order_by.assert_called_once_with(
+        self.home.public_news.filter.assert_not_called()
+        self.away.public_news.filter.assert_called_once()
+        self.away.public_news.filter.return_value.order_by.assert_called_once_with(
             '-published_at', '-pk',
         )
+
+    def test_news_follows_opponent_for_both_home_and_away_manager(self):
+        for viewed, opponent in ((self.home, self.away), (self.away, self.home)):
+            with self.subTest(viewed=viewed.name):
+                result = self.context(viewed=viewed)
+                self.assertIn(f'/{opponent.pk}/', result['news_url'])
+                self.assertEqual(len(result['news']), 2)
+                self.assertTrue(all(item['is_demo'] and not item['url'] for item in result['news']))
+                self.assertTrue(all(opponent.short_name in item['title'] for item in result['news']))
+
+    def test_real_opponent_news_replaces_display_only_examples(self):
+        self.away.public_news.filter.return_value.order_by.return_value.__getitem__.return_value = [
+            NS(pk=91, title='Echte Gast-News', published_at=date(2026, 10, 3),
+               thumbnail_static_path='/opponent-news.png'),
+        ]
+        result = self.context()
+        self.assertEqual(result['news'][0]['title'], 'Echte Gast-News')
+        self.assertNotIn('is_demo', result['news'][0])
+        self.assertIn('/3/', result['news'][0]['url'])
+
+    def test_without_fixture_no_own_news_or_demo_opponent_is_shown(self):
+        self.fixture = None
+        result = self.context()
+        self.assertEqual(result['news'], [])
+        self.assertEqual(result['news_url'], '')
+        self.home.public_news.filter.assert_not_called()
 
     @override_settings(MEDIA_URL='/media/')
     def test_trainer_is_responsible_manager_with_real_uploaded_portrait(self):

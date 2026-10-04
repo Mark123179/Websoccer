@@ -313,7 +313,7 @@ def build_match_preview_context(club, fixture):
         'lineup_date_label': '', 'last_result': None, 'form': [],
         'absences': [], 'injuries': [], 'suspensions': [], 'spotlights': [], 'news': [],
         'home_form': [], 'away_form': [], 'form_stats': [],
-        'news_url': reverse('club_news', kwargs={'club_id': club.pk}),
+        'news_url': reverse('club_news', kwargs={'club_id': opponent.pk}) if opponent else '',
         'default_player_url': default_player_url(),
     }
     # No GET-side weather roll, referee assignment or historical backfill.
@@ -348,16 +348,31 @@ def build_match_preview_context(club, fixture):
                 'label': 'Sonnig', 'temperature': 18, 'type': 'normal',
                 'icon_class': 'normal', 'is_demo': True,
             }
-    preview['news'] = [
-        {'title': item.title, 'date_label': _date(item.published_at),
-         'url': reverse('club_news_detail', kwargs={'club_id': club.pk, 'news_id': item.pk}),
-         'thumbnail_url': _image(item.thumbnail_static_path)}
-        for item in club.public_news.filter(published_at__lte=timezone.localdate())
-        .order_by('-published_at', '-pk')[:3]
-    ]
     if not opponent:
         return preview
     players = list(Player.objects.filter(club=opponent).order_by('pk'))
+    preview['news'] = [
+        {'title': item.title, 'date_label': _date(item.published_at),
+         'url': reverse('club_news_detail', kwargs={'club_id': opponent.pk, 'news_id': item.pk}),
+         'thumbnail_url': _image(item.thumbnail_static_path),
+         'category': getattr(item, 'category', '') or 'Vereinsnews',
+         'author': getattr(item, 'outlet', '') or 'Vereinsredaktion'}
+        for item in opponent.public_news.filter(published_at__lte=timezone.localdate())
+        .order_by('-published_at', '-pk')[:2]
+    ]
+    if not preview['news']:
+        # Visual examples only: no news records, transfers or club changes.
+        name = opponent.short_name or opponent.name
+        portrait = _report_portrait(players[0].portrait_url) if players else default_player_url()
+        preview['news'] = [
+            {'title': f'{name} plant Verstärkung',
+             'thumbnail_url': portrait, 'category': 'Transfer-News'},
+            {'title': f'{name} vor nächstem Transfer',
+             'thumbnail_url': _crest(opponent), 'category': 'Transfer-News'},
+        ]
+        for item in preview['news']:
+            item.update(date_label=_date(timezone.localdate()), url='',
+                        author='Vereinsredaktion', is_demo=True)
     preview['form'] = get_form_rows(opponent, 5)
     last, report, side = _last_report(opponent)
     opponent_report = (last, report, side)

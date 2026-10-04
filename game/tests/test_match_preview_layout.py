@@ -62,7 +62,31 @@ class MatchPreviewLayoutTests(SimpleTestCase):
         self.assertNotIn('foreground.png', html)
         self.assertNotIn('Vorbericht für das Spiel', html)
         self.assertIn('Der Spielplan ist derzeit frei.', html)
-        self.assertIn('match-preview.js?v=preview-23', html)
+        self.assertIn('match-preview.js?v=preview-24', html)
+
+    def test_news_examples_name_only_opponent_and_have_no_delete_controls(self):
+        html = render_to_string('game/club_match_preview.html', {
+            'club': {'name': 'Mein Verein'},
+            'preview': {
+                'has_fixture': True, 'opponent': {'name': 'Gegnerverein'},
+                'news_url': '/clubs/42/news/',
+                'news': [
+                    {'title': 'Gegner plant Verstärkung', 'category': 'Transfer-News',
+                     'thumbnail_url': '/face.png', 'date_label': '04.10.2026', 'is_demo': True},
+                    {'title': 'Gegner vor nächstem Transfer', 'category': 'Transfer-News',
+                     'thumbnail_url': '/crest.png', 'date_label': '04.10.2026', 'is_demo': True},
+                ],
+            },
+        })
+        news = html.split('aria-labelledby="mp-news-title"')[1].split('</section>')[0]
+        self.assertIn('Gegnerverein', news)
+        self.assertNotIn('Mein Verein', news)
+        self.assertIn('/clubs/42/news/', news)
+        self.assertEqual(news.count('<article class="mp-news-item">'), 2)
+        self.assertIn('Beispiele / Testdaten', news)
+        self.assertIn('TRANSFER', news.upper())
+        self.assertNotIn('Löschen', news)
+        self.assertNotIn('<button', news)
 
     def test_partial_fixture_handles_missing_reports_and_zero_temperature(self):
         html = render_to_string('game/club_match_preview.html', {
@@ -133,10 +157,10 @@ class MatchPreviewLayoutTests(SimpleTestCase):
             'request': SimpleNamespace(user=SimpleNamespace(pk=42)),
         })
         self.assertIn('data-layout-owner="42"', html)
-        self.assertIn('match-preview-layout.css?v=layout-11', html)
-        self.assertIn('match-preview-layout.js?v=layout-11', html)
+        self.assertIn('match-preview-layout.css?v=layout-12', html)
+        self.assertIn('match-preview-layout.js?v=layout-12', html)
         self.assertIn('data-layout-revision="3"', html)
-        self.assertIn('data-layout-detail-patch="3"', html)
+        self.assertIn('data-layout-detail-patch="4"', html)
         self.assertNotIn('Die letzten fünf', html)
         self.assertNotIn('Form der letzten fünf Spiele', html)
         for name in ('open', 'tools', 'select', 'parent', 'x', 'y', 'width', 'height',

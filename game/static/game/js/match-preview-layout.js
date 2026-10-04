@@ -358,7 +358,7 @@
         layout.detailPatch = 2;
     }
     function expandFooter(layout) {
-        if (detailPatch < 3 || layout.detailPatch >= detailPatch) return;
+        if (detailPatch < 3 || layout.detailPatch >= 3) return;
         const restoreChildren = group => {
             items.forEach(item => {
                 let parent = item.parent;
@@ -413,7 +413,26 @@
             }
         }
         stack(rightAnchor, ["weather-0", "referee-0"].map(id => byId.get(id)).filter(Boolean));
-        layout.detailPatch = detailPatch;
+        layout.detailPatch = 3;
+    }
+    function expandNews(layout) {
+        if (detailPatch < 4 || layout.detailPatch >= 4) return;
+        const news = byId.get("news-0");
+        if (news) {
+            // Only rebuild the former empty-news area, never the user's
+            // elevated stadium images, footer positions or kit geometry.
+            layout.nodes[news.id].height = baselineSizes.get(news.id).height /
+                dimensions(news).height * 100;
+            paint(news, layout.nodes[news.id]);
+            items.forEach(item => {
+                let parent = item.parent;
+                while (parent && parent !== news) parent = parent.parent;
+                if (parent !== news) return;
+                layout.nodes[item.id] = clone(baseline.nodes[item.id]);
+                paint(item, layout.nodes[item.id]);
+            });
+        }
+        layout.detailPatch = 4;
     }
     function updateSelection() {
         if (!editing || !selected) { selection.hidden = true; return; }
@@ -656,6 +675,7 @@
             useFree(saved);
             repairDetails(saved);
             expandFooter(saved);
+            expandNews(saved);
         }
     });
 })();
