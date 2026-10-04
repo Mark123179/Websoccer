@@ -10,6 +10,7 @@
 - [Scouting world-map viewBox calibration](scouting-map-viewbox.md) — world.svg IS the Vorlage Natural-Earth SVG (vb 5.6 19.4 988.8 386.2); copy its EXACT projected continent viewBoxes; meet letterbox = intended ocean; never self-compute or force stage aspect.
 - [Tactics template-grid specificity trap](tactics-template-grid-specificity.md) — .tactics-template-grid selectors (0,2,0) override generic panel rules (0,1,0); always edit the template-grid block for height changes.
 - [Static asset cache-bust (CSS+JS)](manager-profile-css-cachebust.md) — bump ?v= on EVERY template CSS/JS edit; bump BOTH the CSS and paired JS `?v=` together or user gets stale code.
+- [Collected static parity](collected-static-parity.md) — collectstatic can skip stale committed outputs by timestamp; verify production security fixes by content.
 - [Sub-badge glyph convention](sub-badge-glyph-convention.md) — match report on-photo sub badges use ↑(on,green)/↓(off,red), not same glyph+color-only; inline "Wechsel" marker stays ⇆ on purpose.
 - [Global Calendar Architecture](global-calendar-architecture.md) — ws-game-header ist global in base.html; Kalenderdaten kommen aus context_processors.py (global_calendar); build_game_header() gibt nur title/subtitle/back_url zurück.
 - [Squad/club mutation auth + CSRF](squad-csrf-and-authz.md) — session-based CSRF (no cookie); use {{ csrf_token }} in JS + @login_required + current_manager_club ownership check (not just Player club scoping).
@@ -70,6 +71,8 @@
 - [Bench came_on backfill](match-report-bench-sub-in-backfill.md) — green "eingewechselt" arrow needs substitution-event cross-check, not just ratings.is_sub (some old subs have no rating row at all).
 - [Scouting-Pool seeding](scouting-pool-seeding.md) — seed_scouting_pool fills clubless SCOUTABLE pool players (POOLSEED-<ISO>- prefix) so Pool>=COUNTRY_THRESHOLD(50) flips a country to scoutable; needs own PlayerStrengthProfile + keep base<84/pot<=85; GB catalog name "England" maps to GB-ENG not GB.
 - [Vereinsnews data wiring](vereinsnews-data-wiring.md) — last_match via get_last_match() not matchday order; scorers=[min,name]; MOTM from report_data; Player.age is stored IntegerField.
+- [News image compatibility](news-image-compatibility.md) — new upload restrictions must not erase historical images; validate and escape display sources separately.
+- [Merge marker detection](merge-marker-detection.md) — decorative equals-sign comment separators can be mistaken for unresolved merge markers.
 - [Screenshot below-the-fold verification](screenshot-below-fold-verification.md) — screenshot tool has no scroll param and no browser-use/playwright/selenium in env; verify below-fold layout via Django test client HTML fetch + DOM-order checks instead.
 - [Match-report data backfill vs template bug](match-report-data-backfill.md) — empty shirt-number badges/Auslastung were unrun idempotent seed commands (assign_shirt_numbers, seed_club_profiles), not template bugs; check DB population before assuming pipeline is broken.
 - [Match-report CSS extraction + formation parsing](match-report-css-extraction.md) — extract reference CSS from raw HTML, not screenshots; wrap conditional grid images in a permanent slot span; formation_slots() needs a dict, never the report_data display string.

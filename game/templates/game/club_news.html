@@ -8,8 +8,9 @@
 {% endblock %}
 
 {% block content %}
+{{ vn_data|json_script:"vn-data" }}
 <script>
-window.VN_DATA = {{ vn_data_json|safe }};
+window.VN_DATA = JSON.parse(document.getElementById('vn-data').textContent);
 window.VN_DATA.csrf = '{{ csrf_token }}';
 </script>
 <div id="vereinsnews-app"></div>

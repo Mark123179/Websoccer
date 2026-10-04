@@ -1,8 +1,8 @@
-/* ============================================================
+/* ------------------------------------------------------------
    VEREINSNEWS — Netflix-Stil · Vanilla JS (kein Framework)
    Views: home (Übersicht) · article (Detail) · editor (Regie-Modus)
    Daten kommen aus window.VN_DATA (Django-Context), kein Demo-Modus.
-   ============================================================ */
+   ------------------------------------------------------------ */
 'use strict';
 
 var _d = window.VN_DATA || {};
@@ -73,6 +73,20 @@ var state={
 
 /* ── Helpers ── */
 function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+// Historical sources are checked at render time, not erased from stored news.
+function safeImageSource(src){
+  if(typeof src!=='string'||/[\x00-\x1f\x7f\\]/.test(src))return'';
+  // Legacy formats (including SVG) stay in the inert <img> context only.
+  // New uploads/publications are restricted separately to the four raster types.
+  if(/^data:image\/(?:png|jpeg|jpg|gif|webp|avif|bmp|x-icon|vnd\.microsoft\.icon|svg\+xml);base64,[A-Za-z0-9+/]+={0,2}$/.test(src))return src;
+  if(src.charAt(0)==='/'&&src.charAt(1)!=='/')return src;
+  if(!/^https?:\/\//i.test(src))return'';
+  try{var u=new URL(src);return u.hostname&&!u.username&&!u.password?src:'';}catch(e){return'';}
+}
+function imageHTML(src,cls){
+  var safe=safeImageSource(src);
+  return safe?'<img class="'+cls+'" src="'+esc(safe)+'" alt="">':'';
+}
 function katC(n){var k=KATS.find(function(k){return k.n===n;});return k?k.c:'#22e6ff';}
 function outletOf(n){return OUTLETS.find(function(o){return o.n===n;})||OUTLETS[0];}
 function ha(h,a){var x=parseInt(h.slice(1),16);return'rgba('+(x>>16&255)+','+(x>>8&255)+','+(x&255)+','+a+')';}
@@ -81,17 +95,18 @@ function fmtViews(v){if(!v)return'Neu';return v>=1000?(v/1000).toFixed(1).replac
 function ALL(){return state.published.concat(ART);}
 function findArt(id){return ALL().concat(SOCIAL).find(function(a){return a.id===id;});}
 function bgFor(a){
-  var hue=(a.card&&a.card.accent)||katC(a.kat);
+  var hue=a.card&&a.card.accent;
+  if(typeof hue!=='string'||!/^#[0-9a-fA-F]{6}$/.test(hue))hue=katC(a.kat);
   return'linear-gradient(178deg,rgba(3,7,12,.05) 28%,rgba(3,7,12,.92) 82%),radial-gradient(circle at 74% 10%,'+ha(hue,.38)+',transparent 62%),linear-gradient(140deg,#0e2130,#050b12)';
 }
 function cardArt(a){
   var cd=a.card;
   if(Object.prototype.hasOwnProperty.call(a,'cardImageUrl')){
-    var image=a.cardImageUrl||null;
+    var image=safeImageSource(a.cardImageUrl)||null;
     var custom=cd&&cd.motiv==='eigenes';
     return{custom:custom?image:null,img:custom?null:image,imgH:cd&&cd.motiv==='wappen'?100:cd&&cd.motiv==='spieler'?124:a.imgH||120};
   }
-  if(cd&&cd.motiv==='eigenes')return{custom:cd.customSrc,img:null,imgH:0};
+  if(cd&&cd.motiv==='eigenes')return{custom:safeImageSource(cd.customSrc),img:null,imgH:0};
   if(cd&&cd.motiv==='wappen')return{custom:null,img:_d.crest_url||null,imgH:100};
   if(cd&&cd.motiv==='spieler'){var p=P[cd.pid];return{custom:null,img:p?p.img:null,imgH:124};}
   return{custom:null,img:a.img||null,imgH:a.imgH||120};
@@ -120,7 +135,7 @@ function adminDeleteBtn(a){
 function cardHTML(a){
   var art=cardArt(a);
   var h='<div class="news-card" style="position:relative;background:'+bgFor(a)+'" onclick="App.open(\''+a.id+'\')">';
-  if(art.custom)h+='<img class="card-custom" src="'+art.custom+'" alt="">';
+  if(art.custom)h+=imageHTML(art.custom,'card-custom');
   else if(art.img)h+='<img class="card-motif" src="'+art.img+'" alt="" style="height:'+art.imgH+'px">';
   if(a.isNew)h+='<span class="badge-neu card-neu">NEU</span>';
   h+=adminDeleteBtn(a);
@@ -135,7 +150,7 @@ function topHTML(a,rank){
   var art=cardArt(a);
   var h='<div class="top-item" onclick="App.open(\''+a.id+'\')"><span class="top-rank">'+rank+'</span>'+
     '<div class="top-card" style="background:'+bgFor(a)+'">';
-  if(art.custom)h+='<img class="card-custom" src="'+art.custom+'" alt="">';
+  if(art.custom)h+=imageHTML(art.custom,'card-custom');
   else if(art.img)h+='<img class="card-motif" src="'+art.img+'" alt="">';
   if(a.isNew)h+='<span class="badge-neu card-neu" style="top:6px;left:6px;font-size:8px;padding:2px 5px">NEU</span>';
   h+='<div class="card-overlay"><strong class="card-title">'+esc(a.title)+'</strong>'+
@@ -160,7 +175,7 @@ function homeHTML(){
   var h='<div class="vn-billboard">';
   if(_d.stadium_url)h+='<img class="bb-bg" src="'+_d.stadium_url+'" alt="">';
   else h+='<div class="bb-bg" style="background:linear-gradient(135deg,#0a1c2a,#050b12)"></div>';
-  if(fa.custom)h+='<img class="card-custom bb-bg" src="'+fa.custom+'" alt="">';
+  if(fa.custom)h+=imageHTML(fa.custom,'card-custom bb-bg');
   h+='<div class="bb-shade"></div>';
   if(!fa.custom&&fa.img)h+='<img class="bb-motif" src="'+fa.img+'" alt="">';
   if(feat.isNew)h+='<span class="badge-neu" style="position:absolute;top:16px;left:16px;font-size:10px;padding:4px 9px">NEU</span>';
@@ -235,7 +250,7 @@ function blocksHTML(blocks){
     }
     if(b.k==='image'){
       return'<figure class="blk-image" style="margin:0">'+
-        (b.src?'<img src="'+b.src+'" alt="">':'<div class="img-placeholder">Bild-Platzhalter</div>')+
+        (imageHTML(b.src,'')||'<div class="img-placeholder">Bild-Platzhalter</div>')+
         '<figcaption>'+esc(b.cap||'')+'</figcaption></figure>';
     }
     if(b.k==='motm'){
@@ -267,7 +282,7 @@ function articleHTML(a){
   var bigH=Math.min(250,Math.round((art.imgH||120)*1.9));
   return'<a class="back-link" onclick="App.goHome()">‹ Zurück zur Übersicht</a>'+
     '<div class="art-hero" style="background:'+bgFor(a).replace('.38','.4')+'">'+
-    (art.custom?'<img class="card-custom" src="'+art.custom+'" alt=""><div class="bb-shade"></div>':'')+
+    (art.custom?imageHTML(art.custom,'card-custom')+'<div class="bb-shade"></div>':'')+
     (!art.custom&&art.img?'<img class="art-motif" src="'+art.img+'" alt="" style="height:'+bigH+'px">':'')+
     '<div class="art-body">'+
     '<div style="display:flex;gap:10px;flex-wrap:wrap">'+
@@ -319,7 +334,7 @@ function blockEdHTML(b,i){
       }).join('')+'</div>';
   }else if(b.k==='image'){
     h+='<div class="dropzone" onclick="App.pickImg('+i+')" ondragover="event.preventDefault();this.classList.add(\'over\')" ondragleave="this.classList.remove(\'over\')" ondrop="App.dropImg(event,'+i+')">'+
-      (b.src?'<img src="'+b.src+'" alt="">':'Bild hierher ziehen oder klicken')+'</div>'+
+      (imageHTML(b.src,'')||'Bild hierher ziehen oder klicken')+'</div>'+
       '<input class="inp small" placeholder="Bildunterschrift…" value="'+esc(b.cap||'')+'" oninput="App.updB('+i+',\'cap\',this.value)">';
   }else if(b.k==='motm'){
     var mo=_d.motm;
@@ -380,7 +395,8 @@ function editorHTML(){
   }
   if(ed.card.motiv==='eigenes'){
     h+='<div class="dropzone" onclick="App.pickImg(-1)" ondragover="event.preventDefault();this.classList.add(\'over\')" ondragleave="this.classList.remove(\'over\')" ondrop="App.dropImg(event,-1)">'+
-      (ed.card.customSrc?'<img src="'+ed.card.customSrc+'" alt="">':'Hintergrundbild hierher ziehen oder klicken')+'</div>';
+      (imageHTML(ed.card.customSrc,'')||'Hintergrundbild hierher ziehen oder klicken')+'</div>'+
+      '<span class="hint">PNG, JPEG, GIF oder WebP · höchstens 1 MiB je Bild · 2 MiB je Nachricht.</span>';
   }
   h+='<span class="micro-label">Akzentfarbe</span><div style="display:flex;gap:8px">'+['#22e6ff','#e50914','#30f29c','#ffd166'].map(function(c){
     return'<button class="swatch'+(ed.card.accent===c?' on':'')+'" style="background:'+c+';box-shadow:0 0 10px '+c+'" onclick="App.setCard(\'accent\',\''+c+'\')"></button>';
@@ -402,7 +418,7 @@ function editorHTML(){
     '<button class="'+(state.edPrev==='karte'?'on':'')+'" onclick="App.setPrev(\'karte\')">News-Karte</button></div>'+
     '<span class="prev-live"><i></i>LIVE</span></div><div id="prevPane">'+previewHTML()+'</div></div>';
 
-  return h+'</div><input type="file" id="imgInput" accept="image/*" style="display:none">';
+  return h+'</div><input type="file" id="imgInput" accept="image/png,image/jpeg,image/gif,image/webp" style="display:none">';
 }
 
 function previewHTML(){
@@ -412,7 +428,7 @@ function previewHTML(){
     var art=cardArt(pa);
     return'<div class="prev-cardstage"><span class="prev-title" style="text-transform:uppercase">So erscheint deine News in den Reihen</span>'+
       '<div class="prev-bigcard" style="background:'+bgFor(pa)+'">'+
-      (art.custom?'<img class="card-custom" src="'+art.custom+'" alt="">':'')+
+      (art.custom?imageHTML(art.custom,'card-custom'):'')+
       (!art.custom&&art.img?'<img class="card-motif" src="'+art.img+'" alt="" style="position:absolute;right:-4px;bottom:0;height:'+Math.round(art.imgH*1.35)+'px;object-fit:contain">':'')+
       '<span class="badge-neu" style="position:absolute;top:10px;left:10px">NEU</span>'+
       '<div class="card-overlay"><span class="card-kat" style="color:'+katC(ed.kat)+'">'+esc(ed.kat)+'</span>'+
@@ -500,12 +516,16 @@ window.App={
   },
   dropImg:function(e,i){e.preventDefault();var f=e.dataTransfer.files[0];if(f)App.readImg(f,i);},
   readImg:function(file,i){
+    if(!/^image\/(?:png|jpeg|gif|webp)$/.test(file.type)){alert('Erlaubte Bildtypen: PNG, JPEG, GIF und WebP.');return;}
+    if(file.size>1024*1024){alert('Bilder dürfen höchstens 1 MiB groß sein.');return;}
     var r=new FileReader();
     r.onload=function(){
+      if(!safeImageSource(r.result)){alert('Ungültige Bilddatei.');return;}
       if(i<0)state.ed.card.customSrc=r.result;
       else state.ed.blocks[i].src=r.result;
       render();
     };
+    r.onerror=function(){alert('Die Bilddatei konnte nicht gelesen werden.');};
     r.readAsDataURL(file);
   },
   publish:function(){

@@ -41,7 +41,7 @@ class NewsArticleImageTests(TestCase):
         response = self.client.get(url)
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'game/club_news.html')
-        return json.loads(response.context['vn_data_json'])
+        return response.context['vn_data']
 
     def test_transfer_keeps_exact_portrait_in_full_page_and_detail(self):
         before = news_article_dicts([self.item], self.club)[0]
@@ -117,7 +117,7 @@ const fs = require('fs'), vm = require('vm'), assert = require('assert');
 const data = JSON.parse(fs.readFileSync(0, 'utf8'));
 const root = {innerHTML: ''};
 const ctx = {window: {VN_DATA: data, location: {hash: ''}},
-             document: {getElementById: () => root}};
+             document: {getElementById: () => root}, URL};
 vm.createContext(ctx);
 vm.runInContext(fs.readFileSync(process.argv[1], 'utf8'), ctx);
 const article = data.art[0], expected = article.cardImageUrl;

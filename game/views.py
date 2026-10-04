@@ -6330,10 +6330,9 @@ def club_news(request, club_id, news_id=None):
     }
 
     vn_data['initial_article'] = f'db_{news_id}' if news_id is not None else ''
-    import json as _json
     return render(request, 'game/club_news.html', {
         'club':         club,
-        'vn_data_json': _json.dumps(vn_data, ensure_ascii=False),
+        'vn_data':      vn_data,
         'game_header':  build_game_header(
             'Vereinsnews',
             club.name,
@@ -6354,9 +6353,20 @@ def club_news_publish(request, club_id):
     is_own_club = bool(user_club.id == club.id)
 
     import json as _json
+    from .news_validation import MAX_NEWS_BODY_BYTES, validate_news_body
+    from django.core.exceptions import RequestDataTooBig
+
     try:
-        body = _json.loads(request.body)
-    except Exception:
+        raw_body = request.body
+        if len(raw_body) > MAX_NEWS_BODY_BYTES:
+            return JsonResponse({'ok': False, 'error': 'Die Nachricht ist zu groß (maximal 2 MiB).'}, status=413)
+        body = _json.loads(raw_body)
+        card, blocks = validate_news_body(body)
+    except RequestDataTooBig:
+        return JsonResponse({'ok': False, 'error': 'Die Nachricht ist zu groß (maximal 2 MiB).'}, status=413)
+    except (ValueError, UnicodeDecodeError) as exc:
+        return JsonResponse({'ok': False, 'error': str(exc) or 'Ungültige Daten.'}, status=400)
+    except TypeError:
         return JsonResponse({'ok': False, 'error': 'Ungültige Daten.'}, status=400)
 
     titel = (body.get('titel') or '').strip()
@@ -6380,7 +6390,7 @@ def club_news_publish(request, club_id):
             return JsonResponse({'ok': False, 'error': 'Für fremde Vereine sind nur Transfer-News erlaubt.'}, status=403)
         if outlet == 'Vereinsredaktion':
             return JsonResponse({'ok': False, 'error': 'Vereinsredaktion ist nur beim eigenen Verein verfügbar.'}, status=403)
-        for blk in (body.get('blocks') or []):
+        for blk in blocks:
             if blk.get('k') in ('match', 'motm'):
                 return JsonResponse({'ok': False, 'error': 'Dieser Block-Typ ist nur beim eigenen Verein verfügbar.'}, status=403)
 
@@ -6393,8 +6403,8 @@ def club_news_publish(request, club_id):
         published_at=timezone.localdate(),
         is_new=True,
         is_social=False,
-        card_data=body.get('card') or None,
-        blocks=body.get('blocks') or [],
+        card_data=card,
+        blocks=blocks,
         published_by=request.user,
     )
     from .news_images import news_article_dicts
