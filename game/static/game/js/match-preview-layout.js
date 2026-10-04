@@ -115,7 +115,6 @@
         [".mp-model-card", "model", "3D / Schiedsrichter"],
         [".mp-model-card .mp-report-heading", "model-heading", "3D-Überschrift", "text"],
         [".mp-model-viewport", "model-viewport", "3D-Stadion"],
-        [".mp-stadium-demo-note", "model-note", "3D-Testhinweis", "text"],
         [".mp-referee-profile", "referee", "Schiedsrichterprofil"],
         [".mp-referee-portrait", "referee-photo", "Schiedsrichter · Porträt"],
         [".mp-referee-info", "referee-info", "Schiedsrichter · Angaben", "text"],
@@ -398,10 +397,10 @@
         layout.detailPatch = 3;
     }
     function expandNews(layout) {
-        if (detailPatch < 4 || layout.detailPatch >= 4) return;
+        if (detailPatch < 4 || layout.detailPatch >= Math.min(detailPatch, 5)) return;
         const news = byId.get("news-0");
         if (news) {
-            // Only rebuild the former empty-news area, never the user's
+            // Only rebuild the news area (including its new brand), never the user's
             // elevated stadium images, footer positions or kit geometry.
             layout.nodes[news.id].height = baselineSizes.get(news.id).height /
                 dimensions(news).height * 100;
@@ -414,7 +413,7 @@
                 paint(item, layout.nodes[item.id]);
             });
         }
-        layout.detailPatch = 4;
+        layout.detailPatch = Math.min(detailPatch, 5);
     }
     function restoreSavedLayout() {
         if (!baseline) baseline = captureBaseline();

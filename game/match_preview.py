@@ -125,17 +125,17 @@ def _stadium(home):
         except ObjectDoesNotExist:
             pass
     photo = getattr(profile, 'stadium_image_static_path', '')
+    has_model = bool(home and home.fm_inside_id == 907)
     return {
         'name': getattr(stadium, 'name', '') or getattr(profile, 'stadium_name', ''),
         'location': getattr(profile, 'city_name', ''),
         'photo_url': resolve_stadium_url(photo) if photo else (
             club_stadium_url(home.fm_inside_id) if home else ''
         ),
-        # The user explicitly requested Dortmund's model as a labeled visual test.
-        'model_available': bool(home),
-        'model_is_demo': bool(home and not (home.pk == 3 and home.fm_inside_id == 907)),
-        'model_name': 'Signal Iduna Park · Dortmund',
-        'model_scene_url': static('stadium_editor/dortmund_editor_scene.js') + '?v=54',
+        'model_available': has_model,
+        'model_name': getattr(stadium, 'name', '') or getattr(profile, 'stadium_name', ''),
+        'model_scene_url': static('stadium_editor/dortmund_editor_scene.js') + '?v=54'
+        if has_model else '',
         'url': reverse('club_detail', kwargs={'club_id': home.pk}) if home else '',
     }
 
@@ -171,7 +171,7 @@ def _money(value):
     return f'{value:,.0f}'.replace(',', '.') + ' €'
 
 
-def _referee_profile(referee, *, is_demo=False):
+def _referee_profile(referee):
     profile = {
         'name': referee.name, 'portrait_url': referee.face_url(),
         'nationality': getattr(referee, 'nationality', ''),
@@ -185,8 +185,6 @@ def _referee_profile(referee, *, is_demo=False):
             ) if getattr(referee, field, None) in (0, 1, 2)
         ],
     }
-    if is_demo:
-        profile['is_demo'] = True
     return profile
 
 
@@ -326,28 +324,6 @@ def build_match_preview_context(club, fixture):
             preview['weather'] = weather_context(weather) if weather else None
             if preview['weather']:
                 preview['weather']['icon_class'] = preview['weather']['type']
-        # Display-only test data: never persist or feed these into simulation.
-        if not preview['trainer']:
-            preview['trainer'] = {
-                'name': 'Alexander Weber', 'kind': 'Trainer', 'url': '',
-                'portrait_url': static('game/images/managers/default-manager.png'),
-                'is_demo': True,
-            }
-        if not preview['referee']:
-            demo_referee = Referee.objects.filter(
-                fm_uid__in=(98033209, 85133471),
-            ).order_by('pk').first()
-            preview['referee'] = _referee_profile(demo_referee, is_demo=True) if demo_referee else {
-                'name': 'Max Mustermann', 'is_demo': True,
-                'portrait_url': static('game/images/managers/default-manager.png'),
-                'nationality': 'Deutschland', 'level_label': 'Testprofil',
-                'summary': 'Neutrales Schiedsrichter-Testprofil.',
-            }
-        if not preview['weather']:
-            preview['weather'] = {
-                'label': 'Sonnig', 'temperature': 18, 'type': 'normal',
-                'icon_class': 'normal', 'is_demo': True,
-            }
     if not opponent:
         return preview
     players = list(Player.objects.filter(club=opponent).order_by('pk'))
@@ -356,23 +332,11 @@ def build_match_preview_context(club, fixture):
          'url': reverse('club_news_detail', kwargs={'club_id': opponent.pk, 'news_id': item.pk}),
          'thumbnail_url': _image(item.thumbnail_static_path),
          'category': getattr(item, 'category', '') or 'Vereinsnews',
-         'author': getattr(item, 'outlet', '') or 'Vereinsredaktion'}
+         'author': getattr(item, 'outlet', '') or 'Vereinsredaktion',
+         'is_new': bool(getattr(item, 'is_new', False))}
         for item in opponent.public_news.filter(published_at__lte=timezone.localdate())
         .order_by('-published_at', '-pk')[:2]
     ]
-    if not preview['news']:
-        # Visual examples only: no news records, transfers or club changes.
-        name = opponent.short_name or opponent.name
-        portrait = _report_portrait(players[0].portrait_url) if players else default_player_url()
-        preview['news'] = [
-            {'title': f'{name} plant Verstärkung',
-             'thumbnail_url': portrait, 'category': 'Transfer-News'},
-            {'title': f'{name} vor nächstem Transfer',
-             'thumbnail_url': _crest(opponent), 'category': 'Transfer-News'},
-        ]
-        for item in preview['news']:
-            item.update(date_label=_date(timezone.localdate()), url='',
-                        author='Vereinsredaktion', is_demo=True)
     preview['form'] = get_form_rows(opponent, 5)
     last, report, side = _last_report(opponent)
     opponent_report = (last, report, side)

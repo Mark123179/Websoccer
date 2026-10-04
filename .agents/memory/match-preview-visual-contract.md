@@ -15,11 +15,11 @@ Die Spielvorschau soll folgende Inhalte zeigen:
 - Letzte Aufstellung des Gegners auf einem Spielfeld mit Spielerbildern, Trainer mit Profilbild, letztes Gegnerergebnis samt Wappen, Form sowie verletzte und gesperrte Gegner inklusive Namen.
 - Letzte Vereinsnews; Top-Torjäger, Notenbester, bester Spieler des letzten Spiels mit Note und wertvollster Spieler, jeweils mit Spielerbild.
 
-Vereinsnews in der Spielvorschau gehören immer zum Gegner, nicht zum eigenen Verein. Die angeforderten zwei Dummy-News dienen nur zur Visualisierung einer fertigen Spielvorschau, im Stil der Vereinsnews-Bildkacheln und ohne Löschen-Button.
+Vereinsnews in der Spielvorschau gehören immer zum Gegner, nicht zum eigenen Verein, im Stil der Vereinsnews-Bildkacheln und ohne Löschen-Button. Die Überschrift trägt das große rote Netflix-artige N der Vereinsnews.
 
-**Why:** Der Nutzer braucht hier keine eigenen Vereinsnews und hat ausdrücklich erklärt: „Sind jetzt nur Dummies zum Visualisieren einer fertigen Spielvorschau.“
+**Why:** Der Nutzer braucht hier keine eigenen Vereinsnews und hat ausdrücklich die bekannte Vereinsnews-Marke mit großem roten N verlangt.
 
-**How to apply:** Vereinsname und Newslinks nach Gegnerrolle auflösen, auch bei Auswärtsspielen. Beispielmeldungen nur als Präsentationsdaten behandeln, niemals echte News oder Transfers daraus erzeugen.
+**How to apply:** Vereinsname und Newslinks nach Gegnerrolle auflösen, auch bei Auswärtsspielen. Nur veröffentlichte echte Gegner-News anzeigen.
 
 Die fertige Spielvorschau soll keine „Layout bearbeiten“-Funktion mehr anbieten.
 
@@ -44,11 +44,11 @@ Die Vorschau darf beim Öffnen weder eine Begegnung vorberechnen noch neue Wette
 
 **How to apply:** Neue verbindliche Vorabinformationen außerhalb der Anzeige erzeugen und speichern; die Vorschau liest sie anschließend. Ohne solche Daten einen klaren Offen-Status zeigen.
 
-Für die visuelle Prüfung hat der Nutzer Dummy-Daten für Trainer, Wetter und Schiedsrichter sowie Dortmunds 3D-Stadion als Test auch bei anderen Spielorten angefordert. Stadionfoto und 3D stehen nebeneinander statt hinter einer Umschaltung. Das Gegner-Spielfeld soll etwas länger sein und das Originalbild der Taktikansicht verwenden.
+Alle Dummies und Testdaten sind aus der fertigen Spielvorschau zu entfernen. Stadionfoto und 3D stehen weiterhin nebeneinander; das Gegner-Spielfeld verwendet das Originalbild der Taktikansicht.
 
-**Why:** Der Nutzer hat diese Testdarstellung ausdrücklich angefordert, um die bisher offenen Bereiche vollständig beurteilen zu können.
+**Why:** Nach visueller Abnahme hat der Nutzer ausdrücklich „alle Dummies weg und alle Testdaten“ verlangt.
 
-**How to apply:** Fehlende Daten nur in der Anzeige durch klar gekennzeichnete Testdaten ergänzen, niemals speichern oder in die Simulation übernehmen. Dortmunds Testmodell nicht als das reale Stadion eines anderen Vereins beschriften. Bestehende echte Daten weiterhin verwenden.
+**How to apply:** Fehlende Informationen als nicht verfügbar/offen anzeigen, nicht durch Beispieltrainer, Wetter, Schiedsrichter oder Nachrichten ersetzen. Nur das Modell des tatsächlichen Heimstadions verwenden, kein Dortmund-Modell bei anderen Heimvereinen.
 
 Die nächste freigegebene Richtung orientiert sich stärker an der kompakten Fußball-Vorlage: Das 3D-Stadion steht neben „Form & Stats“, die Position des Trainerzitats wird zum Schiedsrichterprofil mit Porträt. Einen „Spiel starten“-Button gibt es nicht. Der Kabinenhintergrund bleibt.
 

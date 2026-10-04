@@ -118,6 +118,7 @@ class MatchPreviewContextTests(SimpleTestCase):
                 squad.assert_called_once_with(club=expected)
             else:
                 squad.assert_not_called()
+            referees.assert_not_called()
             return result
 
     def test_home_role_uses_away_opponent_and_actual_home_venue(self):
@@ -126,8 +127,8 @@ class MatchPreviewContextTests(SimpleTestCase):
         self.assertEqual(result['stadium']['name'], 'Heim-Arena')
         self.assertEqual(result['home']['kit_url'], '/915-home.png')
         self.assertEqual(result['away']['kit_url'], '/907-away.png')
-        self.assertTrue(result['stadium']['model_available'])
-        self.assertTrue(result['stadium']['model_is_demo'])
+        self.assertFalse(result['stadium']['model_available'])
+        self.assertEqual(result['stadium']['model_scene_url'], '')
         self.assertEqual(result['time_label'], '18:30 Uhr')
 
     def test_away_role_still_uses_home_stadium_and_reverses_opponent(self):
@@ -139,7 +140,7 @@ class MatchPreviewContextTests(SimpleTestCase):
         self.fixture.home_club, self.fixture.away_club = self.away, self.home
         result = self.context(self.home)
         self.assertTrue(result['stadium']['model_available'])
-        self.assertFalse(result['stadium']['model_is_demo'])
+        self.assertNotIn('model_is_demo', result['stadium'])
         self.assertIn('dortmund_editor_scene.js', result['stadium']['model_scene_url'])
 
     def test_no_fixture_never_invents_opponent_or_runs_squad_queries(self):
@@ -155,13 +156,24 @@ class MatchPreviewContextTests(SimpleTestCase):
         self.assertIsNone(result['weather'])
         self.assertFalse(result['stadium']['model_available'])
 
-    def test_saved_weather_has_priority_over_display_only_demo(self):
+    def test_saved_weather_is_used_without_inventing_temperature(self):
         real_weather = {'type': 'rain', 'label': 'Regen', 'temperature': 0}
         with patch.object(briefing, 'weather_context', return_value=real_weather.copy()):
             result = self.context(day_weather=NS(pk=1))
         self.assertEqual(result['weather']['label'], 'Regen')
         self.assertEqual(result['weather']['temperature'], 0)
         self.assertNotIn('is_demo', result['weather'])
+
+    def test_real_opponent_manager_keeps_profile_link_and_portrait(self):
+        self.away.managed_by = NS(
+            name='Vereinsmanager', profile_image='/manager.png',
+            trainer_type_label='Trainer', user=NS(username='vereinsmanager'),
+        )
+        result = self.context()
+        self.assertEqual(result['trainer']['name'], 'Vereinsmanager')
+        self.assertEqual(result['trainer']['portrait_url'], '/manager.png')
+        self.assertIn('vereinsmanager', result['trainer']['url'])
+        self.assertNotIn('is_demo', result['trainer'])
 
     def test_report_stats_preserve_zero_and_do_not_invent_missing_values(self):
         rows = briefing._report_team_stats({'match_stats': {
@@ -176,11 +188,11 @@ class MatchPreviewContextTests(SimpleTestCase):
     def test_referee_profile_keeps_the_persons_own_portrait_and_details(self):
         ref = NS(name='Test Referee', nationality='Schweiz', level=4,
                  schlagwort='Ausgewogene Spielleitung', face_url=lambda: '/ref-face.png')
-        profile = briefing._referee_profile(ref, is_demo=True)
+        profile = briefing._referee_profile(ref)
         self.assertEqual(profile['portrait_url'], '/ref-face.png')
         self.assertEqual(profile['nationality'], 'Schweiz')
         self.assertEqual(profile['level_label'], 'International')
-        self.assertTrue(profile['is_demo'])
+        self.assertNotIn('is_demo', profile)
 
     def test_both_teams_have_form_and_latest_match_stat_blocks(self):
         result = self.context()
@@ -205,15 +217,14 @@ class MatchPreviewContextTests(SimpleTestCase):
         self.assertEqual([row['player']['id'] for row in result['injuries']], [1])
         self.assertEqual([row['player']['id'] for row in result['suspensions']], [2])
         self.assertEqual(result['spotlights'][-1]['player']['id'], 1)
-        self.assertTrue(result['referee']['is_demo'])
-        self.assertTrue(result['weather']['is_demo'])
-        self.assertTrue(result['trainer']['is_demo'])
-        self.assertEqual(result['weather']['temperature'], 18)
-        self.assertEqual(result['weather']['type'], 'normal')
+        self.assertIsNone(result['referee'])
+        self.assertIsNone(result['weather'])
+        self.assertIsNone(result['trainer'])
+        self.assertEqual(result['news'], [])
 
     def test_future_referee_is_not_borrowed_from_last_match(self):
         result = self.context()
-        self.assertTrue(result['referee']['is_demo'])
+        self.assertIsNone(result['referee'])
         self.fixture.simulated_match_id = 9
         referee = NS(name='Angesetzter Referee', face_url=lambda: '/real-ref.png')
         self.fixture.simulated_match = NS(referee=referee)
@@ -235,11 +246,9 @@ class MatchPreviewContextTests(SimpleTestCase):
             with self.subTest(viewed=viewed.name):
                 result = self.context(viewed=viewed)
                 self.assertIn(f'/{opponent.pk}/', result['news_url'])
-                self.assertEqual(len(result['news']), 2)
-                self.assertTrue(all(item['is_demo'] and not item['url'] for item in result['news']))
-                self.assertTrue(all(opponent.short_name in item['title'] for item in result['news']))
+                self.assertEqual(result['news'], [])
 
-    def test_real_opponent_news_replaces_display_only_examples(self):
+    def test_real_opponent_news_is_linked_without_display_only_examples(self):
         self.away.public_news.filter.return_value.order_by.return_value.__getitem__.return_value = [
             NS(pk=91, title='Echte Gast-News', published_at=date(2026, 10, 3),
                thumbnail_static_path='/opponent-news.png'),

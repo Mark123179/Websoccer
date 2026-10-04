@@ -180,6 +180,21 @@ assert.equal(JSON.stringify([
 ]), kept);
 console.log("News repair: news area enlarged, existing pictures and footer untouched.");
 
+const brandLayout = {detailPatch: 4, nodes: {
+    "news-0": {...frame, y: 55, height: 48},
+    "venue-photo-0": {...frame, y: -20},
+}};
+vm.runInNewContext(repairSource + "expandNews(layout);", {
+    layout: brandLayout, detailPatch: 5, byId: new Map([[news.id, news]]),
+    items: [], baselineSizes: new Map([[news.id, {height: 90}]]),
+    dimensions: () => ({height: 600}), paint: () => {},
+});
+assert.equal(brandLayout.detailPatch, 5);
+assert.equal(brandLayout.nodes[news.id].height, 15);
+assert.equal(brandLayout.nodes[news.id].y, 55);
+assert.equal(brandLayout.nodes["venue-photo-0"].y, -20);
+console.log("News brand repair: old dummy-news area fits real empty-state without moving image.");
+
 // Exercise the complete boot path with no editor DOM, not just the migration helpers.
 const storedReadonly = JSON.stringify({version: 1, revision: 3, detailPatch: 4,
     nodes: {"center-0": {...frame, x: 10, y: 20, width: 50, height: 60}}});

@@ -577,20 +577,6 @@ img[data-image-failed] { visibility: hidden; }
 }
 .mp-home-venue strong { color: var(--mp-text); font-size: 12px; line-height: 1.3; }
 .mp-home-venue > span { color: var(--mp-muted); font-size: 11px; line-height: 1.3; }
-.mp-demo-badge {
-    align-items: center;
-    border: 1px solid rgba(255, 209, 102, 0.38);
-    color: var(--mp-yellow);
-    display: inline-flex;
-    font-size: 9px;
-    font-weight: 700;
-    letter-spacing: 0.08em;
-    line-height: 1.2;
-    padding: 3px 6px;
-    text-transform: uppercase;
-    white-space: nowrap;
-}
-
 .mp-form-stats-photo { aspect-ratio: 16 / 9; background: transparent; border: 0; margin-bottom: 8px; overflow: hidden; position: relative; width: 100%; }
 .mp-stadium-photo { display: block; object-fit: cover; }
 .mp-photo-caption { background: rgba(3, 13, 21, 0.76); bottom: 0; color: var(--mp-text); font-size: 9px; left: 0; padding: 4px 7px; position: absolute; right: 0; }
@@ -638,7 +624,6 @@ img[data-image-failed] { visibility: hidden; }
     position: absolute;
 }
 .mp-stadium-model-status[hidden] { display: none; }
-.mp-stadium-demo-note { color: var(--mp-yellow); font-size: 10px; line-height: 1.35; margin: 6px 12px 0; }
 .mp-model-overlay { align-items: flex-start; background: transparent; border: 0; gap: 8px; left: 8px; margin: 0; padding: 7px 8px 6px; pointer-events: none; position: absolute; right: 8px; top: 8px; z-index: 4; }
 .mp-model-card .mp-model-overlay { align-items: flex-start; }
 .mp-model-overlay h2 { color: var(--mp-text); font-family: "Bahnschrift", "Franklin Gothic Medium", sans-serif; font-size: 13px; line-height: 1.2; margin: 2px 0 0; text-shadow: 0 1px 4px rgba(0, 0, 0, 0.95); }
@@ -657,13 +642,13 @@ img[data-image-failed] { visibility: hidden; }
 .mp-weather-animation--empty { color: var(--mp-faint); font: 12px ui-monospace, "SFMono-Regular", Consolas, monospace; }
 .mp-weather-info { align-items: flex-start; display: flex; flex: 1; flex-direction: column; gap: 3px; min-width: 0; }
 .mp-weather-info strong { color: var(--mp-text); font-size: 12px; line-height: 1.3; }
-.mp-weather-info .mp-demo-badge { font-size: 8px; padding: 2px 5px; }
 .mp-model-card > .mp-referee-profile { align-items: flex-start; border-top: 1px solid var(--mp-rule); gap: 10px; margin: 5px 12px 0; padding: 7px 0 0; }
 .mp-referee-portrait { background: rgba(7, 29, 41, 0.95); border: 1px solid rgba(180, 221, 229, 0.28); border-radius: 50%; flex: 0 0 auto; height: 84px; overflow: hidden; position: relative; width: 84px; }
 .mp-referee-portrait img { height: 100%; object-fit: cover; width: 100%; }
 .mp-referee-info { display: flex; flex: 1; flex-direction: column; gap: 2px; line-height: 1.1; min-width: 0; }
 .mp-referee-info > .mp-eyebrow { font-size: 11px; line-height: 1; }
 .mp-referee-info h2 { color: var(--mp-text); font-family: "Bahnschrift", "Franklin Gothic Medium", sans-serif; font-size: 18px; line-height: 1.1; margin: 0; }
+.mp-referee-profile--empty .mp-referee-info { grid-column: 1 / -1; }
 .mp-referee-info p { color: var(--mp-muted); font-size: 10px; line-height: 1.25; margin: 0; }
 .mp-referee-meta { align-items: center; color: var(--mp-faint); display: flex; flex-wrap: wrap; font-size: 11px; gap: 4px 8px; line-height: 1.05; }
 .mp-referee-ratings { border-top: 1px solid var(--mp-rule); display: grid; gap: 4px 10px; grid-template-columns: repeat(2, minmax(0, 1fr)); margin: 0; padding: 3px 0 0; }
@@ -767,6 +752,21 @@ img[data-image-failed] { visibility: hidden; }
 .mp-avatar--empty { align-items: center; color: var(--mp-faint); display: flex; justify-content: center; }
 .mp-news { border-top: 1px solid var(--mp-rule); margin-top: 12px; padding-top: 14px; }
 .mp-news .mp-subsection-heading { align-items: flex-end; margin-bottom: 8px; }
+.mp-news-brand { align-items: center; display: flex; gap: 8px; min-width: 0; }
+.mp-news-brand-mark { filter: drop-shadow(0 0 10px rgba(229, 9, 20, 0.32)); flex: 0 0 24px; height: 42px; width: 24px; }
+.mp-news .mp-subsection-heading .mp-news-brand-title {
+    color: var(--mp-text);
+    font-family: "Bahnschrift", "Franklin Gothic Medium", sans-serif;
+    font-size: 18px;
+    font-weight: 900;
+    letter-spacing: 0.045em;
+    line-height: 1;
+    margin: 3px 0 0;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+.mp-news-brand-title b { color: #e50914; }
+.mp-layout-free .mp-news .mp-subsection-heading .mp-news-brand-title { font-size: 18px !important; }
 .mp-news-list { display: grid; gap: 8px; grid-template-columns: minmax(0, 1fr); }
 
 .mp-news-item {
@@ -787,7 +787,6 @@ img[data-image-failed] { visibility: hidden; }
 }
 
 .mp-news-item:hover { border-color: rgba(229, 9, 20, 0.76); transform: translateY(-1px); }
-.mp-news-item--demo { cursor: default; }
 .mp-news-thumb,
 .mp-news-thumb img {
     inset: 0;
@@ -871,16 +870,6 @@ img[data-image-failed] { visibility: hidden; }
     letter-spacing: -0.03em;
     width: 17px;
 }
-.mp-news-demo-note,
-.mp-news-copy .mp-news-demo-label {
-    color: var(--mp-faint);
-    font-size: 8px;
-    font-weight: 700;
-    letter-spacing: 0.025em;
-    line-height: 1.25;
-}
-.mp-news-demo-note { margin: -3px 0 7px; }
-.mp-news-copy .mp-news-demo-label { color: var(--mp-yellow); }
 .mp-news-empty { align-items: center; border-top: 1px solid var(--mp-rule); color: var(--mp-faint); display: flex; gap: 9px; padding: 12px 0; }
 .mp-news-empty > span { color: var(--mp-cyan); font-size: 18px; }
 .mp-news-empty p { font-size: 14px; line-height: 1.4; margin: 0; }

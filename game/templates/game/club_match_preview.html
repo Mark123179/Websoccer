@@ -7,12 +7,12 @@
 
 {% block extra_css %}
     {{ block.super }}
-    <link rel="stylesheet" href="{% static 'game/css/match-preview.css' %}?v=preview-25">
-    <link rel="stylesheet" href="{% static 'game/css/match-preview-layout.css' %}?v=layout-13">
+    <link rel="stylesheet" href="{% static 'game/css/match-preview.css' %}?v=preview-26">
+    <link rel="stylesheet" href="{% static 'game/css/match-preview-layout.css' %}?v=layout-14">
 {% endblock %}
 
 {% block content %}
-<section class="match-preview-scene" aria-label="Spielvorschau" data-layout-owner="{{ request.user.pk|default:'guest'|unlocalize }}" data-layout-revision="3" data-layout-detail-patch="4">
+<section class="match-preview-scene" aria-label="Spielvorschau" data-layout-owner="{{ request.user.pk|default:'guest'|unlocalize }}" data-layout-revision="3" data-layout-detail-patch="5">
     <div class="match-preview-content" aria-label="Spielinformationen">
         <div class="match-preview-panels">
             <section class="match-preview-panel match-preview-panel--scout" aria-labelledby="mp-scout-title">
@@ -44,14 +44,14 @@
                 {% endif %}
 
                 {% if preview.trainer %}
-                    {% if preview.trainer.url and not preview.trainer.is_demo %}<a class="mp-trainer" href="{{ preview.trainer.url }}">{% else %}<div class="mp-trainer">{% endif %}
+                    {% if preview.trainer.url %}<a class="mp-trainer" href="{{ preview.trainer.url }}">{% else %}<div class="mp-trainer">{% endif %}
                         <span class="mp-avatar mp-avatar--trainer">
                             {% if preview.trainer.portrait_url %}<img src="{{ preview.trainer.portrait_url }}" alt="" loading="lazy" data-fallback-image>{% endif %}
                             <span class="mp-image-fallback" data-image-fallback aria-hidden="true">T</span>
                         </span>
                         <span class="mp-trainer-copy"><small>{{ preview.trainer.kind|default:"Trainer" }}</small><strong>{{ preview.trainer.name|default:"—" }}</strong></span>
-                        {% if preview.trainer.is_demo %}<span class="mp-demo-badge">Testdaten</span>{% elif preview.trainer.url %}<span class="mp-inline-arrow" aria-hidden="true">↗</span>{% endif %}
-                    {% if preview.trainer.url and not preview.trainer.is_demo %}</a>{% else %}</div>{% endif %}
+                        {% if preview.trainer.url %}<span class="mp-inline-arrow" aria-hidden="true">↗</span>{% endif %}
+                    {% if preview.trainer.url %}</a>{% else %}</div>{% endif %}
                 {% else %}
                     <p class="mp-inline-empty">Trainer nicht hinterlegt.</p>
                 {% endif %}
@@ -195,20 +195,16 @@
                                     <header class="mp-report-heading mp-model-overlay">
                                         <div>
                                             <span class="mp-eyebrow">Stadionansicht</span>
-                                            <h2 id="mp-stadium-model-title">{% if preview.stadium.model_is_demo %}Dortmund · Testmodell{% else %}{{ preview.stadium.model_name|default:"3D-Stadion" }}{% endif %}</h2>
-                                            {% if preview.stadium.model_is_demo %}<p class="mp-stadium-model-name">{{ preview.stadium.model_name|default:"Signal Iduna Park · Dortmund" }}</p>{% endif %}
+                                            <h2 id="mp-stadium-model-title">{{ preview.stadium.model_name|default:"3D-Stadion" }}</h2>
                                         </div>
-                                        {% if preview.stadium.model_is_demo %}<span class="mp-demo-badge">Testdaten</span>{% endif %}
                                     </header>
                                 </div>
-                                {% if preview.stadium.model_is_demo %}<p class="mp-stadium-demo-note">Dortmunder Testmodell – nicht das Stadion des angezeigten Vereins.</p>{% endif %}
                                 <section class="mp-weather-profile" aria-label="Wetter am Spieltag">
                                     {% if preview.weather %}
                                         <div class="mp-weather-animation" aria-hidden="true">{% include 'game/partials/weather_scene.html' with wx=preview.weather only %}</div>
                                         <div class="mp-weather-info">
                                             <span class="mp-eyebrow">Wetter</span>
                                             <strong>{{ preview.weather.label|default:"Prognose offen" }}{% if preview.weather.temperature or preview.weather.temperature == 0 %} · {{ preview.weather.temperature }} °C{% endif %}</strong>
-                                            {% if preview.weather.is_demo %}<span class="mp-demo-badge">Testdaten</span>{% endif %}
                                         </div>
                                     {% else %}
                                         <div class="mp-weather-animation mp-weather-animation--empty" aria-hidden="true">—</div>
@@ -227,7 +223,6 @@
                                             <div class="mp-referee-meta">
                                                 {% if preview.referee.nationality %}<span>{{ preview.referee.nationality }}</span>{% endif %}
                                                 {% if preview.referee.level_label %}<span>{{ preview.referee.level_label }}</span>{% endif %}
-                                                {% if preview.referee.is_demo %}<span class="mp-demo-badge">Testdaten</span>{% endif %}
                                             </div>
                                             {% if preview.referee.ratings %}
                                                 <dl class="mp-referee-ratings" aria-label="Schiedsrichterbewertungen">
@@ -236,6 +231,13 @@
                                                     {% endfor %}
                                                 </dl>
                                             {% elif preview.referee.summary %}<p>{{ preview.referee.summary }}</p>{% endif %}
+                                        </div>
+                                    </section>
+                                {% else %}
+                                    <section class="mp-referee-profile mp-referee-profile--empty" aria-labelledby="mp-referee-title">
+                                        <div class="mp-referee-info">
+                                            <span class="mp-eyebrow">Offizieller des Spiels</span>
+                                            <h2 id="mp-referee-title">Noch nicht angesetzt</h2>
                                         </div>
                                     </section>
                                 {% endif %}
@@ -280,7 +282,13 @@
                 </div>
 
                 <section class="mp-news" aria-labelledby="mp-news-title">
-                    <div class="mp-subsection-heading"><div><span class="mp-eyebrow">{{ preview.opponent.name|default:"Gegner" }}</span><h2 id="mp-news-title">Vereinsnews</h2></div>{% if preview.news_url %}<a class="mp-heading-link" href="{{ preview.news_url }}">Alle <span aria-hidden="true">↗</span></a>{% endif %}</div>
+                    <div class="mp-subsection-heading">
+                        <div class="mp-news-brand">
+                            <svg class="mp-news-brand-mark" viewBox="0 0 34 60" width="24" height="42" aria-hidden="true" focusable="false"><path d="M0 0h10v60H0z" fill="#8f070e"/><path d="M24 0h10v60H24z" fill="#8f070e"/><path d="M0 0h10l24 60H24z" fill="#e50914"/></svg>
+                            <div><span class="mp-eyebrow">{{ preview.opponent.name|default:"Gegner" }}</span><h2 id="mp-news-title" class="mp-news-brand-title" aria-label="Vereinsnews">VEREINS<b>N</b>EWS</h2></div>
+                        </div>
+                        {% if preview.news_url %}<a class="mp-heading-link" href="{{ preview.news_url }}">Alle <span aria-hidden="true">↗</span></a>{% endif %}
+                    </div>
                     {% if preview.news %}
                         <div class="mp-news-list">
                             {% for item in preview.news %}
@@ -289,9 +297,8 @@
                                         {% if item.thumbnail_url %}<img src="{{ item.thumbnail_url }}" alt="" loading="lazy" data-fallback-image><span class="mp-image-fallback" data-image-fallback aria-hidden="true">NEWS</span>{% endif %}
                                     </span>
                                     <span class="mp-news-shade" aria-hidden="true"></span>
-                                    <span class="mp-news-new">NEU</span>
+                                    {% if item.is_new %}<span class="mp-news-new">NEU</span>{% endif %}
                                     <span class="mp-news-copy">
-                                        {% if item.is_demo %}<small class="mp-news-demo-label">Beispiele / Testdaten</small>{% endif %}
                                         <small class="mp-news-category">{{ item.category|default:"Vereinsnews" }}</small>
                                         <strong>{{ item.title|default:"Meldung ohne Titel" }}</strong>
                                         <span class="mp-news-meta"><time>{{ item.date_label|default:"Vereinsnews" }}</time><span class="mp-news-author-mark" aria-hidden="true">VR</span><span>{{ item.author|default:"Vereinsredaktion" }}</span></span>
@@ -300,7 +307,7 @@
                             {% endfor %}
                         </div>
                     {% else %}
-                        <div class="mp-news-empty"><span aria-hidden="true">—</span><p>Ohne feststehenden Gegner sind keine Vereinsnews verfügbar.</p></div>
+                        <div class="mp-news-empty"><span aria-hidden="true">—</span><p>{% if preview.opponent %}Noch keine Vereinsnews veröffentlicht.{% else %}Ohne feststehenden Gegner sind keine Vereinsnews verfügbar.{% endif %}</p></div>
                     {% endif %}
                 </section>
             </section>
@@ -312,8 +319,8 @@
 
 {% block extra_js %}
     {{ block.super }}
-    <script src="{% static 'game/js/match-preview.js' %}?v=preview-25" defer></script>
-    <script src="{% static 'game/js/match-preview-layout.js' %}?v=layout-13" defer></script>
+    <script src="{% static 'game/js/match-preview.js' %}?v=preview-26" defer></script>
+    <script src="{% static 'game/js/match-preview-layout.js' %}?v=layout-14" defer></script>
     {% if preview.stadium.model_available and preview.stadium.model_scene_url %}
         <script type="importmap">{"imports":{"three":"{% static 'stadium_editor/stage/vendor/three.module.js' %}"}}</script>
         <script src="{% static 'game/js/club-stadium.js' %}?v=5" data-scene-url="{{ preview.stadium.model_scene_url }}" defer></script>

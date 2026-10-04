@@ -62,9 +62,9 @@ class MatchPreviewLayoutTests(SimpleTestCase):
         self.assertNotIn('foreground.png', html)
         self.assertNotIn('Vorbericht für das Spiel', html)
         self.assertIn('Der Spielplan ist derzeit frei.', html)
-        self.assertIn('match-preview.js?v=preview-25', html)
+        self.assertIn('match-preview.js?v=preview-26', html)
 
-    def test_news_examples_name_only_opponent_and_have_no_delete_controls(self):
+    def test_news_name_only_opponent_and_use_red_brand_without_delete_controls(self):
         html = render_to_string('game/club_match_preview.html', {
             'club': {'name': 'Mein Verein'},
             'preview': {
@@ -72,9 +72,11 @@ class MatchPreviewLayoutTests(SimpleTestCase):
                 'news_url': '/clubs/42/news/',
                 'news': [
                     {'title': 'Gegner plant Verstärkung', 'category': 'Transfer-News',
-                     'thumbnail_url': '/face.png', 'date_label': '04.10.2026', 'is_demo': True},
+                     'thumbnail_url': '/face.png', 'date_label': '04.10.2026',
+                     'url': '/clubs/42/news/1/', 'is_new': True},
                     {'title': 'Gegner vor nächstem Transfer', 'category': 'Transfer-News',
-                     'thumbnail_url': '/crest.png', 'date_label': '04.10.2026', 'is_demo': True},
+                     'thumbnail_url': '/crest.png', 'date_label': '04.10.2026',
+                     'url': '/clubs/42/news/2/', 'is_new': False},
                 ],
             },
         })
@@ -82,11 +84,37 @@ class MatchPreviewLayoutTests(SimpleTestCase):
         self.assertIn('Gegnerverein', news)
         self.assertNotIn('Mein Verein', news)
         self.assertIn('/clubs/42/news/', news)
-        self.assertEqual(news.count('<article class="mp-news-item">'), 2)
-        self.assertIn('Beispiele / Testdaten', news)
+        self.assertEqual(news.count('<a class="mp-news-item"'), 2)
+        self.assertEqual(news.count('class="mp-news-new"'), 1)
+        self.assertIn('class="mp-news-brand-mark"', news)
+        self.assertIn('fill="#e50914"', news)
+        self.assertIn('VEREINS<b>N</b>EWS', news)
+        self.assertNotIn('Testdaten', news)
         self.assertIn('TRANSFER', news.upper())
         self.assertNotIn('Löschen', news)
         self.assertNotIn('<button', news)
+
+    def test_overview_links_next_match_to_preview_even_without_league(self):
+        for league in (None, SimpleNamespace(id=1)):
+            with self.subTest(league=league):
+                html = render_to_string('game/home.html', {
+                    'primary_club': SimpleNamespace(id=13, league=league),
+                    'next_match': {'competition_name': 'Liga', 'is_simulated': False},
+                })
+                self.assertIn('href="/clubs/13/matches/next/">Spielvorschau</a>', html)
+                self.assertNotIn('Spielplan anzeigen', html)
+
+    def test_without_real_information_preview_shows_empty_states_not_test_data(self):
+        html = render_to_string('game/club_match_preview.html', {
+            'preview': {'has_fixture': True, 'opponent': {'name': 'Gast'}},
+        })
+        for text in ('Trainer nicht hinterlegt.', 'Prognose noch offen',
+                     'Noch nicht angesetzt', 'Kein 3D-Modell verfügbar',
+                     'Noch keine Vereinsnews veröffentlicht.'):
+            self.assertIn(text, html)
+        for text in ('Testdaten', 'Testmodell', 'Alexander Weber', 'Max Mustermann',
+                     'Sonnig', 'plant Verstärkung', 'vor nächstem Transfer'):
+            self.assertNotIn(text, html)
 
     def test_partial_fixture_handles_missing_reports_and_zero_temperature(self):
         html = render_to_string('game/club_match_preview.html', {
@@ -108,23 +136,23 @@ class MatchPreviewLayoutTests(SimpleTestCase):
             'preview': {
                 'has_fixture': True, 'home': {'name': 'Heim'},
                 'away': {'name': 'Gast'}, 'opponent': {'name': 'Gast'},
-                'trainer': {'name': 'Demo-Trainer', 'is_demo': True},
+                'trainer': {'name': 'Vereinstrainer'},
                 'referee': {
-                    'name': 'Demo-Referee', 'is_demo': True,
+                    'name': 'Angesetzter Referee',
                     'portrait_url': '/referee-face.png', 'nationality': 'Schweiz',
                     'level_label': 'International',
                 },
-                'weather': {'label': 'Sonnig', 'temperature': 18, 'is_demo': True},
+                'weather': {'label': 'Sonnig', 'temperature': 18},
                 'stadium': {
                     'name': 'Heimstadion', 'photo_url': '/venue.jpg',
-                    'model_available': True, 'model_is_demo': True,
+                    'model_available': True,
                     'model_name': 'Signal Iduna Park · Dortmund',
                     'model_scene_url': '/dortmund-scene.js',
                 },
             },
         })
-        self.assertGreaterEqual(html.count('Testdaten'), 3)
-        self.assertIn('Testmodell', html)
+        self.assertNotIn('Testdaten', html)
+        self.assertNotIn('Testmodell', html)
         self.assertIn('mp-report-layout', html)
         self.assertNotIn('Form &amp; Stats', html)
         self.assertNotIn('mp-report-stats', html)
@@ -157,10 +185,10 @@ class MatchPreviewLayoutTests(SimpleTestCase):
             'request': SimpleNamespace(user=SimpleNamespace(pk=42)),
         })
         self.assertIn('data-layout-owner="42"', html)
-        self.assertIn('match-preview-layout.css?v=layout-13', html)
-        self.assertIn('match-preview-layout.js?v=layout-13', html)
+        self.assertIn('match-preview-layout.css?v=layout-14', html)
+        self.assertIn('match-preview-layout.js?v=layout-14', html)
         self.assertIn('data-layout-revision="3"', html)
-        self.assertIn('data-layout-detail-patch="4"', html)
+        self.assertIn('data-layout-detail-patch="5"', html)
         self.assertNotIn('Die letzten fünf', html)
         self.assertNotIn('Form der letzten fünf Spiele', html)
         for name in ('open', 'tools', 'select', 'parent', 'x', 'y', 'width', 'height',
