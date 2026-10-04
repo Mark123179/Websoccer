@@ -752,6 +752,15 @@ img[data-image-failed] { visibility: hidden; }
 .mp-avatar--empty { align-items: center; color: var(--mp-faint); display: flex; justify-content: center; }
 .mp-news { border-top: 1px solid var(--mp-rule); margin-top: 12px; padding-top: 14px; }
 .mp-news .mp-subsection-heading { align-items: flex-end; margin-bottom: 8px; }
+.mp-layout-free .mp-news > .mp-subsection-heading {
+    /* Keep the heading in flow: the unsaved empty-state sibling must start below it. */
+    position: relative !important;
+    top: auto !important;
+    left: auto !important;
+    width: 100% !important;
+    height: auto !important;
+    margin: 0 0 8px !important;
+}
 .mp-news-brand { align-items: center; display: flex; gap: 8px; min-width: 0; }
 .mp-news-brand-mark { filter: drop-shadow(0 0 10px rgba(229, 9, 20, 0.32)); flex: 0 0 24px; height: 42px; width: 24px; }
 .mp-news .mp-subsection-heading .mp-news-brand-title {

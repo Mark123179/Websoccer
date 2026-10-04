@@ -7,7 +7,7 @@
 
 {% block extra_css %}
     {{ block.super }}
-    <link rel="stylesheet" href="{% static 'game/css/match-preview.css' %}?v=preview-26">
+    <link rel="stylesheet" href="{% static 'game/css/match-preview.css' %}?v=preview-27">
     <link rel="stylesheet" href="{% static 'game/css/match-preview-layout.css' %}?v=layout-14">
 {% endblock %}
 
@@ -319,7 +319,7 @@
 
 {% block extra_js %}
     {{ block.super }}
-    <script src="{% static 'game/js/match-preview.js' %}?v=preview-26" defer></script>
+    <script src="{% static 'game/js/match-preview.js' %}?v=preview-27" defer></script>
     <script src="{% static 'game/js/match-preview-layout.js' %}?v=layout-14" defer></script>
     {% if preview.stadium.model_available and preview.stadium.model_scene_url %}
         <script type="importmap">{"imports":{"three":"{% static 'stadium_editor/stage/vendor/three.module.js' %}"}}</script>

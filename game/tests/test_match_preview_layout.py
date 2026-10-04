@@ -62,7 +62,7 @@ class MatchPreviewLayoutTests(SimpleTestCase):
         self.assertNotIn('foreground.png', html)
         self.assertNotIn('Vorbericht für das Spiel', html)
         self.assertIn('Der Spielplan ist derzeit frei.', html)
-        self.assertIn('match-preview.js?v=preview-26', html)
+        self.assertIn('match-preview.js?v=preview-27', html)
 
     def test_news_name_only_opponent_and_use_red_brand_without_delete_controls(self):
         html = render_to_string('game/club_match_preview.html', {
@@ -115,6 +115,14 @@ class MatchPreviewLayoutTests(SimpleTestCase):
         for text in ('Testdaten', 'Testmodell', 'Alexander Weber', 'Max Mustermann',
                      'Sonnig', 'plant Verstärkung', 'vor nächstem Transfer'):
             self.assertNotIn(text, html)
+
+    def test_saved_news_heading_stays_in_flow_above_unregistered_empty_state(self):
+        css = Path('game/static/game/css/match-preview.css').read_text()
+        rule = css.split('.mp-layout-free .mp-news > .mp-subsection-heading {')[1].split('}')[0]
+        for declaration in ('position: relative !important', 'top: auto !important',
+                            'left: auto !important', 'height: auto !important',
+                            'margin: 0 0 8px !important'):
+            self.assertIn(declaration, rule)
 
     def test_partial_fixture_handles_missing_reports_and_zero_temperature(self):
         html = render_to_string('game/club_match_preview.html', {
