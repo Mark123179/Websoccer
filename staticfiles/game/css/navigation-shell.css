@@ -1,0 +1,123 @@
+/* Additive control: no new flex item/track in the expanded Golden sidebar. */
+.nav-shell-toggle {
+    position: absolute;
+    top: 14px;
+    right: 13px;
+    width: 36px;
+    height: 36px;
+    padding: 8px;
+    border: 1px solid transparent;
+    border-radius: var(--radius);
+    background: #08151e;
+    color: var(--cyan);
+    cursor: pointer;
+}
+.nav-shell-toggle svg,
+.nav-shell-action-icon {
+    width: 24px;
+    height: 24px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+.nav-search-field { padding-right: 42px; }
+.nav-shell-search,
+.nav-shell-action-icon { display: none; }
+.nav-shell-toggle:hover,
+.nav-shell-search:hover { border-color: var(--line-strong); }
+.navbar button:focus-visible {
+    outline: 2px solid var(--cyan);
+    outline-offset: 2px;
+}
+
+/* Mobile keeps its existing full-width, expanded navbar and zero sidebar.
+ * The explicit navigation state is independent of data-shell-mode=wide.
+ */
+@media (min-width: 761px) {
+    html[data-nav-state="collapsed"] .dashboard-scaler {
+        --sidebar: 80px;
+        --dashboard-content-width: calc(var(--dashboard-shell-width) - var(--sidebar));
+        --dashboard-artboard-width: var(--dashboard-content-width);
+    }
+    html[data-nav-state="collapsed"] .navbar {
+        padding: 110px 10px 14px;
+        overflow: visible;
+    }
+    html[data-nav-state="collapsed"] .nav-shell-toggle {
+        right: 10px;
+        width: 60px;
+        height: 52px;
+    }
+    html[data-nav-state="collapsed"] .nav-shell-toggle svg { transform: rotate(180deg); }
+    html[data-nav-state="collapsed"] .nav-search { display: none; }
+    html[data-nav-state="collapsed"] .nav-shell-search {
+        position: absolute;
+        top: 66px;
+        left: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 60px;
+        height: 44px;
+        background: rgba(255, 255, 255, 0.052);
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        color: var(--cyan);
+        cursor: pointer;
+    }
+    html[data-nav-state="collapsed"] .nav-label {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip-path: inset(50%);
+        white-space: nowrap;
+        border: 0;
+    }
+    html[data-nav-state="collapsed"] .nav-menu {
+        overflow: visible;
+        padding-right: 0;
+    }
+    html[data-nav-state="collapsed"] .navbar a,
+    html[data-nav-state="collapsed"] .nav-logout-btn {
+        position: relative;
+        justify-content: center;
+        flex-shrink: 0;
+        min-height: 58px;
+        padding: 0;
+        gap: 0;
+    }
+    html[data-nav-state="collapsed"] .nav-shell-action-icon { display: block; }
+    html[data-nav-state="collapsed"] .creator-mode-button { margin-top: 0; }
+    html[data-nav-state="collapsed"] .navbar [data-nav-label]::after {
+        content: attr(data-nav-label);
+        display: none;
+        position: absolute;
+        left: calc(100% + 12px);
+        top: 50%;
+        transform: translateY(-50%);
+        background: #08151e;
+        color: var(--text);
+        border: 1px solid var(--line-strong);
+        border-radius: var(--radius);
+        padding: 10px 14px;
+        font-size: 16px;
+        font-weight: 700;
+        line-height: 1.3;
+        text-transform: none;
+        white-space: nowrap;
+        pointer-events: none;
+        z-index: 30;
+    }
+    html[data-nav-state="collapsed"] .navbar [data-nav-label]:is(:hover, :focus-visible)::after {
+        display: block;
+    }
+}
+@media (max-width: 760px) {
+    .nav-shell-toggle { display: none; }
+    .nav-search-field { padding-right: 11px; }
+}

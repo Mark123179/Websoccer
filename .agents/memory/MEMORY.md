@@ -1,4 +1,5 @@
 - [Wide-shell scope rule](wide-shell-scope.md) — 1440×900 is locked golden master; only wide-shell CSS scope may extend layout horizontally.
+- [Sichtbarer Navigationsschalter](navigation-controls.md) — Ein-/Ausklappbutton muss als eigener Button erkennbar sein, nicht wie ein unauffälliger Teil des Suchfelds.
 - [Flex-Kollaps bei min-height](flex-min-height-collapse.md) — flex:1-Kind in Container mit nur min-height kollabiert auf 0px; Artboard-Seiten = Block-Layout; Diagnose via temp dev-login.
 - [Adblock cosmetic filter trap](adblock-classname-trap.md) — CSS classes containing "spons*" are hidden by ad-blocker cosmetic filters (display:none injected client-side); use neutral prefixes like "sxp-".
 - [Asset URL single source of truth](asset-url-sot.md) — ASSETS_BASE_URL must be read at call time via _base(); frozen module-level constants miss env-var; ASSETS_BASE_URL=/assets/ + ASSETS_ROOT=/app/assets are prod-critical in .env.

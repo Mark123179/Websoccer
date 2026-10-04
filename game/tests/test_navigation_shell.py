@@ -1,4 +1,5 @@
 """Global navigation is additive, accessible and preserves server actions."""
+import re
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -21,8 +22,10 @@ class NavigationShellTests(SimpleTestCase):
 
     def test_early_script_and_paired_cache_versions(self):
         html = self.render_shell()
-        self.assertLess(html.index("navigation-shell.js?v=nav-1"), html.index('rel="stylesheet"'))
-        self.assertIn("navigation-shell.css?v=nav-1", html)
+        script = re.search(r'navigation-shell\.js\?v=([^"]+)', html)
+        self.assertIsNotNone(script)
+        self.assertLess(script.start(), html.index('rel="stylesheet"'))
+        self.assertIn(f"navigation-shell.css?v={script.group(1)}", html)
         self.assertNotIn('defer src=', html.split("navigation-shell.js")[0])
 
     def test_actions_labels_active_link_and_csrf_are_retained(self):
@@ -59,3 +62,15 @@ class NavigationShellTests(SimpleTestCase):
         self.assertNotIn("--game-scale", css)
         self.assertIn("clip-path: inset(50%)", css)
         self.assertIn(":focus-visible", css)
+
+    def test_toggle_has_a_visible_button_frame_and_double_arrow(self):
+        html = self.render_shell()
+        toggle = html.split('id="nav-toggle"')[1].split("</button>")[0]
+        self.assertIn('aria-label="Navigation einklappen"', toggle)
+        self.assertIn('m11 6-6 6 6 6M19 6l-6 6 6 6', toggle)
+        css = Path("game/static/game/css/navigation-shell.css").read_text()
+        rule = css.split(".nav-shell-toggle {", 1)[1].split("}", 1)[0]
+        self.assertIn("border: 1px solid var(--cyan)", rule)
+        self.assertIn("z-index: 3", rule)
+        self.assertIn("display: inline-flex", rule)
+        self.assertIn("justify-content: center", rule)
