@@ -14,12 +14,18 @@
             </span>
         </a>
         <div class="nav-quick-actions" aria-label="Manager Aktionen">
-            <a class="nav-action" href="{% url 'notifications_page' %}" aria-label="Benachrichtigungen">
+            <a class="nav-action" id="notifications-trigger"
+               href="{% url 'notifications_page' %}" aria-label="Benachrichtigungen"
+               title="Benachrichtigungen" role="button" aria-haspopup="dialog"
+               aria-expanded="false" aria-controls="notifications-popup"
+               data-open-url="{% url 'notifications_open' %}" data-csrf="{{ csrf_token }}">
                 <svg aria-hidden="true" viewBox="0 0 24 24">
                     <path d="M18 16v-5a6 6 0 0 0-12 0v5l-2 2v1h16v-1l-2-2Z"></path>
                     <path d="M10 21h4"></path>
                 </svg>
-                {% if unread_notifications_count %}<span class="nav-badge" aria-label="{{ unread_notifications_count }} neue Benachrichtigungen">{{ unread_notifications_count }}</span>{% endif %}
+                <span class="nav-badge" id="notifications-badge"
+                      aria-label="{{ unread_notifications_count }} ungelesene Benachrichtigungen"
+                      {% if not unread_notifications_count %}hidden{% endif %}>{{ unread_notifications_count }}</span>
             </a>
             <a class="nav-action{% if request.resolver_match.url_name == 'calendar' %} is-active{% endif %}"
                href="{% url 'calendar' %}" aria-label="Kalender öffnen" title="Kalender">
@@ -97,3 +103,18 @@
         </a>
     </nav>
 </header>
+
+<section class="notifications-popup" id="notifications-popup" role="dialog"
+         aria-labelledby="notifications-popup-title" tabindex="-1" hidden>
+    <div class="notifications-popup-head">
+        <h2 id="notifications-popup-title">Benachrichtigungen</h2>
+        <button class="notifications-popup-close" type="button"
+                aria-label="Benachrichtigungen schließen">×</button>
+    </div>
+    <div class="notifications-popup-content" aria-busy="false">
+        <p class="notifications-popup-status" role="status">Benachrichtigungen werden geladen …</p>
+        <ul class="notifications-popup-list" hidden></ul>
+        <button class="notifications-popup-retry" type="button" hidden>Erneut versuchen</button>
+    </div>
+    <a class="notifications-popup-all" href="{% url 'notifications_page' %}">Alle anzeigen <span aria-hidden="true">→</span></a>
+</section>

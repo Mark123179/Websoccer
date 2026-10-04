@@ -40,7 +40,7 @@ from .views import (
     player_graph_data,
 )
 from .views_auth import auth_login, auth_register, auth_logout
-from .views_notifications import notifications_page
+from .views_notifications import notifications_open, notifications_page
 from .views_ai import ai_chat
 from .views_notes import notizen_api
 from .views_transfer_v2 import (
@@ -660,6 +660,7 @@ urlpatterns = [
 
     # Benachrichtigungen (Glocke im Header)
     path('benachrichtigungen/', notifications_page, name='notifications_page'),
+    path('api/notifications/open/', notifications_open, name='notifications_open'),
 
     # Geschützte Importer-API (Bearer-Token, kein CSRF; Spec §28)
     path('creator-api/import-jobs/next/', importer_next_job, name='importer_next_job'),
