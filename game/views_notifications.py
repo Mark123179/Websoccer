@@ -10,6 +10,14 @@ from django.views.decorators.http import require_POST
 from .models import ManagerProfile, Notification
 
 
+def _safe_notification_url(request, url):
+    """Validate display URLs without changing the stored notification."""
+    return url if url_has_allowed_host_and_scheme(
+        url, allowed_hosts={request.get_host()},
+        require_https=request.is_secure(),
+    ) else ''
+
+
 @login_required(login_url='/auth/login/')
 @require_POST
 def notifications_open(request):
@@ -24,13 +32,9 @@ def notifications_open(request):
         )
         payload = []
         for item in items:
-            safe_url = item.url if url_has_allowed_host_and_scheme(
-                item.url, allowed_hosts={request.get_host()},
-                require_https=request.is_secure(),
-            ) else ''
             payload.append({
                 'id': item.pk, 'title': item.title, 'body': item.body,
-                'url': safe_url, 'is_new': not item.is_read,
+                'url': _safe_notification_url(request, item.url), 'is_new': not item.is_read,
                 'created_at': item.created_at.isoformat(),
                 'date_label': timezone.localtime(item.created_at).strftime('%d.%m.%Y · %H:%M'),
             })
@@ -52,6 +56,8 @@ def notifications_page(request):
     items = list(
         Notification.objects.filter(recipient=manager)[:100]
     )
+    for item in items:
+        item.safe_url = _safe_notification_url(request, item.url)
     # Nur die geladenen Meldungen als gelesen markieren (die Objekte
     # behalten ihren alten is_read-Stand für die Hervorhebung im Template).
     Notification.objects.filter(

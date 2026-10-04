@@ -22,8 +22,8 @@ a.notif-item:hover{border-color:rgba(34,230,255,.55);}
     <h1>Benachrichtigungen</h1>
     <p class="notif-sub">Auktions-Ereignisse und Manager-Nachrichten — beim Öffnen als gelesen markiert.</p>
     {% for n in notifications %}
-        {% if n.url %}
-        <a class="notif-item{% if not n.is_read %} is-unread{% endif %}" href="{{ n.url }}">
+        {% if n.safe_url %}
+        <a class="notif-item{% if not n.is_read %} is-unread{% endif %}" href="{{ n.safe_url }}">
             <p class="notif-title">{{ n.title }}</p>
             {% if n.body %}<p class="notif-body">{{ n.body }}</p>{% endif %}
             <span class="notif-time">{{ n.created_at|date:'d.m.Y, H:i' }} Uhr</span>

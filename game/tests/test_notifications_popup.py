@@ -45,15 +45,30 @@ class NotificationsPopupTests(TestCase):
         self.assertEqual([item['id'] for item in items], [second.pk, first.pk])
 
     def test_text_is_preserved_and_unsafe_links_are_removed(self):
-        for url in ('javascript:alert(1)', 'data:text/html,test', '//outside.example/test'):
+        for url in (
+            'javascript:alert(1)', 'data:text/html,test',
+            '//outside.example/test', 'https://outside.example/test',
+        ):
             with self.subTest(url=url):
                 item = self.create_item(body='<img src=x onerror=alert(1)>', url=url)
                 data = self.client.post(self.url).json()['items'][0]
                 self.assertEqual(data['id'], item.pk)
                 self.assertEqual(data['url'], '')
                 self.assertEqual(data['body'], '<img src=x onerror=alert(1)>')
+                item.refresh_from_db()
+                self.assertEqual(item.url, url)
         self.create_item(url='/clubs/1/')
         self.assertEqual(self.client.post(self.url).json()['items'][0]['url'], '/clubs/1/')
+
+    def test_https_popup_rejects_same_host_http_link(self):
+        item = self.create_item(url='http://testserver/clubs/1/')
+        response = self.client.post(self.url, secure=True)
+        self.assertEqual(response.json()['items'][0]['url'], '')
+        item.refresh_from_db()
+        self.assertEqual(item.url, 'http://testserver/clubs/1/')
+        self.create_item(url='https://testserver/clubs/1/')
+        response = self.client.post(self.url, secure=True)
+        self.assertEqual(response.json()['items'][0]['url'], 'https://testserver/clubs/1/')
 
     def test_get_does_not_mark_anything_read_and_login_is_required(self):
         item = self.create_item()
