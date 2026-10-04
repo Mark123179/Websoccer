@@ -46,8 +46,41 @@ class NotificationsPageTests(TestCase):
                 self.assertEqual(item.url, url)
                 self.assertTrue(item.is_read)
 
+    def test_disguised_unsafe_links_render_without_changing_stored_urls(self):
+        urls = (
+            r'\\outside.example/test',
+            r'/\outside.example/test',
+            r'https://testserver\@outside.example/test',
+            'https://testserver@outside.example/test',
+            '//testserver@outside.example/test',
+            '\x01/clubs/1/',
+            '\t//outside.example/test',
+            '\nhttps://outside.example/test',
+            '///outside.example/test',
+            '///testserver/clubs/1/',
+        )
+        for url in urls:
+            with self.subTest(url=repr(url)):
+                item = self.create_item(url=url, body='Sichtbarer Nachrichtentext')
+                response = self.client.get(self.url)
+                self.assertEqual(response.status_code, 200)
+                displayed = next(
+                    n for n in response.context['notifications'] if n.pk == item.pk
+                )
+                self.assertEqual(displayed.safe_url, '')
+                self.assertEqual(displayed.url, url)
+                self.assertContains(response, '<div class="notif-item is-unread">', count=1)
+                self.assertNotContains(response, '<a class="notif-item')
+                self.assertContains(response, item.title)
+                self.assertContains(response, item.body)
+                item.refresh_from_db()
+                self.assertEqual(item.url, url)
+
     def test_internal_links_remain_clickable_without_changing_urls(self):
-        for url in ('/clubs/1/', 'https://testserver/clubs/1/', 'http://testserver/clubs/1/'):
+        for url in (
+            '/clubs/1/', '//testserver/clubs/1/',
+            'https://testserver/clubs/1/', 'http://testserver/clubs/1/',
+        ):
             with self.subTest(url=url):
                 item = self.create_item(url=url)
                 response = self.client.get(self.url)

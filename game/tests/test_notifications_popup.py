@@ -60,6 +60,49 @@ class NotificationsPopupTests(TestCase):
         self.create_item(url='/clubs/1/')
         self.assertEqual(self.client.post(self.url).json()['items'][0]['url'], '/clubs/1/')
 
+    def test_disguised_unsafe_links_are_empty_without_changing_stored_urls(self):
+        urls = (
+            r'\\outside.example/test',
+            r'/\outside.example/test',
+            r'https://testserver\@outside.example/test',
+            'https://testserver@outside.example/test',
+            '//testserver@outside.example/test',
+            '\x01/clubs/1/',
+            '\t//outside.example/test',
+            '\nhttps://outside.example/test',
+            '///outside.example/test',
+            '///testserver/clubs/1/',
+        )
+        for url in urls:
+            with self.subTest(url=repr(url)):
+                item = self.create_item(url=url, body='Sichtbarer Nachrichtentext')
+                response = self.client.post(self.url)
+                self.assertEqual(response.status_code, 200)
+                data = next(
+                    n for n in response.json()['items'] if n['id'] == item.pk
+                )
+                self.assertEqual(data['url'], '')
+                self.assertEqual(data['title'], item.title)
+                self.assertEqual(data['body'], item.body)
+                item.refresh_from_db()
+                self.assertEqual(item.url, url)
+
+    def test_internal_links_are_preserved_without_changing_stored_urls(self):
+        for url in (
+            '/clubs/1/', '//testserver/clubs/1/',
+            'https://testserver/clubs/1/', 'http://testserver/clubs/1/',
+        ):
+            with self.subTest(url=url):
+                item = self.create_item(url=url)
+                response = self.client.post(self.url)
+                self.assertEqual(response.status_code, 200)
+                data = next(
+                    n for n in response.json()['items'] if n['id'] == item.pk
+                )
+                self.assertEqual(data['url'], url)
+                item.refresh_from_db()
+                self.assertEqual(item.url, url)
+
     def test_https_popup_rejects_same_host_http_link(self):
         item = self.create_item(url='http://testserver/clubs/1/')
         response = self.client.post(self.url, secure=True)
