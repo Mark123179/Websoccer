@@ -5,6 +5,8 @@
 
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Synchronous preference restore, before styles/first visible layout. -->
+    <script src="{% static 'game/js/navigation-shell.js' %}?v=nav-1"></script>
 
     <title>
         {% block title %}
@@ -16,6 +18,7 @@
     <link rel="stylesheet" href="{% static 'game/css/game-stage.css' %}?v=stage-4">
     <link rel="stylesheet" href="{% static 'game/css/global-dashboard.css' %}?v=gm-3">
     <link rel="stylesheet" href="{% static 'game/css/global-dashboard/header.css' %}?v=shell-9">
+    <link rel="stylesheet" href="{% static 'game/css/navigation-shell.css' %}?v=nav-1">
     <link rel="stylesheet" href="{% static 'game/css/weather.css' %}?v=3">
     {% if request.user.is_authenticated %}
     <link rel="stylesheet" href="{% static 'game/css/ai-chat.css' %}?v=3">
@@ -33,7 +36,16 @@
 
     <div class="dashboard-scaler">
 
-    <nav class="navbar" aria-label="Hauptnavigation">
+    <nav class="navbar" id="main-navigation" aria-label="Hauptnavigation">
+        <button type="button" class="nav-shell-toggle" id="nav-toggle"
+                aria-controls="main-navigation" aria-expanded="true"
+                aria-label="Navigation einklappen" title="Navigation einklappen">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m14 6-6 6 6 6"/></svg>
+        </button>
+        <button type="button" class="nav-shell-search" id="nav-search-open"
+                aria-label="Suche öffnen" data-nav-label="Suchen">
+            <span class="nav-search-icon" aria-hidden="true"></span>
+        </button>
         <form class="nav-search" action="/clubs/" method="get" role="search">
             <label class="nav-search-label" for="nav-search-input">Suchen</label>
             <div class="nav-search-field">
@@ -46,65 +58,70 @@
         <div class="nav-menu">
             <a href="/"{% if url_name == 'home' %} aria-current="page"{% endif %}>
                 <span class="nav-icon nav-icon--png"><img src="{% static 'game/images/icons/nav-uebersicht.png' %}" alt=""></span>
-                Übersicht
+                <span class="nav-label">Übersicht</span>
             </a>
             <a href="/forum/"{% if url_name == 'forum' %} aria-current="page"{% endif %}>
                 <span class="nav-icon nav-icon--png"><img src="{% static 'game/images/icons/nav-forum.png' %}" alt=""></span>
-                Zum Forum
+                <span class="nav-label">Zum Forum</span>
             </a>
             <a href="{{ current_manager.club_url }}"{% if url_name == 'club_detail' or url_name == 'club_table' or url_name == 'club_match_preview' or url_name == 'club_match_report' or url_name == 'club_news' %} aria-current="page"{% endif %}>
                 <span class="nav-icon nav-icon--png"><img src="{% static 'game/images/icons/nav-verein.png' %}" alt=""></span>
-                Verein
+                <span class="nav-label">Verein</span>
             </a>
             <a href="{{ current_manager.squad_url }}"{% if url_name == 'club_professional_squad' or url_name == 'club_youth_squad' %} aria-current="page"{% endif %}>
                 <span class="nav-icon nav-icon--png"><img src="{% static 'game/images/icons/nav-kader.png' %}" alt=""></span>
-                Kader
+                <span class="nav-label">Kader</span>
             </a>
             <a href="{{ current_manager.tactics_url }}"{% if url_name == 'club_tactics' %} aria-current="page"{% endif %}>
                 <span class="nav-icon nav-icon--png"><img src="{% static 'game/images/icons/nav-taktik.png' %}" alt=""></span>
-                Taktik
+                <span class="nav-label">Taktik</span>
             </a>
             <a href="{% url 'transfer_scouting' %}"{% if url_name == 'transfer_scouting' or url_name == 'transfer_watchlist' or url_name == 'showauction_stage' or url_name == 'showauction_detail' %} aria-current="page"{% endif %}>
                 <span class="nav-icon nav-icon--png"><img src="{% static 'game/images/icons/nav-transfers.png' %}" alt=""></span>
-                Transfers
+                <span class="nav-label">Transfers</span>
             </a>
             <a href="{{ current_manager.club_url }}">
                 <span class="nav-icon nav-icon--png"><img src="{% static 'game/images/icons/nav-jugend.png' %}" alt=""></span>
-                U21 / Reserve
+                <span class="nav-label">U21 / Reserve</span>
             </a>
             <a href="{{ current_manager.club_url }}">
                 <span class="nav-icon nav-icon--png"><img src="{% static 'game/images/icons/nav-datencenter.png' %}" alt=""></span>
-                Datencenter
+                <span class="nav-label">Datencenter</span>
             </a>
             <a href="{% url 'management_hub' %}"{% if url_name == 'management_hub' or url_name == 'stadium_detail' or url_name == 'stadium_editor' %} aria-current="page"{% endif %}>
                 <span class="nav-icon nav-icon--png"><img src="{% static 'game/images/icons/nav-management.png' %}" alt=""></span>
-                Management
+                <span class="nav-label">Management</span>
             </a>
             <a href="{{ current_manager.club_url }}">
                 <span class="nav-icon nav-icon--png"><img src="{% static 'game/images/icons/nav-community.png' %}" alt=""></span>
-                Community
+                <span class="nav-label">Community</span>
             </a>
         </div>
         {% endwith %}
 
         <a href="/handbuch/" class="nav-menu-handbuch">
             <span class="nav-icon"><img src="{% static 'game/images/icons/sidebar/handbuch.svg' %}" alt=""></span>
-            Handbuch
+            <span class="nav-label">Handbuch</span>
         </a>
 
         <form class="nav-logout-form" action="{% url 'auth_logout' %}" method="post">
             {% csrf_token %}
-            <button class="nav-logout-btn" type="submit">Abmelden</button>
+            <button class="nav-logout-btn" type="submit">
+                <svg class="nav-shell-action-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 4H4v16h5M14 8l4 4-4 4M8 12h10"/></svg>
+                <span class="nav-label">Abmelden</span>
+            </button>
         </form>
 
         {% if request.user.is_superuser %}
         <a class="creator-mode-button" href="{% url 'story_test_start' %}">
-            <span>Admin-Test</span>
-            <strong>Live-Ticker-Test</strong>
+            <svg class="nav-shell-action-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 5 11 7-11 7ZM4 5v14"/></svg>
+            <span class="nav-label">Admin-Test</span>
+            <strong class="nav-label">Live-Ticker-Test</strong>
         </a>
         <a class="creator-mode-button" href="{% url 'creator_index' %}">
-            <span>Manager</span>
-            <strong>Creator Mode</strong>
+            <svg class="nav-shell-action-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m14 5 5 5M4 20l1-6L16 3l5 5-11 11Z"/></svg>
+            <span class="nav-label">Manager</span>
+            <strong class="nav-label">Creator Mode</strong>
         </a>
         {% endif %}
     </nav>
