@@ -75,6 +75,19 @@
     font-size: 12px;
 }
 
+.news-profile-card .club-card-link {
+    /* Keep this action above the list, away from the floating corner tools. */
+    position: relative;
+    left: auto;
+    right: auto;
+    bottom: auto;
+    display: flex;
+    width: fit-content;
+    max-width: 100%;
+    margin-top: 6px;
+    justify-content: flex-start;
+}
+
 .compact-table-card {
     background:
         linear-gradient(180deg, rgba(1, 7, 13, 0.18), rgba(1, 7, 13, 0.34)),

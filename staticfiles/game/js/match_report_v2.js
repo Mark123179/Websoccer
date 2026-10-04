@@ -38,6 +38,7 @@
         var ap = smoothPath(awayPts) + " Z";
 
         var gx = [0, 15, 30, 45, 60, 75, 90], vlines = "", hlines = "", xlabels = "", hh = [-0.66, -0.33, 0.33, 0.66];
+        if (s.length > 91) gx.push(105, 120);
         var scaleX = function (minute) { return xF(Math.min(s.length - 1, minute)); };
         gx.forEach(function (mm) {
             if (mm >= s.length) return;

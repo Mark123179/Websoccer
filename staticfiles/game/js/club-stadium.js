@@ -14,14 +14,17 @@
         if (loading || scene || disposed) return;
         loading = true;
         try {
-            const {mountDortmundScene} = await import(script.dataset.sceneUrl);
+            const sceneUrl = new URL(script.dataset.sceneUrl, document.baseURI);
+            if (host.closest('.match-preview-scene')) sceneUrl.searchParams.set('framing', '1');
+            const {mountDortmundScene} = await import(sceneUrl.href);
             const mounted = await mountDortmundScene({
                 element: host,
                 includeSurroundings: false,
                 interactive: false,
                 autoRotate: true,
                 compact: true,
-                compactZoom: 1.2,
+                compactZoom: host.closest('.match-preview-scene') ? 1 : 1.2,
+                verticalFraming: host.closest('.match-preview-scene') ? 0.07 : 0,
                 transparentBackground: true,
             });
             if (disposed) {

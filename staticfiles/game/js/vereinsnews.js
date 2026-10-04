@@ -86,9 +86,14 @@ function bgFor(a){
 }
 function cardArt(a){
   var cd=a.card;
+  if(Object.prototype.hasOwnProperty.call(a,'cardImageUrl')){
+    var image=a.cardImageUrl||null;
+    var custom=cd&&cd.motiv==='eigenes';
+    return{custom:custom?image:null,img:custom?null:image,imgH:cd&&cd.motiv==='wappen'?100:cd&&cd.motiv==='spieler'?124:a.imgH||120};
+  }
   if(cd&&cd.motiv==='eigenes')return{custom:cd.customSrc,img:null,imgH:0};
   if(cd&&cd.motiv==='wappen')return{custom:null,img:_d.crest_url||null,imgH:100};
-  if(cd&&cd.motiv==='spieler'){var p=P[cd.pid]||P[Object.keys(P)[0]];return{custom:null,img:p?p.img:null,imgH:124};}
+  if(cd&&cd.motiv==='spieler'){var p=P[cd.pid];return{custom:null,img:p?p.img:null,imgH:124};}
   return{custom:null,img:a.img||null,imgH:a.imgH||120};
 }
 function mediaLogoURL(slug){return slug?MEDIA_BASE+slug+'_media.png':'';}
@@ -529,7 +534,7 @@ window.App={
 
 // URL-Hash → Artikel direkt öffnen (z. B. aus Übersicht verlinkt)
 (function(){
-  var h=window.location.hash;
-  if(h){var a=findArt(h.slice(1));if(a){state.view='article';state.art=a;}}
+  var id=_d.initial_article||window.location.hash.slice(1);
+  if(id){var a=findArt(id);if(a){state.view='article';state.art=a;}}
 })();
 render();
