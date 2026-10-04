@@ -3,12 +3,17 @@
     position: absolute;
     top: 14px;
     right: 13px;
-    width: 36px;
+    z-index: 3;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
     height: 36px;
-    padding: 8px;
-    border: 1px solid transparent;
+    padding: 5px;
+    border: 1px solid var(--cyan);
     border-radius: var(--radius);
-    background: #08151e;
+    background: #103440;
+    box-shadow: inset 0 0 10px rgba(34, 230, 255, 0.12);
     color: var(--cyan);
     cursor: pointer;
 }
@@ -22,11 +27,15 @@
     stroke-linecap: round;
     stroke-linejoin: round;
 }
-.nav-search-field { padding-right: 42px; }
+.nav-search-field { padding-right: 50px; }
 .nav-shell-search,
 .nav-shell-action-icon { display: none; }
 .nav-shell-toggle:hover,
 .nav-shell-search:hover { border-color: var(--line-strong); }
+.nav-shell-toggle:hover {
+    background: #184b59;
+    color: #ffffff;
+}
 .navbar button:focus-visible {
     outline: 2px solid var(--cyan);
     outline-offset: 2px;
