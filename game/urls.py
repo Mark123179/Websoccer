@@ -1,6 +1,7 @@
 from django.urls import path
 from . import views_story
 from . import views_story_test
+from .views_news_images import club_news_legacy_image
 from .views import (
     claim_club,
     club_detail,
@@ -235,6 +236,10 @@ from .views_transfermarkt import (
 
 
 urlpatterns = [
+    path(
+        'clubs/<int:club_id>/news/<int:news_id>/images/<str:slot>/<str:digest>/',
+        club_news_legacy_image, name='club_news_legacy_image',
+    ),
     path(
         '',
         home,

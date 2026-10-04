@@ -6072,7 +6072,7 @@ def club_news(request, club_id, news_id=None):
     club = get_object_or_404(Club.objects.select_related('league'), id=club_id)
 
     news_items = list(ClubNewsItem.objects.filter(club=club).order_by('-published_at', '-id'))
-    articles = news_article_dicts(news_items, club)
+    articles = news_article_dicts(news_items, club, externalize_legacy=True)
     art_items = [article for item, article in zip(news_items, articles) if not item.is_social]
     social_items = [article for item, article in zip(news_items, articles) if item.is_social]
 
@@ -6393,6 +6393,17 @@ def club_news_publish(request, club_id):
         for blk in blocks:
             if blk.get('k') in ('match', 'motm'):
                 return JsonResponse({'ok': False, 'error': 'Dieser Block-Typ ist nur beim eigenen Verein verfügbar.'}, status=403)
+
+    from .news_image_storage import persist_news_images
+    try:
+        card, blocks = persist_news_images(card, blocks)
+    except Exception:
+        import logging
+        logging.getLogger(__name__).exception('News image storage failed')
+        return JsonResponse({
+            'ok': False,
+            'error': 'Der Bildspeicher ist derzeit nicht verfügbar. Die Nachricht wurde nicht veröffentlicht. Bitte erneut versuchen.',
+        }, status=503)
 
     item = ClubNewsItem.objects.create(
         club=club,

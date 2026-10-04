@@ -67,11 +67,15 @@ def resolve_news_images(news, club):
     return images
 
 
-def news_article_dicts(news, club):
+def news_article_dicts(news, club, *, externalize_legacy=False):
     """Serialize articles with resolved images, without changing saved card data."""
     news = list(news)
     images = resolve_news_images(news, club)
-    return [
-        dict(item.to_vn_dict(), cardImageUrl=images[item.pk])
-        for item in news
-    ]
+    articles = []
+    for item in news:
+        article = dict(item.to_vn_dict(), cardImageUrl=images[item.pk])
+        if externalize_legacy:
+            from .news_image_storage import externalize_legacy_article
+            article = externalize_legacy_article(item, article)
+        articles.append(article)
+    return articles

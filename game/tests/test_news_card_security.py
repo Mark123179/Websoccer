@@ -4,6 +4,7 @@ from io import BytesIO
 import json
 from pathlib import Path
 import subprocess
+from tempfile import TemporaryDirectory
 
 from django.contrib.auth import get_user_model
 from django.template.loader import render_to_string
@@ -38,6 +39,15 @@ class NewsPublishSecurityTests(TestCase):
         )
 
     def setUp(self):
+        media = TemporaryDirectory()
+        self.addCleanup(media.cleanup)
+        storage = override_settings(
+            MEDIA_ROOT=media.name,
+            STORAGES={'default': {'BACKEND': 'django.core.files.storage.FileSystemStorage'},
+                      'staticfiles': {'BACKEND': 'django.contrib.staticfiles.storage.StaticFilesStorage'}},
+        )
+        storage.enable()
+        self.addCleanup(storage.disable)
         self.client.force_login(self.user)
         self.url = reverse('club_news_publish', args=[self.club.pk])
 
@@ -67,8 +77,16 @@ class NewsPublishSecurityTests(TestCase):
                 response = self.post(self.payload(source))
                 self.assertEqual(response.status_code, 200, response.content[:300])
                 item = ClubNewsItem.objects.get(pk=response.json()['article']['pk'])
-                self.assertEqual(item.card_data['customSrc'], source)
-                self.assertEqual(item.to_vn_dict()['card']['customSrc'], source)
+                saved = item.card_data['customSrc']
+                if source.startswith('data:'):
+                    self.assertTrue(saved.startswith('/media/news-images/'))
+                    self.assertNotIn('data:', json.dumps(response.json()))
+                    image = self.client.get(saved)
+                    self.assertEqual(image.status_code, 200)
+                    self.assertEqual(image.content, base64.b64decode(source.split(',', 1)[1]))
+                else:
+                    self.assertEqual(saved, source)
+                self.assertEqual(item.to_vn_dict()['card']['customSrc'], saved)
 
     def test_allowed_motifs_and_absent_card(self):
         for motif in ('none', 'wappen', 'spieler', 'eigenes'):
@@ -167,7 +185,12 @@ class NewsPublishSecurityTests(TestCase):
             )
             response = self.client.get(reverse('club_news', args=[self.club.pk]))
             self.assertEqual(response.status_code, 200)
-            self.assertEqual(response.context['vn_data']['art'][0]['card']['customSrc'], source)
+            rendered = response.context['vn_data']['art'][0]['card']['customSrc']
+            if source.startswith('data:image/png;base64,'):
+                self.assertTrue(rendered.startswith(f'/clubs/{self.club.pk}/news/{item.pk}/images/card/'))
+                self.assertNotIn(source.encode(), response.content)
+            else:
+                self.assertEqual(rendered, source)
             self.assertNotIn(b'</script><script>alert(1)</script>', response.content)
             item.refresh_from_db()
             self.assertEqual(item.card_data['customSrc'], source)

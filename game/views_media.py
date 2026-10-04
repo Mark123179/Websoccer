@@ -8,6 +8,12 @@ from django.http import HttpResponse, Http404, HttpResponseNotModified
 
 
 def serve_media(request, name):
+    # Migration backups contain original article JSON and must never be public.
+    # Reject traversal before either backend, including paths into the backup area.
+    from .news_image_storage import BACKUP_PREFIX
+    if (name.startswith(('/', '\\', BACKUP_PREFIX)) or '\\' in name
+            or any(part in {'.', '..'} for part in name.split('/'))):
+        raise Http404
     last_modified = None
     blob = None
     data = None

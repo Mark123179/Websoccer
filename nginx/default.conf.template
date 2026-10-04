@@ -74,6 +74,11 @@ server {
         add_header Cache-Control "public";
     }
 
+    # Original News JSON backups are operator-only, never public media.
+    location ^~ /media/news-image-backups/ {
+        return 404;
+    }
+
     location /media/ {
         alias /app/media/;
         access_log off;
