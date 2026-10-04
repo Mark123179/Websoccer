@@ -68,8 +68,8 @@ class MatchPreviewImageTests(SimpleTestCase):
             )
 
     def test_formation_display_keeps_each_populated_snapshot_line(self):
-        self.assertEqual(briefing._formation_label('4n-2-0-1-3'), '4-2-1-3')
-        self.assertEqual(briefing._formation_label('3n-3-2-0-2'), '3-3-2-2')
+        self.assertEqual(briefing._formation_label('4n-2-0-1-3'), '4-2-0-1-3')
+        self.assertEqual(briefing._formation_label('3n-3-2-0-2'), '3-3-2-0-2')
         self.assertEqual(briefing._formation_label('unknown'), '')
         self.assertEqual(briefing._formation_label('4n-3-5-0-2'), '')
 

@@ -26,6 +26,12 @@ Die fertige Spielvorschau soll keine „Layout bearbeiten“-Funktion mehr anbie
 **Why:** Nach Abnahme der Newsdarstellung hat der Nutzer ausdrücklich „Layout bearbeiten entfernen“ verlangt.
 
 **How to apply:** Keine Bearbeitungsoberfläche erneut einführen, sofern nicht ausdrücklich angefordert. Das Entfernen der Werkzeuge darf die zuvor gespeicherte persönliche Anordnung nicht verwerfen.
+
+Formationen in der linken Kachel haben immer fünf Zahlen, einschließlich leerer Linien: beispielsweise „4-2-0-1-3“, nicht „4-2-1-3“.
+
+**Why:** Der Nutzer hat die fünfstellige Darstellung ausdrücklich verlangt.
+
+**How to apply:** Nullen nicht aus der Formationsbeschriftung entfernen; alle fünf Positionslinien beibehalten.
 - Stadionfoto, 3D-Stadionmodell und die beiden Heim-/Auswärtstrikots, die die Teams tatsächlich in dieser Begegnung verwenden.
 
 **Why:** Der Nutzer gibt die Informationsanforderungen vor, lässt die Gestaltung frei und verlangt ausdrücklich die Qualität eines AAA-Managers.

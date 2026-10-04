@@ -71,7 +71,7 @@ def _formation_label(code):
         if key not in FORMATION_PARTS[group]:
             return ''
         counts.append(len(FORMATION_PARTS[group][key]))
-    return '-'.join(str(count) for count in counts if count) if sum(counts) == 10 else ''
+    return '-'.join(str(count) for count in counts) if sum(counts) == 10 else ''
 
 
 def _pid(value):
