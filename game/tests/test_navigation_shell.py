@@ -74,3 +74,11 @@ class NavigationShellTests(SimpleTestCase):
         self.assertIn("z-index: 3", rule)
         self.assertIn("display: inline-flex", rule)
         self.assertIn("justify-content: center", rule)
+
+    def test_collapsed_logout_icon_is_centered_without_extra_form_padding(self):
+        css = Path("game/static/game/css/navigation-shell.css").read_text()
+        rule = css.split('html[data-nav-state="collapsed"] .nav-logout-btn {')[-1].split("}", 1)[0]
+        self.assertIn("display: flex", rule)
+        self.assertIn("align-items: center", rule)
+        form_rule = css.split('html[data-nav-state="collapsed"] .nav-logout-form {')[1].split("}", 1)[0]
+        self.assertIn("padding: 0", form_rule)
