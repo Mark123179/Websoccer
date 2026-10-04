@@ -4910,7 +4910,7 @@ class Notification(models.Model):
     Show-Auktion §12). Empfänger ist das ManagerProfile — nicht der Club —
     damit auch vereinslose Manager erreichbar sind. Erstellung läuft über
     game.notifications.notify(); die Liste unter /benachrichtigungen/
-    markiert beim Öffnen alles als gelesen.
+    markiert beim Öffnen nur die geladenen Meldungen als gelesen.
     """
 
     recipient = models.ForeignKey(

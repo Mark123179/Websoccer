@@ -52,9 +52,11 @@ def notifications_page(request):
     items = list(
         Notification.objects.filter(recipient=manager)[:100]
     )
-    # Öffnen der Liste markiert alles als gelesen (die geladenen Objekte
+    # Nur die geladenen Meldungen als gelesen markieren (die Objekte
     # behalten ihren alten is_read-Stand für die Hervorhebung im Template).
-    Notification.objects.filter(recipient=manager, is_read=False).update(is_read=True)
+    Notification.objects.filter(
+        recipient=manager, pk__in=[item.pk for item in items], is_read=False,
+    ).update(is_read=True)
     return render(request, 'game/notifications.html', {
         'notifications': items,
     })
