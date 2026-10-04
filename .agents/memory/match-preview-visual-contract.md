@@ -44,6 +44,12 @@ Die eigene Anordnung des Nutzers ist bestätigt: „Passt jetzt von der Anordnun
 
 **How to apply:** Foto und Modell nebeneinander, Ausfälle/Sperren unter dem Foto, Wetter/Schiedsrichter unter dem Modell; rechte Spielergruppen als 2×2-Anordnung mit News darunter. Den verschobenen kleinen Form-/Statistikblock entfernen. Bestehende Wetteranimation wiederverwenden, nicht durch eine neue Grafik ersetzen. Bei Überarbeitung gespeicherte Altanordnungen sichern, bevor neue Geometrie gespeichert wird.
 
+Beim Bereinigen der Nutzeranordnung keine Trikots, Wappen, Wetter, Schiedsrichter oder Spielfeld verkleinern. Die Form unter dem Trainer entfällt. Keine zusätzlichen Kacheln innerhalb der drei Hauptkacheln; Stadionfoto und Spielfeld dürfen ihren Bereich vollständig ausfüllen.
+
+**Why:** Der Nutzer hat die erste Bereinigung ausdrücklich abgelehnt, weil genau diese Elemente kleiner wurden und zu viele Innenkacheln entstanden.
+
+**How to apply:** Die gewünschte große Darstellung und die Anordnung getrennt von Typografiekorrekturen behandeln. Innenbereiche strukturell behalten, aber ohne eigene Kachelhintergründe, Rahmen und unnötige Bildpolster darstellen.
+
 Der Nutzer will die Spielvorschau selbst anordnen: Elemente verschieben, ziehen und ihre Größe ändern, ausdrücklich „Direkt in der Spielvorschau“, nicht auf einer separaten Designfläche.
 
 **Why:** Der Nutzer hat den Bearbeitungsort ausdrücklich gewählt und möchte die Anordnung selbst bearbeiten.

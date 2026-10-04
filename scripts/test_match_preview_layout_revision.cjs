@@ -34,6 +34,11 @@ assert.equal(rebased.backupKey, `${key}:before-revision-2`);
 const current = JSON.stringify({version: 1, revision: 2, nodes: {"home-0": frame}});
 assert.equal(boot(current).saved.revision, 2);
 assert.equal(boot(current).previousLayout, null);
+assert.equal(boot(current, "3").saved, null);
+assert.equal(boot(current, "3").previousLayout, current);
+assert.equal(boot(current, "3").backupKey, `${key}:before-revision-3`);
+assert.equal(boot(JSON.stringify({version: 1, revision: 3,
+    nodes: {"home-0": frame}}), "3").saved.revision, 3);
 assert.equal(boot(old, "1").saved.revision, 1, "other page revisions still accept old frames");
 assert.equal(boot('{"version":9}').saved, null);
 assert.equal(boot(old, "2", true).saved, null);

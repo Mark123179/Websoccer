@@ -7,12 +7,12 @@
 
 {% block extra_css %}
     {{ block.super }}
-    <link rel="stylesheet" href="{% static 'game/css/match-preview.css' %}?v=preview-17">
-    <link rel="stylesheet" href="{% static 'game/css/match-preview-layout.css' %}?v=layout-4">
+    <link rel="stylesheet" href="{% static 'game/css/match-preview.css' %}?v=preview-18">
+    <link rel="stylesheet" href="{% static 'game/css/match-preview-layout.css' %}?v=layout-5">
 {% endblock %}
 
 {% block content %}
-<section class="match-preview-scene" aria-label="Spielvorschau" data-layout-owner="{{ request.user.pk|default:'guest'|unlocalize }}" data-layout-revision="2">
+<section class="match-preview-scene" aria-label="Spielvorschau" data-layout-owner="{{ request.user.pk|default:'guest'|unlocalize }}" data-layout-revision="3">
     <div class="match-preview-content" aria-label="Spielinformationen">
         <div class="match-preview-panels">
             <section class="match-preview-panel match-preview-panel--scout" aria-labelledby="mp-scout-title">
@@ -55,20 +55,6 @@
                 {% else %}
                     <p class="mp-inline-empty">Trainer nicht hinterlegt.</p>
                 {% endif %}
-
-                <div class="mp-subsection">
-                    <div class="mp-subsection-heading"><h3>Die letzten fünf</h3><span class="mp-caption">Form</span></div>
-                    {% if preview.form %}
-                        <div class="mp-form" aria-label="Form der letzten fünf Spiele">
-                            {% for result in preview.form %}
-                                <span class="mp-form-result mp-form-result--{{ result.tone|default:'unknown' }}" title="{{ result.label }}{% if result.score %} · {{ result.score }}{% endif %}" aria-label="{{ result.label }}{% if result.score %}, {{ result.score }}{% endif %}">{{ result.label|default:"—"|first|upper }}</span>
-                            {% endfor %}
-                        </div>
-                        {% for result in preview.form %}<span class="mp-visually-hidden">{{ result.label }}{% if result.score %}, {{ result.score }}{% endif %}</span>{% endfor %}
-                    {% else %}
-                        <p class="mp-inline-empty">Noch keine Formdaten verfügbar.</p>
-                    {% endif %}
-                </div>
 
                 <div class="mp-subsection">
                     <div class="mp-subsection-heading"><h3>Letztes Ergebnis</h3></div>
@@ -370,8 +356,8 @@
 
 {% block extra_js %}
     {{ block.super }}
-    <script src="{% static 'game/js/match-preview.js' %}?v=preview-17" defer></script>
-    <script src="{% static 'game/js/match-preview-layout.js' %}?v=layout-4" defer></script>
+    <script src="{% static 'game/js/match-preview.js' %}?v=preview-18" defer></script>
+    <script src="{% static 'game/js/match-preview-layout.js' %}?v=layout-5" defer></script>
     {% if preview.stadium.model_available and preview.stadium.model_scene_url %}
         <script type="importmap">{"imports":{"three":"{% static 'stadium_editor/stage/vendor/three.module.js' %}"}}</script>
         <script src="{% static 'game/js/club-stadium.js' %}?v=3" data-scene-url="{{ preview.stadium.model_scene_url }}" defer></script>

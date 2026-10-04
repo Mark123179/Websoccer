@@ -62,7 +62,7 @@ class MatchPreviewLayoutTests(SimpleTestCase):
         self.assertNotIn('foreground.png', html)
         self.assertNotIn('Vorbericht für das Spiel', html)
         self.assertIn('Der Spielplan ist derzeit frei.', html)
-        self.assertIn('match-preview.js?v=preview-17', html)
+        self.assertIn('match-preview.js?v=preview-18', html)
 
     def test_partial_fixture_handles_missing_reports_and_zero_temperature(self):
         html = render_to_string('game/club_match_preview.html', {
@@ -124,7 +124,7 @@ class MatchPreviewLayoutTests(SimpleTestCase):
         from pathlib import Path
         css = Path('game/static/game/css/match-preview.css').read_text()
         self.assertIn('../images/backgrounds/spielfeld.png', css)
-        self.assertIn('height: 380px;', css)
+        self.assertIn('height: 460px;', css)
         self.assertNotIn('.mp-pitch::before', css)
 
     def test_personal_layout_tools_are_wired_without_game_mutation_controls(self):
@@ -133,9 +133,11 @@ class MatchPreviewLayoutTests(SimpleTestCase):
             'request': SimpleNamespace(user=SimpleNamespace(pk=42)),
         })
         self.assertIn('data-layout-owner="42"', html)
-        self.assertIn('match-preview-layout.css?v=layout-4', html)
-        self.assertIn('match-preview-layout.js?v=layout-4', html)
-        self.assertIn('data-layout-revision="2"', html)
+        self.assertIn('match-preview-layout.css?v=layout-5', html)
+        self.assertIn('match-preview-layout.js?v=layout-5', html)
+        self.assertIn('data-layout-revision="3"', html)
+        self.assertNotIn('Die letzten fünf', html)
+        self.assertNotIn('Form der letzten fünf Spiele', html)
         for name in ('open', 'tools', 'select', 'parent', 'x', 'y', 'width', 'height',
                      'font', 'visible', 'front', 'back', 'save', 'cancel', 'reset', 'status'):
             self.assertIn(f'id="mp-layout-{name}"', html)
