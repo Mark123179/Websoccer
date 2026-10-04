@@ -20,6 +20,12 @@ Vereinsnews in der Spielvorschau gehören immer zum Gegner, nicht zum eigenen Ve
 **Why:** Der Nutzer braucht hier keine eigenen Vereinsnews und hat ausdrücklich erklärt: „Sind jetzt nur Dummies zum Visualisieren einer fertigen Spielvorschau.“
 
 **How to apply:** Vereinsname und Newslinks nach Gegnerrolle auflösen, auch bei Auswärtsspielen. Beispielmeldungen nur als Präsentationsdaten behandeln, niemals echte News oder Transfers daraus erzeugen.
+
+Die fertige Spielvorschau soll keine „Layout bearbeiten“-Funktion mehr anbieten.
+
+**Why:** Nach Abnahme der Newsdarstellung hat der Nutzer ausdrücklich „Layout bearbeiten entfernen“ verlangt.
+
+**How to apply:** Keine Bearbeitungsoberfläche erneut einführen, sofern nicht ausdrücklich angefordert. Das Entfernen der Werkzeuge darf die zuvor gespeicherte persönliche Anordnung nicht verwerfen.
 - Stadionfoto, 3D-Stadionmodell und die beiden Heim-/Auswärtstrikots, die die Teams tatsächlich in dieser Begegnung verwenden.
 
 **Why:** Der Nutzer gibt die Informationsanforderungen vor, lässt die Gestaltung frei und verlangt ausdrücklich die Qualität eines AAA-Managers.

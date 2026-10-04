@@ -72,7 +72,7 @@ const layout = {version: 1, detailPatch: 0, nodes: {
 }};
 const originalAway = JSON.stringify(layout.nodes["away-kit-0"]);
 const repairSource = source.slice(source.indexOf("function repairInitialDetails("),
-    source.indexOf("function updateSelection("));
+    source.indexOf("function restoreSavedLayout("));
 vm.runInNewContext(repairSource + "repairDetails(layout);", {
     layout, byId: kitItems, detailPatch: 1, dimensions: record => record.size,
     paint: () => {}, baseline: {}, items: [],
@@ -179,3 +179,43 @@ assert.equal(JSON.stringify([
     newsLayout.nodes["referee-0"],
 ]), kept);
 console.log("News repair: news area enlarged, existing pictures and footer untouched.");
+
+// Exercise the complete boot path with no editor DOM, not just the migration helpers.
+const storedReadonly = JSON.stringify({version: 1, revision: 3, detailPatch: 4,
+    nodes: {"center-0": {...frame, x: 10, y: 20, width: 50, height: 60}}});
+const box = {left: 0, top: 0, width: 200, height: 100};
+const readonlyCanvas = {
+    offsetWidth: 200, clientWidth: 200, clientHeight: 100, clientLeft: 0, clientTop: 0,
+    closest: () => null, getBoundingClientRect: () => box,
+};
+const readonlyNode = {
+    dataset: {}, style: {removeProperty: () => {}, setProperty: () => {}},
+    offsetWidth: 200, offsetHeight: 100,
+    parentElement: readonlyCanvas, getBoundingClientRect: () => box,
+    getAttribute: () => null, before: () => {}, toggleAttribute: () => {},
+    classList: {toggle: () => {}},
+};
+readonlyCanvas.querySelectorAll = selector =>
+    selector === ".match-preview-panel--center" ? [readonlyNode] : [];
+let storageWrites = 0, freeApplied = false;
+vm.runInNewContext(source, {
+    document: {
+        querySelector: () => ({
+            dataset: {layoutOwner: "42", layoutRevision: "3", layoutDetailPatch: "4"},
+            querySelector: () => readonlyCanvas,
+            classList: {add: name => {freeApplied = name === "mp-layout-free";}},
+        }),
+        getElementById: () => null, createComment: () => ({}),
+        createElement: () => {throw Error("Read-only boot must not create editing controls");},
+        body: {append: () => {throw Error("Read-only boot must not mount editing controls");}},
+    },
+    localStorage: {getItem: () => storedReadonly, setItem: () => {storageWrites++;}},
+    requestAnimationFrame: callback => callback(),
+});
+assert.ok(freeApplied);
+assert.equal(readonlyNode.style.left, "10%");
+assert.equal(readonlyNode.style.top, "20%");
+assert.equal(readonlyNode.style.width, "50%");
+assert.equal(readonlyNode.style.height, "60%");
+assert.equal(storageWrites, 0);
+console.log("Read-only boot: saved geometry restored without controls or storage writes.");

@@ -7,8 +7,8 @@
 
 {% block extra_css %}
     {{ block.super }}
-    <link rel="stylesheet" href="{% static 'game/css/match-preview.css' %}?v=preview-24">
-    <link rel="stylesheet" href="{% static 'game/css/match-preview-layout.css' %}?v=layout-12">
+    <link rel="stylesheet" href="{% static 'game/css/match-preview.css' %}?v=preview-25">
+    <link rel="stylesheet" href="{% static 'game/css/match-preview-layout.css' %}?v=layout-13">
 {% endblock %}
 
 {% block content %}
@@ -308,68 +308,12 @@
     </div>
 </section>
 
-<button class="mp-layout-open" id="mp-layout-open" type="button" aria-controls="mp-layout-tools" aria-expanded="false">Layout bearbeiten</button>
-
-<aside class="mp-layout-tools" id="mp-layout-tools" aria-label="Werkzeuge zur Layoutbearbeitung" hidden>
-    <div class="mp-layout-tools__heading">
-        <strong class="mp-layout-tools__title">Layout bearbeiten</strong>
-        <p class="mp-layout-tools__hint">Ziehen zum Verschieben · Kanten und Ecken skalieren · Pfeiltasten bewegen, Umschalt für große Schritte.</p>
-    </div>
-
-    <div class="mp-layout-tools__controls">
-        <div class="mp-layout-tools__field">
-            <label for="mp-layout-select">Element</label>
-            <select id="mp-layout-select" aria-label="Element auswählen">
-                <option value="">Element auswählen</option>
-            </select>
-        </div>
-        <button id="mp-layout-parent" type="button">Übergeordnete Gruppe</button>
-
-        <div class="mp-layout-tools__field">
-            <label for="mp-layout-x">Position X (px)</label>
-            <input id="mp-layout-x" type="number" step="1" inputmode="numeric">
-        </div>
-        <div class="mp-layout-tools__field">
-            <label for="mp-layout-y">Position Y (px)</label>
-            <input id="mp-layout-y" type="number" step="1" inputmode="numeric">
-        </div>
-        <div class="mp-layout-tools__field">
-            <label for="mp-layout-width">Breite (px)</label>
-            <input id="mp-layout-width" type="number" min="1" step="1" inputmode="numeric">
-        </div>
-        <div class="mp-layout-tools__field">
-            <label for="mp-layout-height">Höhe (px)</label>
-            <input id="mp-layout-height" type="number" min="1" step="1" inputmode="numeric">
-        </div>
-        <div class="mp-layout-tools__field mp-layout-tools__field--font">
-            <label for="mp-layout-font">Textgröße (px)</label>
-            <input id="mp-layout-font" type="number" min="1" step="1" inputmode="numeric">
-        </div>
-        <label class="mp-layout-tools__visibility" for="mp-layout-visible">
-            <input id="mp-layout-visible" type="checkbox" checked>
-            <span>Sichtbar</span>
-        </label>
-    </div>
-
-    <div class="mp-layout-tools__actions">
-        <button id="mp-layout-back" type="button">Nach hinten</button>
-        <button id="mp-layout-front" type="button">Nach vorne</button>
-        <button id="mp-layout-save" type="button">Speichern</button>
-        <button id="mp-layout-cancel" type="button">Abbrechen</button>
-        <button id="mp-layout-reset" type="button">Standardlayout</button>
-    </div>
-
-    <div class="mp-layout-tools__footer">
-        <span id="mp-layout-status" role="status" aria-live="polite" aria-atomic="true"></span>
-        <p class="mp-layout-tools__disclaimer">Nur Darstellung · in diesem Browser gespeichert · keine Änderung der Aufstellung.</p>
-    </div>
-</aside>
 {% endblock %}
 
 {% block extra_js %}
     {{ block.super }}
-    <script src="{% static 'game/js/match-preview.js' %}?v=preview-24" defer></script>
-    <script src="{% static 'game/js/match-preview-layout.js' %}?v=layout-12" defer></script>
+    <script src="{% static 'game/js/match-preview.js' %}?v=preview-25" defer></script>
+    <script src="{% static 'game/js/match-preview-layout.js' %}?v=layout-13" defer></script>
     {% if preview.stadium.model_available and preview.stadium.model_scene_url %}
         <script type="importmap">{"imports":{"three":"{% static 'stadium_editor/stage/vendor/three.module.js' %}"}}</script>
         <script src="{% static 'game/js/club-stadium.js' %}?v=5" data-scene-url="{{ preview.stadium.model_scene_url }}" defer></script>

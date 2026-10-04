@@ -5,7 +5,7 @@
     const canvas = root?.querySelector(".match-preview-panels");
     const open = document.getElementById("mp-layout-open");
     const tools = document.getElementById("mp-layout-tools");
-    if (!root || !canvas || !open || !tools) return;
+    if (!root || !canvas) return;
 
     const key = `fm:match-preview:layout:1:${root.dataset.layoutOwner || "guest"}`;
     const revision = Number(root.dataset.layoutRevision) || 1;
@@ -164,24 +164,6 @@
         if (item.parent) item.parent.group = true;
     });
 
-    document.body.append(open, tools);
-    const selection = document.createElement("div");
-    selection.className = "mp-layout-selection";
-    selection.hidden = true;
-    const dragLabel = document.createElement("button");
-    dragLabel.type = "button";
-    dragLabel.className = "mp-layout-drag-label";
-    dragLabel.setAttribute("aria-label", "Ausgewähltes Element verschieben");
-    selection.append(dragLabel);
-    for (const edge of ["n", "ne", "e", "se", "s", "sw", "w", "nw"]) {
-        const handle = document.createElement("button");
-        handle.type = "button";
-        handle.className = "mp-layout-resize-handle";
-        handle.dataset.edge = edge;
-        handle.setAttribute("aria-label", `Größe ändern (${edge.toUpperCase()})`);
-        selection.append(handle);
-    }
-    document.body.append(selection);
     let editing = false, free = false, selected = null, baseline = null, draft = null;
     let gesture = null, raf = 0, openingDraft = "", baselineRefHeight = 0;
 
@@ -434,6 +416,43 @@
         }
         layout.detailPatch = 4;
     }
+    function restoreSavedLayout() {
+        if (!baseline) baseline = captureBaseline();
+        baselineRefHeight = byId.get("referee-0")?.node.offsetHeight || 0;
+        if (saved && !free) {
+            items.forEach(item => {
+                if (!saved.nodes[item.id]) saved.nodes[item.id] = clone(baseline.nodes[item.id]);
+            });
+            useFree(saved);
+            repairDetails(saved);
+            expandFooter(saved);
+            expandNews(saved);
+        }
+    }
+    // Retire editing controls without discarding the browser-local composition.
+    // Read-only mode installs no drag/resize/keyboard editing listeners.
+    if (!open || !tools) {
+        requestAnimationFrame(restoreSavedLayout);
+        return;
+    }
+    document.body.append(open, tools);
+    const selection = document.createElement("div");
+    selection.className = "mp-layout-selection";
+    selection.hidden = true;
+    const dragLabel = document.createElement("button");
+    dragLabel.type = "button";
+    dragLabel.className = "mp-layout-drag-label";
+    dragLabel.setAttribute("aria-label", "Ausgewähltes Element verschieben");
+    selection.append(dragLabel);
+    for (const edge of ["n", "ne", "e", "se", "s", "sw", "w", "nw"]) {
+        const handle = document.createElement("button");
+        handle.type = "button";
+        handle.className = "mp-layout-resize-handle";
+        handle.dataset.edge = edge;
+        handle.setAttribute("aria-label", `Größe ändern (${edge.toUpperCase()})`);
+        selection.append(handle);
+    }
+    document.body.append(selection);
     function updateSelection() {
         if (!editing || !selected) { selection.hidden = true; return; }
         const rect = selected.node.getBoundingClientRect();
@@ -665,17 +684,5 @@
         }
     });
     // The ordinary approved page stays in normal flow unless a saved override exists.
-    requestAnimationFrame(() => {
-        if (!baseline) baseline = captureBaseline();
-        baselineRefHeight = byId.get("referee-0")?.node.offsetHeight || 0;
-        if (saved && !free) {
-            items.forEach(item => {
-                if (!saved.nodes[item.id]) saved.nodes[item.id] = clone(baseline.nodes[item.id]);
-            });
-            useFree(saved);
-            repairDetails(saved);
-            expandFooter(saved);
-            expandNews(saved);
-        }
-    });
+    requestAnimationFrame(restoreSavedLayout);
 })();
