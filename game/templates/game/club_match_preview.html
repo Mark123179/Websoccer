@@ -7,12 +7,12 @@
 
 {% block extra_css %}
     {{ block.super }}
-    <link rel="stylesheet" href="{% static 'game/css/match-preview.css' %}?v=preview-18">
-    <link rel="stylesheet" href="{% static 'game/css/match-preview-layout.css' %}?v=layout-5">
+    <link rel="stylesheet" href="{% static 'game/css/match-preview.css' %}?v=preview-20">
+    <link rel="stylesheet" href="{% static 'game/css/match-preview-layout.css' %}?v=layout-8">
 {% endblock %}
 
 {% block content %}
-<section class="match-preview-scene" aria-label="Spielvorschau" data-layout-owner="{{ request.user.pk|default:'guest'|unlocalize }}" data-layout-revision="3">
+<section class="match-preview-scene" aria-label="Spielvorschau" data-layout-owner="{{ request.user.pk|default:'guest'|unlocalize }}" data-layout-revision="3" data-layout-detail-patch="1">
     <div class="match-preview-content" aria-label="Spielinformationen">
         <div class="match-preview-panels">
             <section class="match-preview-panel match-preview-panel--scout" aria-labelledby="mp-scout-title">
@@ -229,7 +229,13 @@
                                                 {% if preview.referee.level_label %}<span>{{ preview.referee.level_label }}</span>{% endif %}
                                                 {% if preview.referee.is_demo %}<span class="mp-demo-badge">Testdaten</span>{% endif %}
                                             </div>
-                                            {% if preview.referee.summary %}<p>{{ preview.referee.summary }}</p>{% endif %}
+                                            {% if preview.referee.ratings %}
+                                                <dl class="mp-referee-ratings" aria-label="Schiedsrichterbewertungen">
+                                                    {% for rating in preview.referee.ratings %}
+                                                        <div><dt>{{ rating.label }}</dt><dd>{{ rating.value|default_if_none:"—" }}/20</dd></div>
+                                                    {% endfor %}
+                                                </dl>
+                                            {% elif preview.referee.summary %}<p>{{ preview.referee.summary }}</p>{% endif %}
                                         </div>
                                     </section>
                                 {% endif %}
@@ -356,10 +362,10 @@
 
 {% block extra_js %}
     {{ block.super }}
-    <script src="{% static 'game/js/match-preview.js' %}?v=preview-18" defer></script>
-    <script src="{% static 'game/js/match-preview-layout.js' %}?v=layout-5" defer></script>
+    <script src="{% static 'game/js/match-preview.js' %}?v=preview-20" defer></script>
+    <script src="{% static 'game/js/match-preview-layout.js' %}?v=layout-8" defer></script>
     {% if preview.stadium.model_available and preview.stadium.model_scene_url %}
         <script type="importmap">{"imports":{"three":"{% static 'stadium_editor/stage/vendor/three.module.js' %}"}}</script>
-        <script src="{% static 'game/js/club-stadium.js' %}?v=3" data-scene-url="{{ preview.stadium.model_scene_url }}" defer></script>
+        <script src="{% static 'game/js/club-stadium.js' %}?v=4" data-scene-url="{{ preview.stadium.model_scene_url }}" defer></script>
     {% endif %}
 {% endblock %}

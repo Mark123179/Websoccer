@@ -177,6 +177,13 @@ def _referee_profile(referee, *, is_demo=False):
         'nationality': getattr(referee, 'nationality', ''),
         'level_label': Referee.LEVEL_LABEL_MAP.get(getattr(referee, 'level', None), ''),
         'summary': getattr(referee, 'schlagwort', '') or 'Profil aus der Schiedsrichterdatenbank.',
+        'ratings': [
+            {'label': label, 'value': getattr(referee, field)}
+            for field, label in (
+                ('quote', 'Entscheidungen'), ('karten_tendenz', 'Karten'),
+                ('spielfluss_tendenz', 'Spielfluss'),
+            ) if getattr(referee, field, None) is not None
+        ],
     }
     if is_demo:
         profile['is_demo'] = True

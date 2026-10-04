@@ -21,7 +21,7 @@
                 interactive: false,
                 autoRotate: true,
                 compact: true,
-                compactZoom: 1.2,
+                compactZoom: host.closest('.match-preview-scene') ? 1 : 1.2,
                 transparentBackground: true,
             });
             if (disposed) {

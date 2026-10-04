@@ -50,6 +50,12 @@ Beim Bereinigen der Nutzeranordnung keine Trikots, Wappen, Wetter, Schiedsrichte
 
 **How to apply:** Die gewünschte große Darstellung und die Anordnung getrennt von Typografiekorrekturen behandeln. Innenbereiche strukturell behalten, aber ohne eigene Kachelhintergründe, Rahmen und unnötige Bildpolster darstellen.
 
+Das vom Nutzer angepasste Gladbach-Trikot ist die Größenreferenz für Bayern; es selbst nicht wieder zurücksetzen. Bayern bleibt hinter dem Wappen, Formzeilen gehören unter die Trikots. Wetter darf breiter sein, und vorhandene Schiedsrichterwerte sollen angezeigt werden.
+
+**Why:** Der Nutzer hat das Gladbach-Trikot selbst angepasst und dessen Größe ausdrücklich als richtig bezeichnet.
+
+**How to apply:** Private Layoutkorrekturen gezielt anwenden statt die gesamte Anordnung neu aufzubauen. Schiedsrichter-Unterelemente müssen gemeinsam erfasst werden, sonst überlappt Metatext, wenn die separat positionierte Namenszeile aus dem normalen Textfluss fällt.
+
 Der Nutzer will die Spielvorschau selbst anordnen: Elemente verschieben, ziehen und ihre Größe ändern, ausdrücklich „Direkt in der Spielvorschau“, nicht auf einer separaten Designfläche.
 
 **Why:** Der Nutzer hat den Bearbeitungsort ausdrücklich gewählt und möchte die Anordnung selbst bearbeiten.

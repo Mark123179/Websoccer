@@ -9,7 +9,8 @@
 
     const key = `fm:match-preview:layout:1:${root.dataset.layoutOwner || "guest"}`;
     const revision = Number(root.dataset.layoutRevision) || 1;
-    const backupKey = `${key}:before-revision-${revision}`;
+    const detailPatch = Number(root.dataset.layoutDetailPatch) || 0;
+    const backupKey = `${key}:before-revision-${revision}${detailPatch ? `:details-${detailPatch}` : ""}`;
     const $ = name => document.getElementById(`mp-layout-${name}`);
     const status = message => { $("status").textContent = message; };
     const clone = value => JSON.parse(JSON.stringify(value));
@@ -35,7 +36,8 @@
             });
             nodes[id] = frame;
         });
-        return {version: 1, revision: Number.isInteger(raw.revision) ? raw.revision : 1, nodes};
+        return {version: 1, revision: Number.isInteger(raw.revision) ? raw.revision : 1,
+            detailPatch: Number.isInteger(raw.detailPatch) ? raw.detailPatch : 0, nodes};
     };
     let saved = null, previousLayout = null, storageError = "";
     try {
@@ -50,6 +52,7 @@
                 saved = null;
                 storageError = "Die abgestimmte Anordnung ist geladen. Dein bisheriger Entwurf bleibt gesichert.";
             }
+            else if (saved.detailPatch < detailPatch) previousLayout = value;
         }
     } catch {
         storageError = "Der Browserspeicher ist nicht verfügbar. Änderungen können nicht gespeichert werden.";
@@ -115,6 +118,9 @@
         [".mp-referee-portrait", "referee-photo", "Schiedsrichter · Porträt"],
         [".mp-referee-info", "referee-info", "Schiedsrichter · Angaben", "text"],
         [".mp-referee-info h2", "referee-name", "Schiedsrichter · Name", "text"],
+        [".mp-referee-meta", "referee-meta", "Schiedsrichter · Herkunft / Niveau", "text"],
+        [".mp-referee-info > p", "referee-summary", "Schiedsrichter · Beschreibung", "text"],
+        [".mp-referee-ratings", "referee-ratings", "Schiedsrichter · Werte"],
         [".mp-weather-profile", "weather", "Wetterprofil"],
         [".mp-weather-animation", "weather-scene", "Wetter · Animation"],
         [".mp-weather-info", "weather-info", "Wetter · Angaben", "text"],
@@ -182,7 +188,7 @@
         const parent = parentOf(item);
         return {width: parent.clientWidth || 1, height: parent.clientHeight || 1};
     };
-    const empty = () => ({version: 1, revision, nodes: Object.create(null)});
+    const empty = () => ({version: 1, revision, detailPatch, nodes: Object.create(null)});
     function captureBaseline() {
         const rects = new Map(items.map(item => [item.id, item.node.getBoundingClientRect()]));
         const canvasRect = canvas.getBoundingClientRect();
@@ -237,6 +243,56 @@
         });
         root.classList.remove("mp-layout-free");
         free = false;
+    }
+    function repairDetails(layout) {
+        if (!detailPatch || layout.detailPatch >= detailPatch) return;
+        // Preserve the user's away-kit geometry and all group positions.
+        // Only the matching home kit, form placement and broken detail subtree change.
+        const home = byId.get("home-kit-0"), away = byId.get("away-kit-0");
+        if (home && away && layout.nodes[away.id]) {
+            const a = dimensions(away), h = dimensions(home);
+            const source = layout.nodes[away.id], target = layout.nodes[home.id];
+            const crest = layout.nodes["home-crest-0"];
+            target.width = source.width * a.width / h.width;
+            target.height = source.height * a.height / h.height;
+            target.y = source.y * a.height / h.height;
+            if (crest) {
+                target.x = crest.x + crest.width / 2 - target.width / 2;
+                crest.layer = Math.max(2, crest.layer || 0);
+                paint(byId.get("home-crest-0"), crest);
+            }
+            target.layer = 0;
+            paint(home, target);
+            for (const side of ["home", "away"]) {
+                const kit = byId.get(`${side}-kit-0`), form = byId.get(`${side}-form-0`);
+                if (!kit || !form) continue;
+                const kitSize = dimensions(kit), formSize = dimensions(form);
+                const kitFrame = layout.nodes[kit.id], formFrame = layout.nodes[form.id];
+                formFrame.y = ((kitFrame.y + kitFrame.height) / 100 * kitSize.height + 8) /
+                    formSize.height * 100;
+                paint(form, formFrame);
+            }
+            const venue = byId.get("venue-0"), form = byId.get("home-form-0");
+            if (venue && form) {
+                const f = layout.nodes[form.id], v = layout.nodes[venue.id];
+                v.y = Math.max(v.y, ((f.y + f.height) / 100 * dimensions(form).height + 8) /
+                    dimensions(venue).height * 100);
+                paint(venue, v);
+            }
+        }
+        const model = byId.get("model-0");
+        if (model) {
+            layout.nodes[model.id].height = baseline.nodes[model.id].height;
+            paint(model, layout.nodes[model.id]);
+            items.forEach(item => {
+                let parent = item.parent;
+                while (parent && parent !== model) parent = parent.parent;
+                if (parent !== model) return;
+                layout.nodes[item.id] = clone(baseline.nodes[item.id]);
+                paint(item, layout.nodes[item.id]);
+            });
+        }
+        layout.detailPatch = detailPatch;
     }
     function updateSelection() {
         if (!editing || !selected) { selection.hidden = true; return; }
@@ -471,6 +527,12 @@
     // The ordinary approved page stays in normal flow unless a saved override exists.
     requestAnimationFrame(() => {
         if (!baseline) baseline = captureBaseline();
-        if (saved && !free) useFree(saved);
+        if (saved && !free) {
+            items.forEach(item => {
+                if (!saved.nodes[item.id]) saved.nodes[item.id] = clone(baseline.nodes[item.id]);
+            });
+            useFree(saved);
+            repairDetails(saved);
+        }
     });
 })();

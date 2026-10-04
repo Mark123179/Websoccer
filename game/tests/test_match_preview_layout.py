@@ -62,7 +62,7 @@ class MatchPreviewLayoutTests(SimpleTestCase):
         self.assertNotIn('foreground.png', html)
         self.assertNotIn('Vorbericht für das Spiel', html)
         self.assertIn('Der Spielplan ist derzeit frei.', html)
-        self.assertIn('match-preview.js?v=preview-18', html)
+        self.assertIn('match-preview.js?v=preview-20', html)
 
     def test_partial_fixture_handles_missing_reports_and_zero_temperature(self):
         html = render_to_string('game/club_match_preview.html', {
@@ -133,9 +133,10 @@ class MatchPreviewLayoutTests(SimpleTestCase):
             'request': SimpleNamespace(user=SimpleNamespace(pk=42)),
         })
         self.assertIn('data-layout-owner="42"', html)
-        self.assertIn('match-preview-layout.css?v=layout-5', html)
-        self.assertIn('match-preview-layout.js?v=layout-5', html)
+        self.assertIn('match-preview-layout.css?v=layout-8', html)
+        self.assertIn('match-preview-layout.js?v=layout-8', html)
         self.assertIn('data-layout-revision="3"', html)
+        self.assertIn('data-layout-detail-patch="1"', html)
         self.assertNotIn('Die letzten fünf', html)
         self.assertNotIn('Form der letzten fünf Spiele', html)
         for name in ('open', 'tools', 'select', 'parent', 'x', 'y', 'width', 'height',
@@ -154,6 +155,22 @@ class MatchPreviewLayoutTests(SimpleTestCase):
         self.assertNotIn('fetch(', js)
         self.assertNotIn('XMLHttpRequest', js)
         self.assertIn('mp-layout-editing', css)
+
+    def test_referee_metrics_are_rendered_and_model_clipping_survives_free_mode(self):
+        html = render_to_string('game/club_match_preview.html', {
+            'competition_name': 'Bundesliga', 'preview': {
+                'has_fixture': True, 'home': {'name': 'Heim'}, 'away': {'name': 'Gast'},
+                'opponent': {'name': 'Gast'}, 'referee': {
+                    'name': 'Test', 'ratings': [{'label': 'Karten', 'value': 8}],
+                },
+            },
+        })
+        self.assertIn('mp-referee-ratings', html)
+        self.assertIn('Karten', html)
+        self.assertIn('8', html)
+        css = Path('game/static/game/css/match-preview-layout.css').read_text()
+        self.assertIn('.mp-model-viewport', css)
+        self.assertIn('overflow: hidden !important', css)
 
     def test_injuries_and_suspensions_render_in_separate_ordered_blocks(self):
         html = render_to_string('game/club_match_preview.html', {

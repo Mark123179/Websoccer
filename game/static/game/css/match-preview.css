@@ -482,6 +482,7 @@ img[data-image-failed] { visibility: hidden; }
     overflow: visible;
     position: relative;
     width: 104px;
+    z-index: 2;
 }
 
 .mp-crest-frame img { object-fit: contain; padding: 0; }
@@ -551,6 +552,8 @@ img[data-image-failed] { visibility: hidden; }
     margin-top: 4px;
     min-height: 22px;
     min-width: 0;
+    position: relative;
+    z-index: 0;
 }
 
 .mp-kit img {
@@ -620,7 +623,8 @@ img[data-image-failed] { visibility: hidden; }
 .mp-model-card .mp-report-heading { align-items: center; }
 .mp-stadium-model-name { color: var(--mp-faint); font-size: 9px; line-height: 1.3; margin: -2px 0 6px; }
 .mp-model-viewport { aspect-ratio: 16 / 9; background: transparent; border: 0; height: auto; overflow: hidden; position: relative; width: 100%; }
-.mp-stadium-model-stage { height: 100%; width: 100%; }
+.mp-stadium-model-stage { height: 100%; max-height: 100%; min-height: 0; overflow: hidden; position: relative; width: 100%; }
+.mp-stadium-model-stage canvas { display: block; height: 100% !important; max-height: 100%; max-width: 100%; width: 100% !important; }
 .mp-stadium-model-status {
     align-items: center;
     background: rgba(3, 14, 22, 0.42);
@@ -643,8 +647,8 @@ img[data-image-failed] { visibility: hidden; }
 .mp-weather-profile,
 .mp-referee-profile { align-items: center; display: flex; gap: 10px; min-width: 0; }
 .mp-weather-profile { border-top: 1px solid var(--mp-rule); margin: 8px 12px 0; min-height: 80px; padding-top: 7px; }
-.mp-weather-animation { align-items: center; background: transparent; border: 0; border-radius: 0; display: flex; flex: 0 0 72px; height: 72px; justify-content: center; overflow: hidden; width: 72px; }
-.mp-weather-animation .wx-scene { border-radius: 0; height: 72px; overflow: hidden; width: 72px; }
+.mp-weather-animation { align-items: center; background: transparent; border: 0; border-radius: 0; display: flex; flex: 0 0 132px; height: 72px; justify-content: center; overflow: hidden; width: 132px; }
+.mp-weather-animation .wx-scene { border-radius: 0; height: 72px; overflow: hidden; width: 132px; }
 .mp-weather-animation .wxs-tag { display: none; }
 .mp-weather-animation .wxs-grass { height: 11px; }
 .mp-weather-animation .wxs-sun,
@@ -656,10 +660,15 @@ img[data-image-failed] { visibility: hidden; }
 .mp-model-card > .mp-referee-profile { border-top: 1px solid var(--mp-rule); gap: 10px; margin: 5px 12px 0; padding: 7px 0 0; }
 .mp-referee-portrait { background: rgba(7, 29, 41, 0.95); border: 1px solid rgba(180, 221, 229, 0.28); border-radius: 50%; flex: 0 0 auto; height: 72px; overflow: hidden; position: relative; width: 72px; }
 .mp-referee-portrait img { height: 100%; object-fit: cover; width: 100%; }
-.mp-referee-info { min-width: 0; }
-.mp-referee-info h2 { color: var(--mp-text); font-family: "Bahnschrift", "Franklin Gothic Medium", sans-serif; font-size: 14px; line-height: 1.2; margin: 2px 0; }
-.mp-referee-info p { color: var(--mp-muted); font-size: 9px; line-height: 1.3; margin: 3px 0 0; }
-.mp-referee-meta { align-items: center; color: var(--mp-faint); display: flex; flex-wrap: wrap; font-size: 9px; gap: 6px 12px; }
+.mp-referee-info { display: flex; flex: 1; flex-direction: column; gap: 4px; line-height: 1.25; min-width: 0; }
+.mp-referee-info > .mp-eyebrow { font-size: 10px; line-height: 1.2; }
+.mp-referee-info h2 { color: var(--mp-text); font-family: "Bahnschrift", "Franklin Gothic Medium", sans-serif; font-size: 16px; line-height: 1.15; margin: 0; }
+.mp-referee-info p { color: var(--mp-muted); font-size: 10px; line-height: 1.25; margin: 0; }
+.mp-referee-meta { align-items: center; color: var(--mp-faint); display: flex; flex-wrap: wrap; font-size: 10px; gap: 4px 8px; line-height: 1.2; }
+.mp-referee-ratings { border-top: 1px solid var(--mp-rule); display: grid; gap: 5px 10px; grid-template-columns: repeat(3, minmax(0, 1fr)); margin: 2px 0 0; padding: 5px 0 0; }
+.mp-referee-ratings > div { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.mp-referee-ratings dt { color: var(--mp-faint); font-size: 10px; line-height: 1.15; overflow-wrap: anywhere; }
+.mp-referee-ratings dd { color: var(--mp-text); font-family: ui-monospace, "SFMono-Regular", Consolas, monospace; font-size: 12px; font-weight: 700; line-height: 1.15; margin: 0; }
 
 .mp-no-fixture {
     align-items: center;

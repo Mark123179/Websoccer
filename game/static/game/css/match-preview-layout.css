@@ -347,6 +347,11 @@
     overflow: visible !important;
 }
 
+.match-preview-scene.mp-layout-free [data-mp-layout-item].mp-model-viewport {
+    isolation: isolate;
+    overflow: hidden !important;
+}
+
 .match-preview-scene:not(.mp-layout-editing) .mp-layout-item-hidden {
     display: none !important;
 }
