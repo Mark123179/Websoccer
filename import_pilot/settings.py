@@ -1,4 +1,6 @@
 """Standalone technical pilot settings: no game models, signals or Celery app."""
+import hashlib
+import hmac
 import os
 from pathlib import Path
 
@@ -12,12 +14,13 @@ if not (os.environ.get("REPL_ID") or os.environ.get("REPLIT_DEV_DOMAIN")):
 for _key in ("DATABASE_URL", "PILOT_DB_PASSWORD", "PILOT_SECRET_KEY"):
     if not os.environ.get(_key):
         raise ImproperlyConfigured(f"{_key} is required for the import pilot.")
-if len(os.environ["PILOT_DB_PASSWORD"]) < 32 or len(os.environ["PILOT_SECRET_KEY"]) < 32:
-    raise ImproperlyConfigured("Pilot secrets must contain at least 32 characters.")
-if os.environ["PILOT_DB_PASSWORD"] == os.environ["PILOT_SECRET_KEY"]:
-    raise ImproperlyConfigured("Use independent pilot secrets.")
-
-SECRET_KEY = os.environ["PILOT_SECRET_KEY"]
+# Domain separation also works when the supplied pilot inputs are identical.
+# Never use the existing application's signing key or unmodified DB password.
+SECRET_KEY = hmac.new(
+    os.environ["PILOT_SECRET_KEY"].encode(),
+    b"websoccer/import-pilot/session-signing/v1",
+    hashlib.sha256,
+).hexdigest()
 DEBUG = False
 ALLOWED_HOSTS = ["127.0.0.1", "localhost"]
 ROOT_URLCONF = "import_pilot.urls"

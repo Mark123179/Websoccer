@@ -9,6 +9,12 @@ Verifikationsbehauptungen müssen die tatsächlich identischen Startbedingungen 
 
 **How to apply:** Verteilungsvergleiche nicht als Parität verkaufen. Vorbestehende Testfehler nur nach einem tatsächlichen Baseline-Lauf unter passenden Bedingungen behaupten; frische und wiederverwendete Testdatenbanken getrennt ausweisen. Fachliche Gleichheit von Laufzeitabweichungen trennen.
 
+Ein absichtlich weiterlaufender Bestand ist kein eingefrorener Snapshot. Änderungen zwischen einer frühen Kontrollmessung und späterer Verifikation offen ausweisen; die frühe Kontrollmessung nicht still ersetzen.
+
+**Why:** Bei der Pilot-Einrichtung änderte sich während der Zugangsdaten-Eingabe der Profil-Fingerprint, obwohl Pilot-Schreibrechte auf den Bestand ausgeschlossen waren.
+
+**How to apply:** Frühen Vorher/Nachher-Vergleich und das engere Verifikationsintervall getrennt dokumentieren. Gleiche Zeilenzahlen nicht als identische Inhalte ausgeben und die genaue Ursache nicht aus einem aggregierten Fingerprint erraten.
+
 Diagnosen nach betroffenen Spielen und Zahlentypen aufschlüsseln; mehrere Prüfer können denselben Fehler mehrfach melden. Dateninkonsistenz und Erzählerfehler nur über eine unabhängige Quellenprüfung unterscheiden.
 
 **Why:** Der Nutzer wies darauf hin, dass Meldungszahlen kein Maß für betroffene Spiele sind und eine pauschale Einordnung als harmlose Altdaten ohne Gegenprüfung nicht belegt ist.

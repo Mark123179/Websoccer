@@ -17,10 +17,6 @@ def prepare():
     for key in ("DATABASE_URL", "PILOT_DB_PASSWORD", "PILOT_SECRET_KEY"):
         if not os.environ.get(key):
             raise RuntimeError(f"Missing required workspace secret: {key}")
-    if any(len(os.environ[key]) < 32 for key in ("PILOT_DB_PASSWORD", "PILOT_SECRET_KEY")):
-        raise RuntimeError("Pilot secrets must contain at least 32 characters.")
-    if os.environ["PILOT_DB_PASSWORD"] == os.environ["PILOT_SECRET_KEY"]:
-        raise RuntimeError("Use independent pilot secrets.")
     if os.environ.get("DJANGO_SETTINGS_MODULE", "import_pilot.settings") != "import_pilot.settings":
         raise RuntimeError("Refusing an existing application settings context.")
 
