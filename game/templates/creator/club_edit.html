@@ -3,6 +3,11 @@
 
 {% block title %}Creator · {{ club.name }}{% endblock %}
 
+{% block extra_css %}
+{{ block.super }}
+<link rel="stylesheet" href="{% static 'game/css/creator-club-3d.css' %}?v=creator-3d-1">
+{% endblock %}
+
 {% block content %}
 <section class="creator-section">
 
@@ -240,6 +245,76 @@
     </div>
   </div>
 
+  <section class="creator-3d-panel" aria-labelledby="creator-3d-kits-title">
+    <header class="creator-3d-heading">
+      <div>
+        <span class="creator-3d-kicker">Ausrüstung · PNG-Texturen</span>
+        <h2 id="creator-3d-kits-title">3D-Trikottexturen</h2>
+      </div>
+      <p>PNG-Dateien für die Darstellung der Spieltrikots. Die Vorschau zeigt die Texturdatei – kein interaktives 3D-Trikot.</p>
+    </header>
+    <div class="creator-3d-kit-grid">
+      {% for kit in kits_3d %}
+      <article class="creator-3d-kit">
+        <div class="creator-3d-kit-head">
+          <h3>{{ kit.label }}</h3>
+          <span class="creator-3d-format">PNG</span>
+        </div>
+        <div class="creator-3d-texture-preview">
+          {% if kit.uploaded and kit.url %}
+          <img src="{{ kit.url }}" alt="{{ kit.label }} PNG-Trikottextur für {{ club.name }}">
+          {% else %}
+          <span>Noch keine Textur hochgeladen</span>
+          {% endif %}
+        </div>
+        <p class="creator-3d-path"><span>Dateipfad</span><code>{{ kit.path }}</code></p>
+        {% if club.fm_inside_id %}
+        <form class="creator-3d-upload-form" method="post" enctype="multipart/form-data" action="{% url 'creator_upload_3d_kit' club_id=club.id kit_type=kit.type %}">
+          {% csrf_token %}
+          <label class="creator-3d-file-label" for="creator-3d-{{ kit.type }}">PNG-Datei auswählen</label>
+          <input id="creator-3d-{{ kit.type }}" type="file" name="image" accept="image/png" required aria-label="{{ kit.label }} PNG-Textur auswählen">
+          <button type="submit" class="creator-btn creator-btn-primary">Textur hochladen</button>
+        </form>
+        {% else %}
+        <p class="creator-3d-disabled" role="note">Upload nicht verfügbar: Zuerst eine FM Inside ID hinterlegen.</p>
+        <button type="button" class="creator-btn creator-3d-disabled-button" disabled>Textur hochladen</button>
+        {% endif %}
+      </article>
+      {% endfor %}
+    </div>
+  </section>
+
+  <section class="creator-3d-panel creator-3d-stadium-panel" aria-labelledby="creator-3d-stadium-title">
+    <header class="creator-3d-heading">
+      <div>
+        <span class="creator-3d-kicker">Stadion · Nur Ansicht</span>
+        <h2 id="creator-3d-stadium-title">3D-Stadionansichten</h2>
+      </div>
+      <p>Die Modelle zeigen den Originalzustand und abgeschlossene Ausbauten. Hier gibt es keine Bearbeitungssteuerung.</p>
+    </header>
+    <div class="creator-3d-stadium-grid">
+      {% for model in stadium_models %}
+      <article class="creator-3d-stadium">
+        <div class="creator-3d-stadium-title">
+          <h3>{{ model.label }}</h3>
+          <span class="creator-3d-readonly">Nur Ansicht</span>
+        </div>
+        {% if model.available and model.viewer_url %}
+        <iframe src="{{ model.viewer_url }}" loading="lazy" title="{{ model.label }} – 3D-Stadionansicht für {{ club.name }}" allowfullscreen></iframe>
+        {% else %}
+        <div class="creator-3d-model-unavailable" role="status">
+          <span class="creator-3d-unavailable-mark" aria-hidden="true"></span>
+          <p>{{ model.message }}</p>
+        </div>
+        {% endif %}
+      </article>
+      {% endfor %}
+    </div>
+    {% if stadium_geometry_warning %}
+    <p class="creator-3d-context-note" role="status">Hinweis zum aktuellen Modell: {{ stadium_geometry_warning }}</p>
+    {% endif %}
+  </section>
+
   <!-- ─── Quellen & IDs ──────────────────────────────────────────────────── -->
   <div class="creator-source-ids-card">
     <div class="creator-card-head"><h2>Quellen &amp; IDs</h2></div>
@@ -271,6 +346,11 @@
             </label>
             <input type="text" name="api_football_id" inputmode="numeric" pattern="[0-9]*"
                    value="{{ club.api_football_id|default:'' }}" placeholder="z. B. 157">
+          </div>
+          <div class="creator-field">
+            <label for="creator-cmtracker-id">CMTracker-ID</label>
+            <input id="creator-cmtracker-id" type="text" name="cmtracker_id" inputmode="numeric" pattern="[0-9]*"
+                   value="{{ club.cmtracker_id|default:'' }}" placeholder="Nur Ziffern">
           </div>
         </div>
         <button type="submit" class="creator-btn creator-btn-primary" style="margin-top:12px;">IDs speichern</button>

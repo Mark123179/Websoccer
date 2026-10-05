@@ -23,6 +23,7 @@ from .models import (
     MediaOutlet, Referee, HistoricCoach, ClubRecord,
 )
 from . import strength_engine as se
+from .creator_club_assets import creator_asset_context
 from .strength_service import compute_strength_for_player, compute_rl_form_for_player
 from .club_import.validation import validate_db_player, LEVEL_ERROR as VALIDATION_LEVEL_ERROR
 from .management.commands.import_player_source_ratings import (
@@ -761,6 +762,7 @@ def creator_club_edit(request, club_id):
         'profile': profile,
         'players': players,
         'kits': kits,
+        **creator_asset_context(club, stadium),
         'stadium_path': stadium_path,
         'city_path': city_path,
         'crest_path': crest_path,
@@ -1680,40 +1682,47 @@ def creator_save_stammdaten(request, club_id):
 
 # ─── Club: Quellen & IDs ──────────────────────────────────────────────────────
 
+@staff_member_required
 @require_POST
 def creator_save_source_ids(request, club_id):
-    """Speichert fm_inside_id, transfermarkt_id und api_football_id des Vereins."""
-    from django.db import IntegrityError
+    """Save the club's source identities together, never partially."""
+    from django.db import IntegrityError, transaction
     club = get_object_or_404(Club, id=club_id)
 
-    def _parse_bigint(raw):
+    def _parse_bigint(raw, maximum=2**63 - 1):
         raw = (raw or '').strip()
         if not raw:
             return None
+        if not raw.isascii() or not raw.isdecimal():
+            return False
         try:
             v = int(raw)
-            return v if v > 0 else None
+            return v if 0 < v <= maximum else False
         except ValueError:
             return False  # Sentinel: ungültig
 
     fmi_raw = request.POST.get('fm_inside_id', '')
     tm_raw  = request.POST.get('transfermarkt_id', '')
     af_raw  = request.POST.get('api_football_id', '')
+    cm_raw = request.POST.get('cmtracker_id', str(club.cmtracker_id or ''))
 
     fmi = _parse_bigint(fmi_raw)
     tm  = _parse_bigint(tm_raw)
-    af  = _parse_bigint(af_raw)
+    af  = _parse_bigint(af_raw, maximum=2**31 - 1)
+    cm = _parse_bigint(cm_raw)
 
-    if fmi is False or tm is False or af is False:
+    if fmi is False or tm is False or af is False or cm is False:
         messages.error(request, 'Ungültige ID — nur positive ganze Zahlen erlaubt.')
         return _redirect_tab(club_id, 'bilder')
 
     club.fm_inside_id      = fmi
     club.transfermarkt_id  = tm
     club.api_football_id   = af
+    club.cmtracker_id = cm
 
     try:
-        club.save(update_fields=['fm_inside_id', 'transfermarkt_id', 'api_football_id'])
+        with transaction.atomic():
+            club.save(update_fields=['fm_inside_id', 'transfermarkt_id', 'api_football_id', 'cmtracker_id'])
         messages.success(request, 'Quellen & IDs gespeichert.')
     except IntegrityError:
         messages.error(request, 'Eine dieser IDs ist bereits einem anderen Verein zugewiesen.')

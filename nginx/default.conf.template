@@ -67,6 +67,14 @@ server {
         try_files $uri =404;
     }
 
+    # Mutable 3D kit textures use the requested FMI-based static URL, but live
+    # on the durable asset mount, not in an ephemeral collectstatic snapshot.
+    location ^~ /static/game/images/3dkits/ {
+        alias /app/assets/3dkits/;
+        access_log off;
+        add_header Cache-Control "no-cache";
+    }
+
     location /static/ {
         alias /app/staticfiles/;
         access_log off;

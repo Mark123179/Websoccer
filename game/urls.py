@@ -162,6 +162,7 @@ from .views_creator import (
     creator_league_fixture_save,
     creator_upload_league_logo,
 )
+from .creator_club_assets import creator_upload_3d_kit, creator_stadium_model
 from .views_creator import (
     creator_manager_list,
     creator_manager_edit,
@@ -567,6 +568,8 @@ urlpatterns = [
     path('creator/clubs/<int:club_id>/upload/stadium/', creator_upload_stadium, name='creator_upload_stadium'),
     path('creator/clubs/<int:club_id>/upload/city/', creator_upload_city, name='creator_upload_city'),
     path('creator/clubs/<int:club_id>/upload/kit/<str:kit_type>/', creator_upload_kit, name='creator_upload_kit'),
+    path('creator/clubs/<int:club_id>/upload/3d-kit/<str:kit_type>/', creator_upload_3d_kit, name='creator_upload_3d_kit'),
+    path('creator/clubs/<int:club_id>/3d-stadium/<str:mode>/', creator_stadium_model, name='creator_stadium_model'),
     path('creator/clubs/<int:club_id>/upload/crest/', creator_upload_crest, name='creator_upload_crest'),
     path('creator/players/vereinslose/', creator_vereinslose, name='creator_vereinslose'),
     path('creator/players/<int:player_id>/', creator_player_edit, name='creator_player_edit'),

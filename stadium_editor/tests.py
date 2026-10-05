@@ -426,6 +426,7 @@ class StadiumEditorTests(TestCase):
             [
                 'game/templates/game/match_report.html',
                 'stadium_editor/templates/stadium_editor/live_mode.html',
+                'game/templates/creator/stadium_model.html',
             ],
         )
         stage_js = (

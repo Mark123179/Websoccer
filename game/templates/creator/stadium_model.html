@@ -1,0 +1,27 @@
+{% load static %}
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ club.name }} · Stadion {% if mode == 'original' %}Original{% else %}Aktuell{% endif %}</title>
+  <link rel="stylesheet" href="{% static 'game/css/creator-stadium-model.css' %}?v=creator-model-3">
+  <script type="importmap">{"imports":{"three":"{% static 'stadium_editor/stage/vendor/three.module.js' %}","three/addons/":"{% static 'stadium_editor/stage/vendor/addons/' %}"}}</script>
+</head>
+<body>
+  <main data-creator-stadium-viewer data-view-kind="{{ mode }}"
+        {% if mode == 'original' %}data-mode="original"{% else %}data-stadium-live-mode data-mode="live" data-camera="orbit" data-day="true"{% endif %}
+        data-scene-url="{{ scene_url }}"
+        data-original-module="{% static 'stadium_editor/dortmund_editor_scene.js' %}?v=54">
+    <div data-stadium-stage aria-label="3D-Stadion von {{ club.name }}"></div>
+    <canvas {% if mode == 'original' %}hidden{% endif %} aria-label="2D-Ersatzansicht von {{ club.name }}"></canvas>
+    <p class="live-stage__status" role="status" aria-live="polite" data-viewer-status>Stadion wird geladen …</p>
+    <span class="viewer-note">Nur Ansicht · Ziehen: drehen · Mausrad: Zoom</span>
+  </main>
+  {% if mode == 'original' %}
+  <script type="module" src="{% static 'game/js/creator-stadium-model.js' %}?v=creator-model-3"></script>
+  {% else %}
+  {% include 'stadium_editor/_live_mode_script.html' %}
+  {% endif %}
+</body>
+</html>

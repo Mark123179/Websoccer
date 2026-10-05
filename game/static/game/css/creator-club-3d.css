@@ -1,0 +1,281 @@
+.creator-3d-panel {
+  --creator-3d-ink: #d9e5e8;
+  --creator-3d-muted: #8ea3aa;
+  --creator-3d-line: rgba(152, 183, 190, .18);
+  --creator-3d-accent: #83c8b4;
+  margin: 1.25rem 0;
+  padding: clamp(1rem, 2.3vw, 1.6rem);
+  border: 1px solid var(--creator-3d-line);
+  border-radius: 12px;
+  color: var(--creator-3d-ink);
+  background:
+    radial-gradient(ellipse at 90% 0%, rgba(49, 111, 104, .14), transparent 38%),
+    linear-gradient(145deg, rgba(12, 31, 43, .92), rgba(8, 22, 33, .96));
+  min-width: 0;
+}
+
+.creator-3d-heading {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--creator-3d-line);
+}
+
+.creator-3d-heading h2 {
+  margin: .2rem 0 0;
+  color: #e3edf0;
+  font-size: clamp(1.15rem, 2vw, 1.45rem);
+  letter-spacing: -.025em;
+}
+
+.creator-3d-heading > p {
+  max-width: 38rem;
+  margin: 0;
+  color: var(--creator-3d-muted);
+  font-size: .82rem;
+  line-height: 1.55;
+}
+
+.creator-3d-kicker {
+  color: var(--creator-3d-accent);
+  font-size: .66rem;
+  font-weight: 750;
+  letter-spacing: .13em;
+  text-transform: uppercase;
+}
+
+.creator-3d-kit-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: .85rem;
+  margin-top: 1rem;
+}
+
+.creator-3d-kit,
+.creator-3d-stadium {
+  min-width: 0;
+  padding: 1rem;
+  border: 1px solid var(--creator-3d-line);
+  border-radius: 8px;
+  background: rgba(4, 17, 27, .48);
+}
+
+.creator-3d-kit-head,
+.creator-3d-stadium-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: .6rem;
+}
+
+.creator-3d-kit-head h3,
+.creator-3d-stadium-title h3 {
+  margin: 0;
+  color: #d9e5e8;
+  font-size: .95rem;
+  font-weight: 700;
+}
+
+.creator-3d-format,
+.creator-3d-readonly {
+  flex: 0 0 auto;
+  padding: .2rem .42rem;
+  border: 1px solid rgba(131, 200, 180, .3);
+  border-radius: 3px;
+  color: var(--creator-3d-accent);
+  font-size: .62rem;
+  font-weight: 700;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.creator-3d-texture-preview {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 154px;
+  margin: .8rem 0;
+  overflow: hidden;
+  border: 1px solid rgba(152, 183, 190, .12);
+  border-radius: 5px;
+  background-color: #081721;
+  background-image: linear-gradient(45deg, rgba(125, 163, 165, .055) 25%, transparent 25%, transparent 75%, rgba(125, 163, 165, .055) 75%), linear-gradient(45deg, rgba(125, 163, 165, .055) 25%, transparent 25%, transparent 75%, rgba(125, 163, 165, .055) 75%);
+  background-position: 0 0, 8px 8px;
+  background-size: 16px 16px;
+  color: #82979e;
+  font-size: .75rem;
+  text-align: center;
+}
+
+.creator-3d-texture-preview img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.creator-3d-path {
+  display: grid;
+  gap: .28rem;
+  margin: 0 0 .85rem;
+  color: var(--creator-3d-muted);
+  font-size: .68rem;
+}
+
+.creator-3d-path code {
+  overflow-wrap: anywhere;
+  color: #b8c9ce;
+  font:  .72rem/1.45 ui-monospace, SFMono-Regular, Consolas, monospace;
+}
+
+.creator-3d-upload-form {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: .55rem;
+  padding-top: .75rem;
+  border-top: 1px solid var(--creator-3d-line);
+}
+
+.creator-3d-file-label {
+  flex: 1 1 100%;
+  color: #adbec3;
+  font-size: .73rem;
+  font-weight: 650;
+}
+
+.creator-3d-upload-form input[type="file"] {
+  min-width: 0;
+  flex: 1 1 100%;
+  color: #a9bbc0;
+  font-size: .72rem;
+}
+
+.creator-3d-upload-form input[type="file"]::file-selector-button {
+  margin-right: .55rem;
+  padding: .42rem .62rem;
+  border: 1px solid rgba(152, 183, 190, .28);
+  border-radius: 4px;
+  color: #d8e4e7;
+  background: #142b36;
+  font: inherit;
+  cursor: pointer;
+}
+
+.creator-3d-upload-form .creator-btn {
+  min-height: 36px;
+}
+
+.creator-3d-disabled {
+  margin: .5rem 0;
+  color: #c8a87d;
+  font-size: .75rem;
+  line-height: 1.5;
+}
+
+.creator-3d-disabled-button {
+  opacity: .48;
+  cursor: not-allowed;
+}
+
+.creator-3d-stadium-panel {
+  margin-top: 1rem;
+}
+
+.creator-3d-stadium-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: .9rem;
+  margin-top: 1rem;
+}
+
+.creator-3d-stadium-title {
+  margin-bottom: .75rem;
+}
+
+.creator-3d-stadium iframe {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  min-height: 250px;
+  border: 1px solid rgba(152, 183, 190, .2);
+  border-radius: 5px;
+  background: #07141d;
+}
+
+.creator-3d-model-unavailable {
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: .65rem;
+  width: 100%;
+  min-height: 250px;
+  aspect-ratio: 16 / 9;
+  padding: 1.25rem;
+  border: 1px dashed rgba(152, 183, 190, .23);
+  border-radius: 5px;
+  background: linear-gradient(145deg, rgba(15, 36, 47, .8), rgba(7, 20, 29, .92));
+  text-align: center;
+}
+
+.creator-3d-model-unavailable p {
+  max-width: 25rem;
+  margin: 0;
+  color: var(--creator-3d-muted);
+  font-size: .82rem;
+  line-height: 1.55;
+}
+
+.creator-3d-unavailable-mark {
+  width: 2rem;
+  height: 2rem;
+  border: 1px solid rgba(131, 200, 180, .4);
+  border-radius: 50%;
+  background: linear-gradient(135deg, transparent 47%, rgba(131, 200, 180, .58) 48%, rgba(131, 200, 180, .58) 52%, transparent 53%);
+}
+
+.creator-3d-kit :focus-visible,
+.creator-3d-stadium :focus-visible {
+  outline: 2px solid var(--creator-3d-accent);
+  outline-offset: 3px;
+}
+
+@media (max-width: 850px) {
+  .creator-3d-kit-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .creator-3d-heading {
+    align-items: start;
+    flex-direction: column;
+    gap: .55rem;
+  }
+}
+
+@media (max-width: 600px) {
+  .creator-3d-kit-grid,
+  .creator-3d-stadium-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .creator-3d-panel {
+    padding: .9rem;
+  }
+
+  .creator-3d-stadium iframe,
+  .creator-3d-model-unavailable {
+    min-height: 200px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .creator-3d-panel *,
+  .creator-3d-panel *::before,
+  .creator-3d-panel *::after {
+    scroll-behavior: auto !important;
+    transition-duration: .01ms !important;
+    animation-duration: .01ms !important;
+  }
+}

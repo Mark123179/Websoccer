@@ -240,6 +240,11 @@ STATIC_URL = '/static/'
 # STATIC_ROOT is where `collectstatic` gathers files for production serving
 # (nginx). Harmless in Replit dev where runserver serves from app dirs.
 STATIC_ROOT = BASE_DIR / 'staticfiles'
+STATICFILES_FINDERS = [
+    'game.creator_club_assets.ThreeDKitFinder',
+    'django.contrib.staticfiles.finders.FileSystemFinder',
+    'django.contrib.staticfiles.finders.AppDirectoriesFinder',
+]
 
 # Basis-URL für Bild-Assets (Spielergesichter, Club-Logos, Trophäen …).
 # Lokal/Replit: /static/assets/ (Ordner game/static/assets/).

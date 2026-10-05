@@ -1,0 +1,6 @@
+html, body { margin: 0; height: 100%; background: #07151d; color: #c2d6df; font-family: system-ui, sans-serif; }
+main { position: relative; height: 100%; overflow: hidden; }
+[data-stadium-stage], canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+[hidden] { display: none !important; }
+[data-viewer-status] { position: absolute; inset: 40% 5% auto; text-align: center; font-size: 13px; pointer-events: none; }
+.viewer-note { position: absolute; bottom: 8px; left: 10px; color: #8ba5b3; font-size: 10px; pointer-events: none; }
