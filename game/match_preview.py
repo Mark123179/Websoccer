@@ -319,6 +319,9 @@ def build_match_preview_context(club, fixture):
         referee = fixture.simulated_match.referee if fixture.simulated_match_id else None
         if referee:
             preview['referee'] = _referee_profile(referee)
+            if getattr(referee, 'pk', None):
+                from .referee_season_stats import current_referee_stats
+                preview['referee']['season_stats'] = current_referee_stats(referee.pk)
         if fixture.scheduled_date:
             weather = DayWeather.objects.filter(sim_day=fixture.scheduled_date).first()
             preview['weather'] = weather_context(weather) if weather else None

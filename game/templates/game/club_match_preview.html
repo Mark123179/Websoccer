@@ -7,12 +7,12 @@
 
 {% block extra_css %}
     {{ block.super }}
-    <link rel="stylesheet" href="{% static 'game/css/match-preview.css' %}?v=preview-27">
-    <link rel="stylesheet" href="{% static 'game/css/match-preview-layout.css' %}?v=layout-14">
+    <link rel="stylesheet" href="{% static 'game/css/match-preview.css' %}?v=preview-29">
+    <link rel="stylesheet" href="{% static 'game/css/match-preview-layout.css' %}?v=layout-16">
 {% endblock %}
 
 {% block content %}
-<section class="match-preview-scene" aria-label="Spielvorschau" data-layout-owner="{{ request.user.pk|default:'guest'|unlocalize }}" data-layout-revision="3" data-layout-detail-patch="5">
+<section class="match-preview-scene" aria-label="Spielvorschau" data-layout-owner="{{ request.user.pk|default:'guest'|unlocalize }}" data-layout-revision="3" data-layout-detail-patch="6">
     <div class="match-preview-content" aria-label="Spielinformationen">
         <div class="match-preview-panels">
             <section class="match-preview-panel match-preview-panel--scout" aria-labelledby="mp-scout-title">
@@ -232,6 +232,24 @@
                                                 </dl>
                                             {% elif preview.referee.summary %}<p>{{ preview.referee.summary }}</p>{% endif %}
                                         </div>
+                                        {% if preview.referee.season_stats %}
+                                            <section class="mp-referee-season" aria-label="Schiedsrichterstatistik der aktuellen Saison">
+                                                <h3>Aktuelle Saison{% if preview.referee.season_stats.available %} · {{ preview.referee.season_stats.season }}{% endif %}</h3>
+                                                {% if preview.referee.season_stats.metrics %}
+                                                    <dl class="mp-referee-season-values">
+                                                        {% for metric in preview.referee.season_stats.metrics %}
+                                                            <div title="{{ metric.detail }}">
+                                                                <dt>{{ metric.label }}</dt>
+                                                                <dd class="{{ metric.class_name }}" aria-label="{{ metric.label }}: {{ metric.value }}. {{ metric.detail }}">{{ metric.value }}</dd>
+                                                            </div>
+                                                        {% endfor %}
+                                                    </dl>
+                                                    <p>Vergleich: gesamte Sim · pro Spiel<br>Grün: selten · Gelb: erhöht · Rot: stark erhöht<br>— = nicht vollständig erfasst</p>
+                                                {% else %}
+                                                    <p>{{ preview.referee.season_stats.message }}</p>
+                                                {% endif %}
+                                            </section>
+                                        {% endif %}
                                     </section>
                                 {% else %}
                                     <section class="mp-referee-profile mp-referee-profile--empty" aria-labelledby="mp-referee-title">
@@ -319,8 +337,8 @@
 
 {% block extra_js %}
     {{ block.super }}
-    <script src="{% static 'game/js/match-preview.js' %}?v=preview-27" defer></script>
-    <script src="{% static 'game/js/match-preview-layout.js' %}?v=layout-14" defer></script>
+    <script src="{% static 'game/js/match-preview.js' %}?v=preview-29" defer></script>
+    <script src="{% static 'game/js/match-preview-layout.js' %}?v=layout-16" defer></script>
     {% if preview.stadium.model_available and preview.stadium.model_scene_url %}
         <script type="importmap">{"imports":{"three":"{% static 'stadium_editor/stage/vendor/three.module.js' %}"}}</script>
         <script src="{% static 'game/js/club-stadium.js' %}?v=5" data-scene-url="{{ preview.stadium.model_scene_url }}" defer></script>

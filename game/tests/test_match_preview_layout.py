@@ -62,7 +62,7 @@ class MatchPreviewLayoutTests(SimpleTestCase):
         self.assertNotIn('foreground.png', html)
         self.assertNotIn('Vorbericht für das Spiel', html)
         self.assertIn('Der Spielplan ist derzeit frei.', html)
-        self.assertIn('match-preview.js?v=preview-27', html)
+        self.assertIn('match-preview.js?v=preview-29', html)
 
     def test_news_name_only_opponent_and_use_red_brand_without_delete_controls(self):
         html = render_to_string('game/club_match_preview.html', {
@@ -193,10 +193,10 @@ class MatchPreviewLayoutTests(SimpleTestCase):
             'request': SimpleNamespace(user=SimpleNamespace(pk=42)),
         })
         self.assertIn('data-layout-owner="42"', html)
-        self.assertIn('match-preview-layout.css?v=layout-14', html)
-        self.assertIn('match-preview-layout.js?v=layout-14', html)
+        self.assertIn('match-preview-layout.css?v=layout-16', html)
+        self.assertIn('match-preview-layout.js?v=layout-16', html)
         self.assertIn('data-layout-revision="3"', html)
-        self.assertIn('data-layout-detail-patch="5"', html)
+        self.assertIn('data-layout-detail-patch="6"', html)
         self.assertNotIn('Die letzten fünf', html)
         self.assertNotIn('Form der letzten fünf Spiele', html)
         for name in ('open', 'tools', 'select', 'parent', 'x', 'y', 'width', 'height',
