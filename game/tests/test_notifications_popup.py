@@ -159,6 +159,29 @@ class NotificationsPopupTests(TestCase):
                     item.refresh_from_db()
                     self.assertEqual(item.url, url)
 
+    @override_settings(ALLOWED_HOSTS=['[::1]'])
+    def test_malformed_ipv6_links_are_empty_without_changing_stored_urls(self):
+        for prefix in ('//', 'http://', 'https://'):
+            for address in ('[::1', '::1]', '[not-an-ip]'):
+                url = f'{prefix}{address}/clubs/1/'
+                with self.subTest(url=url):
+                    item = self.create_item(url=url, body='Sichtbarer Nachrichtentext')
+                    response = self.client.post(
+                        self.url, HTTP_HOST='[::1]:8443', secure=True,
+                    )
+                    self.assertEqual(response.status_code, 200)
+                    data = next(
+                        n for n in response.json()['items'] if n['id'] == item.pk
+                    )
+                    self.assertEqual(data['url'], '')
+                    self.assertEqual(data['title'], item.title)
+                    self.assertEqual(data['body'], item.body)
+                    self.assertTrue(data['is_new'])
+                    self.assertEqual(response.json()['unread_count'], 0)
+                    item.refresh_from_db()
+                    self.assertEqual(item.url, url)
+                    self.assertTrue(item.is_read)
+
     def test_https_popup_rejects_same_host_http_link(self):
         item = self.create_item(url='http://testserver/clubs/1/')
         response = self.client.post(self.url, secure=True)

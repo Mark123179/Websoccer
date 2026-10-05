@@ -168,6 +168,32 @@ class NotificationsPageTests(TestCase):
                     item.refresh_from_db()
                     self.assertEqual(item.url, url)
 
+    @override_settings(ALLOWED_HOSTS=['[::1]'])
+    def test_malformed_ipv6_links_render_without_anchors_or_changing_stored_urls(self):
+        for prefix in ('//', 'http://', 'https://'):
+            for address in ('[::1', '::1]', '[not-an-ip]'):
+                url = f'{prefix}{address}/clubs/1/'
+                with self.subTest(url=url):
+                    item = self.create_item(url=url, body='Sichtbarer Nachrichtentext')
+                    response = self.client.get(
+                        self.url, HTTP_HOST='[::1]:8443', secure=True,
+                    )
+                    self.assertEqual(response.status_code, 200)
+                    displayed = next(
+                        n for n in response.context['notifications'] if n.pk == item.pk
+                    )
+                    self.assertEqual(displayed.safe_url, '')
+                    self.assertEqual(displayed.url, url)
+                    self.assertNotContains(response, '<a class="notif-item')
+                    self.assertContains(
+                        response, '<div class="notif-item is-unread">', count=1,
+                    )
+                    self.assertContains(response, item.title)
+                    self.assertContains(response, item.body)
+                    item.refresh_from_db()
+                    self.assertEqual(item.url, url)
+                    self.assertTrue(item.is_read)
+
     def test_https_page_rejects_same_host_http_link(self):
         insecure = self.create_item(url='http://testserver/clubs/1/')
         secure = self.create_item(url='https://testserver/clubs/1/')
