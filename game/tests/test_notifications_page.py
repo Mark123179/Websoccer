@@ -131,6 +131,43 @@ class NotificationsPageTests(TestCase):
                     item.refresh_from_db()
                     self.assertEqual(item.url, url)
 
+    @override_settings(ALLOWED_HOSTS=['[::1]', '[2001:db8::1]'])
+    def test_ipv6_links_require_identical_request_address_and_port(self):
+        for host, other_host in (
+            ('[::1]:8443', '[2001:db8::1]:8443'),
+            ('[2001:db8::1]:9443', '[::1]:9443'),
+        ):
+            address, port = host.rsplit(':', 1)
+            other_port = '9443' if port == '8443' else '8443'
+            cases = [('/clubs/1/', True)]
+            for prefix in ('//', 'http://', 'https://'):
+                cases.extend([
+                    (f'{prefix}{host}/clubs/1/', True),
+                    (f'{prefix}{other_host}/clubs/1/', False),
+                    (f'{prefix}{address}:{other_port}/clubs/1/', False),
+                    (f'{prefix}{address}/clubs/1/', False),
+                ])
+            for url, allowed in cases:
+                with self.subTest(host=host, url=url):
+                    item = self.create_item(url=url)
+                    response = self.client.get(self.url, HTTP_HOST=host)
+                    self.assertEqual(response.status_code, 200)
+                    displayed = next(
+                        n for n in response.context['notifications'] if n.pk == item.pk
+                    )
+                    self.assertEqual(displayed.safe_url, url if allowed else '')
+                    self.assertEqual(displayed.url, url)
+                    anchor = f'<a class="notif-item is-unread" href="{url}">'
+                    if allowed:
+                        self.assertContains(response, anchor, count=1)
+                    else:
+                        self.assertNotContains(response, anchor)
+                        self.assertContains(
+                            response, '<div class="notif-item is-unread">', count=1,
+                        )
+                    item.refresh_from_db()
+                    self.assertEqual(item.url, url)
+
     def test_https_page_rejects_same_host_http_link(self):
         insecure = self.create_item(url='http://testserver/clubs/1/')
         secure = self.create_item(url='https://testserver/clubs/1/')
