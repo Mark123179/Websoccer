@@ -606,3 +606,31 @@ mtime_ms = 1791044182110
 storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:6e4eaecc-e6c5-4f64-8de5-e8845034f33b/905ea8e3-e9b2-4021-a408-d32679b6ea57/281b001d-11ab-4a39-b261-1f00c60600a3"
 storage_version_token = "1791044223304412"
 content_type = "image/jpeg"
+
+[[outputs]]
+id = "YmZtxxH7y3HLZ103SsSNb"
+uri = "file://.local/tasks/t0-import-neuaufbau-bericht.md"
+type = "text"
+title = "T0-Bericht: Import-Neuaufbau"
+description = "Read-only Auswirkungsanalyse mit Paketbefunden, Pilotumfang, Engine-Schnittstelle, Schutzkonzept, Dortmund-Szene und offenen Entscheidungen. T1–T5 bleiben gesperrt."
+logical_id = "0493e429-4d51-46af-9b22-80ad8ec7066e"
+content_hash = "sha256:609abd9ec1aaba0b3e7389a6ec72c3f37700368b4295af4f2fcdc555f48e4239"
+size = 54304
+mtime_ms = 1791226964872
+storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:6e4eaecc-e6c5-4f64-8de5-e8845034f33b/0493e429-4d51-46af-9b22-80ad8ec7066e/54f0d47e-a917-4dff-ada9-9411cae5ed65"
+storage_version_token = "1791227047185234"
+content_type = "text/markdown"
+
+[[outputs]]
+id = "8KNbJBPLdyZJlWoVpo7xd"
+uri = "file://.local/tasks/t0-import-neuaufbau-anlagen.md"
+type = "text"
+title = "T0-Anlagen: Abhängigkeitsmatrizen"
+description = "412 Datei-Kandidaten, 1.521 Modellfelder, 244 Beziehungen und Migrations-Prüfindex mit Pfaden, Zielzuordnung, Belegen und ausdrücklich markierter Unsicherheit."
+logical_id = "7e7adb01-c502-403d-9166-9614ee54da23"
+content_hash = "sha256:8d52c59b75eafe0eeeee2caa8dae7ce11e49ee9416b8f324132f8de757e6e7a2"
+size = 657805
+mtime_ms = 1791226997892
+storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:6e4eaecc-e6c5-4f64-8de5-e8845034f33b/7e7adb01-c502-403d-9166-9614ee54da23/f0eba269-1d1b-4419-98ba-93154b0ca0ae"
+storage_version_token = "1791227047908709"
+content_type = "text/markdown"
