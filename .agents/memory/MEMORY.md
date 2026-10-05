@@ -135,3 +135,4 @@
 - [Spielvorschau-Aufbau](match-preview-visual-contract.md) — drei transparente Kacheln, Mitte breiter; Originalkabine mit Stuhl/Tasche im Vordergrund; echte Gegnerdaten und persönliche Anordnung erhalten.
 - [Schiedsrichtervergleich](referee-preview-comparison.md) — aktuelle Saison in der Spielvorschau; Vergleich mit allen Schiedsrichtern der gesamten Sim statt nur dem Wettbewerb.
 - [Creator-3D-Vereinsassets](creator-club-3d-assets.md) — 3D-Trikots sind PNG-Texturen für Home/Away/Third; aktuelles Stadion bedeutet den durch den Manager ausgebauten Zustand.
+- [Import-Pilot Freigabegrenzen](import-pilot-approval-boundaries.md) — Nachtrag 3: neue Pilot-Rolle, Bestand unverändert; tatsächlichen Nachweis und Kontenliste liefern, danach Halt.
