@@ -1,13 +1,19 @@
 ---
 name: Import-Pilot Freigabegrenzen
-description: Verbindliche Trennungsrichtung, Konten-Startwerte und Freigabehalte aus Nachträgen 3 und 4.
+description: Verbindliche Anker-/Feldlistenregeln aus Nachtrag 5 sowie fortgeltende Schutz-, Konten- und Isolationsentscheidungen.
 ---
 
-Nachtrag 4 hat bei Widersprüchen Vorrang vor Teil A/C und Nachträgen 1–3; BVB-Referenzpaket unverändert. Die Trennung erfolgt über eine neue Pilot-Rolle; bestehende Rollen, Verbindungen, Einstellungen und Prozesse bleiben unangetastet. Pilot → public braucht effektiven Schreibschutz; Bestand → Pilot wird über Suchpfad, Code, Befehle und laufende Prozesse belegt, nicht durch Rechteentzug im Bestand.
+Nachtrag 5 hat bei Widersprüchen Vorrang vor Teil A, B6, C und Nachträgen 1–4. Club, Player und Stadium bleiben die Spielanker; keine neuen Modelle daneben mit späterem Umhängen der Module. Bestehende B6-Tabellen erweitern/reparieren, neue nur bei echter Lücke. Jedes Feld einer Schicht und einem kontrollierten Schreibrecht zuordnen; Spiegel einzeln begründen. Nach Ligastart gilt E37.
+
+**Why:** Der Nutzer lehnt die Zwischenstufe ab, in der nach dem Reset die echten Spielanker leer und die Module noch nicht umgehängt wären.
+
+**How to apply:** Feldliste mit Codeprüfung und vollständiger Paketfeldzuordnung vorlegen, danach Halt. Nur diese Dokumentation ist freigegeben; Modell/Migration/Paketimport/Dortmund-Szenensicherung, T2–T5 und Hetzner bleiben gesperrt. Nach ausdrücklicher Freigabe lädt der Pilot die vollständige game-App und verwendet die echten Seiten sowie dieselben echten Migrationen wie später live. Alte Datenmigrationen normal ausführen, deren Geschäftsdaten im Pilot bereinigen, vor BVB Nullbestand belegen und Schutzkopien erhalten. Neue UI nur für Creator-Upload/Vorschau/Arbeitsliste. Redundante Spalten später modulweise abbauen.
+
+Fortgeltende N14-Isolation: Die Trennung erfolgt über eine neue Pilot-Rolle; bestehende Rollen, Verbindungen, Einstellungen und Prozesse bleiben unangetastet. Pilot → public braucht effektiven Schreibschutz; Bestand → Pilot wird über Suchpfad, Code, Befehle und laufende Prozesse belegt, nicht durch Rechteentzug im Bestand.
 
 **Why:** Der Nutzer hat diese Richtung ausdrücklich gewählt und gegenseitige harte Rollenabschirmung verworfen.
 
-**How to apply:** Der Nutzer hat am 2026-10-05 den tatsächlichen Isolationsnachweis und die korrigierte Kontenliste bestätigt. Freigegeben ist jetzt die Schutzbereichskopie aus einem neuen konsistenten Quellstand. Kopierbericht und höchstens einseitigen Modellplan gemeinsam vorlegen, danach Halt. Fachliches Datenmodell erst nach ausdrücklicher Modellplan-Freigabe; Paketimport, Dortmund-Szenensicherung, T2–T5 und Hetzner bleiben gesperrt. Der Weg „Replit-Datenbank sichern und direkt leeren“ wurde verworfen.
+**How to apply:** Der Nutzer hat am 2026-10-05 den tatsächlichen Isolationsnachweis und die korrigierte Kontenliste bestätigt. Diese Isolation nicht durch Eingriffe in die Bestandsrolle ersetzen. Der Weg „Replit-Datenbank sichern und direkt leeren“ wurde verworfen.
 
 Die bestätigte Schutzliste umfasst elf Regeln-/Parametertabellen: zusätzlich zu den neun der Vorprüfung NeutralVenue vollständig und LandKoeffizient ausschließlich Saison 0. Nachtrag 4 autorisiert ihre Kopie sowie Schiedsrichter-/Sponsorenkatalog und bestätigte Konten/Profile; keine alten Spiele, Sim-Zähler, Sponsorenverträge, Angebote oder Erträge.
 
@@ -15,7 +21,7 @@ Die bestätigte Schutzliste umfasst elf Regeln-/Parametertabellen: zusätzlich z
 
 **How to apply:** Aktuellen konsistenten Quellstand prüfen. Manager-Startwerte ausdrücklich level=1, xp=0, xp_max=800, nicht den früheren Vorschlag Level 0/alte Schwelle verwenden. Übrige N17-Feldentscheidungen sind bestätigt; Notizen und Support-Tickets weder im Pilot noch beim Live-Reset übernehmen. Vor Kontokopie fehlende Rechte-Zielmodelle und Profile ohne Login melden und nicht selbst entscheiden.
 
-Der Modellplan muss B6-Dateien/App, die Wiederverwendung von strength_service/strength_engine ohne Formelkopie oder Formeländerung, T4-Datenzugriff, späteren Anwendungseinstieg und den Umgang mit Altmodellen/-tabellen beantworten.
+Der Modellplan muss die Wiederverwendung von strength_service/strength_engine ohne Formelkopie oder Formeländerung beibehalten. N27 ersetzt den früheren Einseitenplan durch eine Feldliste mit Tabelle/Spalte, Zustand, Schicht/Schreiber, Spiegel/Quelle/Funktion und erneutem Upload nach Ligastart.
 
 **Why:** Der Nutzer verlangt in N22 ausdrücklich, dass aus dem isolierten Pilot kein zweites Spiel neben dem Spiel entsteht.
 

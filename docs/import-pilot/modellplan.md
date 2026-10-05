@@ -1,8 +1,10 @@
 # N22: Modellplan zur Freigabe
 
+**Durch Nachtrag 5 abgelehnt und ersetzt.** Maßgeblich sind jetzt [die N27-Feldliste](feldliste-n27.md) und [ihre vollständige Paket-Anlage](feldliste-n27-paketfelder.md). Der folgende frühere Vorschlag wird nur als Historie erhalten; er ist kein Implementierungsauftrag.
+
 **Vorschlag · höchstens eine Seite · noch nicht umgesetzt**
 
-**Empfehlung: ein gemeinsamer Spielcode, isolierter Pilot-Datenbestand.** Keine zweite Spiel-App und keine Formelkopie. Eine separate fachliche Pilot-App würde dauerhaft doppelte Regeln erzeugen; ein sofortiger Umbau des laufenden Bestands wäre nicht freigegeben.
+**Empfehlung: ein gemeinsamer Spielcodea, isolierter Pilot-Datenbestand.** Keine zweite Spiel-App und keine Formelkopie. Eine separate fachliche Pilot-App würde dauerhaft doppelte Regeln erzeugen; ein sofortiger Umbau des laufenden Bestands wäre nicht freigegeben.
 
 **1. App und Dateien für B6.** Alle fachlichen Modelle gehören zur bestehenden App **`game`**, registriert über `game/models.py`; neue Definitionen liegen in `game/import_models/real.py` (Verein, Stadion, Spieler, externe IDs, Quellwerte, Person), `history.py` (Marktwertpunkte, Transfers, Rekorde, Titel mit expliziter Herkunft), `state.py` (Kader einschließlich Mannschaft/Leih-Pool, Stadion-Ausbau, Stärkeprofil) und `package.py` (Paket, Arbeitsliste). Eindeutige neue Modell-/Tabellennamen vermeiden Kollisionen mit Altmodellen. Finanzen, Spiele und Saison bleiben Spielstandmodelle in `game`; ihre Vereins-/Spielerzugriffe werden kontrolliert an die neue Identität angebunden. Echtweltschicht schreibt nur der Import, Spielstand nur das Spiel; gemischte Historie unterscheidet Herkunft.
 
