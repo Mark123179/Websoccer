@@ -1,7 +1,7 @@
 import re
 
 from django.contrib.auth import get_user_model
-from django.test import Client, TestCase
+from django.test import Client, TestCase, override_settings
 from django.urls import reverse
 
 from game.models import Notification
@@ -102,6 +102,34 @@ class NotificationsPopupTests(TestCase):
                 self.assertEqual(data['url'], url)
                 item.refresh_from_db()
                 self.assertEqual(item.url, url)
+
+    @override_settings(ALLOWED_HOSTS=['manager.example', 'alternate.example'])
+    def test_links_use_request_host_and_port_not_all_allowed_hosts(self):
+        for host, other_host in (
+            ('manager.example:8443', 'alternate.example:8443'),
+            ('alternate.example:9443', 'manager.example:9443'),
+        ):
+            domain, port = host.split(':')
+            other_port = '9443' if port == '8443' else '8443'
+            cases = [('/clubs/1/', True)]
+            for prefix in ('//', 'http://', 'https://'):
+                cases.extend([
+                    (f'{prefix}{host}/clubs/1/', True),
+                    (f'{prefix}{other_host}/clubs/1/', False),
+                    (f'{prefix}{domain}:{other_port}/clubs/1/', False),
+                    (f'{prefix}{domain}/clubs/1/', False),
+                ])
+            for url, allowed in cases:
+                with self.subTest(host=host, url=url):
+                    item = self.create_item(url=url)
+                    response = self.client.post(self.url, HTTP_HOST=host)
+                    self.assertEqual(response.status_code, 200)
+                    data = next(
+                        n for n in response.json()['items'] if n['id'] == item.pk
+                    )
+                    self.assertEqual(data['url'], url if allowed else '')
+                    item.refresh_from_db()
+                    self.assertEqual(item.url, url)
 
     def test_https_popup_rejects_same_host_http_link(self):
         item = self.create_item(url='http://testserver/clubs/1/')
