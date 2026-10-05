@@ -2,6 +2,17 @@
     const root = document.querySelector(".match-preview-page");
     if (!root) return;
 
+    // The calendar can wrap to a second row on narrower screens.
+    // Keep all three panels together and below its actual logical height.
+    const header = root.querySelector(".ws-game-header");
+    if (header) {
+        const alignPanels = () => root.style.setProperty("--mp-header-bottom",
+            `${header.offsetTop + header.offsetHeight}px`);
+        alignPanels();
+        new ResizeObserver(alignPanels).observe(header);
+        window.addEventListener("resize", alignPanels);
+    }
+
     root.querySelectorAll("img[data-fallback-image]").forEach(image => {
         image.addEventListener("error", () => {
             image.dataset.imageFailed = "true";

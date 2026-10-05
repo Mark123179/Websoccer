@@ -116,6 +116,7 @@
         [".mp-model-card .mp-report-heading", "model-heading", "3D-Überschrift", "text"],
         [".mp-model-viewport", "model-viewport", "3D-Stadion"],
         [".mp-referee-profile", "referee", "Schiedsrichterprofil"],
+        [".mp-referee-season", "referee-season", "Schiedsrichter · aktuelle Saison"],
         [".mp-referee-portrait", "referee-photo", "Schiedsrichter · Porträt"],
         [".mp-referee-info", "referee-info", "Schiedsrichter · Angaben", "text"],
         [".mp-referee-info h2", "referee-name", "Schiedsrichter · Name", "text"],
@@ -415,6 +416,36 @@
         }
         layout.detailPatch = Math.min(detailPatch, 5);
     }
+    function expandRefereeSeason(layout) {
+        if (detailPatch < 6 || layout.detailPatch >= 6) return;
+        const referee = byId.get("referee-0"), season = byId.get("referee-season-0");
+        if (!referee || !season) return;
+        const rect = referee.node.getBoundingClientRect();
+        const scale = rect.width / referee.node.offsetWidth || 1;
+        const contentBottom = Math.max(...[
+            ".mp-referee-portrait", ".mp-referee-info",
+        ].map(selector => referee.node.querySelector(selector)?.getBoundingClientRect().bottom || rect.top));
+        const required = (contentBottom - rect.top) / scale + 8 +
+            baselineSizes.get(season.id).height;
+        const previousHeight = referee.node.offsetHeight;
+        const nextHeight = Math.max(previousHeight, required);
+        // Percentage child frames otherwise grow/move when their parent grows.
+        for (const child of items.filter(item => item.parent === referee && item !== season)) {
+            const childFrame = layout.nodes[child.id];
+            childFrame.y *= previousHeight / nextHeight;
+            childFrame.height *= previousHeight / nextHeight;
+            paint(child, childFrame);
+        }
+        layout.nodes[referee.id].height = nextHeight / dimensions(referee).height * 100;
+        paint(referee, layout.nodes[referee.id]);
+        const size = dimensions(season), frame = layout.nodes[season.id];
+        frame.x = 0;
+        frame.y = ((contentBottom - rect.top) / scale + 8) / size.height * 100;
+        frame.width = 100;
+        frame.height = baselineSizes.get(season.id).height / size.height * 100;
+        paint(season, frame);
+        layout.detailPatch = 6;
+    }
     function restoreSavedLayout() {
         if (!baseline) baseline = captureBaseline();
         baselineRefHeight = byId.get("referee-0")?.node.offsetHeight || 0;
@@ -426,6 +457,7 @@
             repairDetails(saved);
             expandFooter(saved);
             expandNews(saved);
+            expandRefereeSeason(saved);
         }
     }
     // Retire editing controls without discarding the browser-local composition.

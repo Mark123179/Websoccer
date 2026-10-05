@@ -67,7 +67,7 @@
     left: 24px;
     position: absolute;
     right: 24px;
-    top: 208px;
+    top: max(120px, calc(var(--mp-header-bottom, 108px) + 12px));
 }
 
 .match-preview-panel {
@@ -656,6 +656,18 @@ img[data-image-failed] { visibility: hidden; }
 .mp-referee-ratings dt { color: var(--mp-faint); font-size: 11px; line-height: 1.1; }
 .mp-referee-ratings dd { color: var(--mp-text); font-size: 13px; font-weight: 700; line-height: 1.15; margin: 0; overflow-wrap: anywhere; }
 
+.mp-referee-profile:has(.mp-referee-season) { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: start; }
+.mp-referee-season { border-top: 1px solid var(--mp-rule); grid-column: 1 / -1; margin-top: 0; padding-top: 8px; min-width: 0; }
+.mp-referee-season h3 { color: var(--mp-muted); font-size: 11px; font-weight: 700; margin: 0 0 7px; }
+.mp-referee-season-values { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px 10px; margin: 0; align-items: end; }
+.mp-referee-season-values dt { color: var(--mp-muted); font-size: 10px; overflow-wrap: anywhere; }
+.mp-referee-season-values dd { color: var(--mp-text); font-size: 18px; font-weight: 800; margin: 2px 0 0; line-height: 1.1; }
+.mp-referee-season-values dd.is-low { color: var(--mp-green); }
+.mp-referee-season-values dd.is-elevated { color: var(--mp-yellow); }
+.mp-referee-season-values dd.is-high { color: var(--mp-red); }
+.mp-referee-season p { color: var(--mp-muted); font-size: 9px; line-height: 1.4; margin: 8px 0 0; }
+.match-preview-scene.mp-layout-free .match-preview-panel--center[data-mp-layout-item] { overflow-y: auto !important; overscroll-behavior: contain; scrollbar-width: thin; scrollbar-color: rgba(34, 230, 255, 0.35) rgba(255, 255, 255, 0.04); }
+
 .mp-no-fixture {
     align-items: center;
     display: flex;
@@ -938,7 +950,7 @@ img[data-image-failed] { visibility: hidden; }
         grid-template-rows: minmax(0, 0.95fr) minmax(0, 1.3fr) minmax(0, 0.95fr);
         left: 14px;
         right: 14px;
-        top: 198px;
+        top: max(120px, calc(var(--mp-header-bottom, 108px) + 12px));
     }
     .match-preview-panel { min-height: 0; }
     .match-preview-panel--scout,
