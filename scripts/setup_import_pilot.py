@@ -5,6 +5,7 @@ internally and are never rendered in console output.
 """
 import os
 import sys
+from contextlib import closing
 from pathlib import Path
 
 import psycopg2
@@ -29,7 +30,7 @@ def prepare():
     from django.conf import settings
 
     settings.DATABASES
-    with psycopg2.connect(os.environ["DATABASE_URL"]) as maintenance:
+    with closing(psycopg2.connect(os.environ["DATABASE_URL"])) as maintenance, maintenance:
         with maintenance.cursor() as cursor:
             cursor.execute(
                 "SELECT inet_server_addr() IS NULL OR "

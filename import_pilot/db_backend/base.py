@@ -53,6 +53,14 @@ class DatabaseWrapper(PostgreSQLWrapper):
                     OR EXISTS(
                         SELECT 1 FROM pg_class c
                         JOIN pg_namespace n ON n.oid = c.relnamespace
+                        WHERE n.nspname = 'public'
+                          AND c.relkind IN ('r','p','v','f')
+                          AND has_any_column_privilege(
+                              current_user, c.oid, 'INSERT,UPDATE,REFERENCES')
+                    )
+                    OR EXISTS(
+                        SELECT 1 FROM pg_class c
+                        JOIN pg_namespace n ON n.oid = c.relnamespace
                         WHERE n.nspname = 'public' AND c.relkind = 'S'
                           AND has_sequence_privilege(current_user, c.oid, 'USAGE,UPDATE')
                     )
