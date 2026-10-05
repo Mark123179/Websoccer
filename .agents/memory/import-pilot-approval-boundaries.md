@@ -21,6 +21,12 @@ Der Modellplan muss B6-Dateien/App, die Wiederverwendung von strength_service/st
 
 **How to apply:** Einen gemeinsamen Spiel-/Berechnungscode vorsehen, keine Pilot-Kopie der Stärkeformeln oder komplette zweite Spiel-App bauen. Der Modellplan ist ein Freigabegegenstand, kein Auftrag zur vorgezogenen Modellimplementierung.
 
+Rechte für im Pilot noch nicht geladene Zielmodelle als Metadaten erhalten, ohne diese Modelle dafür zu aktivieren.
+
+**Why:** Der Nutzer hat nach der vorgeschriebenen Meldung der fehlenden Rechte-Zielmodelle ausdrücklich „Als Metadaten erhalten (empfohlen)“ gewählt.
+
+**How to apply:** Natürliche Schlüssel erhalten und technische IDs zuordnen; keine Rechte verwerfen und keine Spielmodelle oder Rechteauswertung allein zur Katalogübernahme einschalten. Die Entscheidung hebt den Halt vor der Modellplan-Freigabe nicht auf.
+
 Die vorhandenen Pilot-Secrets verwenden; ihre Übernahme nicht an einer starren 32-Zeichen-Grenze blockieren.
 
 **Why:** Der Nutzer hat ausdrücklich angeordnet, die Werte auch mit 28, 30 oder 31 Zeichen zu übernehmen.

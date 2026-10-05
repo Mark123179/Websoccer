@@ -2,6 +2,8 @@
 
 Status: VORSCHLAG, keine Kopie ausgeführt. Erfasst anhand der aktuellen SQL-Spalten und der vorhandenen Modelle.
 
+Historischer N17-Vorschlag: inzwischen durch Nachtrag 4 bestätigt, mit `level=1`, `xp=0`, `xp_max=800` statt der ursprünglichen Level-/Schwellenvorschläge. Die ausgeführte Übernahme und endgültige Feldliste stehen in [kopierbericht.md](kopierbericht.md).
+
 'Wird auf null gesetzt' bezeichnet fachlichen Neustart, nicht pauschal SQL NULL: numerische Zähler 0, boolsche Marker false, JSON {}, nullable Beziehungen/Datum NULL. Kein Nullability-/Schemaumbau im Bestand.
 
 | ManagerProfile-Feld | Aktion | Ziel / Begründung |

@@ -1,0 +1,197 @@
+{
+  "authorization": "N18–N22 + explicit permission-metadata approval",
+  "started_at": "2026-10-05T20:35:54.732857+00:00",
+  "tables": {
+    "django_content_type": {
+      "source_total": 157,
+      "copied": 157,
+      "expected_content_equal": true,
+      "mode": "natural-key-metadata"
+    },
+    "auth_permission": {
+      "source_total": 628,
+      "copied": 628,
+      "expected_content_equal": true,
+      "mode": "natural-key-metadata"
+    },
+    "auth_user": {
+      "source_total": 3,
+      "copied": 3,
+      "expected_content_equal": true,
+      "mode": "full"
+    },
+    "auth_group": {
+      "source_total": 0,
+      "copied": 0,
+      "expected_content_equal": true,
+      "mode": "full"
+    },
+    "auth_user_groups": {
+      "source_total": 0,
+      "copied": 0,
+      "expected_content_equal": true,
+      "mode": "full"
+    },
+    "auth_user_user_permissions": {
+      "source_total": 0,
+      "copied": 0,
+      "expected_content_equal": true,
+      "mode": "natural-key-metadata"
+    },
+    "auth_group_permissions": {
+      "source_total": 0,
+      "copied": 0,
+      "expected_content_equal": true,
+      "mode": "natural-key-metadata"
+    },
+    "game_managerprofile": {
+      "source_total": 3,
+      "copied": 3,
+      "expected_content_equal": true,
+      "mode": "profile-reset"
+    },
+    "game_referee": {
+      "source_total": 463,
+      "copied": 463,
+      "expected_content_equal": true,
+      "mode": "full"
+    },
+    "game_sponsor": {
+      "source_total": 504,
+      "copied": 504,
+      "expected_content_equal": true,
+      "mode": "full"
+    },
+    "game_economyparameter": {
+      "source_total": 77,
+      "copied": 77,
+      "expected_content_equal": true,
+      "mode": "full"
+    },
+    "game_countrynetwork": {
+      "source_total": 0,
+      "copied": 0,
+      "expected_content_equal": true,
+      "mode": "full"
+    },
+    "game_stadionumfeldconfig": {
+      "source_total": 1,
+      "copied": 1,
+      "expected_content_equal": true,
+      "mode": "full"
+    },
+    "game_datasource": {
+      "source_total": 5,
+      "copied": 5,
+      "expected_content_equal": true,
+      "mode": "full"
+    },
+    "game_strengthformulasettings": {
+      "source_total": 1,
+      "copied": 1,
+      "expected_content_equal": true,
+      "mode": "full"
+    },
+    "game_strengthmodifierrule": {
+      "source_total": 15,
+      "copied": 15,
+      "expected_content_equal": true,
+      "mode": "full"
+    },
+    "game_mediaoutlet": {
+      "source_total": 24,
+      "copied": 24,
+      "expected_content_equal": true,
+      "mode": "full"
+    },
+    "showauction_showauctionpreset": {
+      "source_total": 5,
+      "copied": 5,
+      "expected_content_equal": true,
+      "mode": "full"
+    },
+    "game_storysettings": {
+      "source_total": 0,
+      "copied": 0,
+      "expected_content_equal": true,
+      "mode": "full"
+    },
+    "game_neutralvenue": {
+      "source_total": 0,
+      "copied": 0,
+      "expected_content_equal": true,
+      "mode": "full"
+    },
+    "game_landkoeffizient": {
+      "source_total": 9,
+      "copied": 9,
+      "expected_content_equal": true,
+      "mode": "saison-0-only"
+    }
+  },
+  "snapshot": "2800971:2800971:",
+  "source_snapshot_at": "2026-10-05T20:35:54.743392+00:00",
+  "permissions": {
+    "metadata_only": true,
+    "missing_model_content_types": 156,
+    "missing_model_permissions": 624,
+    "content_type_ids_remapped": 151,
+    "permission_ids_remapped": 616
+  },
+  "pilot_identity": [
+    "import_pilot_role",
+    "import_pilot_role",
+    "import_pilot",
+    "import_pilot"
+  ],
+  "cross_schema_fks": [],
+  "sequence_references_to_public": [],
+  "migrations_unchanged": true,
+  "installed_apps": [
+    "import_pilot",
+    "sessions"
+  ],
+  "no_game_imports": true,
+  "copy_committed_at": "2026-10-05T20:35:56.733162+00:00",
+  "source_verification": {
+    "table_count": 159,
+    "changed_tables": [],
+    "metadata_unchanged": true,
+    "sequences_unchanged": true,
+    "files_unchanged": true,
+    "processes_unchanged": true
+  },
+  "committed_row_counts": {
+    "django_content_type": 157,
+    "auth_permission": 628,
+    "auth_user": 3,
+    "auth_group": 0,
+    "auth_user_groups": 0,
+    "auth_user_user_permissions": 0,
+    "auth_group_permissions": 0,
+    "game_managerprofile": 3,
+    "game_referee": 463,
+    "game_sponsor": 504,
+    "game_economyparameter": 77,
+    "game_countrynetwork": 0,
+    "game_stadionumfeldconfig": 1,
+    "game_datasource": 5,
+    "game_strengthformulasettings": 1,
+    "game_strengthmodifierrule": 15,
+    "game_mediaoutlet": 24,
+    "showauction_showauctionpreset": 5,
+    "game_storysettings": 0,
+    "game_neutralvenue": 0,
+    "game_landkoeffizient": 9
+  },
+  "pilot_sessions": 0,
+  "post_copy_role_guard_passed": true,
+  "additional_verification": {
+    "persisted_profiles_matching_all_resets": 3,
+    "exact_pilot_table_allowlist": true,
+    "pilot_table_and_sequence_ownership": true,
+    "pilot_health_status": 200,
+    "nonempty_target_repeat_refused": true,
+    "existing_login_page_visual_check": true
+  }
+}
