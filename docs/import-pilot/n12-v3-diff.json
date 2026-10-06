@@ -1,0 +1,53 @@
+{
+  "v2": "ab3925f40f1b84ddd103a25928d61aa7feb3c36d9036890ff802131896751391",
+  "v3": "b938a48eab942e6daf6ab8884b4acb13165648c0961fc0b5efcbd8f425c17b50",
+  "manifest_changed_fields": [
+    "data_sha256"
+  ],
+  "changed_data_values": [
+    {
+      "path": "data.titles[14].competition.category",
+      "before": "national_cup",
+      "after": "super_cup",
+      "competition": "DFB-/DFL-Supercup",
+      "season": "1989/90"
+    },
+    {
+      "path": "data.titles[16].competition.category",
+      "before": "national_cup",
+      "after": "super_cup",
+      "competition": "DFB-/DFL-Supercup",
+      "season": "1995/96"
+    },
+    {
+      "path": "data.titles[18].competition.category",
+      "before": "national_cup",
+      "after": "super_cup",
+      "competition": "DFB-/DFL-Supercup",
+      "season": "1996/97"
+    },
+    {
+      "path": "data.titles[25].competition.category",
+      "before": "national_cup",
+      "after": "super_cup",
+      "competition": "DFB-/DFL-Supercup",
+      "season": "2013/14"
+    },
+    {
+      "path": "data.titles[26].competition.category",
+      "before": "national_cup",
+      "after": "super_cup",
+      "competition": "DFB-/DFL-Supercup",
+      "season": "2014/15"
+    },
+    {
+      "path": "data.titles[28].competition.category",
+      "before": "national_cup",
+      "after": "super_cup",
+      "competition": "DFB-/DFL-Supercup",
+      "season": "2019/20"
+    }
+  ],
+  "other_data_changes": 0,
+  "read_only": true
+}

@@ -358,13 +358,28 @@ def persons_and_facts(data, club, run, after_start):
                 "record_date": fact.get("date"), "period_from": fact.get("period_from"),
                 "period_to": fact.get("period_to"), "season": fact.get("season") or "",
                 "competition": fact.get("competition") or "",
-                "context_line": (fact.get("context") or "")[:200],
+                "context_line": fact.get("context") or "",
                 "evidence": fact.get("sources") or [], "searched": fact.get("searched") or [],
                 "package": run})
+    sync_titles(data, club, run)
+
+
+def sync_titles(data, club, run):
     for fact in data["titles"]:
         if fact.get("origin") != "real" or int(fact["season"][:4]) > int(run.titles_through_season[:4]):
             continue
         competition = fact["competition"]
+        # Category is editable source metadata, not the identity of a won title.
+        previous = m.ClubTrophyEntry.objects.filter(club=club, origin="real",
+            competition_name=competition["name"], season=fact["season"])
+        if previous.count() > 1:
+            raise PackageError("Ambiguous title identity; no category was changed.")
+        row = previous.first()
+        if row:
+            if row.category != competition["category"]:
+                row.category, row.package = competition["category"], run
+                row.save(update_fields=["category", "package"])
+            continue
         m.ClubTrophyEntry.objects.get_or_create(club=club, origin="real", source_row_key=digest(fact),
             defaults={"competition_name": competition["name"], "season": fact["season"],
                 "competition_fm_id": competition.get("fm_id"), "category": competition["category"],
@@ -388,6 +403,19 @@ def apply_package(path_or_bytes, target_league, *, user=None):
             status="applied").order_by("-applied_at", "-pk").first()
         if existing and existing.data_sha256 == manifest["data_sha256"]:
             return {"run": existing.pk, "club": existing.club_id, "unchanged": True}
+        if existing and dict(existing.package_data, titles=data["titles"]) == data:
+            # A category-only upload must not resave players, records or strengths.
+            run = m.SourceImportRun.objects.create(source="club_package", club=existing.club,
+                target_league=league, manifest=manifest, package_data=data,
+                data_sha256=manifest["data_sha256"], format=manifest["format"],
+                format_version=manifest["format_version"], package_type="club",
+                collected_at=existing.collected_at, titles_through_season=manifest["titles_through_season"],
+                source_versions=manifest["source_versions"], position_window=manifest["position_window"],
+                status="validated", created_by=user, total_rows=len(data["players"]))
+            sync_titles(data, existing.club, run)
+            run.status, run.applied_at = "applied", timezone.now()
+            run.save(update_fields=["status", "applied_at"])
+            return {"run": run.pk, "club": existing.club_id, "unchanged": False}
         after_start = league_started(league)
         try:
             club = identity(data["club"]["ids"], m.Club)

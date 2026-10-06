@@ -30,12 +30,12 @@
                     {% for club in richest_clubs %}
                         <span class="overview-club-pick">{{ club.name }}</span>
                     {% endfor %}
-                    <a class="card-action" href="/clubs/">Jetzt Verein ausw&auml;hlen</a>
+                    <a class="card-action" href="{% url 'club_list' %}">Jetzt Verein ausw&auml;hlen</a>
                 </div>
             {% else %}
             <div class="overview-club-main">
                 {% if primary_club and primary_club.crest_static_path %}
-                    <a class="img-link" href="/clubs/{{ primary_club.id }}/" aria-label="{{ primary_club.name }} Vereinsprofil">
+                    <a class="img-link" href="{% url 'club_detail' primary_club.id %}" aria-label="{{ primary_club.name }} Vereinsprofil">
                         <img class="overview-club-crest" src="{{ primary_club.crest_static_path }}" alt="{{ primary_club.name }}">
                     </a>
                 {% endif %}
@@ -97,7 +97,7 @@
                         <small>{{ spotlight.meta }}</small>
                         {% if spotlight.portrait %}
                             {% if spotlight.player_id %}
-                                <a class="img-link" href="/players/{{ spotlight.player_id }}/" aria-label="Spielerprofil">
+                                <a class="img-link" href="{% url 'player_detail' spotlight.player_id %}" aria-label="Spielerprofil">
                                     <img src="{{ spotlight.portrait }}" alt="{{ spotlight.name }}" onerror="this.onerror=null;this.src='{{ default_player_url }}'">
                                 </a>
                             {% else %}
@@ -140,7 +140,7 @@
             <div class="overview-fixture">
                 <div class="overview-team">
                     {% if next_match_home_club and next_match_home_club.crest_static_path %}
-                        <a class="img-link" href="/clubs/{{ next_match_home_club.id }}/" aria-label="{{ next_match_home_club.name }} Vereinsprofil">
+                        <a class="img-link" href="{% url 'club_detail' next_match_home_club.id %}" aria-label="{{ next_match_home_club.name }} Vereinsprofil">
                             <img src="{{ next_match_home_club.crest_static_path }}" alt="{{ next_match_home_club.name }}">
                         </a>
                     {% endif %}
@@ -151,7 +151,7 @@
 
                 <div class="overview-team">
                     {% if next_match_away_club and next_match_away_club.crest_static_path %}
-                        <a class="img-link" href="/clubs/{{ next_match_away_club.id }}/" aria-label="{{ next_match_away_club.name }} Vereinsprofil">
+                        <a class="img-link" href="{% url 'club_detail' next_match_away_club.id %}" aria-label="{{ next_match_away_club.name }} Vereinsprofil">
                             <img src="{{ next_match_away_club.crest_static_path }}" alt="{{ next_match_away_club.name }}">
                         </a>
                     {% endif %}
@@ -181,7 +181,7 @@
             <div class="overview-result" style="margin-top: -5px;">
                 <div class="overview-team compact">
                     {% if last_match_home_club and last_match_home_club.crest_static_path %}
-                        <a class="img-link" href="/clubs/{{ last_match_home_club.id }}/" aria-label="{{ last_match_home_club.name }} Vereinsprofil">
+                        <a class="img-link" href="{% url 'club_detail' last_match_home_club.id %}" aria-label="{{ last_match_home_club.name }} Vereinsprofil">
                             <img src="{{ last_match_home_club.crest_static_path }}" alt="{{ last_match_home_club.name }}" style="margin-left: -23px; margin-right: -23px;">
                         </a>
                     {% endif %}
@@ -190,7 +190,7 @@
                 <span style="text-align: center; margin-left: -16px; margin-right: -16px; margin-top: -26px; margin-bottom: 0; padding: 0;">{% if last_match_score %}{{ last_match_score }}{% else %}–{% endif %}</span>
                 <div class="overview-team compact">
                     {% if last_match_away_club and last_match_away_club.crest_static_path %}
-                        <a class="img-link" href="/clubs/{{ last_match_away_club.id }}/" aria-label="{{ last_match_away_club.name }} Vereinsprofil">
+                        <a class="img-link" href="{% url 'club_detail' last_match_away_club.id %}" aria-label="{{ last_match_away_club.name }} Vereinsprofil">
                             <img src="{{ last_match_away_club.crest_static_path }}" alt="{{ last_match_away_club.name }}" style="margin-left: -4px; margin-right: -4px;">
                         </a>
                     {% endif %}
@@ -311,7 +311,7 @@
                 {% for row in transfer_rows %}
                     <details class="overview-transfer-row">
                         <summary>
-                            <a class="overview-transfer-avatar" href="/players/{{ row.player.id }}/" onclick="event.stopPropagation();" aria-label="Spielerprofil von {{ row.player.full_name }}">
+                            <a class="overview-transfer-avatar" href="{% url 'player_detail' row.player.id %}" onclick="event.stopPropagation();" aria-label="Spielerprofil von {{ row.player.full_name }}">
                                 <img src="{{ row.player.portrait_static_path }}" alt="{{ row.player.full_name }}" onerror="this.onerror=null;this.src='{{ default_player_url }}'">
                             </a>
                             <span class="overview-transfer-player">
@@ -375,7 +375,7 @@
                 {% endfor %}
             </div>
 
-            <a class="card-action" href="/clubs/">Zum Transfermarkt</a>
+            <a class="card-action" href="{% url 'club_list' %}">Zum Transfermarkt</a>
         </article>
 
         <article class="dashboard-card overview-table-card">
@@ -420,7 +420,7 @@
             {% if primary_club and primary_club.league %}
             <a class="table-link" href="{% url 'league_detail' primary_club.league.id %}">Komplette Tabelle anzeigen <span>&rarr;</span></a>
             {% else %}
-            <a class="table-link" href="/liga/2/">Komplette Tabelle anzeigen <span>&rarr;</span></a>
+            <a class="table-link" href="{% url 'league_detail' 2 %}">Komplette Tabelle anzeigen <span>&rarr;</span></a>
             {% endif %}
             {% endif %}
         </article>
@@ -456,7 +456,7 @@
 
             <div class="overview-news-list">
                 {% for item in sim_news %}
-                    <a href="/clubs/{{ item.club_id }}/">
+                    <a href="{% url 'club_detail' item.club_id %}">
                         <i aria-hidden="true"></i>
                         <strong>{{ item.title }}</strong>
                         <span>{{ item.published_at|date:"j. N Y" }}</span>
@@ -466,7 +466,7 @@
                 {% endfor %}
             </div>
 
-            <a class="table-link" href="/clubs/">Alle Nachrichten anzeigen <span>&rarr;</span></a>
+            <a class="table-link" href="{% url 'club_list' %}">Alle Nachrichten anzeigen <span>&rarr;</span></a>
         </article>
 
         <aside class="dashboard-card overview-card overview-social-card" aria-label="Social Feed">
@@ -514,7 +514,7 @@
                     <p class="overview-no-club-headline">Kein Spielbetrieb</p>
                     <p class="overview-no-club-copy">Noch kein Spielplan hinterlegt.</p>
                 {% endfor %}
-                <a class="olr-footer" href="/clubs/">Alle Live-Spiele</a>
+                <a class="olr-footer" href="{% url 'club_list' %}">Alle Live-Spiele</a>
             </aside>
 
             <aside class="dashboard-card overview-card overview-stats-widget" aria-label="Statistiken">

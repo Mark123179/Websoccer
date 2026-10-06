@@ -17,6 +17,7 @@ from .models import (
     LeagueStandings,
 )
 from .player_assets import get_cached_trophy_static_path
+from .club_import.runtime import package_mode
 
 
 def build_club_profile_context(club):
@@ -83,8 +84,10 @@ def build_links(club):
 def build_club_identity(club, players):
     league_name = club.league.name if club.league else 'Liga'
     country_name = club.league.country if club.league else 'Deutschland'
-    pro_players = [player for player in players if player.age and player.age > 21]
-    youth_players = [player for player in players if player.age and player.age <= 21]
+    pro_players = [player for player in players if player.squad_team == "first"] if package_mode() else [
+        player for player in players if player.age and player.age > 21]
+    youth_players = [player for player in players if player.squad_team == "u21"] if package_mode() else [
+        player for player in players if player.age and player.age <= 21]
     total_market_value = sum(
         Decimal(player.market_value or 0)
         for player in players

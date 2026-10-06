@@ -10,7 +10,7 @@
 
 {% block extra_css %}
     {{ block.super }}
-    <link rel="stylesheet" href="{% static 'game/css/club-profile.css' %}?v=ghost-42">
+    <link rel="stylesheet" href="{% static 'game/css/club-profile.css' %}?v=ghost-43">
 
 {% endblock %}
 
@@ -22,10 +22,11 @@
             <p class="package-t4-kicker">Importierter Vereinsstand</p>
             <h1>{{ club.official_name|default:club.name }}</h1>
             <p>{{ club.nickname|default:"Kein Spitzname hinterlegt" }}{% if club.motto %} · „{{ club.motto }}“{% endif %}</p>
+            <p>Gegründet {% if club.founded_year %}{{ club.founded_year }}{% else %}Unbekannt{% endif %}</p>
             <div class="package-t4-colors" aria-label="Vereinsfarben">
                 <span><i style="--club-color:{{ club.color_primary|default:'#d9ded9' }}"></i>Primär</span>
                 <span><i style="--club-color:{{ club.color_secondary|default:'#d9ded9' }}"></i>Sekundär</span>
-                <span><i style="--club-color:{{ club.color_tertiary|default:'#d9ded9' }}"></i>Tertiär</span>
+                {% if club.color_tertiary %}<span><i style="--club-color:{{ club.color_tertiary }}"></i>Tertiär</span>{% endif %}
             </div>
         </header>
         <div class="package-t4-capacities">
@@ -64,7 +65,9 @@
         {% include 'game/club_profile/cards/next_match_card.html' %}
         {% include 'game/club_profile/cards/trophy_cabinet_card.html' %}
         {% include 'game/club_profile/cards/pro_highlights_card.html' %}
+        {% if not package_mode or request.user.is_staff or request.user.is_superuser %}
         {% include 'game/club_profile/cards/youth_highlights_card.html' %}
+        {% endif %}
         {% include 'game/club_profile/cards/facilities_card.html' %}
         {% include 'game/club_profile/cards/league_table_card.html' %}
         {% include 'game/club_profile/cards/stadium_card.html' %}
@@ -75,7 +78,7 @@
     </main>
 </section>
 
-<script src="{% static 'game/js/club-profile.js' %}?v=42" defer></script>
+<script src="{% static 'game/js/club-profile.js' %}?v=43" defer></script>
 {% if club.pk == 3 %}
 <script type="importmap">{"imports":{"three":"{% static 'stadium_editor/stage/vendor/three.module.js' %}"}}</script>
 <script src="{% static 'game/js/club-stadium.js' %}?v=3" data-scene-url="{% static 'stadium_editor/dortmund_editor_scene.js' %}?v=54" defer></script>

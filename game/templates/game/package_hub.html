@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load package_display %}
 
 {% block title %}Paket-Creator · Import{% endblock %}
 
@@ -83,9 +84,9 @@
             {% for issue in issues %}
             <article class="package-issue">
                 <div class="package-issue__meta">
-                    <span class="package-severity package-severity--{{ issue.severity }}">{{ issue.get_severity_display|default:issue.severity }}</span>
+                    <span class="package-severity package-severity--{{ issue.severity }}">{{ issue.get_severity_display|default:issue.severity|package_label }}</span>
                     <span>{{ issue.package.club.name|default:issue.entity_ref|default:"Paket" }}</span>
-                    <span>{{ issue.get_resolution_status_display|default:issue.resolution_status }}</span>
+                    <span>{{ issue.get_resolution_status_display|default:issue.resolution_status|package_label }}</span>
                 </div>
                 <h3>{{ issue.field }}</h3>
                 <p>{{ issue.note }}</p>

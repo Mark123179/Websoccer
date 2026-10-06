@@ -21,6 +21,7 @@ from django.db.models import Avg, Count, F, Sum
 from django.utils import timezone
 from .asset_urls import resolve_stadium_url
 from .club_import.runtime import owner, ownership_field, package_mode
+from .club_import.presentation import loan_line
 from .club_profile import build_club_profile_context
 from .club_profile_highlights import nt_confederation_badge
 from .competition_assets import (
@@ -3914,6 +3915,7 @@ def _build_player_row(player, stats, form_map):
         'market_value': float(player.market_value or 0),
         'market_value_fmt': (f"{int(float(player.market_value)):,}".replace(',', '.') + ' €') if player.market_value else '–',
         'status': status,
+        'package_loan_line': loan_line(player) if package_mode() else '',
         'is_loaned_in': player.is_loaned_in,
         'on_transfer_list': player.is_on_transfer_list,
         'on_loan_list': player.is_on_loan_list,
@@ -3937,6 +3939,7 @@ def _build_loan_card(player, stats):
         'grade': season.get('grade'),
         'partner': partner.name if partner else '',
         'loan_until': player.loan_until,
+        'package_loan_line': loan_line(player) if package_mode() else '',
         'detail_url': reverse('player_detail', args=[player.id]),
     }
 
@@ -6673,8 +6676,8 @@ def player_detail(request, player_id):
         'to_club',
     ).filter(player=player)
     if package_mode():
-        transfer_queryset = transfer_queryset.order_by('-transfer_date', '-pk')
-        transfer_rows = transfer_queryset
+        from .club_import.presentation import ordered_transfers
+        transfer_rows = ordered_transfers(player, transfer_queryset)
     else:
         transfer_rows = transfer_queryset[:6]
     injury_rows = PlayerInjuryRecord.objects.filter(player=player)[:5]
@@ -6745,6 +6748,8 @@ def player_detail(request, player_id):
             'transfer_rows': transfer_display_rows(transfer_rows),
             'package_mode': package_mode(),
             'package_transfer_rows': package_transfer_rows,
+            'package_ws_club': player.owner_club if player.loan_status == 'loaned_out' else player.club,
+            'package_loan_line': loan_line(player) if package_mode() else '',
             'package_start_values': package_start_values,
             'injury_rows': injury_rows,
             'suspension_rows': suspension_rows,

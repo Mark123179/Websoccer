@@ -5,7 +5,7 @@
 - [Adblock cosmetic filter trap](adblock-classname-trap.md) — CSS classes containing "spons*" are hidden by ad-blocker cosmetic filters (display:none injected client-side); use neutral prefixes like "sxp-".
 - [Asset URL single source of truth](asset-url-sot.md) — ASSETS_BASE_URL must be read at call time via _base(); frozen module-level constants miss env-var; ASSETS_BASE_URL=/assets/ + ASSETS_ROOT=/app/assets are prod-critical in .env.
 - [Render-only report normalization](report-render-normalization.md) — normalize environment-specific URLs after persistence-capable backfills to avoid rewriting historical reports.
-- [Authenticated preview screenshots](preview-screenshot-auth.md) — screenshot browser is logged out; use test-client force_login GET, or temporarily revert @login_required then restore.
+- [Authenticated preview screenshots](preview-screenshot-auth.md) — keep auth enforced; strict pilot screenshots use short-lived sessions without login signals, then remove them.
 - [Scouting-System V1 decisions](scouting-system-v1.md) — Club-row lock serializes per-club money (bid locks = deadlock); earmarked bid w/o coin LOSES at settlement; never expose pool_count/strength.
 - [Europe-night map markers](europe-night-calibration.md) — placement is a hand-verified CITY_MAP_PCT table (TPS fallback); TPS has ~10px extrapolation error for Italian cities; pin positions must be verified against satellite RGB warmth (warmth=(R+G)/2-B > +20 = real city lights).
 - [Scouting world-map viewBox calibration](scouting-map-viewbox.md) — world.svg IS the Vorlage Natural-Earth SVG (vb 5.6 19.4 988.8 386.2); copy its EXACT projected continent viewBoxes; meet letterbox = intended ocean; never self-compute or force stage aspect.

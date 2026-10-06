@@ -11,6 +11,7 @@
             <span class="loan-row__main">
                 <span class="loan-row__name">{{ c.name }}</span>
                 <span class="loan-row__partner">{% if tone == 'in' %}von {{ c.partner }}{% else %}an {{ c.partner }}{% endif %}</span>
+                {% if c.package_loan_line %}<small>{{ c.package_loan_line }}</small>{% endif %}
             </span>
             <span class="loan-row__hp"><span class="pos-badge pos-badge--hp">{{ c.hp }}</span></span>
             <span class="loan-row__stat"><b>{{ c.matches }}</b><i>Sp.</i></span>

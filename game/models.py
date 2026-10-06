@@ -6081,7 +6081,7 @@ class ClubRecord(models.Model):
         on_delete=models.SET_NULL,
         related_name='+',
     )
-    context_line = models.CharField(max_length=200, blank=True)
+    context_line = models.TextField(blank=True)
     record_date = models.DateField(null=True, blank=True)
     period_from = models.DateField(null=True, blank=True)
     period_to = models.DateField(null=True, blank=True)

@@ -8,6 +8,7 @@ from django.urls import reverse
 
 from .competition_assets import competition_logo_static_path, _NATIONALITY_CONFEDERATION
 from .models import PlayerFormSnapshot, PlayerSeasonStat
+from .club_import.runtime import package_mode
 
 logger = logging.getLogger(__name__)
 
@@ -35,6 +36,8 @@ def build_highlights(club, players, season, is_youth):
         ]
         pool = [player for player in players if player.age > YOUTH_MAX_AGE] or players
 
+    if package_mode():
+        pool = [player for player in players if player.squad_team == ("u21" if is_youth else "first")]
     stats = collect_player_stats(pool, season)
     highlights = []
     for category, metric_key, direction in categories:
@@ -87,6 +90,8 @@ def collect_player_stats(players, season):
     )
     if not season_rows.exists():
         season_rows = PlayerSeasonStat.objects.filter(player_id__in=player_ids)
+    if package_mode():
+        season_rows = season_rows.filter(matches__gt=0)
 
     grade_values = defaultdict(list)
     for row in season_rows:
@@ -123,6 +128,10 @@ def pick_highlight_player(club, players, stats, category, metric_key, direction,
             value = fallback_metric(metric_key, player)
         ranked.append((player, value))
 
+    if package_mode():
+        ranked = [(player, value) for player, value in ranked if value is not None]
+        if not ranked:
+            return players[0], None
     values = [value for _player, value in ranked]
     target = min(values) if direction == 'min' else max(values)
     tied = [player for player, value in ranked if value == target]
@@ -132,6 +141,8 @@ def pick_highlight_player(club, players, stats, category, metric_key, direction,
 
 
 def fallback_metric(metric_key, player):
+    if package_mode() and metric_key in {"grade", "pass_quote"}:
+        return None
     if metric_key == 'grade':
         return Decimal('1.80')
     if metric_key == 'pass_quote':
@@ -145,6 +156,8 @@ def fallback_metric(metric_key, player):
 
 
 def metric_label(metric_key, value):
+    if value is None:
+        return "–"
     if metric_key == 'market':
         return compact_money(value)
     if metric_key == 'goals':

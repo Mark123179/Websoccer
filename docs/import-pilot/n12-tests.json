@@ -1,0 +1,9 @@
+{
+  "tests": 1677,
+  "seconds": 451.434,
+  "result": "OK",
+  "display_tests_after_css": 9,
+  "display_result_after_css": "OK",
+  "command": "python manage.py test game.tests --verbosity=0 --keepdb",
+  "sha256": "664517333b09b03c146972f536877e0c9ae0fd75310b7ec55018d8c61a315615"
+}

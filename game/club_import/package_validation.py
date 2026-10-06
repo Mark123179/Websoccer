@@ -44,6 +44,10 @@ def validate_package(manifest, data, raw_checksum):
         for field in ("club", "stadium", "players", "persons", "records", "titles", "gaps"):
             if field not in data:
                 raise PackageError("Required section missing: " + field)
+        for title in data["titles"]:
+            if title["competition"]["category"] not in (
+                    "championship", "national_cup", "super_cup", "international_cup", "lower_tier"):
+                raise PackageError("Unknown title category.")
         for field in ("name", "short_name", "founded_year", "ids", "colors"):
             if data["club"].get(field) is None:
                 raise PackageError("Required club field missing: " + field)

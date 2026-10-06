@@ -2536,6 +2536,24 @@ def management_halloffame(request):
         'most_goals_season': 'Tore', 'fewest_conceded_season': 'Gegentore',
         'championships': 'Titel', 'cup_wins': 'Titel',
     }
+    title_counts = {}
+    if package_mode() and club:
+        from django.db.models import Count, Sum
+        from .models import ClubTrophyEntry, ClubTrophy
+        real_counts = dict(ClubTrophyEntry.objects.filter(club=club, origin="real")
+            .values_list("category").annotate(total=Count("pk")))
+        sim_counts = dict(ClubTrophyEntry.objects.filter(club=club, origin="sim")
+            .values_list("category").annotate(total=Count("pk")))
+        sim_cache = dict(ClubTrophy.objects.filter(club=club, origin="sim")
+            .values_list("category").annotate(total=Sum("count")))
+        sim_records = {row.record_key: int(row.value_numeric or 0)
+                       for row in rows if row.source == ClubRecord.SOURCE_SIM}
+        for key, category in (("championships", "championship"), ("cup_wins", "national_cup"),
+                              ("international_titles", "international_cup")):
+            # Existing simulations use SIM records/cache; don't count those again
+            # if their individual facts are present as well.
+            title_counts[category] = (real_counts.get(category, 0) if mode == "echt" else 0) + max(
+                sim_counts.get(category, 0), sim_cache.get(category, 0), sim_records.get(key, 0))
 
     def season_text(value):
         value = str(value or '').strip()
@@ -2582,12 +2600,25 @@ def management_halloffame(request):
         elif record.holder_coach:
             image_url = coach_face_url(record.holder_coach.fm_inside_id)
 
+        real = package_mode() and record.source == ClubRecord.SOURCE_SEED
+        shown_season = str(record.season or '') if real else season_text(record.season)
+        date_format = '%d.%m.%Y' if real else '%d.%m.'
+        def shown_date(value):
+            return value.strftime(date_format) if value else ''
         value = record.value_display
         unit = unit_by_key.get(definition_key, '')
+        context_line = record.context_line
+        if package_mode() and definition_key in {'most_titles_player', 'most_titles_coach'}:
+            value = f'{record.value_numeric.normalize():f}' if record.value_numeric is not None else 'Unbekannt'
+            unit, context_line = '', ''
+        elif package_mode() and unit:
+            import re
+            if re.search(re.escape(unit) + r'(?:n)?\b', value, re.IGNORECASE):
+                unit = ''
         if definition_key in {'highest_market_value', 'best_ppg_coach'}:
             unit = ''
         if definition_key in {'biggest_win', 'biggest_defeat'}:
-            unit = season_text(record.season)
+            unit = shown_season
         return {
             'record': record, 'key': definition_key, 'label': label,
             'style_class': 'nische--belegt' if definition_key.startswith(
@@ -2601,11 +2632,11 @@ def management_halloffame(request):
             'opponent_name': record.opponent_name,
             'opponent_url': reverse('club_detail', kwargs={'club_id': record.opponent_club_id})
                 if record.opponent_club_id else '',
-            'context': record.context_line,
-            'season': season_text(record.season),
-            'date': short_date(record.record_date),
+            'context': context_line,
+            'season': shown_season,
+            'date': shown_date(record.record_date),
             'period': (
-                f'{short_date(record.period_from)} – {short_date(record.period_to)}'
+                f'{shown_date(record.period_from)} – {shown_date(record.period_to)}'
                 if record.period_from and record.period_to else ''
             ),
             'competition': record.competition,
@@ -2625,6 +2656,10 @@ def management_halloffame(request):
         'best_ppg_coach', 'most_wins_coach',
         'coach_empty_6', 'coach_empty_7', 'coach_empty_8',
     )
+    if package_mode():
+        coach_keys = tuple("longest_win_streak_coach" if key == "coach_empty_7" else key
+                           for key in coach_keys)
+        panel_labels["longest_win_streak_coach"] = panel_labels["coach_empty_7"]
     club_keys = (
         'biggest_win', 'biggest_defeat', 'longest_win_streak',
         'longest_unbeaten', 'longest_winless', 'best_season',
@@ -2638,6 +2673,13 @@ def management_halloffame(request):
         for index, key in enumerate(keys):
             record = records.get(key)  # Editable hall slots may have researched SEED records.
             item = payload(record, key, labels[key])
+            category = {'championships': 'championship', 'cup_wins': 'national_cup',
+                        'international_titles': 'international_cup'}.get(key)
+            if package_mode() and category:
+                item.update(record={"derived": True}, value=str(title_counts.get(category, 0)),
+                            unit='', holder_name='', context='', season='', date='', period='',
+                            is_trophy=key in {'championships', 'cup_wins'})
+                record = item['record']
             if keys is club_keys:
                 item['style_class'] = (
                     'zelle--belegt' if record else
@@ -2672,7 +2714,12 @@ def management_halloffame(request):
         from .models import ClubTrophyEntry
         titles = ClubTrophyEntry.objects.filter(club=club, origin="real").order_by(
             "-season", "competition_name")
-        context.update(package_mode=True, hall_real_titles=titles, hall_real_title_count=titles.count())
+        from dataclasses import replace
+        slots = tuple(replace(slot, key="longest_win_streak_coach")
+                      if slot.key == "coach_empty_7" else slot for slot in HALL_RECORD_SLOTS)
+        context.update(package_mode=True, hall_real_titles=titles, hall_real_title_count=titles.count(),
+                       record_request_slots=slots,
+                       hall_club_query=f"&club={club.pk}" if club else "")
     return render(request, 'game/management/halloffame.html', context)
 
 
@@ -2683,15 +2730,27 @@ def management_halloffame_correction_request(request):
     from .models import ClubRecord, ClubRecordCorrectionRequest
 
     club = current_manager_club(user=request.user)
+    from .club_import.runtime import package_mode
+    if package_mode() and (request.user.is_staff or request.user.is_superuser) and request.POST.get('club'):
+        from django.http import Http404
+        try:
+            club_id = int(request.POST['club'])
+        except (TypeError, ValueError):
+            raise Http404("Ungültiger Verein.")
+        club = get_object_or_404(Club, pk=club_id)
     room = request.POST.get('room', 'entrance')
     mode = request.POST.get('mode', 'echt')
     form_url = reverse('management_halloffame') + f'?raum={room}&modus={mode}&antrag=1'
+    club_query = f'&club={club.pk}' if package_mode() and club else ''
+    form_url += club_query
     if not club:
         messages.error(request, 'Du brauchst einen eigenen Verein für einen Rekordantrag.')
         return redirect(form_url)
 
     record_key = (request.POST.get('record_key') or '').strip()
     slot = SLOTS_BY_KEY.get(record_key)
+    if package_mode() and record_key == "longest_win_streak_coach":
+        slot = SLOTS_BY_KEY["coach_empty_7"]
     if slot is None:
         messages.error(request, 'Bitte einen gültigen Rekordplatz auswählen.')
         return redirect(form_url)
@@ -2735,7 +2794,7 @@ def management_halloffame_correction_request(request):
         requester_note=(request.POST.get('requester_note') or '').strip(),
     )
     messages.success(request, 'Rekordänderung wurde zur Prüfung eingereicht.')
-    return redirect(reverse('management_halloffame') + f'?raum={room}&modus={mode}')
+    return redirect(reverse('management_halloffame') + f'?raum={room}&modus={mode}' + club_query)
 
 
 # ------------------------------------------------------------------ #

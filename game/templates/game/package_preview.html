@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load package_display %}
 
 {% block title %}Paketvorschau · Creator{% endblock %}
 
@@ -71,6 +72,13 @@
     </section>
     {% endif %}
 
+    {% if preview.title_changes %}
+    <section class="package-preview-card package-preview-wide">
+        <h2>Geänderte Titel · {{ preview.title_changes|length }}</h2>
+        <table><thead><tr><th>Wettbewerb</th><th>Saison</th><th>Bisher</th><th>Neu</th></tr></thead>
+        <tbody>{% for title in preview.title_changes %}<tr><td>{{ title.competition }}</td><td>{{ title.season }}</td><td>{{ title.old|package_label }}</td><td>{{ title.new|package_label }}</td></tr>{% endfor %}</tbody></table>
+    </section>
+    {% endif %}
     <section class="package-preview-card package-preview-wide package-strengths">
         <div class="package-strengths__summary">
             <div><p class="package-preview-kicker">Stärkenpipeline</p><h2>Neu berechnete Spielerstärken</h2></div>

@@ -1,4 +1,19 @@
 ---
+
+## Supercup-Korrektur: Gegenprüfung und manuelle Bestätigung
+
+Nach dem Anzeige-Korrekturbericht gilt Halt zur Gegenprüfung durch Claude.
+Das Supercup-Korrekturpaket darf der Agent nur im getrennten Testbestand einlesen,
+nicht im echten Pilot. Erst nach der Gegenprüfung folgt die freigegebene
+Pilot-Sicherung; Mark lädt das Paket über den Import-Knopf hoch und bestätigt es.
+
+**Why:** Der Nutzer hat diese Reihenfolge ausdrücklich festgelegt, um Anzeige,
+Stärkentabelle und Paketvorschau vor der Pilot-Abnahme getrennt zu prüfen.
+
+**How to apply:** Ein grüner Testlauf ist keine Freigabe für die Bestätigung im
+Pilot oder die vorgezogene Sicherung. Keine zusätzlichen Fachwerte zur
+Vorwegnahme des Kategorie-Pakets ändern; die bestehende Spielwert- und
+Stärkeformel-Freigabe bleibt unverändert.
 name: Import-Pilot Freigabegrenzen
 description: Verbindliche Anker-/Feldlistenregeln aus Nachtrag 5 sowie fortgeltende Schutz-, Konten- und Isolationsentscheidungen.
 ---

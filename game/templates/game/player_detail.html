@@ -1,6 +1,7 @@
 {% extends 'base.html' %}
 
 {% load humanize %}
+{% load package_display %}
 {% load static %}
 
 {% block title %}
@@ -9,13 +10,13 @@
 
 {% block extra_css %}
     {{ block.super }}
-    <link rel="stylesheet" href="{% static 'game/css/player-profile.css' %}?v=gm-12">
+    <link rel="stylesheet" href="{% static 'game/css/player-profile.css' %}?v=gm-14">
     <link rel="stylesheet" href="{% static 'game/css/trophy-cabinet.css' %}?v=gm-4">
 {% endblock %}
 
 {% block content %}
 
-<section class="player-dashboard player-command-profile is-aaa-profile">
+<section class="player-dashboard player-command-profile is-aaa-profile{% if package_mode %} is-package-profile{% endif %}">
 
     <div class="aaa-profile-grid">
         <aside class="aaa-left-column">
@@ -64,27 +65,34 @@
                     <div>
                         <span>WS-Verein</span>
                         <strong>
+                            {% if package_mode %}
+                            {% if package_ws_club %}<a href="{% url 'club_detail' package_ws_club.pk %}">{{ package_ws_club.name }}</a>{% else %}ohne WS-Verein{% endif %}
+                            {% else %}
                             {% if player.club and player.club.crest_static_path %}
-                                <a class="img-link" href="/clubs/{{ player.club.id }}/" aria-label="{{ player.club.name }} Vereinsprofil">
+                                <a class="img-link" href="{% url 'club_detail' player.club.id %}" aria-label="{{ player.club.name }} Vereinsprofil">
                                     <img src="{{ player.club.crest_static_path }}" alt="" onerror="this.style.display='none'">
                                 </a>
                             {% endif %}
                             {{ player.club.name|default:"ohne WS-Verein" }}
+                            {% endif %}
                         </strong>
                     </div>
                     <div>
                         <span>Wettbewerb</span>
                         <strong>
+                            {% if not package_mode or player.loan_status != 'loaned_out' %}
                             {% if league_logo %}
                                 <img src="{{ league_logo }}" alt="">
                             {% endif %}
                             {{ player.club.league.name|default:"Websoccer" }}
+                            {% endif %}
                         </strong>
                     </div>
                     <div>
                         <span>Gehalt pro Spiel</span>
-                        <strong>{{ player.salary_per_match|floatformat:0|intcomma }} &euro;</strong>
+                        <strong>{% if package_mode %}{{ player.salary_per_match|euro_de }}{% else %}{{ player.salary_per_match|floatformat:0|intcomma }}{% endif %} &euro;</strong>
                     </div>
+                    {% if package_loan_line %}<div><span>Leihstatus</span><strong>{{ package_loan_line }}</strong></div>{% endif %}
                     <div class="aaa-player-freshness-panel">
                         <div class="aaa-player-freshness-main">
                             <span class="aaa-player-freshness-title">
@@ -191,9 +199,9 @@
                         {% if package_mode and player.market_value == None %}
                             <strong class="market-value-large">Unbekannt</strong>
                         {% elif player.transfermarkt_profile_url %}
-                            <a class="market-value-large" href="{{ player.transfermarkt_profile_url }}" target="_blank" rel="noopener" title="Transfermarkt-Profil von {{ player.full_name }}">{{ player.market_value|floatformat:0|intcomma }} &euro;</a>
+                            <a class="market-value-large" href="{{ player.transfermarkt_profile_url }}" target="_blank" rel="noopener" title="Transfermarkt-Profil von {{ player.full_name }}">{% if package_mode %}{{ player.market_value|euro_de }}{% else %}{{ player.market_value|floatformat:0|intcomma }}{% endif %} &euro;</a>
                         {% else %}
-                            <strong class="market-value-large">{{ player.market_value|floatformat:0|intcomma }} &euro;</strong>
+                            <strong class="market-value-large">{% if package_mode %}{{ player.market_value|euro_de }}{% else %}{{ player.market_value|floatformat:0|intcomma }}{% endif %} &euro;</strong>
                         {% endif %}
                         {% if market_trend %}
                             <span class="market-trend-badge is-{{ market_trend.direction }}" title="Änderung zum Vorjahreswert">
@@ -241,14 +249,14 @@
                     <h3>Quellverlauf</h3>
                     <p>Jeder Punkt des importierten Marktwertverlaufs bleibt sichtbar. Der gekennzeichnete Startwert ist ein Spielwert, kein recherchierter Vereinswert.</p>
                     {% for start_value in package_start_values %}
-                    <p class="package-start-marker"><b>Startwert markiert</b> · {{ start_value.recorded_at|date:"d.m.Y" }} · {{ start_value.value_eur|floatformat:0|intcomma }} €</p>
+                    <p class="package-start-marker"><b>Startwert markiert</b> · {{ start_value.recorded_at|date:"d.m.Y" }} · {{ start_value.value_eur|euro_de }} €</p>
                     {% endfor %}
                     <ul>
                         {% for point in market_rows %}
                         <li>
                             <time>{{ point.recorded_at|date:"d.m.Y" }}</time>
-                            <strong>{% if point.value_eur != None %}{{ point.value_eur|floatformat:0|intcomma }} €{% else %}Unbekannt{% endif %}</strong>
-                            <span class="package-market-club">{{ point.club.name|default:point.club_original_name|default:"Unbekannter Verein" }}{% if not point.club_id and point.club_original_name %} · externe Referenz ohne Wappen{% endif %}</span>
+                            <strong>{% if point.value_eur != None %}{{ point.value_eur|euro_de }} €{% else %}Unbekannt{% endif %}</strong>
+                            {% if not point.is_start_value %}<span class="package-market-club">{{ point.club.name|default:point.club_original_name|default:"Unbekannter Verein" }}{% if not point.club_id and point.club_original_name %} · externe Referenz ohne Wappen{% endif %}</span>{% endif %}
                             <span>{% if point.is_start_value %}Spielstartwert{% elif point.origin == 'real' %}Importierte Vereinsgeschichte{% else %}Simulation{% endif %}</span>
                         </li>
                         {% empty %}<li>Keine Werte dokumentiert.</li>{% endfor %}
@@ -304,7 +312,7 @@
                                 <strong>{{ row.to_name }}</strong>
                                 {% if row.external_to %}<small>Externe Referenz · ohne Wappen</small>{% endif %}
                             </div>
-                            <span>{% if row.is_loan %}Leihe{% else %}{{ row.fee }}{% endif %}</span>
+                            <span>{{ row.fee }}</span>
                         </li>
                         {% empty %}<li>Keine Transferfakten im Paket vorhanden.</li>{% endfor %}
                     </ol>
@@ -587,12 +595,19 @@
     .package-market-ledger{margin:1rem 0 0;padding-top:.9rem;border-top:1px solid #d3d8d0}
     .package-market-ledger h3{margin:0;font-size:.95rem}.package-market-ledger p{font-size:.78rem;color:#6d786e;line-height:1.5}
     .package-market-ledger ul{list-style:none;padding:0;margin:0;max-height:13rem;overflow:auto}
-    .package-market-ledger li{display:grid;grid-template-columns:5rem minmax(5rem,.8fr) minmax(6rem,1.3fr) auto;gap:.4rem;padding:.4rem 0;border-top:1px solid #e2e5df;font-size:.75rem}
+    .package-market-ledger li{display:grid;grid-template-columns:5rem minmax(5rem,.8fr) minmax(0,1.3fr);gap:.4rem;padding:.4rem 0;border-top:1px solid #e2e5df;font-size:.75rem}
+    .package-market-ledger li>*{min-width:0;overflow-wrap:anywhere;white-space:normal}
+    .package-market-ledger li>small{grid-column:2/-1}
     .package-market-ledger li time{color:#737d73}.package-market-ledger li strong{font-variant-numeric:tabular-nums}.package-market-ledger li span{color:#667267}
     .package-market-ledger .package-market-club{color:#34483a}
     .market-plot i.is-package-start-value{z-index:4;width:.8rem;height:.8rem;border:2px solid #315a43;background:#e1eadb;box-shadow:0 0 0 3px rgba(49,90,67,.16)}
-    .package-transfer-list{list-style:none;padding:0;margin:.5rem 0}
-    .package-transfer-list li{display:grid;grid-template-columns:5.5rem minmax(0,1fr) auto minmax(0,1fr) auto;align-items:center;gap:.65rem;padding:.75rem .35rem;border-top:1px solid #dfe3dc}
+    .is-package-profile .aaa-history-grid{grid-template-columns:minmax(0,1fr);grid-template-rows:auto minmax(0,1fr);height:auto;align-items:start}
+    .is-package-profile .aaa-history-grid .aaa-event-grid{grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:auto;height:auto}
+    .is-package-profile .aaa-history-grid .aaa-event-card,.is-package-profile .aaa-history-grid .aaa-transfer-card{height:auto}
+    .package-transfer-list{list-style:none;padding:0;margin:.5rem 0;max-height:28rem;overflow-y:auto;scrollbar-width:thin}
+    .package-transfer-list li{display:grid;grid-template-columns:5rem minmax(0,1fr) auto minmax(0,1fr);align-items:start;gap:.45rem;padding:.75rem .35rem;border-top:1px solid #dfe3dc}
+    .package-transfer-list li>*{min-width:0;overflow-wrap:anywhere;white-space:normal}
+    .package-transfer-list>li>span{grid-column:2/-1}
     .package-transfer-list time,.package-transfer-list small{font-size:.72rem;color:#737d73}.package-transfer-list div strong{display:block;font-size:.83rem}.package-transfer-list div small{display:block;margin-top:.15rem}.package-transfer-list>li>span{font-size:.75rem;color:#58675a}
     @media(max-width:620px){.package-transfer-list li{grid-template-columns:4.5rem 1fr auto 1fr}.package-transfer-list>li>span{grid-column:2/-1}.package-market-ledger li{grid-template-columns:4.3rem 1fr}.package-market-ledger li span{grid-column:2}}
 </style>

@@ -8,15 +8,18 @@ description: How to capture an authenticated app_preview screenshot when the scr
 The `screenshot` (app_preview) tool uses a fresh, **unauthenticated** browser context — it
 lands on `/auth/login/` for any `@login_required` page, so it cannot see manager screens by default.
 
-**Safe workaround for visual verification:** `current_manager_club(user=...)` returns the Bayern
-fallback for an *anonymous* request (only the authenticated-user branch returns None on miss). So you
-can temporarily comment out the `@login_required` decorator on the single view you need to screenshot,
-restart the workflow, capture, then **restore the decorator immediately** and re-verify auth gating
-(anon → 302 to login, auth → 200).
+**Safe verification:** use the testing browser with an authenticated session.
+Never remove `@login_required` to take a screenshot. For a strict no-game-writes
+pilot, prepare a short-lived Django session for an existing authorized account
+without calling login/force_login, since those can update last_login or signals.
+Keep cookie material in an owner-only temporary file, never echo it, and remove
+both the session and file after the browser pass.
 
-**Why:** This is a 1440×900 locked golden-master app with no dev/auto-login bypass, and you must not
-ship one. The temporary-decorator trick leaves zero residue once reverted and never weakens shipped code.
+**Why:** The pilot's display review must preserve all game data, while login
+signals can mutate account activity. Authentication must stay enforced throughout
+verification, not merely be restored before delivery.
 
-**How to apply:** Only for a screenshot pass. Always grep for the bypass marker and confirm the
-decorator is back before committing. Test-client `force_login()` GET (200) is the headless alternative
-when a pixel screenshot isn't required.
+**How to apply:** Use the pilot's own session engine/signing settings and an
+existing staff account; don't change passwords, roles, manager assignments, or
+game rows. Test-client force_login is appropriate in an isolated test database,
+not a real pilot with a strict fingerprint contract.

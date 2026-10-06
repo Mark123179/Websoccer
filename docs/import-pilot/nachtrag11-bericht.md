@@ -64,7 +64,7 @@ Vereinsseite, Kader, Spielerprofil und Ruhmeshalle wurden zuvor im getrennten v2
 - **Verein:** SIGNAL IDUNA PARK, nationale Kapazität 81.365 und alle zwölf Steh-/Sitz-/VIP-Quellenwerte.
 - **Kader:** erste Mannschaft und getrennter Leihpool. U21 nur für Creator; ein Test mit vorhandenem U21-Spieler bestätigt das Verbergen für normale Benutzer.
 - **Spielerprofil:** vollständiger Marktwertgraph, gekennzeichneter Spiel-Startwert und Transfers neueste zuerst; fremde Originalnamen ohne erfundene Wappen.
-- **Ruhmeshalle:** echte Rekorde und 30 Titel-Einzeleinträge. Lesender Creator-Zugang ohne Managerzuweisung: `/import-pilot/management/halloffame/?club=1&raum=club&modus=echt`.
+- **Ruhmeshalle:** echte Rekorde und 30 Titel-Einzeleinträge. Lesender Creator-Zugang ohne Managerzuweisung: `/import-pilot/management/halloffame/?club=8&raum=club&modus=echt`.
 
 ![T4-Testbestand: bestehende Vereinsseite](screenshots/verein.png)
 ![T4-Testbestand: bestehender Kader](screenshots/kader.png)

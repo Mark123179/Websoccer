@@ -802,3 +802,59 @@ mtime_ms = 1791291102484
 storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:6e4eaecc-e6c5-4f64-8de5-e8845034f33b/c1190d18-70c0-42d2-9fb5-a4164c3c1699/66e16c2e-6db2-4fad-b86d-059531b25e10"
 storage_version_token = "1791291103082478"
 content_type = "text/html"
+
+[[outputs]]
+id = "7MJ1v_8qNdY59tNOhcr-6"
+uri = "file://docs/import-pilot/nachtrag12-bericht.html"
+type = "html"
+title = "Nachtrag 12 – Bericht mit neun Pilot-Fotos"
+description = "Gesamtlauf, Korrekturen je Punkt, Migration, Navigation, getrennte v3-Prüfung und bestätigter v2-Pilotstand."
+logical_id = "c9f8d91e-375f-40ca-a1e7-44ee7cfc1d65"
+content_hash = "sha256:a40ea088835ae7d59b66b7bda3f440c84c4d1bc37f212adcd0a6ddd882e3cad6"
+size = 18522386
+mtime_ms = 1791307988559
+storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:6e4eaecc-e6c5-4f64-8de5-e8845034f33b/c9f8d91e-375f-40ca-a1e7-44ee7cfc1d65/81a33518-5254-411c-9928-69d91a079a80"
+storage_version_token = "1791308071330506"
+content_type = "text/html"
+
+[[outputs]]
+id = "6lNrSrNEp7ZbEKf4vMiwX"
+uri = "file://docs/import-pilot/n12-staerken-51.csv"
+type = "table"
+title = "Stärkentabelle – alle 51 Spieler"
+description = "TM-ID, Quellwerte samt FMInside-Spannen, Rohbasis/Potenzial 0–200 und Einzelsperren mit Gründen."
+logical_id = "a01bbcbc-26c0-4438-9f30-a9c2997d4e98"
+content_hash = "sha256:9ed5052bedd1647e032dd3b5dac0c45b6f661d9e7da28bacbc97671bb85d2251"
+size = 2924
+mtime_ms = 1791306499859
+storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:6e4eaecc-e6c5-4f64-8de5-e8845034f33b/a01bbcbc-26c0-4438-9f30-a9c2997d4e98/9012a2bb-d809-4627-8528-63a6e090b72e"
+storage_version_token = "1791308071960516"
+content_type = "text/csv"
+
+[[outputs]]
+id = "jZw8DkFD1mu5cR4CTVkqb"
+uri = "file://docs/import-pilot/n12-screenshots.zip"
+type = "unspecified"
+title = "Neun Original-Bildschirmfotos"
+description = "PNG-Aufnahmen aus dem echten Pilot: Verein, Kader, drei Ruhmeshallenräume und vier Spielerprofile."
+logical_id = "d17c4850-3e35-40e5-8d00-2b068e61fe9c"
+content_hash = "sha256:b1f7c753f6669b23bd2718d08f8457ad318ce09af5c47c8a1dd5bff8d49e6e9b"
+size = 13855522
+mtime_ms = 1791307989311
+storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:6e4eaecc-e6c5-4f64-8de5-e8845034f33b/d17c4850-3e35-40e5-8d00-2b068e61fe9c/3d33a730-47de-4dec-8924-762d40f58d9c"
+storage_version_token = "1791308072668940"
+content_type = "application/octet-stream"
+
+[[outputs]]
+id = "e4a88whJN4Hw6TO7GKbfF"
+uri = "file://docs/import-pilot/n12-pruefbelege.zip"
+type = "unspecified"
+title = "Nachtrag 12 – Prüfbelege"
+description = "Vorher-/Nachher-Fingerprints, einzige Feldreparatur, Paketdiff, Testprotokolle und Browserprüfung; Markdown-Bericht enthalten."
+logical_id = "686ef30e-ee88-47e2-a461-76dfdf5b4b28"
+content_hash = "sha256:7fd2b5f152c41fe980a1514a2777eade4bd1f1b83a03023d4235f049980317ca"
+size = 26949
+mtime_ms = 1791307989703
+storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:6e4eaecc-e6c5-4f64-8de5-e8845034f33b/686ef30e-ee88-47e2-a461-76dfdf5b4b28/751e14ba-e3f9-462d-8818-826dc8640814"
+storage_version_token = "1791308073770535"
+content_type = "application/octet-stream"

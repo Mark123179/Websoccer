@@ -1,0 +1,1604 @@
+{
+  "tables": {
+    "auth_group": [
+      0,
+      "d41d8cd98f00b204e9800998ecf8427e"
+    ],
+    "auth_group_permissions": [
+      0,
+      "d41d8cd98f00b204e9800998ecf8427e"
+    ],
+    "auth_permission": [
+      636,
+      "d273389288418fabe159b7f67704303e"
+    ],
+    "auth_user": [
+      3,
+      "743eef91094802ebb01789bb37492518"
+    ],
+    "auth_user_groups": [
+      0,
+      "d41d8cd98f00b204e9800998ecf8427e"
+    ],
+    "auth_user_user_permissions": [
+      0,
+      "d41d8cd98f00b204e9800998ecf8427e"
+    ],
+    "django_admin_log": [
+      0,
+      "d41d8cd98f00b204e9800998ecf8427e"
+    ],
+    "django_content_type": [
+      159,
+      "1636413d45354a66490920f017ceae7d"
+    ],
+    "django_migrations": [
+      219,
+      "242ab0ae1afa476885fcbe1892eee994"
+    ],
+    "django_session": [
+      442,
+      "e51cc03d375bd0de46e98137aa5fef9c"
+    ],
+    "game_aibuyerrun": [
+      26,
+      "0e6e638c7fdf57f2191fae8ad95db014"
+    ],
+    "game_aitransferoffer": [
+      0,
+      "d41d8cd98f00b204e9800998ecf8427e"
+    ],
+    "game_apifootballdailyusage": [
+      0,
+      "d41d8cd98f00b204e9800998ecf8427e"
+    ],
+    "game_buybackclause": [
+      0,
+      "d41d8cd98f00b204e9800998ecf8427e"
+    ],
+    "game_club": [
+      28,
+      "ed62b116f1f735922cecb362d7b5b3be"
+    ],
+    "game_clubcmtprofile": [
+      0,
+      "d41d8cd98f00b204e9800998ecf8427e"
+    ],
+    "game_clubexternalid": [
+      0,
+      "d41d8cd98f00b204e9800998ecf8427e"
+    ],
+    "game_clubfinancialtransaction": [
+      64,
+      "b756920cca7baf03d88f1da6852c00ef"
+    ],
+    "game_clubnewsitem": [
+      0,
+      "d41d8cd98f00b204e9800998ecf8427e"
+    ],
+    "game_clubpartnership": [
+      0,
+      "d41d8cd98f00b204e9800998ecf8427e"
+    ],
+    "game_clubplayerimportjob": [
+      16,
+      "d54b696316d223d0500dc35dbc2540eb"
+    ],
+    "game_clubpublicprofile": [
+      22,
+      "e53dcd0cd4ca4064f8bcca867e3a47ae"
+    ],
+    "game_clubrecord": [
+      259,
+      "ab6dc865065df84fa3a9094c6db10b05"
+    ],
+    "game_clubrecordbreak": [
+      36,
+      "0f488a3fa9f4139c774c94bd9451e380"
+    ],
+    "game_clubrecordcorrectionrequest": [
+      0,
+      "d41d8cd98f00b204e9800998ecf8427e"
+    ],
+    "game_clubsponsor": [
+      5,
+      "8c5d82094d6a16212dff156b5166a70a"
+    ],
+    "game_clubstadionumfeldstate": [
+      28,
+      "2d028dd3368021398777e53c62227657"
+    ],
+    "game_clubtmprofile": [
+      0,
+      "d41d8cd98f00b204e9800998ecf8427e"
+    ],
+    "game_clubtrophy": [
+      36,
+      "f4ec2cede09132ca6f9895e91a9cabad"
+    ],
+    "game_clubtrophyentry": [
+      0,
+      "d41d8cd98f00b204e9800998ecf8427e"
+    ],
+    "game_cointransaction": [
+      0,
+      "d41d8cd98f00b204e9800998ecf8427e"
+    ],
+    "game_communitysubmission": [
+      0,
+      "d41d8cd98f00b204e9800998ecf8427e"
+    ],
+    "game_communitytournament": [
+      0,
+      "d41d8cd98f00b204e9800998ecf8427e"
+    ],
+    "game_communitytournamentapplication": [
+      0,
+      "d41d8cd98f00b204e9800998ecf8427e"
+    ],
+    "game_communitytournamententry": [
+      0,
+      "d41d8cd98f00b204e9800998ecf8427e"
+    ],
+    "game_communitytournamentmatch": [
+      0,
+      "d41d8cd98f00b204e9800998ecf8427e"
+    ],
+    "game_communitytournamentphase": [
+      0,
+      "d41d8cd98f00b204e9800998ecf8427e"
+    ],
+    "game_communitytournamentround": [
+      0,
+      "d41d8cd98f00b204e9800998ecf8427e"
+    ],
+    "game_communitytournamentstanding": [
+      0,
+      "d41d8cd98f00b204e9800998ecf8427e"
+    ],
+    "game_countrynetwork": [
+      0,
+      "d41d8cd98f00b204e9800998ecf8427e"
+    ],
+    "game_creatoractionlog": [
+      0,
+      "d41d8cd98f00b204e9800998ecf8427e"
+    ],
+    "game_cupfixture": [
+      6,
+      "43e564547e5e62e522005262afd3d36f"
+    ],
+    "game_cupround": [
+      5,
+      "3ade3b5812b350e80dcdbf96672f0477"
+    ],
+    "game_cupseason": [
+      1,
+      "83dc1b6fcc4e29c2ed73a20923d76217"
+    ],
+    "game_cupseason_participants": [
+      18,
+      "9bf6d9ccee66f05c0b0794288593b98f"
+    ],
+    "game_datasource": [
+      5,
+      "c4ca6be4075cfea715ecfd18047bb375"
+    ],
+    "game_dayweather": [
+      81,
+      "79c259ed572ffe09f84221473b639203"
+    ],
+    "game_dealrequest": [
+      0,
+      "d41d8cd98f00b204e9800998ecf8427e"
+    ],
+    "game_dealrequestplayer": [
+      0,
+      "d41d8cd98f00b204e9800998ecf8427e"
+    ],
+    "game_economyparameter": [
+      77,
+      "1049b38a456aba10702d21f2118f8402"
+    ],
+    "game_facilityconstruction": [
+      3,
+      "bdd8c296aac9925704f79d47551cb523"
+    ],
+    "game_financematchdayrun": [
+      702,
+      "832e17757c938f90c4b070cf6c803342"
+    ],
+    "game_financereservation": [
+      6,
+      "d338e9b24d9db8eea75fabc5786c3507"
+    ],
+    "game_financetransaction": [
+      752,
+      "cd148e27afe43a48bf305c2c46e49f31"
+    ],
+    "game_forcedauction": [
+      0,
+      "d41d8cd98f00b204e9800998ecf8427e"
+    ],
+    "game_forcedauctionbid": [
+      0,
+      "d41d8cd98f00b204e9800998ecf8427e"
+    ],
+    "game_friendlyfixture": [
+      0,
+      "d41d8cd98f00b204e9800998ecf8427e"
+    ],
+    "game_gameseasonstate": [
+      1,
+      "70d3c10bf1da9cebd58824148a076321"
+    ],
+    "game_historiccoach": [
+      0,
+      "d41d8cd98f00b204e9800998ecf8427e"
+    ],
+    "game_hoenesscoin": [
+      2,
+      "cb3e6dd8cbb7c6db4639bbf6930a8cf6"
+    ],
+    "game_importissue": [
+      0,
+      "d41d8cd98f00b204e9800998ecf8427e"
+    ],
+    "game_inactivitypenalty": [
+      0,
+      "d41d8cd98f00b204e9800998ecf8427e"
+    ],
+    "game_inactivityrecord": [
+      2,
+      "a945da07e658461bf6c729392f3aa745"
+    ],
+    "game_insolvencycase": [
+      0,
+      "d41d8cd98f00b204e9800998ecf8427e"
+    ],
+    "game_landkoeffizient": [
+      9,
+      "2252c0cdc04f38c7b02357226296435e"
+    ],
+    "game_league": [
+      5,
+      "64e12b9063583e21001c09c36292fbe5"
+    ],
+    "game_leaguenews": [
+      2,
+      "f547e52f37e70f2e8fce213cfe54143a"
+    ],
+    "game_leagueseasonstate": [
+      3,
+      "d07d88f385dca6d388b7400cc7a553b7"
+    ],
+    "game_leaguestandings": [
+      18,
+      "487cf0d40b65788ae67b4104e0a74c2b"
+    ],
+    "game_listingpin": [
+      0,
+      "d41d8cd98f00b204e9800998ecf8427e"
+    ],
+    "game_loan": [
+      0,
+      "d41d8cd98f00b204e9800998ecf8427e"
+    ],
+    "game_loanlisting": [
+      0,
+      "d41d8cd98f00b204e9800998ecf8427e"
+    ],
+    "game_managercareerentry": [
+      0,
+      "d41d8cd98f00b204e9800998ecf8427e"
+    ],
+    "game_managercareerstation": [
+      4,
+      "ed4d0f9c06741b0da244e6ad70da5404"
+    ],
+    "game_managercompetitiontitle": [
+      0,
+      "d41d8cd98f00b204e9800998ecf8427e"
+    ],
+    "game_managernotes": [
+      1,
+      "d960dee70a54538b06fc05f36b4efe74"
+    ],
+    "game_managerprofile": [
+      3,
+      "9545f84c72215b6e3b247727873a417d"
+    ],
+    "game_managerseasonscore": [
+      0,
+      "d41d8cd98f00b204e9800998ecf8427e"
+    ],
+    "game_managerteamphoto": [
+      0,
+      "d41d8cd98f00b204e9800998ecf8427e"
+    ],
+    "game_managertimelineentry": [
+      3,
+      "76354b4aa9a77c871257d32f12474935"
+    ],
+    "game_managertitle": [
+      0,
+      "d41d8cd98f00b204e9800998ecf8427e"
+    ],
+    "game_managervacationblock": [
+      0,
+      "d41d8cd98f00b204e9800998ecf8427e"
+    ],
+    "game_matchdayrevenue": [
+      54,
+      "10236045f299eeae40bd0a3bd63503f8"
+    ],
+    "game_matchevent": [
+      28446,
+      "e0f2edacb2b54773ea708e05942f0423"
+    ],
+    "game_matchresult": [
+      0,
+      "d41d8cd98f00b204e9800998ecf8427e"
+    ],
+    "game_matchstory": [
+      201,
+      "5f7f064a7c3c0fb5111c36758b750e62"
+    ],
+    "game_matchstoryround": [
+      201,
+      "a18486f6c1447506931e9d88c3503396"
+    ],
+    "game_mediaoutlet": [
+      24,
+      "f6cd30c4a824a08649c6ba7aebdb9fd7"
+    ],
+    "game_neutralvenue": [
+      0,
+      "d41d8cd98f00b204e9800998ecf8427e"
+    ],
+    "game_notification": [
+      0,
+      "d41d8cd98f00b204e9800998ecf8427e"
+    ],
+    "game_pendingtransfer": [
+      0,
+      "d41d8cd98f00b204e9800998ecf8427e"
+    ],
+    "game_player": [
+      828,
+      "5851a888d5d72aa56da1d1ff4e4c7f10"
+    ],
+    "game_playerawardtitle": [
+      0,
+      "d41d8cd98f00b204e9800998ecf8427e"
+    ],
+    "game_playerclubhistory": [
+      1000,
+      "be6a62231e8f7fbd11e16be2197150de"
+    ],
+    "game_playercmtattributeprofile": [
+      0,
+      "d41d8cd98f00b204e9800998ecf8427e"
+    ],
+    "game_playercmtprofile": [
+      0,
+      "d41d8cd98f00b204e9800998ecf8427e"
+    ],
+    "game_playereditlog": [
+      226,
+      "b006c46350fb2524098088bd40b9f33b"
+    ],
+    "game_playereditrequest": [
+      0,
+      "d41d8cd98f00b204e9800998ecf8427e"
+    ],
+    "game_playerexternalid": [
+      479,
+      "75f9ffeccaaec79c32139abafbe15d15"
+    ],
+    "game_playerfmiprofile": [
+      0,
+      "d41d8cd98f00b204e9800998ecf8427e"
+    ],
+    "game_playerformsnapshot": [
+      2685,
+      "f964db09a89d2db4cea6d5aeb05098fe"
+    ],
+    "game_playerimportcandidate": [
+      218,
+      "75f0f0d60622d368a952306300f1478c"
+    ],
+    "game_playerinjuryrecord": [
+      15,
+      "463ed2b30870210bd016979d6cbbbbd1"
+    ],
+    "game_playermarketvaluesnapshot": [
+      424,
+      "6767e45a8141840040123cfe654c613f"
+    ],
+    "game_playerrlformprofile": [
+      426,
+      "9a858497e434ee255ddfc98cad49dc89"
+    ],
+    "game_playerseasonstat": [
+      306,
+      "fc2d0fd43edb1108d31ecb7e27d4575a"
+    ],
+    "game_playersourcerating": [
+      1287,
+      "5d86e01b48cca2631d64b98c9e4af0fe"
+    ],
+    "game_playersourceratingsnapshot": [
+      49,
+      "5ff9b8f24970478335aa09e6eaf6c7b1"
+    ],
+    "game_playerstrengthprofile": [
+      504,
+      "a4a2daa4f239cb7434fc4dc51bf88595"
+    ],
+    "game_playerstrengthsnapshot": [
+      1296,
+      "b0f53d8a115f0b391e5bc0febadfb46d"
+    ],
+    "game_playersuspensionrecord": [
+      5,
+      "33ae722d3da6691428ff51b213490cd2"
+    ],
+    "game_playertmprofile": [
+      0,
+      "d41d8cd98f00b204e9800998ecf8427e"
+    ],
+    "game_playertransferhistory": [
+      1,
+      "ecc76eb23133da112c8e0dfbdf91532b"
+    ],
+    "game_playerweightedratingsnapshot": [
+      0,
+      "d41d8cd98f00b204e9800998ecf8427e"
+    ],
+    "game_positionbarometer": [
+      0,
+      "d41d8cd98f00b204e9800998ecf8427e"
+    ],
+    "game_presidentsatisfaction": [
+      4,
+      "28453b09af84b617519bbf14aa9fb62d"
+    ],
+    "game_referee": [
+      463,
+      "c2b6e0c9e1a46c3eda7bb3809a822a20"
+    ],
+    "game_rumornews": [
+      2,
+      "523d9bc28c12e0d957f85d0005bd4e48"
+    ],
+    "game_scoutingassignment": [
+      0,
+      "d41d8cd98f00b204e9800998ecf8427e"
+    ],
+    "game_scoutingbid": [
+      0,
+      "d41d8cd98f00b204e9800998ecf8427e"
+    ],
+    "game_scoutingdepartment": [
+      3,
+      "06457bf98b47cefdcee45dc370267a21"
+    ],
+    "game_scoutingfind": [
+      0,
+      "d41d8cd98f00b204e9800998ecf8427e"
+    ],
+    "game_seasoneconomysnapshot": [
+      2,
+      "6c397a75e5dc7485a9a560ddb7a71222"
+    ],
+    "game_seasonfinancestate": [
+      2,
+      "2fe6d9c2fd16ba784234b81494744fa1"
+    ],
+    "game_seasonfixture": [
+      306,
+      "89a93fe8fd75f8e6d84e48f0e3879435"
+    ],
+    "game_seasongoal": [
+      1,
+      "205cf39d3d19357bab4892e2deaa6a44"
+    ],
+    "game_sellonclause": [
+      0,
+      "d41d8cd98f00b204e9800998ecf8427e"
+    ],
+    "game_simulatedmatch": [
+      201,
+      "a10780bb30e9fe293abb042632c78a32"
+    ],
+    "game_sourceimportrun": [
+      1,
+      "3d3b676df73609188fa42254fa69d105"
+    ],
+    "game_sponsor": [
+      504,
+      "df2dc25b8364e752142bb27ff760f6ef"
+    ],
+    "game_sponsorcontract": [
+      5,
+      "1ea1a819172c088fc85ce01a9485ec03"
+    ],
+    "game_sponsoroffer": [
+      428,
+      "a0d77f60f98893816b374c59a18e259b"
+    ],
+    "game_squadlimitnote": [
+      0,
+      "d41d8cd98f00b204e9800998ecf8427e"
+    ],
+    "game_squadoffer": [
+      0,
+      "d41d8cd98f00b204e9800998ecf8427e"
+    ],
+    "game_stadionumfeldconfig": [
+      1,
+      "82b4aad46484cee321d27b769e9857ff"
+    ],
+    "game_stadium": [
+      22,
+      "eb1684dd6e00ef7579ea691694b00f45"
+    ],
+    "game_stadiumexpansion": [
+      1,
+      "c5f0e5849b43ed45db5fb4d168be14bd"
+    ],
+    "game_storyaudit": [
+      4,
+      "6161bc145b21a1fb630fcb9f2487e2c9"
+    ],
+    "game_storysettings": [
+      0,
+      "d41d8cd98f00b204e9800998ecf8427e"
+    ],
+    "game_strengthformulasettings": [
+      1,
+      "5c264eedffdb9520cb3a661d31717363"
+    ],
+    "game_strengthmodifierrule": [
+      15,
+      "908f1ab28e9cb2c8f71c3b763bc24afe"
+    ],
+    "game_supportticket": [
+      0,
+      "d41d8cd98f00b204e9800998ecf8427e"
+    ],
+    "game_tacticsetup": [
+      22,
+      "617156c9f457b50c62b9b6f3887a2e9b"
+    ],
+    "game_tactictemplate": [
+      2,
+      "73750b1d85b182bd1c03d33985d410bf"
+    ],
+    "game_transferbid": [
+      5,
+      "09b7a5ceccbbe2fbf281bfeef8b93be7"
+    ],
+    "game_transferlisting": [
+      5,
+      "0167cff1474e60c8c468e374508a742e"
+    ],
+    "game_transferlock": [
+      0,
+      "d41d8cd98f00b204e9800998ecf8427e"
+    ],
+    "game_transfernegotiation": [
+      0,
+      "d41d8cd98f00b204e9800998ecf8427e"
+    ],
+    "game_transferrecord": [
+      0,
+      "d41d8cd98f00b204e9800998ecf8427e"
+    ],
+    "game_transferrecordplayer": [
+      0,
+      "d41d8cd98f00b204e9800998ecf8427e"
+    ],
+    "game_transferreport": [
+      0,
+      "d41d8cd98f00b204e9800998ecf8427e"
+    ],
+    "game_tvpot": [
+      18,
+      "4360c62aa19e02cea39464239a3e2007"
+    ],
+    "game_vereinkoeffizient": [
+      19,
+      "cc1f1cc31dc649cc3533550ca13886d5"
+    ],
+    "game_watchlistentry": [
+      1,
+      "16e97449840b892ec72a8d222fdec75a"
+    ],
+    "game_youthlevypayment": [
+      0,
+      "d41d8cd98f00b204e9800998ecf8427e"
+    ],
+    "showauction_showauction": [
+      1,
+      "68f793926067732dccba67feee0a05ff"
+    ],
+    "showauction_showauctionbid": [
+      0,
+      "d41d8cd98f00b204e9800998ecf8427e"
+    ],
+    "showauction_showauctionpreset": [
+      5,
+      "54f3470ecc3fe713e3205027b693e2c6"
+    ],
+    "showauction_showauctionwatch": [
+      0,
+      "d41d8cd98f00b204e9800998ecf8427e"
+    ],
+    "stadium_editor_stadiumdesign": [
+      2,
+      "0a720db50f21b4171e80b4bb54aa7bf7"
+    ],
+    "stadium_editor_stadiumgeometry": [
+      20,
+      "061e93f6ed39197623867b2da5145837"
+    ]
+  },
+  "metadata": {
+    "schema_acl": "c213b7ef4e1d4e02d5f65108e1d9f75fe6835c081e2dd02db9aa3ef37d95c9df",
+    "object_acls": "691bd3d79b3a726c14583541c85d3496e0b20ea7f04ff43a16cadde03b9a45dc",
+    "roles": "e5e6532a4c827db98db6cbbe0599ff1ce1714bb1e3ad0738002bd9a9dc94d5c9",
+    "constraints": "306279767b22b526c5be26a7240a1f566029bee76b281bb90beeddd1d6aa13c7"
+  },
+  "sequences": {
+    "auth_group_id_seq": [
+      [
+        1,
+        false
+      ]
+    ],
+    "auth_group_permissions_id_seq": [
+      [
+        1,
+        false
+      ]
+    ],
+    "auth_permission_id_seq": [
+      [
+        636,
+        true
+      ]
+    ],
+    "auth_user_groups_id_seq": [
+      [
+        1,
+        false
+      ]
+    ],
+    "auth_user_id_seq": [
+      [
+        19,
+        true
+      ]
+    ],
+    "auth_user_user_permissions_id_seq": [
+      [
+        1,
+        false
+      ]
+    ],
+    "django_admin_log_id_seq": [
+      [
+        1,
+        false
+      ]
+    ],
+    "django_content_type_id_seq": [
+      [
+        159,
+        true
+      ]
+    ],
+    "django_migrations_id_seq": [
+      [
+        315,
+        true
+      ]
+    ],
+    "game_aibuyerrun_id_seq": [
+      [
+        26,
+        true
+      ]
+    ],
+    "game_aitransferoffer_id_seq": [
+      [
+        1,
+        false
+      ]
+    ],
+    "game_apifootballdailyusage_id_seq": [
+      [
+        1,
+        false
+      ]
+    ],
+    "game_buybackclause_id_seq": [
+      [
+        1,
+        false
+      ]
+    ],
+    "game_club_id_seq": [
+      [
+        120,
+        true
+      ]
+    ],
+    "game_clubcmtprofile_id_seq": [
+      [
+        1,
+        false
+      ]
+    ],
+    "game_clubexternalid_id_seq": [
+      [
+        1,
+        false
+      ]
+    ],
+    "game_clubfinancialtransaction_id_seq": [
+      [
+        126,
+        true
+      ]
+    ],
+    "game_clubnewsitem_id_seq": [
+      [
+        37,
+        true
+      ]
+    ],
+    "game_clubpartnership_id_seq": [
+      [
+        1,
+        false
+      ]
+    ],
+    "game_clubplayerimportjob_id_seq": [
+      [
+        16,
+        true
+      ]
+    ],
+    "game_clubpublicprofile_id_seq": [
+      [
+        22,
+        true
+      ]
+    ],
+    "game_clubrecord_id_seq": [
+      [
+        259,
+        true
+      ]
+    ],
+    "game_clubrecordbreak_id_seq": [
+      [
+        36,
+        true
+      ]
+    ],
+    "game_clubrecordcorrectionrequest_id_seq": [
+      [
+        1,
+        false
+      ]
+    ],
+    "game_clubsponsor_id_seq": [
+      [
+        10,
+        true
+      ]
+    ],
+    "game_clubstadionumfeldstate_id_seq": [
+      [
+        28,
+        true
+      ]
+    ],
+    "game_clubtmprofile_id_seq": [
+      [
+        1,
+        false
+      ]
+    ],
+    "game_clubtrophy_id_seq": [
+      [
+        47,
+        true
+      ]
+    ],
+    "game_clubtrophyentry_id_seq": [
+      [
+        1,
+        false
+      ]
+    ],
+    "game_cointransaction_id_seq": [
+      [
+        1,
+        false
+      ]
+    ],
+    "game_communitysubmission_id_seq": [
+      [
+        1,
+        false
+      ]
+    ],
+    "game_communitytournament_id_seq": [
+      [
+        1,
+        true
+      ]
+    ],
+    "game_communitytournamentapplication_id_seq": [
+      [
+        1,
+        false
+      ]
+    ],
+    "game_communitytournamententry_id_seq": [
+      [
+        1,
+        false
+      ]
+    ],
+    "game_communitytournamentmatch_id_seq": [
+      [
+        1,
+        false
+      ]
+    ],
+    "game_communitytournamentphase_id_seq": [
+      [
+        1,
+        false
+      ]
+    ],
+    "game_communitytournamentround_id_seq": [
+      [
+        1,
+        false
+      ]
+    ],
+    "game_communitytournamentstanding_id_seq": [
+      [
+        1,
+        false
+      ]
+    ],
+    "game_countrynetwork_id_seq": [
+      [
+        1,
+        false
+      ]
+    ],
+    "game_creatoractionlog_id_seq": [
+      [
+        1,
+        false
+      ]
+    ],
+    "game_cupfixture_id_seq": [
+      [
+        48,
+        true
+      ]
+    ],
+    "game_cupround_id_seq": [
+      [
+        40,
+        true
+      ]
+    ],
+    "game_cupseason_id_seq": [
+      [
+        35,
+        true
+      ]
+    ],
+    "game_cupseason_participants_id_seq": [
+      [
+        115,
+        true
+      ]
+    ],
+    "game_datasource_id_seq": [
+      [
+        5,
+        true
+      ]
+    ],
+    "game_dealrequest_id_seq": [
+      [
+        1,
+        false
+      ]
+    ],
+    "game_dealrequestplayer_id_seq": [
+      [
+        1,
+        false
+      ]
+    ],
+    "game_economyparameter_id_seq": [
+      [
+        77,
+        true
+      ]
+    ],
+    "game_facilityconstruction_id_seq": [
+      [
+        7,
+        true
+      ]
+    ],
+    "game_financematchdayrun_id_seq": [
+      [
+        1350,
+        true
+      ]
+    ],
+    "game_financereservation_id_seq": [
+      [
+        6,
+        true
+      ]
+    ],
+    "game_financetransaction_id_seq": [
+      [
+        752,
+        true
+      ]
+    ],
+    "game_forcedauction_id_seq": [
+      [
+        1,
+        true
+      ]
+    ],
+    "game_forcedauctionbid_id_seq": [
+      [
+        1,
+        false
+      ]
+    ],
+    "game_friendlyfixture_id_seq": [
+      [
+        1,
+        false
+      ]
+    ],
+    "game_gameseasonstate_id_seq": [
+      [
+        1,
+        true
+      ]
+    ],
+    "game_historiccoach_id_seq": [
+      [
+        1,
+        false
+      ]
+    ],
+    "game_hoenesscoin_id_seq": [
+      [
+        2,
+        true
+      ]
+    ],
+    "game_importissue_id_seq": [
+      [
+        1,
+        false
+      ]
+    ],
+    "game_inactivitypenalty_id_seq": [
+      [
+        1,
+        false
+      ]
+    ],
+    "game_inactivityrecord_id_seq": [
+      [
+        2,
+        true
+      ]
+    ],
+    "game_insolvencycase_id_seq": [
+      [
+        2,
+        true
+      ]
+    ],
+    "game_landkoeffizient_id_seq": [
+      [
+        9,
+        true
+      ]
+    ],
+    "game_league_id_seq": [
+      [
+        16,
+        true
+      ]
+    ],
+    "game_leaguenews_id_seq": [
+      [
+        2,
+        true
+      ]
+    ],
+    "game_leagueseasonstate_id_seq": [
+      [
+        4,
+        true
+      ]
+    ],
+    "game_leaguestandings_id_seq": [
+      [
+        36,
+        true
+      ]
+    ],
+    "game_listingpin_id_seq": [
+      [
+        1,
+        false
+      ]
+    ],
+    "game_loan_id_seq": [
+      [
+        1,
+        false
+      ]
+    ],
+    "game_loanlisting_id_seq": [
+      [
+        1,
+        false
+      ]
+    ],
+    "game_managercareerentry_id_seq": [
+      [
+        1,
+        false
+      ]
+    ],
+    "game_managercareerstation_id_seq": [
+      [
+        17,
+        true
+      ]
+    ],
+    "game_managercompetitiontitle_id_seq": [
+      [
+        1,
+        false
+      ]
+    ],
+    "game_managernotes_id_seq": [
+      [
+        1,
+        true
+      ]
+    ],
+    "game_managerprofile_id_seq": [
+      [
+        15,
+        true
+      ]
+    ],
+    "game_managerseasonscore_id_seq": [
+      [
+        1,
+        false
+      ]
+    ],
+    "game_managerteamphoto_id_seq": [
+      [
+        1,
+        false
+      ]
+    ],
+    "game_managertimelineentry_id_seq": [
+      [
+        5,
+        true
+      ]
+    ],
+    "game_managertitle_id_seq": [
+      [
+        1,
+        false
+      ]
+    ],
+    "game_managervacationblock_id_seq": [
+      [
+        1,
+        false
+      ]
+    ],
+    "game_matchdayrevenue_id_seq": [
+      [
+        54,
+        true
+      ]
+    ],
+    "game_matchevent_id_seq": [
+      [
+        57679,
+        true
+      ]
+    ],
+    "game_matchresult_id_seq": [
+      [
+        1,
+        false
+      ]
+    ],
+    "game_matchstory_id_seq": [
+      [
+        408,
+        true
+      ]
+    ],
+    "game_matchstoryround_id_seq": [
+      [
+        403,
+        true
+      ]
+    ],
+    "game_mediaoutlet_id_seq": [
+      [
+        24,
+        true
+      ]
+    ],
+    "game_neutralvenue_id_seq": [
+      [
+        1,
+        false
+      ]
+    ],
+    "game_notification_id_seq": [
+      [
+        1,
+        false
+      ]
+    ],
+    "game_pendingtransfer_id_seq": [
+      [
+        1,
+        false
+      ]
+    ],
+    "game_player_id_seq": [
+      [
+        22743,
+        true
+      ]
+    ],
+    "game_playerawardtitle_id_seq": [
+      [
+        6,
+        true
+      ]
+    ],
+    "game_playerclubhistory_id_seq": [
+      [
+        1000,
+        true
+      ]
+    ],
+    "game_playercmtattributeprofile_id_seq": [
+      [
+        1,
+        false
+      ]
+    ],
+    "game_playercmtprofile_id_seq": [
+      [
+        1,
+        false
+      ]
+    ],
+    "game_playereditlog_id_seq": [
+      [
+        242,
+        true
+      ]
+    ],
+    "game_playereditrequest_id_seq": [
+      [
+        1,
+        false
+      ]
+    ],
+    "game_playerexternalid_id_seq": [
+      [
+        20563,
+        true
+      ]
+    ],
+    "game_playerfmiprofile_id_seq": [
+      [
+        1,
+        false
+      ]
+    ],
+    "game_playerformsnapshot_id_seq": [
+      [
+        4594,
+        true
+      ]
+    ],
+    "game_playerimportcandidate_id_seq": [
+      [
+        218,
+        true
+      ]
+    ],
+    "game_playerinjuryrecord_id_seq": [
+      [
+        20,
+        true
+      ]
+    ],
+    "game_playermarketvaluesnapshot_id_seq": [
+      [
+        1282,
+        true
+      ]
+    ],
+    "game_playerrlformprofile_id_seq": [
+      [
+        1316,
+        true
+      ]
+    ],
+    "game_playerseasonstat_id_seq": [
+      [
+        816,
+        true
+      ]
+    ],
+    "game_playersourcerating_id_seq": [
+      [
+        22187,
+        true
+      ]
+    ],
+    "game_playersourceratingsnapshot_id_seq": [
+      [
+        154,
+        true
+      ]
+    ],
+    "game_playerstrengthprofile_id_seq": [
+      [
+        22413,
+        true
+      ]
+    ],
+    "game_playerstrengthsnapshot_id_seq": [
+      [
+        22889,
+        true
+      ]
+    ],
+    "game_playersuspensionrecord_id_seq": [
+      [
+        10,
+        true
+      ]
+    ],
+    "game_playertmprofile_id_seq": [
+      [
+        1,
+        false
+      ]
+    ],
+    "game_playertransferhistory_id_seq": [
+      [
+        8,
+        true
+      ]
+    ],
+    "game_playerweightedratingsnapshot_id_seq": [
+      [
+        1,
+        false
+      ]
+    ],
+    "game_positionbarometer_id_seq": [
+      [
+        1,
+        false
+      ]
+    ],
+    "game_presidentsatisfaction_id_seq": [
+      [
+        9,
+        true
+      ]
+    ],
+    "game_referee_id_seq": [
+      [
+        463,
+        true
+      ]
+    ],
+    "game_rumornews_id_seq": [
+      [
+        2,
+        true
+      ]
+    ],
+    "game_scoutingassignment_id_seq": [
+      [
+        1,
+        false
+      ]
+    ],
+    "game_scoutingbid_id_seq": [
+      [
+        1,
+        false
+      ]
+    ],
+    "game_scoutingdepartment_id_seq": [
+      [
+        3,
+        true
+      ]
+    ],
+    "game_scoutingfind_id_seq": [
+      [
+        1,
+        false
+      ]
+    ],
+    "game_seasoneconomysnapshot_id_seq": [
+      [
+        2,
+        true
+      ]
+    ],
+    "game_seasonfinancestate_id_seq": [
+      [
+        2,
+        true
+      ]
+    ],
+    "game_seasonfixture_id_seq": [
+      [
+        1683,
+        true
+      ]
+    ],
+    "game_seasongoal_id_seq": [
+      [
+        3,
+        true
+      ]
+    ],
+    "game_sellonclause_id_seq": [
+      [
+        1,
+        false
+      ]
+    ],
+    "game_simulatedmatch_id_seq": [
+      [
+        251,
+        true
+      ]
+    ],
+    "game_sourceimportrun_id_seq": [
+      [
+        1,
+        true
+      ]
+    ],
+    "game_sponsor_id_seq": [
+      [
+        504,
+        true
+      ]
+    ],
+    "game_sponsorcontract_id_seq": [
+      [
+        5,
+        true
+      ]
+    ],
+    "game_sponsoroffer_id_seq": [
+      [
+        445,
+        true
+      ]
+    ],
+    "game_squadlimitnote_id_seq": [
+      [
+        1,
+        false
+      ]
+    ],
+    "game_squadoffer_id_seq": [
+      [
+        1,
+        false
+      ]
+    ],
+    "game_stadionumfeldconfig_id_seq": [
+      [
+        1,
+        true
+      ]
+    ],
+    "game_stadium_id_seq": [
+      [
+        23,
+        true
+      ]
+    ],
+    "game_stadiumexpansion_id_seq": [
+      [
+        1,
+        true
+      ]
+    ],
+    "game_storyaudit_id_seq": [
+      [
+        4,
+        true
+      ]
+    ],
+    "game_strengthformulasettings_id_seq": [
+      [
+        1,
+        true
+      ]
+    ],
+    "game_strengthmodifierrule_id_seq": [
+      [
+        15,
+        true
+      ]
+    ],
+    "game_supportticket_id_seq": [
+      [
+        1,
+        false
+      ]
+    ],
+    "game_tacticsetup_id_seq": [
+      [
+        86,
+        true
+      ]
+    ],
+    "game_tactictemplate_id_seq": [
+      [
+        5,
+        true
+      ]
+    ],
+    "game_transferbid_id_seq": [
+      [
+        5,
+        true
+      ]
+    ],
+    "game_transferlisting_id_seq": [
+      [
+        5,
+        true
+      ]
+    ],
+    "game_transferlock_id_seq": [
+      [
+        1,
+        false
+      ]
+    ],
+    "game_transfernegotiation_id_seq": [
+      [
+        1,
+        false
+      ]
+    ],
+    "game_transferrecord_id_seq": [
+      [
+        1,
+        false
+      ]
+    ],
+    "game_transferrecordplayer_id_seq": [
+      [
+        1,
+        false
+      ]
+    ],
+    "game_transferreport_id_seq": [
+      [
+        1,
+        false
+      ]
+    ],
+    "game_tvpot_id_seq": [
+      [
+        18,
+        true
+      ]
+    ],
+    "game_vereinkoeffizient_id_seq": [
+      [
+        19,
+        true
+      ]
+    ],
+    "game_watchlistentry_id_seq": [
+      [
+        1,
+        true
+      ]
+    ],
+    "game_youthlevypayment_id_seq": [
+      [
+        1,
+        false
+      ]
+    ],
+    "showauction_showauction_id_seq": [
+      [
+        4,
+        true
+      ]
+    ],
+    "showauction_showauctionbid_id_seq": [
+      [
+        1,
+        true
+      ]
+    ],
+    "showauction_showauctionpreset_id_seq": [
+      [
+        5,
+        true
+      ]
+    ],
+    "showauction_showauctionwatch_id_seq": [
+      [
+        1,
+        true
+      ]
+    ],
+    "stadium_editor_stadiumdesign_id_seq": [
+      [
+        3,
+        true
+      ]
+    ],
+    "stadium_editor_stadiumgeometry_id_seq": [
+      [
+        21,
+        true
+      ]
+    ]
+  }
+}

@@ -125,6 +125,14 @@ def preview_package(raw, league):
     changes = list(manual_changes)
     last = m.SourceImportRun.objects.filter(club=club, status="applied").order_by("-applied_at", "-pk").first() if club else None
     previous = {p["ids"]["tm"]["value"]: p for p in last.package_data["players"]} if last else {}
+    title_changes = []
+    if last:
+        old_titles = {(t["competition"]["name"], t["season"]): t for t in last.package_data["titles"]}
+        for title in data["titles"]:
+            old = old_titles.get((title["competition"]["name"], title["season"]))
+            if old and old["competition"]["category"] != title["competition"]["category"]:
+                title_changes.append(dict(competition=title["competition"]["name"], season=title["season"],
+                    old=old["competition"]["category"], new=title["competition"]["category"]))
     for player in data["players"]:
         old = previous.get(player["ids"]["tm"]["value"])
         if old:
@@ -157,6 +165,7 @@ def preview_package(raw, league):
     state["plan"] = rows
     state["image_check_enabled"] = image_check_enabled()
     state["images"] = image_gaps(data)
+    state["title_changes"] = title_changes
     if club:
         state["issues"] = list(m.ImportIssue.objects.filter(club=club).order_by("pk").values())
         state["club"] = list(m.Club.objects.filter(pk=club.pk).values())
@@ -164,8 +173,9 @@ def preview_package(raw, league):
         state["ids"] = list(m.PlayerExternalId.objects.filter(player__owner_club=club).order_by("pk").values())
         state["ratings"] = list(m.PlayerSourceRating.objects.filter(player__owner_club=club).order_by("pk").values())
         state["seasons"] = list(m.LeagueSeasonState.objects.filter(league=league).order_by("pk").values())
+        state["titles"] = list(m.ClubTrophyEntry.objects.filter(club=club).order_by("pk").values())
     guard = hashlib.sha256(json.dumps(state, sort_keys=True, default=str).encode()).hexdigest()
-    return dict(manifest=manifest, data=display_data, changes=changes, issue_balance=balance,
+    return dict(manifest=manifest, data=display_data, changes=changes, title_changes=title_changes, issue_balance=balance,
         image_check_enabled=image_check_enabled(),
         missing_images=image_gaps(data), players_to_review=review,
         new_strengths=new_strength, new_strength_players=new_strength_players, guard=guard,

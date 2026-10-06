@@ -1,0 +1,88 @@
+{
+  "initial": {
+    "assignmentId": "696ddde2-0e5d-4cf9-8c14-118266403f5a",
+    "jobId": "import-package-acceptance:1637",
+    "kind": "testing",
+    "name": "import-package-acceptance",
+    "screenshots": [
+      {
+        "description": "Full-height BVB club page screenshot, file 01-club-8.png.",
+        "id": "ek5np1"
+      },
+      {
+        "description": "Full-height actual squad route screenshot, file 02-club-8-squad.png; includes the 28-player/24,4 summary.",
+        "id": "go2nek"
+      },
+      {
+        "description": "Player Hall of Fame room screenshot, file 03-hall-player.png.",
+        "id": "wnkucy"
+      },
+      {
+        "description": "Coach Hall of Fame room screenshot, file 04-hall-coach.png; shows plaque text clipping.",
+        "id": "xolhdp"
+      },
+      {
+        "description": "Club Hall of Fame room screenshot, file 05-hall-club.png; shows current 8/11/3 title totals and overlapping plaque text.",
+        "id": "ecce5y"
+      },
+      {
+        "description": "Nwaneri player profile and loan history screenshot, file 06-player-283-nwaneri.png.",
+        "id": "vjnnw3"
+      },
+      {
+        "description": "Ramaj profile and transfer history screenshot, file 07-player-284-ramaj.png.",
+        "id": "bgseet"
+      },
+      {
+        "description": "Couto profile and transfer history screenshot, file 08-player-286-couto.png; history text is cramped/overlapping.",
+        "id": "ypx3v4"
+      },
+      {
+        "description": "Wehrbein profile with 50.000 € Spielstartwert and 250 € salary, file 09-player-288-wehrbein.png.",
+        "id": "omqxss"
+      }
+    ],
+    "status": "completed",
+    "text": "Read-only verification on the HTTPS real pilot is complete and all nine requested screenshots are saved. The requested BVB/player facts and navigation were present, but the visual-readability check found significant clipping/overlap in Hall-of-Fame plaques and player history panels.\n\n**Screenshot files** (all 1440px wide; each ID is the corresponding browser capture):\n1. `docs/import-pilot/n12-screenshots/01-club-8.png` — **ek5np1** — 1439px high\n2. `docs/import-pilot/n12-screenshots/02-club-8-squad.png` — **go2nek** — 3337px high\n3. `docs/import-pilot/n12-screenshots/03-hall-player.png` — **wnkucy** — 900px high\n4. `docs/import-pilot/n12-screenshots/04-hall-coach.png` — **xolhdp** — 900px high\n5. `docs/import-pilot/n12-screenshots/05-hall-club.png` — **ecce5y** — 1662px high\n6. `docs/import-pilot/n12-screenshots/06-player-283-nwaneri.png` — **vjnnw3** — 1655px high\n7. `docs/import-pilot/n12-screenshots/07-player-284-ramaj.png` — **bgseet** — 2423px high\n8. `docs/import-pilot/n12-screenshots/08-player-286-couto.png` — **ypx3v4** — 2329px high\n9. `docs/import-pilot/n12-screenshots/09-player-288-wehrbein.png` — **omqxss** — 1439px high\n\n**Verified:** club 8 is Borussia Dortmund, founded 1909; no Tertiär placeholder appeared. The club profile shows average pro age 24,4; the actual internal roster route is `/import-pilot/clubs/8/squad/` and shows 28 players in the squad summary. Hall room links preserve `club=8`; the unsubmitted request modal had German Spieler/Trainer/Verein groups and hidden club value 8, then was closed. Current-v2 title totals are 8/11/3; Tuchel’s streak is 11 Pflichtspielsiege in 2015/16. Nwaneri, Ramaj, Couto, and Wehrbein’s specified loan/history/start-value details were visible; clicking Nwaneri’s squad link stayed under `/import-pilot/players/283/`. No page-500 or navigation failure was observed.\n\n**Exceptions:** Hall-of-Fame record text visibly overflows or clips its plaques; player source/transfer-history columns are narrow, with overlapping or cramped text. Screenshots 5 and 6 are 12px shorter than their inner scroller (browser viewport-height ceiling); other captures match the measured content height. Repeated 404 and occasional 401 resource errors/broken image placeholders occurred; image/flag/crest availability was deferred as requested and was not treated as a failure. Role-specific U21 visibility was not re-tested; no account changes were made. No login flow, database/app writes, v3 upload/confirmation, code/settings/workflow changes, or suite rerun occurred.",
+    "verdict": "failure"
+  },
+  "final": {
+    "assignmentId": "e1d9d0d6-3d28-42b4-ae58-ee906dd6b820",
+    "jobId": "import-package-acceptance:1644",
+    "kind": "testing",
+    "name": "import-package-acceptance",
+    "screenshots": [
+      {
+        "description": "Updated player Hall of Fame capture, saved as docs/import-pilot/n12-screenshots/03-hall-player.png at 1440×900.",
+        "id": "xyzbb0"
+      },
+      {
+        "description": "Updated coach Hall of Fame front view, saved as docs/import-pilot/n12-screenshots/04-hall-coach.png at 1440×900; Tuchel’s 11-streak wording remains visible.",
+        "id": "a8ffpm"
+      },
+      {
+        "description": "Updated club Hall of Fame capture, saved as docs/import-pilot/n12-screenshots/05-hall-club.png at 1440×1678.",
+        "id": "3ttz58"
+      },
+      {
+        "description": "Updated Nwaneri profile capture with refreshed source/history layout, saved as docs/import-pilot/n12-screenshots/06-player-283-nwaneri.png at 1440×1563.",
+        "id": "ik2yav"
+      },
+      {
+        "description": "Updated Ramaj primary capture with transfer list reset to top, saved as docs/import-pilot/n12-screenshots/07-player-284-ramaj.png at 1440×1563.",
+        "id": "rqf7wd"
+      },
+      {
+        "description": "Updated Couto full profile capture with original fee and Leih-Ende rows visible, saved as docs/import-pilot/n12-screenshots/08-player-286-couto.png at 1440×1563.",
+        "id": "ni7rqc"
+      },
+      {
+        "description": "Updated Wehrbein profile capture showing the Spielstartwert and salary, saved as docs/import-pilot/n12-screenshots/09-player-288-wehrbein.png at 1440×1368.",
+        "id": "w371u7"
+      }
+    ],
+    "status": "completed",
+    "text": "Focused follow-up complete. I reused the existing read-only pilot session and overwrote only files 03–09 at their original paths; files 01/02 were untouched. Updated screenshots are 1440px wide. Hall player/coach remain 1440×900; longer captures use the measured inner-scroll height plus 16px. Ramaj’s transfer-list scroll was briefly moved to show the original fee, then reset before the primary capture; no extra file was saved.\n\n**Readability:** The profile CSS now presents market-source rows in three columns and a wider transfer-history card, with fees on separate rows. Nwaneri/Couto values and Ramaj’s `5,00 Mio. €` fee are complete and legible without neighboring overlap. The 28rem Ramaj transfer list retains the complete DOM; the same-date loan precedes the purchase. Wehrbein’s `50.000 €` `Spielstartwert`, salary `250 €`, and source entry without an unknown club remain readable.\n\nHall plaques no longer overlap neighboring cards, and the full values/record phrases are present. Long phrases still wrap awkwardly (occasionally splitting a word across lines), and value elements show a small 2–3px vertical overflow measurement; this is a minor residual typography issue, not clipping of the requested values. The updated club room capture includes the current record panel. No data or app state was changed, no request was submitted, and no additional flows were opened.",
+    "verdict": "success"
+  }
+}

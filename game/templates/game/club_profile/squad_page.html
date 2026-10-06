@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load package_display %}
 
 {% load static %}
 {% load humanize %}
@@ -11,7 +12,7 @@
 
 {% block extra_css %}
     {{ block.super }}
-    <link rel="stylesheet" href="{% static 'game/css/squad-overview.css' %}?v=13">
+    <link rel="stylesheet" href="{% static 'game/css/squad-overview.css' %}?v=14">
 {% endblock %}
 
 {% block content %}
@@ -33,7 +34,7 @@
                         <td><a href="{% url 'player_detail' row.id %}">{{ row.full_name }}</a></td>
                         <td>{% if row.main_position_1 %}{{ row.main_position_1 }}{% else %}Unbekannt{% endif %}{% if row.main_position_2 %} · {{ row.main_position_2 }}{% endif %}{% if row.main_position_3 %} · {{ row.main_position_3 }}{% endif %}</td>
                         <td>{% if row.age != None %}{{ row.age }}{% else %}Unbekannt{% endif %}</td>
-                        <td>{% if row.loan_status == 'loaned_in' %}Leihe · von {{ row.owner_club.name|default:row.owner_club_original_name|default:"extern" }}{% elif row.loan_status == 'loaned_out' %}Verliehen · bei {{ row.loan_club.name|default:row.loan_club_original_name|default:"extern" }}{% else %}Im Kader{% endif %}</td>
+                        <td>{% if row.loan_status == 'loaned_in' or row.loan_status == 'loaned_out' %}{{ row|loan_line }}{% else %}Im Kader{% endif %}</td>
                     </tr>
                 {% empty %}
                     <tr><td colspan="5">Für die erste Mannschaft sind keine Spieler importiert.</td></tr>
@@ -46,7 +47,7 @@
                 <h2>Leih-Pool</h2>
                 <p class="package-squad-note">Spieler ohne zugeordneten Websoccer-Verein; nicht Teil der aufstellbaren Mannschaft.</p>
                 {% for player in package_loan_pool %}
-                    <a href="{% url 'player_detail' player.id %}">{{ player.full_name }}</a>
+                    <a href="{% url 'player_detail' player.id %}">{{ player.full_name }}{% if player|loan_line %}<small>{{ player|loan_line }}</small>{% endif %}</a>
                 {% empty %}<p>Keine passenden Spieler im Leih-Pool.</p>{% endfor %}
             </section>
             {% if request.user.is_staff or request.user.is_superuser %}
@@ -370,5 +371,5 @@
 
 {% block extra_js %}
     {{ block.super }}
-    <script src="{% static 'game/js/squad-overview.js' %}?v=13" defer></script>
+    <script src="{% static 'game/js/squad-overview.js' %}?v=14" defer></script>
 {% endblock %}
