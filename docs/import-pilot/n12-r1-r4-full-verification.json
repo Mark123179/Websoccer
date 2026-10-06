@@ -1,0 +1,16 @@
+{
+  "tests": 1682,
+  "seconds": 433.306,
+  "result": "OK",
+  "exit_code": 0,
+  "command": "python manage.py test game.tests --verbosity=0 --keepdb",
+  "log_sha256": "bbadc775038db627a936c446e531b7667ea281c380bda96b3a73d2360624f022",
+  "pilot_game_tables_unchanged": 144,
+  "pilot_package_hash": "ab3925f40f1b84ddd103a25928d61aa7feb3c36d9036890ff802131896751391",
+  "issues": 156,
+  "open": 128,
+  "package_closed": 28,
+  "strengths": 49,
+  "locks": 2,
+  "v3_imported_into_real_pilot": false
+}

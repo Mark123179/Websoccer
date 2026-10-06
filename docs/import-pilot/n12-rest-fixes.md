@@ -23,3 +23,20 @@ Abgeleitete FMInside-/CMTracker-Links öffnen die aktuelle Quell-Datenbank. Sie 
 Prüfung: alle 14 gezielten Tests bestanden (22,986 Sekunden), einschließlich kanonischer IDs, Vorrang gespeicherter Adressen, fehlender IDs, Altmodus und Schutz vor Adress-Rückschreiben. Kein neuer vollständiger Gesamtlauf.
 
 Zusätzlich wurde die komplette echte Pilot-Creatoransicht für Kobel in einer schreibgeschützten Transaktion gerendert. Alle 144 Game-Fachtabellen bleiben identisch zum gelieferten v2-Stand. Maschinenbeleg: `n12-r4-verification.json`; Testprotokoll: `n12-r4-tests.log`. Keine Sitzung, Kontoänderung oder neue Bildschirmaufnahme. Der vereinbarte Halt gilt weiterhin.
+
+## Abschließender Gesamtlauf inklusive R1–R4
+
+Am 06.10.2026 wurde der vollständige aktuelle Stand erneut geprüft:
+
+- Befehl: `python manage.py test game.tests --verbosity=0 --keepdb`.
+- **1.682 Tests bestanden, OK, Exit-Code 0.**
+- Laufzeit: **433,306 Sekunden** (7 Minuten 13 Sekunden).
+- Nur eine Testsuite; keine weiteren Codeänderungen während des Laufs.
+- Der getrennte v3-Test bleibt grün: sechs Kategorien geändert, null andere Fachwerte geändert, Wiederholung unverändert.
+- Abschließender lesender Vergleich: alle **144 Pilot-Fachtabellen**, die Paket-Hashes und die Arbeitslisten-Status-/Text-Fingerprints unverändert.
+- Echter Pilot weiterhin v2: **156 Einträge / 128 offen / 28 paketgeschlossen, 49 Stärken, zwei Einzelsperren**.
+- Kein v3-Pilotimport, Reset oder Live-Eingriff.
+
+Dieser Abschluss ersetzt die vorherigen Zwischenstände „kein neuer Gesamtlauf“. Er ersetzt nicht die noch ausstehende Claude-Gegenprüfung oder Live-Freigabe.
+
+Vollständiges Protokoll: `n12-r1-r4-full-tests.log`. Maschinenbeleg: `n12-r1-r4-full-verification.json`.
