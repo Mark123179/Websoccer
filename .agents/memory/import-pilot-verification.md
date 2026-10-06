@@ -11,6 +11,12 @@ For FMInside Dynamic, use the observed tooltip range's upper bound as source pot
 
 **How to apply:** Read FM26 26.2.0 tooltips, not a range inferred from rating or another database. If no range can be read, retain NULL and report it separately from package player_lock gaps. Package-only corrections do not reimport the pilot; the user uploads the rebuilt package himself.
 
+FMInside Dynamic range evidence can be read from the normal page HTML's data-site-tooltip attribute on the potential symbol; browser hover is not inherently required. Range codes can be two digits, such as -55, -65, -75, -85 and -95.
+
+**Why:** The user reported reading all BVB Dynamic ranges from that source attribute on 2026-10-06 and supplied the complete range list.
+
+**How to apply:** Inspect the actual source attribute and preserve its wording. Do not confuse a two-digit code with an invalid range or require browser access solely to reveal this HTML attribute.
+
 **Why:** The user corrected the schema-switch approach: ordinary post-merge and server deployment commands run migrate without knowing that switch. Hidden required columns would break old-mode inserts and every later migration.
 
 **How to apply:** Same classes/migrations in both modes, no migration drift. Already applied migrations remain immutable; corrections use a follow-up migration. Existing player locks initialize false, existing ordinary clubs playable and prior placeholders non-playable. Preserve legacy runtime/default behavior until takeover; package initialization writes explicit unknowns and locks.
