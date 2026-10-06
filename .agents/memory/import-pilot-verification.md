@@ -5,11 +5,11 @@ description: Shared-model activation, proxy metadata, and honest source equality
 
 Install the shared schema unconditionally. One temporary flag controls behavior, not fields or models; remove it and legacy branches after takeover.
 
-When ratings exist but all source potentials are Dynamic/NULL, report missing strength as an explicit acceptance gap. Do not fill potential from rating or introduce a special calculation without approval.
+For FMInside Dynamic, use the observed tooltip range's upper bound as source potential. Include potential_range with min/max/code and preserve raw.potential_text verbatim. This is standard package scope, including players with CMTracker values. Never fill potential from rating or introduce a special strength calculation.
 
-**Why:** The approved source-NULL rule and use of the existing calculator are both binding; supplying an invented potential would satisfy a count by changing the meaning of the data.
+**Why:** Nachtrag 8 explicitly approves the tooltip upper bound as a real source value, not an estimate. The approved source-NULL rule still applies when no range is readable; formulas stay unchanged.
 
-**How to apply:** Preserve raw/current NULLs and expose non-computability honestly. Keep this distinct from package player_lock gaps; seek a domain decision before changing the strength path.
+**How to apply:** Read FM26 26.2.0 tooltips, not a range inferred from rating or another database. If no range can be read, retain NULL and report it separately from package player_lock gaps. Package-only corrections do not reimport the pilot; the user uploads the rebuilt package himself.
 
 **Why:** The user corrected the schema-switch approach: ordinary post-merge and server deployment commands run migrate without knowing that switch. Hidden required columns would break old-mode inserts and every later migration.
 
