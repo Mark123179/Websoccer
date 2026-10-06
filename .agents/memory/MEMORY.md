@@ -138,3 +138,4 @@
 - [Import-Pilot Freigabegrenzen](import-pilot-approval-boundaries.md) — v2 nach grünem Gesamtlauf und v1-Dump; Bildprüfung im Pilot aus; keine Verweis-Clubs oder Positionsupdates nach Start.
 - [Import-Pilot Verifikation](import-pilot-verification.md) — Schema immer bekannt, ein temporärer Verhaltensschalter; Altspaltenvergleich statt SELECT-*-Hashes nach additiven Migrationen.
 - [Arbeitslisten-Lebenszyklus](import-issue-lifecycle.md) — Einträge vereinsgebunden; Handeinträge füllen Lücken, Paketwerte gewinnen; Einzelsperren hängen an Daten und Stärke.
+- [Pilot-Präfix-Testisolierung](pilot-prefix-test-isolation.md) — TestCase isoliert keine HTTP-Weiterleitungen; Präfix-Tests dürfen nicht über den Proxy den echten Pilot treffen.

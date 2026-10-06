@@ -2613,7 +2613,11 @@ def management_halloffame(request):
             unit, context_line = '', ''
         elif package_mode() and unit:
             import re
-            if re.search(re.escape(unit) + r'(?:n)?\b', value, re.IGNORECASE):
+            describes_wins = (
+                definition_key in {'longest_win_streak', 'longest_win_streak_coach'}
+                and re.search(r'\b(?:pflichtspiel)?siege?\b', value, re.IGNORECASE)
+            )
+            if describes_wins or re.search(re.escape(unit) + r'(?:n)?\b', value, re.IGNORECASE):
                 unit = ''
         if definition_key in {'highest_market_value', 'best_ppg_coach'}:
             unit = ''

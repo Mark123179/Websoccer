@@ -48,7 +48,7 @@
                 aria-label="Suche öffnen" data-nav-label="Suchen">
             <span class="nav-search-icon" aria-hidden="true"></span>
         </button>
-        <form class="nav-search" action="/clubs/" method="get" role="search">
+        <form class="nav-search" action="{% url 'club_list' %}" method="get" role="search">
             <label class="nav-search-label" for="nav-search-input">Suchen</label>
             <div class="nav-search-field">
                 <span class="nav-search-icon" aria-hidden="true"></span>

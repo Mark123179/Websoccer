@@ -1,0 +1,16 @@
+{
+  "tests": 11,
+  "result": "OK",
+  "actual_pilot_render": "OK",
+  "pilot_game_tables_unchanged": 144,
+  "package_hash": "ab3925f40f1b84ddd103a25928d61aa7feb3c36d9036890ff802131896751391",
+  "issues": 156,
+  "open": 128,
+  "closed": 28,
+  "checks": [
+    "R1 win streak text unchanged; redundant unit removed",
+    "R2 prefixed home search and club URLs; assigned-club news branch tested in isolated test DB",
+    "R3 actual Enzo market value 1500000 rendered as 1,5 Mio. €"
+  ],
+  "verification": "Read-only transaction; existing staff request object; no login/session/account writes."
+}

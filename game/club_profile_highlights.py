@@ -245,6 +245,9 @@ def compact_money(value):
         return f'{amount:.2f}'.replace('.', ',') + ' Mrd. €'
     if value >= Decimal('1000000'):
         amount = value / Decimal('1000000')
+        if package_mode():
+            label = f'{amount:.1f}'.rstrip('0').rstrip('.').replace('.', ',')
+            return f'{label} Mio. €'
         return f'{amount:.0f} Mio. €'
     if value >= Decimal('1000'):
         amount = value / Decimal('1000')

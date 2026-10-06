@@ -432,7 +432,7 @@
 
             <div class="overview-news-list">
                 {% for item in club_news %}
-                    <a href="{% if primary_club %}/clubs/{{ primary_club.id }}/news/{% else %}/clubs/{% endif %}">
+                    <a href="{% if primary_club %}{% url 'club_news' primary_club.id %}{% else %}{% url 'club_list' %}{% endif %}">
                         {% if primary_club and primary_club.crest_static_path %}
                             <img class="overview-news-crest" src="{{ primary_club.crest_static_path }}" alt="">
                         {% else %}
@@ -446,7 +446,7 @@
                 {% endfor %}
             </div>
 
-            <a class="table-link" href="{% if primary_club %}/clubs/{{ primary_club.id }}/news/{% else %}/clubs/{% endif %}">Alle Nachrichten anzeigen <span>&rarr;</span></a>
+            <a class="table-link" href="{% if primary_club %}{% url 'club_news' primary_club.id %}{% else %}{% url 'club_list' %}{% endif %}">Alle Nachrichten anzeigen <span>&rarr;</span></a>
         </article>
 
         <article class="dashboard-card overview-news-card overview-sim-news-card">

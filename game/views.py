@@ -2141,8 +2141,8 @@ def home(request):
             'date': date(2026, 7, index + 1),
             'from_crest': player.club.crest_static_path if player.club else '',
             'to_crest': primary_club.crest_static_path if primary_club else '',
-            'from_club_url': f'/clubs/{player.club.id}/' if player.club else '',
-            'to_club_url': f'/clubs/{primary_club.id}/' if primary_club else '',
+            'from_club_url': reverse_club_detail(player.club) if player.club else '',
+            'to_club_url': reverse_club_detail(primary_club) if primary_club else '',
             'fee_label': money_label(player.market_value) or money_full_eur(player.market_value),
             'from_label': player.club.short_name if player.club else 'Abgebend',
             'to_label': primary_club.short_name if primary_club else 'Zielverein',
@@ -6589,7 +6589,7 @@ def render_public_club_stub(request, club_id, title, copy):
 
 
 def reverse_club_detail(club):
-    return f'/clubs/{club.id}/'
+    return reverse('club_detail', args=[club.id])
 
 
 def _player_nation_nt_logo(player):

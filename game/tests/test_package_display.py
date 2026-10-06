@@ -97,9 +97,60 @@ class PackageDisplayTests(TestCase):
         self.assertEqual(player_slots["top_assists"]["unit"], "")
         self.assertEqual(player_slots["most_apps_field"]["unit"], "")
         club_slots = {s["key"]: s for s in self.hall().context["club_slots"]}
+        self.assertEqual(club_slots["longest_win_streak"]["value"], "11 Pflichtspielsiege in Folge")
+        self.assertEqual(club_slots["longest_win_streak"]["unit"], "")
+        self.assertEqual(coach_slots["longest_win_streak_coach"]["unit"], "")
         self.assertEqual(club_slots["biggest_win"]["date"], "05.08.1978")
         self.assertEqual(club_slots["biggest_defeat"]["date"], "29.04.1978")
         self.assertEqual(club_slots["longest_unbeaten"]["season"], "2011/12 bis 2012/13")
+
+    def test_youth_market_value_keeps_decimal_millions(self):
+        from game.club_profile_highlights import compact_money
+        self.assertEqual(compact_money(1500000), "1,5 Mio. €")
+        self.assertEqual(compact_money(2000000), "2 Mio. €")
+        self.assertEqual(compact_money(50000), "50 Tsd. €")
+        with override_settings(IMPORT_PACKAGE_MODE=False):
+            self.assertEqual(compact_money(1500000), "2 Mio. €")
+
+    def test_home_search_transfer_crests_and_news_keep_pilot_prefix(self):
+        from django.conf import settings
+        from django.urls import get_script_prefix, set_script_prefix
+        from unittest.mock import patch
+        from game.views import reverse_club_detail
+        other_club = m.Club.objects.create(
+            name="Navigation source", short_name="NAV", league=self.league,
+            founded_year=1900, budget=0)
+        targets = list(m.Player.objects.filter(club=self.club).order_by(
+            "-market_value", "-potential", "last_name", "first_name"
+        ).values_list("pk", flat=True)[:3])
+        m.Player.objects.filter(pk__in=targets).update(club=other_club)
+        prefix = get_script_prefix()
+        try:
+            set_script_prefix("/import-pilot/")
+            # Exercise the test database, never the running pilot proxy.
+            middleware = [item for item in settings.MIDDLEWARE
+                          if item != "import_pilot.proxy.PilotProxyMiddleware"]
+            with override_settings(FORCE_SCRIPT_NAME="/import-pilot",
+                                   MIDDLEWARE=middleware), patch(
+                "game.views.current_manager_club", return_value=self.club
+            ):
+                response = self.client.get("/")
+                self.assertEqual(response.status_code, 200)
+                self.assertContains(response, 'action="/import-pilot/clubs/"')
+                self.assertContains(response, f'href="/import-pilot/clubs/{self.club.pk}/news/"')
+                self.assertNotContains(response, f'href="/clubs/{self.club.pk}/news/"')
+                rows = response.context["transfer_rows"]
+                self.assertEqual(len(rows), 3)
+                for row in rows:
+                    for key in ("from_club_url", "to_club_url"):
+                        self.assertTrue(row[key].startswith("/import-pilot/clubs/"))
+                        self.assertContains(response, f'href="{row[key]}"')
+                self.assertEqual(reverse_club_detail(self.club),
+                                 f"/import-pilot/clubs/{self.club.pk}/")
+            set_script_prefix("/")
+            self.assertEqual(reverse_club_detail(self.club), f"/clubs/{self.club.pk}/")
+        finally:
+            set_script_prefix(prefix)
 
     def test_hall_navigation_and_request_form_keep_selected_club(self):
         response = self.hall()
