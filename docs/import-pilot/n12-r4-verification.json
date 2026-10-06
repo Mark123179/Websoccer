@@ -1,0 +1,35 @@
+{
+  "actual_pilot_render": "OK",
+  "source_identity_rows": [
+    {
+      "code": "TM",
+      "label": "Transfermarkt",
+      "external_id": "257814",
+      "url": "https://www.transfermarkt.de/gregor-kobel/profil/spieler/257814",
+      "derived": true,
+      "safe_link": true
+    },
+    {
+      "code": "FM",
+      "label": "FMInside",
+      "external_id": "98040383",
+      "url": "https://fminside.net/players/98040383-gregor-kobel",
+      "derived": true,
+      "safe_link": true
+    },
+    {
+      "code": "CMTRACKER",
+      "label": "CMTracker",
+      "external_id": "235073",
+      "url": "https://cmtracker.net/en/players/235073",
+      "derived": true,
+      "safe_link": true
+    }
+  ],
+  "game_tables_unchanged": 144,
+  "package_hash": "ab3925f40f1b84ddd103a25928d61aa7feb3c36d9036890ff802131896751391",
+  "issues": 156,
+  "open": 128,
+  "closed": 28,
+  "verification": "Read-only transaction; existing staff request object; no login, session or account mutation."
+}

@@ -47,3 +47,40 @@ def loan_line(player):
 
 def is_loan_end(text):
     return (text or "").strip().lower().replace(" ", "").startswith(("leih-ende", "leihende"))
+
+
+def source_identity_rows(player):
+    """Canonical IDs and display-only links; never backfill legacy URL fields."""
+    from urllib.parse import urlsplit
+    from django.utils.text import slugify
+
+    identities = {row.source.code: row
+                  for row in player.external_ids.select_related("source").all()}
+    slug = slugify(player.full_name) or "player"
+    providers = (
+        ("TM", "Transfermarkt",
+         lambda value: f"https://www.transfermarkt.de/{slug}/profil/spieler/{value}"),
+        ("FM", "FMInside",
+         lambda value: f"https://fminside.net/players/{value}-{slug}"),
+        ("CMTRACKER", "CMTracker",
+         lambda value: f"https://cmtracker.net/en/players/{value}"),
+    )
+    result = []
+    for code, label, make_url in providers:
+        identity = identities.get(code)
+        external_id = str(identity.external_id or "") if identity else ""
+        url = (identity.profile_url or identity.source_url or "") if identity else ""
+        derived = False
+        if not url and external_id.isascii() and external_id.isdigit():
+            url = make_url(external_id)
+            derived = True
+        try:
+            parsed = urlsplit(url)
+            safe_link = parsed.scheme in {"http", "https"} and bool(parsed.netloc)
+        except ValueError:
+            safe_link = False
+        result.append({
+            "code": code, "label": label, "external_id": external_id,
+            "url": url, "derived": derived, "safe_link": safe_link,
+        })
+    return result

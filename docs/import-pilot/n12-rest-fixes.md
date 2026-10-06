@@ -11,3 +11,15 @@ Zusätzlich wurden Übersicht, Vereinsraum und Vereinsseite mit echten Pilotdate
 Maschinenbeleg: `n12-rest-fixes-verification.json`. Der Pilot bleibt auf v2 mit 156 Arbeitslisteneinträgen, davon 128 offen und 28 durch Paket erledigt. Kein v3-Import oder weiterer freigegebener Folgeschritt wurde ausgeführt.
 
 Die früher gelieferten Bildschirmfotos dokumentieren den damaligen Stand; für diese drei Korrekturen wurden keine neuen Fotos aufgenommen.
+
+## Ergänzung R4: Creator → Spieler → Source
+
+Im Paketmodus liest der Source-Tab die kanonischen externen IDs. Kobel zeigt Transfermarkt-ID 257814, FMInside-ID 98040383 und CMTracker-ID 235073, jeweils schreibgeschützt und mit Profil-Link.
+
+Gespeicherte Profiladressen haben Vorrang. Fehlende Adressen werden ausschließlich für die Anzeige aus vorhandenen IDs abgeleitet und als „Aus ID abgeleitet · nicht gespeichert“ gekennzeichnet. Fehlende IDs bleiben fehlend; alte Spiegel- und Ratingfelder werden dafür nicht ausgewertet. Unsichere URL-Schemata werden nicht als anklickbare Links ausgegeben.
+
+Abgeleitete FMInside-/CMTracker-Links öffnen die aktuelle Quell-Datenbank. Sie aktualisieren keine importierten Ratings und behaupten keine Übereinstimmung mit dem historischen Datenbankstand. Ein Source-Formular-Save schreibt im Paketmodus keine dieser Adressen in die Datenbank; das bisherige Altmodus-Verhalten bleibt bestehen.
+
+Prüfung: alle 14 gezielten Tests bestanden (22,986 Sekunden), einschließlich kanonischer IDs, Vorrang gespeicherter Adressen, fehlender IDs, Altmodus und Schutz vor Adress-Rückschreiben. Kein neuer vollständiger Gesamtlauf.
+
+Zusätzlich wurde die komplette echte Pilot-Creatoransicht für Kobel in einer schreibgeschützten Transaktion gerendert. Alle 144 Game-Fachtabellen bleiben identisch zum gelieferten v2-Stand. Maschinenbeleg: `n12-r4-verification.json`; Testprotokoll: `n12-r4-tests.log`. Keine Sitzung, Kontoänderung oder neue Bildschirmaufnahme. Der vereinbarte Halt gilt weiterhin.

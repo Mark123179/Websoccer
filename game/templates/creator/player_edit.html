@@ -843,6 +843,33 @@
     <div class="cpe-tab-panel cpe-tab-hidden" id="tab-source">
       <div class="cpe-section-bar">Source</div>
 
+      {% if source_identity_rows %}
+      {% for identity in source_identity_rows %}
+      <div class="cpe-field-row">
+        <div class="cpe-label">{{ identity.label }}-ID</div>
+        <input class="cpe-input cpe-input-medium" type="text" readonly
+               aria-label="{{ identity.label }}-ID" value="{{ identity.external_id|default:'—' }}">
+      </div>
+      <div class="cpe-field-row">
+        <div class="cpe-label">{{ identity.label }}</div>
+        <div class="cpe-field">
+          <input class="cpe-input cpe-input-link" type="url" readonly
+                 aria-label="{{ identity.label }}-Profiladresse" value="{{ identity.url }}">
+          {% if identity.derived %}
+          <span class="cpe-hint">Aus ID abgeleitet · nicht gespeichert</span>
+          {% elif not identity.url %}
+          <span class="cpe-hint">Keine Profiladresse vorhanden.</span>
+          {% endif %}
+          {% if identity.safe_link %}
+          <a class="cpe-hint" href="{{ identity.url }}" target="_blank" rel="noopener noreferrer">Profil öffnen</a>
+          {% endif %}
+        </div>
+      </div>
+      {% endfor %}
+      <div class="cpe-field-row">
+        <span class="cpe-hint">IDs und Adressen sind hier schreibgeschützt. Abgeleitete FMInside-/CMTracker-Links öffnen die aktuelle Quell-Datenbank; gespeicherte Ratings bleiben unverändert.</span>
+      </div>
+      {% else %}
       <div class="cpe-field-row">
         <div class="cpe-label">Transfermarkt</div>
         <input class="cpe-input cpe-input-link" type="url" name="tm_url" value="{{ player.transfermarkt_profile_url|default_if_none:'' }}" placeholder="https://www.transfermarkt.de/...">
@@ -855,6 +882,7 @@
         <div class="cpe-label">CMTracker</div>
         <input class="cpe-input cpe-input-link" type="url" name="src_ea_url" value="{{ source_meta.ea.url|default_if_none:'' }}" placeholder="https://www.cmtracker.net/...">
       </div>
+      {% endif %}
 
       <hr class="cpe-divider">
 

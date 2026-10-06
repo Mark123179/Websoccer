@@ -112,6 +112,88 @@ class PackageDisplayTests(TestCase):
         with override_settings(IMPORT_PACKAGE_MODE=False):
             self.assertEqual(compact_money(1500000), "2 Mio. €")
 
+    def test_creator_source_shows_canonical_ids_and_derived_links_without_writes(self):
+        from django.test import RequestFactory
+        from game.views_creator import _build_source_tab_context, creator_player_edit
+        player = m.Player.objects.get(last_name="Kobel")
+        m.Player.objects.filter(pk=player.pk).update(
+            transfermarkt_profile_url="https://legacy.invalid/tm")
+        player.source_ratings.filter(source="FM").update(
+            source_url="https://legacy.invalid/fm")
+        player.refresh_from_db()
+        before = fingerprint()
+        context = _build_source_tab_context(player)
+        self.assertEqual(fingerprint(), before)
+        identities = {row["code"]: row for row in context["source_identity_rows"]}
+        expected = {
+            "TM": ("257814", "https://www.transfermarkt.de/gregor-kobel/profil/spieler/257814"),
+            "FM": ("98040383", "https://fminside.net/players/98040383-gregor-kobel"),
+            "CMTRACKER": ("235073", "https://cmtracker.net/en/players/235073"),
+        }
+        # Direct GET isolates this display from the main app's activity writes.
+        request = RequestFactory().get(reverse("creator_player_edit", args=[player.pk]))
+        request.user = self.user
+        request.session = {}
+        response = creator_player_edit(request, player.pk)
+        self.assertEqual(response.status_code, 200)
+        for code, (external_id, url) in expected.items():
+            self.assertEqual(identities[code]["external_id"], external_id)
+            self.assertEqual(identities[code]["url"], url)
+            self.assertTrue(identities[code]["derived"])
+            self.assertContains(response, f'value="{external_id}"')
+            self.assertContains(response, f'href="{url}"')
+        self.assertContains(response, "Aus ID abgeleitet")
+        self.assertNotContains(response, 'name="tm_url"')
+        self.assertNotContains(response, 'name="src_fm_url"')
+        after = fingerprint()
+        # The complete Creator also initializes unrelated empty rule catalogs.
+        # Its Source display must not write players, identities or source values.
+        for table in ("game_player", "game_playerexternalid", "game_playersourcerating"):
+            self.assertEqual(after[table], before[table], table)
+        with override_settings(IMPORT_PACKAGE_MODE=False):
+            legacy = _build_source_tab_context(player)
+            self.assertEqual(legacy["source_identity_rows"], [])
+            self.assertEqual(legacy["source_meta"]["fm"]["url"], "https://legacy.invalid/fm")
+
+    def test_creator_source_prefers_stored_urls_and_does_not_guess_missing_ids(self):
+        from game.club_import.presentation import source_identity_rows
+        player = m.Player.objects.get(last_name="Kobel")
+        fm = player.external_ids.get(source__code="FM")
+        fm.profile_url = "https://fminside.net/players/7-fm-26/98040383-gregor-kobel"
+        fm.source_url = "https://fminside.net/players/98040383-other"
+        fm.save()
+        rows = {row["code"]: row for row in source_identity_rows(player)}
+        self.assertEqual(rows["FM"]["url"], fm.profile_url)
+        self.assertFalse(rows["FM"]["derived"])
+        player.external_ids.filter(source__code="FM").update(
+            external_id=None, profile_url="", source_url="", status="nicht_gefunden")
+        rows = {row["code"]: row for row in source_identity_rows(player)}
+        self.assertEqual(rows["FM"]["external_id"], "")
+        self.assertEqual(rows["FM"]["url"], "")
+        self.assertFalse(rows["FM"]["safe_link"])
+        player.external_ids.filter(source__code="TM").update(profile_url="javascript:alert(1)")
+        rows = {row["code"]: row for row in source_identity_rows(player)}
+        self.assertFalse(rows["TM"]["safe_link"])
+
+    def test_package_source_save_never_persists_projected_addresses(self):
+        from django.test import RequestFactory
+        from game.views_creator import _save_player_source_ratings
+        player = m.Player.objects.get(last_name="Kobel")
+        old_tm = player.transfermarkt_profile_url
+        old_urls = dict(player.source_ratings.values_list("source", "source_url"))
+        old_id_rows = list(player.external_ids.order_by("pk").values())
+        request = RequestFactory().post("/", {
+            "tm_url": "https://changed.invalid/tm",
+            "src_fm_url": "https://changed.invalid/fm",
+            "src_ea_url": "https://changed.invalid/cm",
+        })
+        request.user = self.user
+        _save_player_source_ratings(request, player)
+        player.refresh_from_db()
+        self.assertEqual(player.transfermarkt_profile_url, old_tm)
+        self.assertEqual(dict(player.source_ratings.values_list("source", "source_url")), old_urls)
+        self.assertEqual(list(player.external_ids.order_by("pk").values()), old_id_rows)
+
     def test_home_search_transfer_crests_and_news_keep_pilot_prefix(self):
         from django.conf import settings
         from django.urls import get_script_prefix, set_script_prefix

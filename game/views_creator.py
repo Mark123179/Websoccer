@@ -1,7 +1,7 @@
 import os
 from datetime import date
 from decimal import Decimal, InvalidOperation
-from .club_import.runtime import visible_clubs, visible_leagues
+from .club_import.runtime import package_mode, visible_clubs, visible_leagues
 
 from django.apps import apps
 from django.contrib import messages
@@ -122,8 +122,11 @@ def _save_player_source_ratings(request, player):
                 _parse_source_int(request.POST.get(f'src_{prefix}_{col}'), 99),
             )
 
-        url = (request.POST.get(f'src_{prefix}_url') or '').strip()
-        row.source_url = url
+        # Package-mode addresses are read-only projections, not submitted edits.
+        url = row.source_url
+        if not package_mode():
+            url = (request.POST.get(f'src_{prefix}_url') or '').strip()
+            row.source_url = url
 
         _version_labels = {
             'fm': 'FMInside Scraper',
@@ -152,18 +155,20 @@ def _save_player_source_ratings(request, player):
             )
 
         # Kanonische externe ID konsistent halten (nur falls schon vorhanden).
-        ext = player.external_ids.filter(
-            source__code=SOURCE_DATASOURCE_CODE[source_key],
-        ).first()
-        if ext and ext.profile_url != url:
-            ext.profile_url = url
-            ext.save(update_fields=['profile_url', 'updated_at'])
+        if not package_mode():
+            ext = player.external_ids.filter(
+                source__code=SOURCE_DATASOURCE_CODE[source_key],
+            ).first()
+            if ext and ext.profile_url != url:
+                ext.profile_url = url
+                ext.save(update_fields=['profile_url', 'updated_at'])
 
     # Transfermarkt-Link direkt am Spieler.
-    player.transfermarkt_profile_url = (
-        request.POST.get('tm_url') or ''
-    ).strip()
-    player.save(update_fields=['transfermarkt_profile_url'])
+    if not package_mode():
+        player.transfermarkt_profile_url = (
+            request.POST.get('tm_url') or ''
+        ).strip()
+        player.save(update_fields=['transfermarkt_profile_url'])
 
 
 def _build_source_tab_context(player):
@@ -204,6 +209,17 @@ def _build_source_tab_context(player):
             'source_version': ea_row.source_version if ea_row else '',
         },
     }
+    identity_rows = []
+    if package_mode():
+        from .club_import.presentation import source_identity_rows
+        identity_rows = source_identity_rows(player)
+        for identity in identity_rows:
+            key = {"TM": "tm", "FM": "fm", "CMTRACKER": "ea"}[identity["code"]]
+            source_meta.setdefault(key, {}).update({
+                "url": identity["url"],
+                "external_id": identity["external_id"],
+                "url_derived": identity["derived"],
+            })
     fm_snapshots = list(
         PlayerSourceRatingSnapshot.objects.filter(
             player=player,
@@ -219,6 +235,7 @@ def _build_source_tab_context(player):
     return {
         'source_attr_rows': attr_rows,
         'source_meta': source_meta,
+        'source_identity_rows': identity_rows,
         'source_is_gk': is_gk,
         'source_fm_snapshots': fm_snapshots,
         'source_ea_snapshots': ea_snapshots,
