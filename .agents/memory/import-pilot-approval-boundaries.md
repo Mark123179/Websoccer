@@ -3,11 +3,17 @@ name: Import-Pilot Freigabegrenzen
 description: Verbindliche Anker-/Feldlistenregeln aus Nachtrag 5 sowie fortgeltende Schutz-, Konten- und Isolationsentscheidungen.
 ---
 
-Nachtrag 8 hat bei Widersprüchen Vorrang vor Teil A, B, C und Nachträgen 1–7. Club, Player und Stadium bleiben die Spielanker; keine neuen Modelle daneben mit späterem Umhängen der Module. Bestehende Tabellen erweitern/reparieren, neue nur bei echter Lücke. Jedes Feld einer Schicht und einem kontrollierten Schreibrecht zuordnen; Spiegel einzeln begründen. Nach Ligastart gilt die bestätigte konkrete Positivliste, nicht pauschal „Echtweltdaten überschreiben“.
+Nachtrag 9 hat bei Widersprüchen Vorrang vor Teil A, B, C und Nachträgen 1–8. Club, Player und Stadium bleiben die Spielanker; keine neuen Modelle daneben mit späterem Umhängen der Module. Bestehende Tabellen erweitern/reparieren, neue nur bei echter Lücke. Jedes Feld einer Schicht und einem kontrollierten Schreibrecht zuordnen; Spiegel einzeln begründen. Nach Ligastart gilt die bestätigte konkrete Positivliste, nicht pauschal „Echtweltdaten überschreiben“.
 
 **Why:** Der Nutzer lehnt die Zwischenstufe ab, in der nach dem Reset die echten Spielanker leer und die Module noch nicht umgehängt wären.
 
 **How to apply:** T2 ist abgenommen. Nachtrag 8 autorisiert T3 und T4 in einem Zug mit anschließendem Halt; T5/Reset, Dortmund-Szenensicherung und Stärkeformeländerungen bleiben gesperrt. Ein ausdrücklich auf Paket-Nachpflege begrenzter Auftrag startet diese App-Arbeiten nicht. Der Pilot lädt die vollständige game-App und dieselben echten Migrationen wie später live. Kein Hetznerzugriff und keine Deploy-Sperre: Mark übernimmt manuell per GitHub-Push, Server-Pull und Deploy. Redundante Spalten später modulweise abbauen.
+
+Nachtrag 9 bestätigt BVB v2 einschließlich der entfernten Dynamic-Info-Lücken. Der Pilot bleibt bis Marks eigenem Creator-Upload auf v1; der Nachweis v1 → v2 → v2 darf dort keine Importspuren hinterlassen.
+
+**Why:** Mark will die echte Änderungsvorschau selbst sehen und bestätigen.
+
+**How to apply:** Testbestand getrennt halten, Pilot-Paketstand vor und nach der Arbeit nachweisen, Abweichungen mit Ursache melden statt Stärkeformeln zu verändern. Abschlussbericht umfasst zehn Punkte; danach Halt.
 
 Nur importierte Vereine stehen in Club. Fremde Historien-/Rekord-/Leihvereine bleiben TM-ID plus Originalname; spätere FK-Verknüpfung ist auch nach Ligastart erlaubt. Der operative Leihstand gehört nach Initialisierung ausschließlich dem Spiel; der Erhebungsstand gehört ins Paketarchiv. Haupt-/Nebenpositionen einschließlich ihrer Spiegel bleiben bei Vereinspaket-Reupload nach Ligastart ebenso gesperrt wie Ratings.
 

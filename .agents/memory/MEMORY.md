@@ -137,3 +137,4 @@
 - [Creator-3D-Vereinsassets](creator-club-3d-assets.md) — 3D-Trikots sind PNG-Texturen für Home/Away/Third; aktuelles Stadion bedeutet den durch den Manager ausgebauten Zustand.
 - [Import-Pilot Freigabegrenzen](import-pilot-approval-boundaries.md) — T2 abgenommen, T3/T4 freigegeben; Paket-Nachpflege bleibt eigener Auftrag; keine Verweis-Clubs oder Positionsupdates nach Start.
 - [Import-Pilot Verifikation](import-pilot-verification.md) — Schema immer bekannt, ein temporärer Verhaltensschalter; Altspaltenvergleich statt SELECT-*-Hashes nach additiven Migrationen.
+- [Arbeitslisten-Lebenszyklus](import-issue-lifecycle.md) — Einträge vereinsgebunden; Handeinträge füllen Lücken, Paketwerte gewinnen; Einzelsperren hängen an Daten und Stärke.
