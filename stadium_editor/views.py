@@ -65,12 +65,12 @@ def stadium_editor(request):
         'geometry': geometry,
         'design': design.design if design else {},
         'is_editor_admin': bool(request.user.is_staff),
-        'is_dortmund_editor': stadium.club_id == 3,
-        'preview_capacity_limit': max_kapazitaet() if stadium.club_id == 3 else 150000,
+        'is_dortmund_editor': stadium.club.fm_inside_id == 907,
+        'preview_capacity_limit': max_kapazitaet() if stadium.club.fm_inside_id == 907 else 150000,
         'pending_expansions': pending_expansions,
         'completed_expansion_count': StadiumExpansion.objects.filter(
             stadium=stadium, applied=True,
-        ).count() if stadium.club_id == 3 else 0,
+        ).count() if stadium.club.fm_inside_id == 907 else 0,
         'attribution': geometry.attribution,
         'game_header': build_game_header('Stadion', 'Editor', reverse('stadium_detail')),
     })
@@ -192,7 +192,7 @@ def stadium_live_mode(request, club_id):
 def dortmund_preview_scene(request):
     """Review the uploaded scene without touching persisted geometry or designs."""
     try:
-        stadium = Stadium.objects.get(club_id=3)
+        stadium = Stadium.objects.get(club__fm_inside_id=907)
         scene = load_preview()
     except Stadium.DoesNotExist:
         return JsonResponse({'error': 'Dortmunder Stadion nicht gefunden.'}, status=404)
@@ -208,7 +208,7 @@ def dortmund_preview_scene(request):
 @require_GET
 def dortmund_preview(request):
     try:
-        stadium = Stadium.objects.select_related('club').get(club_id=3)
+        stadium = Stadium.objects.select_related('club').get(club__fm_inside_id=907)
     except Stadium.DoesNotExist:
         return HttpResponse('Dortmunder Stadion nicht gefunden.', status=404)
     return render(request, 'stadium_editor/live_mode.html', {
@@ -216,7 +216,7 @@ def dortmund_preview(request):
         'stadium': stadium,
         'scene_url': reverse('dortmund_preview_scene'),
         'preview': True,
-        'current_url': reverse('stadium_live_mode', args=[3]),
+        'current_url': reverse('stadium_live_mode', args=[stadium.club_id]),
     })
 
 

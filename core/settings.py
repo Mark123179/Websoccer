@@ -43,6 +43,9 @@ _REPLIT_DETECTED = bool(
 # (runserver serving static files) keeps working unchanged. Production sets
 # DEBUG=False in its .env.
 DEBUG = _env_bool('DEBUG', default=True)
+# Transitional activation of the shared N28–N31 game schema. Leave off on the
+# unmigrated public service; enable only during an explicitly approved cutover.
+IMPORT_REBUILD_SCHEMA = _env_bool('IMPORT_REBUILD_SCHEMA', default=False)
 
 # SECURITY WARNING: keep the secret key used in production secret!
 # Read from the environment. In production (DEBUG=False) SECRET_KEY MUST be set

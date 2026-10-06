@@ -1,0 +1,11 @@
+{
+  "table_count": 159,
+  "changed_tables": [
+    "game_managerprofile"
+  ],
+  "unchanged_tables": 158,
+  "sequences_equal": true,
+  "metadata_equal": true,
+  "pilot_has_public_write_privileges": false,
+  "complete_byte_equality": false
+}

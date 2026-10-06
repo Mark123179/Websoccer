@@ -1,0 +1,1378 @@
+{
+  "authorization": "N28\u2013N31",
+  "protected": {
+    "django_content_type": {
+      "columns": [
+        "id",
+        "app_label",
+        "model"
+      ],
+      "before_rows": 157,
+      "before_fingerprint": "4910ea92b1c91cc77553b08f37e528b5",
+      "after_original_rows": 157,
+      "after_fingerprint": "4910ea92b1c91cc77553b08f37e528b5",
+      "total_rows": 159
+    },
+    "auth_permission": {
+      "columns": [
+        "id",
+        "name",
+        "content_type_id",
+        "codename"
+      ],
+      "before_rows": 628,
+      "before_fingerprint": "ce2a5d31f89f9020b7640433319cb05b",
+      "after_original_rows": 628,
+      "after_fingerprint": "ce2a5d31f89f9020b7640433319cb05b",
+      "total_rows": 636
+    },
+    "auth_user": {
+      "columns": [
+        "id",
+        "password",
+        "last_login",
+        "is_superuser",
+        "username",
+        "first_name",
+        "last_name",
+        "email",
+        "is_staff",
+        "is_active",
+        "date_joined"
+      ],
+      "before_rows": 3,
+      "before_fingerprint": "743eef91094802ebb01789bb37492518",
+      "after_original_rows": 3,
+      "after_fingerprint": "743eef91094802ebb01789bb37492518",
+      "total_rows": 3
+    },
+    "auth_group": {
+      "columns": [
+        "id",
+        "name"
+      ],
+      "before_rows": 0,
+      "before_fingerprint": "d41d8cd98f00b204e9800998ecf8427e",
+      "after_original_rows": 0,
+      "after_fingerprint": "d41d8cd98f00b204e9800998ecf8427e",
+      "total_rows": 0
+    },
+    "auth_user_groups": {
+      "columns": [
+        "id",
+        "user_id",
+        "group_id"
+      ],
+      "before_rows": 0,
+      "before_fingerprint": "d41d8cd98f00b204e9800998ecf8427e",
+      "after_original_rows": 0,
+      "after_fingerprint": "d41d8cd98f00b204e9800998ecf8427e",
+      "total_rows": 0
+    },
+    "auth_user_user_permissions": {
+      "columns": [
+        "id",
+        "user_id",
+        "permission_id"
+      ],
+      "before_rows": 0,
+      "before_fingerprint": "d41d8cd98f00b204e9800998ecf8427e",
+      "after_original_rows": 0,
+      "after_fingerprint": "d41d8cd98f00b204e9800998ecf8427e",
+      "total_rows": 0
+    },
+    "auth_group_permissions": {
+      "columns": [
+        "id",
+        "group_id",
+        "permission_id"
+      ],
+      "before_rows": 0,
+      "before_fingerprint": "d41d8cd98f00b204e9800998ecf8427e",
+      "after_original_rows": 0,
+      "after_fingerprint": "d41d8cd98f00b204e9800998ecf8427e",
+      "total_rows": 0
+    },
+    "game_managerprofile": {
+      "columns": [
+        "id",
+        "name",
+        "trainer_type",
+        "updated_at",
+        "highscore",
+        "level",
+        "member_since",
+        "nationality_flag",
+        "nationality_name",
+        "profile_image",
+        "user_id",
+        "xp",
+        "xp_max",
+        "name_confirmed",
+        "favourite_club_id",
+        "last_seen",
+        "active_title",
+        "inactivity_season_count",
+        "inactivity_streak",
+        "previous_season_score",
+        "residence",
+        "season_score",
+        "title_progress",
+        "transfer_ban_until",
+        "visibility_settings",
+        "login_day14_awarded",
+        "login_day30_awarded",
+        "login_day30_money_paid",
+        "login_last_date",
+        "login_points_today",
+        "login_streak",
+        "birth_date"
+      ],
+      "before_rows": 3,
+      "before_fingerprint": "4cc7b1695c4353c9268f763b3fc4ef66",
+      "after_original_rows": 3,
+      "after_fingerprint": "4cc7b1695c4353c9268f763b3fc4ef66",
+      "total_rows": 3
+    },
+    "game_referee": {
+      "columns": [
+        "id",
+        "fm_uid",
+        "name",
+        "nationality",
+        "nationality_code",
+        "schlagwort",
+        "vorsaison_spiele",
+        "vorsaison_gelb_avg",
+        "vorsaison_rot",
+        "vorsaison_elfmeter",
+        "vorsaison_umstritten",
+        "vorsaison_competitions",
+        "birth_date",
+        "quote",
+        "level",
+        "karten_tendenz",
+        "spielfluss_tendenz"
+      ],
+      "before_rows": 463,
+      "before_fingerprint": "c2b6e0c9e1a46c3eda7bb3809a822a20",
+      "after_original_rows": 463,
+      "after_fingerprint": "c2b6e0c9e1a46c3eda7bb3809a822a20",
+      "total_rows": 463
+    },
+    "game_sponsor": {
+      "columns": [
+        "id",
+        "slug",
+        "name",
+        "display_name",
+        "bereich",
+        "branche",
+        "aktiv",
+        "created_at",
+        "domain"
+      ],
+      "before_rows": 504,
+      "before_fingerprint": "df2dc25b8364e752142bb27ff760f6ef",
+      "after_original_rows": 504,
+      "after_fingerprint": "df2dc25b8364e752142bb27ff760f6ef",
+      "total_rows": 504
+    },
+    "game_economyparameter": {
+      "columns": [
+        "id",
+        "saison",
+        "key",
+        "value"
+      ],
+      "before_rows": 77,
+      "before_fingerprint": "1049b38a456aba10702d21f2118f8402",
+      "after_original_rows": 77,
+      "after_fingerprint": "1049b38a456aba10702d21f2118f8402",
+      "total_rows": 77
+    },
+    "game_countrynetwork": {
+      "columns": [
+        "id",
+        "iso2",
+        "name",
+        "continent",
+        "region",
+        "community_points",
+        "activity_points",
+        "is_paused",
+        "created_at",
+        "updated_at"
+      ],
+      "before_rows": 0,
+      "before_fingerprint": "d41d8cd98f00b204e9800998ecf8427e",
+      "after_original_rows": 0,
+      "after_fingerprint": "d41d8cd98f00b204e9800998ecf8427e",
+      "total_rows": 0
+    },
+    "game_stadionumfeldconfig": {
+      "columns": [
+        "id",
+        "state",
+        "updated_at"
+      ],
+      "before_rows": 1,
+      "before_fingerprint": "82b4aad46484cee321d27b769e9857ff",
+      "after_original_rows": 1,
+      "after_fingerprint": "82b4aad46484cee321d27b769e9857ff",
+      "total_rows": 1
+    },
+    "game_datasource": {
+      "columns": [
+        "id",
+        "code",
+        "name",
+        "base_url",
+        "notes"
+      ],
+      "before_rows": 5,
+      "before_fingerprint": "c4ca6be4075cfea715ecfd18047bb375",
+      "after_original_rows": 5,
+      "after_fingerprint": "c4ca6be4075cfea715ecfd18047bb375",
+      "total_rows": 5
+    },
+    "game_strengthformulasettings": {
+      "columns": [
+        "id",
+        "name",
+        "is_active",
+        "rating_modifier_factor",
+        "default_league_median_rating",
+        "default_freshness",
+        "notes",
+        "updated_at"
+      ],
+      "before_rows": 1,
+      "before_fingerprint": "5c264eedffdb9520cb3a661d31717363",
+      "after_original_rows": 1,
+      "after_fingerprint": "5c264eedffdb9520cb3a661d31717363",
+      "total_rows": 1
+    },
+    "game_strengthmodifierrule": {
+      "columns": [
+        "id",
+        "category",
+        "label",
+        "min_value",
+        "max_value",
+        "modifier",
+        "risk_label",
+        "sort_order",
+        "is_active",
+        "settings_id"
+      ],
+      "before_rows": 15,
+      "before_fingerprint": "908f1ab28e9cb2c8f71c3b763bc24afe",
+      "after_original_rows": 15,
+      "after_fingerprint": "908f1ab28e9cb2c8f71c3b763bc24afe",
+      "total_rows": 15
+    },
+    "game_mediaoutlet": {
+      "columns": [
+        "id",
+        "name",
+        "slug",
+        "accent_color",
+        "has_logo",
+        "sort_order"
+      ],
+      "before_rows": 24,
+      "before_fingerprint": "f6cd30c4a824a08649c6ba7aebdb9fd7",
+      "after_original_rows": 24,
+      "after_fingerprint": "f6cd30c4a824a08649c6ba7aebdb9fd7",
+      "total_rows": 24
+    },
+    "showauction_showauctionpreset": {
+      "columns": [
+        "id",
+        "name",
+        "slug",
+        "color_hex",
+        "icon",
+        "rules_text",
+        "config",
+        "is_active",
+        "sort_order",
+        "created_at",
+        "updated_at"
+      ],
+      "before_rows": 5,
+      "before_fingerprint": "54f3470ecc3fe713e3205027b693e2c6",
+      "after_original_rows": 5,
+      "after_fingerprint": "54f3470ecc3fe713e3205027b693e2c6",
+      "total_rows": 5
+    },
+    "game_storysettings": {
+      "columns": [
+        "id",
+        "story_release_enabled"
+      ],
+      "before_rows": 0,
+      "before_fingerprint": "d41d8cd98f00b204e9800998ecf8427e",
+      "after_original_rows": 0,
+      "after_fingerprint": "d41d8cd98f00b204e9800998ecf8427e",
+      "total_rows": 0
+    },
+    "game_neutralvenue": {
+      "columns": [
+        "id",
+        "name",
+        "city",
+        "capacity",
+        "is_active"
+      ],
+      "before_rows": 0,
+      "before_fingerprint": "d41d8cd98f00b204e9800998ecf8427e",
+      "after_original_rows": 0,
+      "after_fingerprint": "d41d8cd98f00b204e9800998ecf8427e",
+      "total_rows": 0
+    },
+    "game_landkoeffizient": {
+      "columns": [
+        "id",
+        "land",
+        "saison",
+        "punkte"
+      ],
+      "before_rows": 9,
+      "before_fingerprint": "2252c0cdc04f38c7b02357226296435e",
+      "after_original_rows": 9,
+      "after_fingerprint": "2252c0cdc04f38c7b02357226296435e",
+      "total_rows": 9
+    }
+  },
+  "phases": [
+    "protected tables/indexes/sequences isolated in pilot",
+    "all standard migrations applied, no fake",
+    "seed rows removed and all protected originals restored/verified"
+  ],
+  "identity": [
+    "import_pilot_role",
+    "import_pilot_role",
+    "import_pilot",
+    "import_pilot"
+  ],
+  "empty_business_tables": {
+    "django_admin_log": 0,
+    "game_aibuyerrun": 0,
+    "game_aitransferoffer": 0,
+    "game_apifootballdailyusage": 0,
+    "game_buybackclause": 0,
+    "game_club": 0,
+    "game_clubcmtprofile": 0,
+    "game_clubexternalid": 0,
+    "game_clubfinancialtransaction": 0,
+    "game_clubnewsitem": 0,
+    "game_clubpartnership": 0,
+    "game_clubplayerimportjob": 0,
+    "game_clubpublicprofile": 0,
+    "game_clubrecord": 0,
+    "game_clubrecordbreak": 0,
+    "game_clubrecordcorrectionrequest": 0,
+    "game_clubsponsor": 0,
+    "game_clubstadionumfeldstate": 0,
+    "game_clubtmprofile": 0,
+    "game_clubtrophy": 0,
+    "game_clubtrophyentry": 0,
+    "game_cointransaction": 0,
+    "game_communitysubmission": 0,
+    "game_communitytournament": 0,
+    "game_communitytournamentapplication": 0,
+    "game_communitytournamententry": 0,
+    "game_communitytournamentmatch": 0,
+    "game_communitytournamentphase": 0,
+    "game_communitytournamentround": 0,
+    "game_communitytournamentstanding": 0,
+    "game_creatoractionlog": 0,
+    "game_cupfixture": 0,
+    "game_cupround": 0,
+    "game_cupseason": 0,
+    "game_cupseason_participants": 0,
+    "game_dayweather": 0,
+    "game_dealrequest": 0,
+    "game_dealrequestplayer": 0,
+    "game_facilityconstruction": 0,
+    "game_financematchdayrun": 0,
+    "game_financereservation": 0,
+    "game_financetransaction": 0,
+    "game_forcedauction": 0,
+    "game_forcedauctionbid": 0,
+    "game_friendlyfixture": 0,
+    "game_gameseasonstate": 0,
+    "game_historiccoach": 0,
+    "game_hoenesscoin": 0,
+    "game_importissue": 0,
+    "game_inactivitypenalty": 0,
+    "game_inactivityrecord": 0,
+    "game_insolvencycase": 0,
+    "game_league": 0,
+    "game_leaguenews": 0,
+    "game_leagueseasonstate": 0,
+    "game_leaguestandings": 0,
+    "game_listingpin": 0,
+    "game_loan": 0,
+    "game_loanlisting": 0,
+    "game_managercareerentry": 0,
+    "game_managercareerstation": 0,
+    "game_managercompetitiontitle": 0,
+    "game_managernotes": 0,
+    "game_managerseasonscore": 0,
+    "game_managerteamphoto": 0,
+    "game_managertimelineentry": 0,
+    "game_managertitle": 0,
+    "game_managervacationblock": 0,
+    "game_matchdayrevenue": 0,
+    "game_matchevent": 0,
+    "game_matchresult": 0,
+    "game_matchstory": 0,
+    "game_matchstoryround": 0,
+    "game_notification": 0,
+    "game_pendingtransfer": 0,
+    "game_player": 0,
+    "game_playerawardtitle": 0,
+    "game_playerclubhistory": 0,
+    "game_playercmtattributeprofile": 0,
+    "game_playercmtprofile": 0,
+    "game_playereditlog": 0,
+    "game_playereditrequest": 0,
+    "game_playerexternalid": 0,
+    "game_playerfmiprofile": 0,
+    "game_playerformsnapshot": 0,
+    "game_playerimportcandidate": 0,
+    "game_playerinjuryrecord": 0,
+    "game_playermarketvaluesnapshot": 0,
+    "game_playerrlformprofile": 0,
+    "game_playerseasonstat": 0,
+    "game_playersourcerating": 0,
+    "game_playersourceratingsnapshot": 0,
+    "game_playerstrengthprofile": 0,
+    "game_playerstrengthsnapshot": 0,
+    "game_playersuspensionrecord": 0,
+    "game_playertmprofile": 0,
+    "game_playertransferhistory": 0,
+    "game_playerweightedratingsnapshot": 0,
+    "game_positionbarometer": 0,
+    "game_presidentsatisfaction": 0,
+    "game_rumornews": 0,
+    "game_scoutingassignment": 0,
+    "game_scoutingbid": 0,
+    "game_scoutingdepartment": 0,
+    "game_scoutingfind": 0,
+    "game_seasoneconomysnapshot": 0,
+    "game_seasonfinancestate": 0,
+    "game_seasonfixture": 0,
+    "game_seasongoal": 0,
+    "game_sellonclause": 0,
+    "game_simulatedmatch": 0,
+    "game_sourceimportrun": 0,
+    "game_sponsorcontract": 0,
+    "game_sponsoroffer": 0,
+    "game_squadlimitnote": 0,
+    "game_squadoffer": 0,
+    "game_stadium": 0,
+    "game_stadiumexpansion": 0,
+    "game_storyaudit": 0,
+    "game_supportticket": 0,
+    "game_tacticsetup": 0,
+    "game_tactictemplate": 0,
+    "game_transferbid": 0,
+    "game_transferlisting": 0,
+    "game_transferlock": 0,
+    "game_transfernegotiation": 0,
+    "game_transferrecord": 0,
+    "game_transferrecordplayer": 0,
+    "game_transferreport": 0,
+    "game_tvpot": 0,
+    "game_vereinkoeffizient": 0,
+    "game_watchlistentry": 0,
+    "game_youthlevypayment": 0,
+    "showauction_showauction": 0,
+    "showauction_showauctionbid": 0,
+    "showauction_showauctionwatch": 0,
+    "stadium_editor_stadiumdesign": 0,
+    "stadium_editor_stadiumgeometry": 0
+  },
+  "profile_start_values": {
+    "level": 1,
+    "xp": 0,
+    "xp_max": 800,
+    "invalid_profiles": 0
+  },
+  "permission_assignments": {
+    "natural_key_remapped": true,
+    "user_assignments": 0,
+    "group_assignments": 0
+  },
+  "backups_retained_until_verification": true,
+  "migrations": [
+    [
+      "admin",
+      "0001_initial"
+    ],
+    [
+      "admin",
+      "0002_logentry_remove_auto_add"
+    ],
+    [
+      "admin",
+      "0003_logentry_add_action_flag_choices"
+    ],
+    [
+      "auth",
+      "0001_initial"
+    ],
+    [
+      "auth",
+      "0002_alter_permission_name_max_length"
+    ],
+    [
+      "auth",
+      "0003_alter_user_email_max_length"
+    ],
+    [
+      "auth",
+      "0004_alter_user_username_opts"
+    ],
+    [
+      "auth",
+      "0005_alter_user_last_login_null"
+    ],
+    [
+      "auth",
+      "0006_require_contenttypes_0002"
+    ],
+    [
+      "auth",
+      "0007_alter_validators_add_error_messages"
+    ],
+    [
+      "auth",
+      "0008_alter_user_username_max_length"
+    ],
+    [
+      "auth",
+      "0009_alter_user_last_name_max_length"
+    ],
+    [
+      "auth",
+      "0010_alter_group_name_max_length"
+    ],
+    [
+      "auth",
+      "0011_update_proxy_permissions"
+    ],
+    [
+      "auth",
+      "0012_alter_user_first_name_max_length"
+    ],
+    [
+      "contenttypes",
+      "0001_initial"
+    ],
+    [
+      "contenttypes",
+      "0002_remove_content_type_name"
+    ],
+    [
+      "game",
+      "0001_initial"
+    ],
+    [
+      "game",
+      "0002_alter_club_budget_alter_player_first_name_and_more"
+    ],
+    [
+      "game",
+      "0003_remove_player_strength"
+    ],
+    [
+      "game",
+      "0004_club_fm_inside_id_player_fm_inside_id"
+    ],
+    [
+      "game",
+      "0005_player_contract_until_player_market_value_note_and_more"
+    ],
+    [
+      "game",
+      "0006_remove_player_market_value_note_and_more"
+    ],
+    [
+      "game",
+      "0007_alter_player_position"
+    ],
+    [
+      "game",
+      "0008_playersourcerating"
+    ],
+    [
+      "game",
+      "0009_alter_player_position_alter_player_primary_position_and_more"
+    ],
+    [
+      "game",
+      "0010_player_main_position_1_player_main_position_2_and_more"
+    ],
+    [
+      "game",
+      "0011_playerdatareview_league_coefficient_source_and_more"
+    ],
+    [
+      "game",
+      "0012_club_api_football_id_league_api_football_id_and_more"
+    ],
+    [
+      "game",
+      "0013_alter_playerformsnapshot_fixture_id_and_more"
+    ],
+    [
+      "game",
+      "0014_strengthformulasettings_and_more"
+    ],
+    [
+      "game",
+      "0015_datasource_player_wsc_player_id_playerexternalid_and_more"
+    ],
+    [
+      "game",
+      "0016_seed_player_history_snapshots"
+    ],
+    [
+      "game",
+      "0017_playerweightedratingsnapshot"
+    ],
+    [
+      "game",
+      "0018_seed_weighted_rating_snapshots"
+    ],
+    [
+      "game",
+      "0019_player_portrait_asset"
+    ],
+    [
+      "game",
+      "0020_remove_player_portrait_asset"
+    ],
+    [
+      "game",
+      "0021_player_profile_ws_dashboard"
+    ],
+    [
+      "game",
+      "0022_playerseasonstat_grade_season_number"
+    ],
+    [
+      "game",
+      "0023_playerseasonstat_substitutions"
+    ],
+    [
+      "game",
+      "0024_playerseasonstat_player_of_match_awards"
+    ],
+    [
+      "game",
+      "0025_clubnewsitem_clubpublicprofile_clubtrophy_and_more"
+    ],
+    [
+      "game",
+      "0026_seed_public_club_profiles"
+    ],
+    [
+      "game",
+      "0027_clear_seeded_partner_clubs"
+    ],
+    [
+      "game",
+      "0028_alter_player_main_position_1_and_more"
+    ],
+    [
+      "game",
+      "0029_add_shirt_number_to_player"
+    ],
+    [
+      "game",
+      "0030_add_nt_nationality_to_player"
+    ],
+    [
+      "game",
+      "0031_add_nt_nationality_to_clubprofilematch"
+    ],
+    [
+      "game",
+      "0032_add_manager_profile"
+    ],
+    [
+      "game",
+      "0033_add_match_result"
+    ],
+    [
+      "game",
+      "0034_seed_club_trophies"
+    ],
+    [
+      "game",
+      "0035_add_user_fields_to_manager_profile"
+    ],
+    [
+      "game",
+      "0036_add_manager_career_station"
+    ],
+    [
+      "game",
+      "0037_seed_manager_career_stations"
+    ],
+    [
+      "game",
+      "0038_link_kirschgutzje_to_user"
+    ],
+    [
+      "game",
+      "0039_update_club_trophies_verified"
+    ],
+    [
+      "game",
+      "0040_managercareerstation_custom_club_name"
+    ],
+    [
+      "game",
+      "0041_set_intercontinental_cup_asset"
+    ],
+    [
+      "game",
+      "0042_add_name_confirmed_to_manager_profile"
+    ],
+    [
+      "game",
+      "0043_backfill_name_confirmed"
+    ],
+    [
+      "game",
+      "0044_set_intercontinental_cup_asset_all_clubs"
+    ],
+    [
+      "game",
+      "0045_seed_intercontinental_cup_other_clubs"
+    ],
+    [
+      "game",
+      "0046_migrate_manager_flag_urls"
+    ],
+    [
+      "game",
+      "0047_seed_full_trophies_international_clubs"
+    ],
+    [
+      "game",
+      "0048_alter_managerprofile_nationality_flag_default"
+    ],
+    [
+      "game",
+      "0049_update_trophy_asset_ids"
+    ],
+    [
+      "game",
+      "0050_alter_managerprofile_nationality_flag_default"
+    ],
+    [
+      "game",
+      "0051_alter_managerprofile_nationality_name_default"
+    ],
+    [
+      "game",
+      "0052_clear_deutschland_default_nationality"
+    ],
+    [
+      "game",
+      "0053_managerprofile_nationality_name_requires_flag"
+    ],
+    [
+      "game",
+      "0054_managerprofile_favourite_club"
+    ],
+    [
+      "game",
+      "0055_clubpublicprofile_map_coords"
+    ],
+    [
+      "game",
+      "0056_clubpublicprofile_map_coords_data"
+    ],
+    [
+      "game",
+      "0057_add_club_managed_by"
+    ],
+    [
+      "game",
+      "0058_player_loan_partner_club_player_loan_status_and_more"
+    ],
+    [
+      "game",
+      "0059_seed_demo_loans"
+    ],
+    [
+      "game",
+      "0060_remove_libero_position"
+    ],
+    [
+      "game",
+      "0061_player_transfer_loan_list_flags"
+    ],
+    [
+      "game",
+      "0062_stadium_model"
+    ],
+    [
+      "game",
+      "0063_seed_stadium_data"
+    ],
+    [
+      "game",
+      "0064_seed_stadium_data_fix"
+    ],
+    [
+      "game",
+      "0065_stadium_expansion"
+    ],
+    [
+      "game",
+      "0066_matchday_revenue"
+    ],
+    [
+      "game",
+      "0067_stadium_facility_levels"
+    ],
+    [
+      "game",
+      "0068_hoenesscoin_seasongoal"
+    ],
+    [
+      "game",
+      "0069_gameseasonstate"
+    ],
+    [
+      "game",
+      "0070_coin_transaction"
+    ],
+    [
+      "game",
+      "0071_president_satisfaction"
+    ],
+    [
+      "game",
+      "0072_sportgericht_models"
+    ],
+    [
+      "game",
+      "0073_add_club_financial_transaction_and_sponsor"
+    ],
+    [
+      "game",
+      "0074_manager_career_entry"
+    ],
+    [
+      "game",
+      "0075_manager_career_entry_constraints"
+    ],
+    [
+      "game",
+      "0076_liga_standings_fixtures_news"
+    ],
+    [
+      "game",
+      "0077_seasonfixture_lineup_malus"
+    ],
+    [
+      "game",
+      "0078_inactivityrecord_unique_per_matchday"
+    ],
+    [
+      "game",
+      "0079_playersourcerating_abschluss_and_more"
+    ],
+    [
+      "game",
+      "0080_player_edit_log"
+    ],
+    [
+      "game",
+      "0081_player_rl_form_profile"
+    ],
+    [
+      "game",
+      "0082_player_rl_form_season_callable_default"
+    ],
+    [
+      "game",
+      "0083_api_football_daily_usage"
+    ],
+    [
+      "game",
+      "0084_sourceimportrun"
+    ],
+    [
+      "game",
+      "0085_remove_clubprofilematch"
+    ],
+    [
+      "game",
+      "0086_tacticsetup_conditions_tacticsetup_instructions_and_more"
+    ],
+    [
+      "game",
+      "0087_simulated_match"
+    ],
+    [
+      "game",
+      "0088_seasonfixture_simulated_match"
+    ],
+    [
+      "game",
+      "0089_leagueseasonstate_tacticsetup_is_locked"
+    ],
+    [
+      "game",
+      "0090_simulatedmatch_match_type"
+    ],
+    [
+      "game",
+      "0091_playerseasonstat_noten_persistenz"
+    ],
+    [
+      "game",
+      "0092_cup_models"
+    ],
+    [
+      "game",
+      "0093_club_job_availability_type"
+    ],
+    [
+      "game",
+      "0094_club_is_import_placeholder_club_transfermarkt_id_and_more"
+    ],
+    [
+      "game",
+      "0095_club_import_name_provisional_and_more"
+    ],
+    [
+      "game",
+      "0096_clubplayerimportjob_validation_issues"
+    ],
+    [
+      "game",
+      "0097_tacticsetup_lineup_confirmed_matchday"
+    ],
+    [
+      "game",
+      "0098_countrynetwork_player_admin_reviewed_and_more"
+    ],
+    [
+      "game",
+      "0099_alter_datasource_code_and_more"
+    ],
+    [
+      "game",
+      "0100_consolidate_cmtracker_source"
+    ],
+    [
+      "game",
+      "0101_cmt_datenmodell_v1"
+    ],
+    [
+      "game",
+      "0102_extern_loan_choice"
+    ],
+    [
+      "game",
+      "0103_alter_player_loan_status"
+    ],
+    [
+      "game",
+      "0104_scouting_position_multiselect"
+    ],
+    [
+      "game",
+      "0105_stadionumfeldconfig"
+    ],
+    [
+      "game",
+      "0106_facilityconstruction"
+    ],
+    [
+      "game",
+      "0107_vereinsnews_fields"
+    ],
+    [
+      "game",
+      "0108_simulatedmatch_match_no_simulatedmatch_season_and_more"
+    ],
+    [
+      "game",
+      "0109_backfill_simulatedmatch_season_match_no"
+    ],
+    [
+      "game",
+      "0110_managertimelineentry"
+    ],
+    [
+      "game",
+      "0111_timeline_entry_moderation"
+    ],
+    [
+      "game",
+      "0112_club_cmtracker_id"
+    ],
+    [
+      "game",
+      "0113_mediaoutlet"
+    ],
+    [
+      "game",
+      "0114_managerprofile_last_seen"
+    ],
+    [
+      "game",
+      "0115_clubnewsitem_published_by"
+    ],
+    [
+      "game",
+      "0116_playerclubhistory"
+    ],
+    [
+      "game",
+      "0117_normalize_tx_seasons"
+    ],
+    [
+      "game",
+      "0118_managernotes"
+    ],
+    [
+      "game",
+      "0119_seasoneconomysnapshot_economyparameter_and_more"
+    ],
+    [
+      "game",
+      "0120_seed_economy_parameters"
+    ],
+    [
+      "game",
+      "0121_migrate_legacy_finance"
+    ],
+    [
+      "game",
+      "0122_seasonfinancestate_league_level_landkoeffizient_and_more"
+    ],
+    [
+      "game",
+      "0123_seed_finance_phase2"
+    ],
+    [
+      "game",
+      "0124_seed_abfindung_params"
+    ],
+    [
+      "game",
+      "0125_seed_stadium_phase3_params"
+    ],
+    [
+      "game",
+      "0126_matchdayrevenue_attendance_seating_and_more"
+    ],
+    [
+      "game",
+      "0127_migrate_stadionumfeld_state"
+    ],
+    [
+      "game",
+      "0128_finance_phase4_transfermarkt"
+    ],
+    [
+      "game",
+      "0129_seed_finance_phase4"
+    ],
+    [
+      "game",
+      "0130_finance_phase5_insolvency_auction"
+    ],
+    [
+      "game",
+      "0131_seed_verbandsabgabe"
+    ],
+    [
+      "game",
+      "0132_finance_phase6_ai_buyer"
+    ],
+    [
+      "game",
+      "0133_seed_ki_kaeufer"
+    ],
+    [
+      "game",
+      "0134_snapshot_potential_median_200"
+    ],
+    [
+      "game",
+      "0135_financetransaction_referenz_mw"
+    ],
+    [
+      "game",
+      "0136_financematchdayrun_typ"
+    ],
+    [
+      "game",
+      "0137_fix_financematchdayrun_typ_backfill"
+    ],
+    [
+      "game",
+      "0138_insolvencycase_reminder_sent"
+    ],
+    [
+      "game",
+      "0139_forcedauctionbid_ki_meta"
+    ],
+    [
+      "game",
+      "0140_aitransferoffer_ki_meta"
+    ],
+    [
+      "game",
+      "0141_referee_model_and_fk"
+    ],
+    [
+      "game",
+      "0142_referee_model_v2"
+    ],
+    [
+      "game",
+      "0143_sponsor_model_and_offer_v2"
+    ],
+    [
+      "game",
+      "0144_seed_sponsor_v2_params"
+    ],
+    [
+      "game",
+      "0145_rename_game_sponsor_bereich_aktiv_idx_game_sponso_bereich_7e9aac_idx_and_more"
+    ],
+    [
+      "game",
+      "0146_sponsoroffer_status_typ_torgeld"
+    ],
+    [
+      "game",
+      "0147_sponsor_domain"
+    ],
+    [
+      "game",
+      "0148_sponsoroffer_status_datamigration"
+    ],
+    [
+      "game",
+      "0149_fix_sponsor_params"
+    ],
+    [
+      "game",
+      "0150_add_torgeld_to_typ_split"
+    ],
+    [
+      "game",
+      "0151_fix_sponsor_risk_mode"
+    ],
+    [
+      "game",
+      "0152_day_weather"
+    ],
+    [
+      "game",
+      "0153_financereservation_notification_and_more"
+    ],
+    [
+      "game",
+      "0154_positionbarometer_club_reserved_buybackclause_and_more"
+    ],
+    [
+      "game",
+      "0155_seed_transfer_v2_params"
+    ],
+    [
+      "game",
+      "0156_pendingtransfer_status_cancelled_limit"
+    ],
+    [
+      "game",
+      "0157_rumor_news_daily_dedup"
+    ],
+    [
+      "game",
+      "0158_rumor_player_requires_day"
+    ],
+    [
+      "game",
+      "0159_creator_transferaufsicht_models"
+    ],
+    [
+      "game",
+      "0160_alter_transferreport_status"
+    ],
+    [
+      "game",
+      "0161_dealrequest_counter"
+    ],
+    [
+      "game",
+      "0162_historiccoach_clubrecordcorrectionrequest_and_more"
+    ],
+    [
+      "game",
+      "0163_alter_clubrecordbreak_new_value_fields"
+    ],
+    [
+      "game",
+      "0164_alter_simulatedmatch_match_type"
+    ],
+    [
+      "game",
+      "0165_clubrecord_custom_labels_and_correction_payload"
+    ],
+    [
+      "game",
+      "0166_manager_profile_handoff"
+    ],
+    [
+      "game",
+      "0167_manager_login_rewards"
+    ],
+    [
+      "game",
+      "0168_rename_manager_active_title"
+    ],
+    [
+      "game",
+      "0169_managercompetitiontitle"
+    ],
+    [
+      "game",
+      "0170_managerprofile_birth_date"
+    ],
+    [
+      "game",
+      "0171_tacticsetup_context"
+    ],
+    [
+      "game",
+      "0172_friendly_fixture_neutral_venue"
+    ],
+    [
+      "game",
+      "0173_friendlyfixture_simulation_claim"
+    ],
+    [
+      "game",
+      "0174_friendlyfixture_simulation_retry"
+    ],
+    [
+      "game",
+      "0175_community_tournaments"
+    ],
+    [
+      "game",
+      "0176_community_tournament_winner"
+    ],
+    [
+      "game",
+      "0177_alter_tournament_standing_order"
+    ],
+    [
+      "game",
+      "0178_tournament_forfeits_rewards"
+    ],
+    [
+      "game",
+      "0179_community_entry_final_rank"
+    ],
+    [
+      "game",
+      "0180_tournament_shootout_penalties"
+    ],
+    [
+      "game",
+      "0181_managertimelineentry_ticket_details"
+    ],
+    [
+      "game",
+      "0182_manager_timeline_system_metadata"
+    ],
+    [
+      "game",
+      "0183_managertimelineentry_cup_fixture"
+    ],
+    [
+      "game",
+      "0184_club_stadium_colors"
+    ],
+    [
+      "game",
+      "0185_live_match_stories"
+    ],
+    [
+      "game",
+      "0186_match_story_version_v41"
+    ],
+    [
+      "game",
+      "0187_import_rebuild_n28_n31"
+    ],
+    [
+      "sessions",
+      "0001_initial"
+    ],
+    [
+      "showauction",
+      "0001_initial"
+    ],
+    [
+      "showauction",
+      "0002_seed_presets"
+    ],
+    [
+      "stadium_editor",
+      "0001_initial"
+    ],
+    [
+      "stadium_editor",
+      "0002_seed_bundled_geometries"
+    ],
+    [
+      "stadium_editor",
+      "0003_stadiumdesign_blickrichtung"
+    ],
+    [
+      "stadium_editor",
+      "0004_upgrade_design_contract_v2"
+    ],
+    [
+      "stadium_editor",
+      "0005_add_explicit_roof_geometry"
+    ],
+    [
+      "stadium_editor",
+      "0005_fix_bvb_nord_standing_grid"
+    ],
+    [
+      "stadium_editor",
+      "0006_merge_0005_roof_and_bvb_grid"
+    ],
+    [
+      "stadium_editor",
+      "0007_stadiumgeometry_steckbrief"
+    ],
+    [
+      "stadium_editor",
+      "0008_discard_legacy_dortmund_design"
+    ]
+  ]
+}

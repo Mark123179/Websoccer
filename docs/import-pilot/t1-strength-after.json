@@ -1,0 +1,8 @@
+{
+  "cases": 96,
+  "outputs_sha256": "01715d53dd9961107b0110935c3df2602b8d10595de436caddf051699663d416",
+  "code": {
+    "game/strength_service.py": "f18f5e4966d0f9b93a3efb359814bbf6e4579dc49bed0f55fb66591937c782ae",
+    "game/strength_engine.py": "9525c4054f4ead414a5042276a60bf4c8ff0e80d9df716af2af45303d5fef446"
+  }
+}

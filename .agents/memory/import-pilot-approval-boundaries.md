@@ -3,11 +3,17 @@ name: Import-Pilot Freigabegrenzen
 description: Verbindliche Anker-/Feldlistenregeln aus Nachtrag 5 sowie fortgeltende Schutz-, Konten- und Isolationsentscheidungen.
 ---
 
-Nachtrag 5 hat bei Widersprüchen Vorrang vor Teil A, B6, C und Nachträgen 1–4. Club, Player und Stadium bleiben die Spielanker; keine neuen Modelle daneben mit späterem Umhängen der Module. Bestehende B6-Tabellen erweitern/reparieren, neue nur bei echter Lücke. Jedes Feld einer Schicht und einem kontrollierten Schreibrecht zuordnen; Spiegel einzeln begründen. Nach Ligastart gilt E37.
+Nachtrag 6 hat bei Widersprüchen Vorrang vor Teil A, B, C und Nachträgen 1–5. Club, Player und Stadium bleiben die Spielanker; keine neuen Modelle daneben mit späterem Umhängen der Module. Bestehende Tabellen erweitern/reparieren, neue nur bei echter Lücke. Jedes Feld einer Schicht und einem kontrollierten Schreibrecht zuordnen; Spiegel einzeln begründen. Nach Ligastart gilt die bestätigte konkrete Positivliste, nicht pauschal „Echtweltdaten überschreiben“.
 
 **Why:** Der Nutzer lehnt die Zwischenstufe ab, in der nach dem Reset die echten Spielanker leer und die Module noch nicht umgehängt wären.
 
-**How to apply:** Feldliste mit Codeprüfung und vollständiger Paketfeldzuordnung vorlegen, danach Halt. Nur diese Dokumentation ist freigegeben; Modell/Migration/Paketimport/Dortmund-Szenensicherung, T2–T5 und Hetzner bleiben gesperrt. Nach ausdrücklicher Freigabe lädt der Pilot die vollständige game-App und verwendet die echten Seiten sowie dieselben echten Migrationen wie später live. Alte Datenmigrationen normal ausführen, deren Geschäftsdaten im Pilot bereinigen, vor BVB Nullbestand belegen und Schutzkopien erhalten. Neue UI nur für Creator-Upload/Vorschau/Arbeitsliste. Redundante Spalten später modulweise abbauen.
+**How to apply:** Der Nutzer hat die Feldliste samt Auflagen ausdrücklich für Modell/Migration/Pilot-Schema freigegeben, danach Halt am Ende der Modellphase. Paketimport, Creator-Upload, Dortmund-Szenensicherung, folgende Import-/UI-Phasen und Hetzner bleiben ohne weitere Freigabe gesperrt. Der Pilot lädt die vollständige game-App und verwendet die echten Seiten sowie dieselben echten Migrationen wie später live. Alte Datenmigrationen normal ausführen, deren Geschäftsdaten im Pilot bereinigen, vor BVB Nullbestand belegen und Schutzkopien erhalten. Neue UI nur für Creator-Upload/Vorschau/Arbeitsliste. Redundante Spalten später modulweise abbauen.
+
+Nur importierte Vereine stehen in Club. Fremde Historien-/Rekord-/Leihvereine bleiben TM-ID plus Originalname; spätere FK-Verknüpfung ist auch nach Ligastart erlaubt. Der operative Leihstand gehört nach Initialisierung ausschließlich dem Spiel; der Erhebungsstand gehört ins Paketarchiv. Haupt-/Nebenpositionen einschließlich ihrer Spiegel bleiben bei Vereinspaket-Reupload nach Ligastart ebenso gesperrt wie Ratings.
+
+**Why:** Der Nutzer hat Verweis-Club-Zeilen und doppelte Real-Leihstände ausdrücklich verworfen; Positionsänderungen sind für den späteren spielerbezogenen Aktualisierungsweg vorgesehen.
+
+**How to apply:** Keine NULL-/Platzhalterliga, keine historischen Mini-Clubs, kein zweiter Stammverein aus real_life_club. Fehlende Vereins-FKs sind kein Anlass für Namensmatching oder erfundene IDs. Paketmaske nach Ligastart nicht eigenmächtig erweitern.
 
 Fortgeltende N14-Isolation: Die Trennung erfolgt über eine neue Pilot-Rolle; bestehende Rollen, Verbindungen, Einstellungen und Prozesse bleiben unangetastet. Pilot → public braucht effektiven Schreibschutz; Bestand → Pilot wird über Suchpfad, Code, Befehle und laufende Prozesse belegt, nicht durch Rechteentzug im Bestand.
 

@@ -1,4 +1,4 @@
-"""Standalone technical pilot settings: no game models, signals or Celery app."""
+"""N28 full game pilot, guarded role/schema; no workers or schedulers."""
 import hashlib
 import hmac
 import os
@@ -24,15 +24,44 @@ SECRET_KEY = hmac.new(
 DEBUG = False
 ALLOWED_HOSTS = ["127.0.0.1", "localhost"]
 ROOT_URLCONF = "import_pilot.urls"
+IMPORT_REBUILD_SCHEMA = True
 INSTALLED_APPS = [
     "import_pilot.apps.ImportPilotConfig",
+    "django.contrib.admin",
+    "django.contrib.auth",
+    "django.contrib.contenttypes",
     "django.contrib.sessions",
+    "django.contrib.messages",
+    "django.contrib.staticfiles",
+    "django.contrib.humanize",
+    "game",
+    "showauction",
+    "stadium_editor",
 ]
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
+    "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "django.contrib.messages.middleware.MessageMiddleware",
+    "import_pilot.middleware.T1ReadOnlyMiddleware",
 ]
+TEMPLATES = [{
+    "BACKEND": "django.template.backends.django.DjangoTemplates",
+    "DIRS": [], "APP_DIRS": True,
+    "OPTIONS": {"context_processors": [
+        "django.template.context_processors.request",
+        "django.contrib.auth.context_processors.auth",
+        "django.contrib.messages.context_processors.messages",
+        "game.context_processors.current_manager",
+        "game.context_processors.posthog_settings",
+    ]},
+}]
+STATIC_URL = "/static/"
+LOGIN_URL = "/auth/login/"
+LOGIN_REDIRECT_URL = "/"
+ASSETS_BASE_URL = os.environ.get("ASSETS_BASE_URL", "/assets/")
+X_FRAME_OPTIONS = "SAMEORIGIN"
 
 # Reuse only the server/database location, not the maintenance identity.
 _database = dj_database_url.parse(os.environ["DATABASE_URL"], conn_max_age=0)
@@ -71,6 +100,9 @@ ORIGINAL_ASSETS_ROOT = os.environ.get(
     "ASSETS_ROOT", str(BASE_DIR / "game" / "static" / "assets")
 )
 STORAGES = {
+    "staticfiles": {
+        "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
+    },
     "default": {
         "BACKEND": "django.core.files.storage.FileSystemStorage",
         "OPTIONS": {"location": str(MEDIA_ROOT), "base_url": MEDIA_URL},
