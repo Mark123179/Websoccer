@@ -3,11 +3,17 @@ name: Import pilot verification
 description: Shared-model activation, proxy metadata, and honest source equality evidence.
 ---
 
-Keep schema activation and migration deployment coordinated when changing shared Game classes while the existing service remains on its old schema.
+Install the shared schema unconditionally. One temporary flag controls behavior, not fields or models; remove it and legacy branches after takeover.
 
-**Why:** The user authorizes a shared full Game schema, but explicitly prohibits migrating or stopping the existing public service during pilot work. Unconditionally querying new columns would break that service.
+When ratings exist but all source potentials are Dynamic/NULL, report missing strength as an explicit acceptance gap. Do not fill potential from rating or introduce a special calculation without approval.
 
-**How to apply:** Use the same classes and migration, not duplicate models or formulas. Do not enable the new schema on the existing service before an approved migration/cutover.
+**Why:** The approved source-NULL rule and use of the existing calculator are both binding; supplying an invented potential would satisfy a count by changing the meaning of the data.
+
+**How to apply:** Preserve raw/current NULLs and expose non-computability honestly. Keep this distinct from package player_lock gaps; seek a domain decision before changing the strength path.
+
+**Why:** The user corrected the schema-switch approach: ordinary post-merge and server deployment commands run migrate without knowing that switch. Hidden required columns would break old-mode inserts and every later migration.
+
+**How to apply:** Same classes/migrations in both modes, no migration drift. Already applied migrations remain immutable; corrections use a follow-up migration. Existing player locks initialize false, existing ordinary clubs playable and prior placeholders non-playable. Preserve legacy runtime/default behavior until takeover; package initialization writes explicit unknowns and locks.
 
 Django proxy metadata can retain cached inherited field lists when base classes are extended after proxies have been constructed. A table-to-columns dict must not be overwritten by a later proxy's narrower cached field list.
 
@@ -20,3 +26,9 @@ Do not equate isolation from writes with byte equality of a concurrently active 
 **Why:** Public profile hashes changed while the existing request middleware continued updating activity and login rewards. Aggregate-only before hashes cannot prove which individual columns changed.
 
 **How to apply:** Capture read-only baseline evidence before work. Report exact mismatching tables and the limits of attribution; retain role/ACL/sequence evidence separately. If column-level attribution is required later, agree on a stronger baseline or an authorized writer pause first.
+
+The user accepted the earlier profile mismatch as normal last_seen activity. For additive schema work compare original columns and original technical metadata rows, not SELECT * hashes that necessarily change when columns/models are added.
+
+**Why:** The source service is intentionally active and additive schema changes are now explicitly authorized while its preexisting data must stay unchanged.
+
+**How to apply:** Exclude only the accepted activity column; do not ignore whole profiles, old rights or other old fields. Export digests, never personal row values.

@@ -1,0 +1,64 @@
+game/club_import/import_service.py:330:    if package_mode():
+game/club_import/fmid_csv_service.py:348:    if package_mode():
+core/settings.py:48:IMPORT_PACKAGE_MODE = _env_bool('IMPORT_PACKAGE_MODE', default=False)
+game/scouting/coverage.py:41:        .filter(scouting_condition())
+game/club_import/package_service.py:336:    if not package_mode():
+game/scouting/draw.py:77:        .filter(scouting_condition())
+game/match_engine.py:712:    if package_mode():
+game/match_engine.py:714:            match_condition(), pk__in=player_ids, club=club).values_list("pk", flat=True))
+game/match_readiness.py:104:            Player.objects.filter(match_condition(), club=club, pk__in=filled_ids).values_list('pk', flat=True)
+game/match_readiness.py:316:        Player.objects.filter(match_condition(), club=club).select_related('strength_profile')
+game/match_readiness.py:390:        Player.objects.filter(match_condition(), club=club).select_related('strength_profile')
+game/match_readiness.py:619:        Player.objects.filter(match_condition(), club=club).select_related('strength_profile')
+game/match_readiness.py:769:                squad_qs = Player.objects.filter(match_condition(), club=club)
+game/match_readiness.py:860:    player_count = Player.objects.filter(match_condition(), club=club).count()
+game/economy/severance.py:122:        if package_mode():
+game/club_import/runtime.py:6:def package_mode():
+game/club_import/runtime.py:7:    return getattr(settings, "IMPORT_PACKAGE_MODE", False)
+game/club_import/runtime.py:10:def ownership_field():
+game/club_import/runtime.py:11:    return "owner_club" if package_mode() else "real_life_club"
+game/club_import/runtime.py:14:def owner(player):
+game/club_import/runtime.py:15:    return getattr(player, ownership_field(), None)
+game/club_import/runtime.py:18:def owner_name(player):
+game/club_import/runtime.py:19:    club = owner(player)
+game/club_import/runtime.py:21:        player.owner_club_original_name or "—" if package_mode() else "—")
+game/club_import/runtime.py:24:def scouting_condition():
+game/club_import/runtime.py:26:    if not package_mode():
+game/club_import/runtime.py:33:def can_scout(player):
+game/club_import/runtime.py:34:    if not package_mode():
+game/club_import/runtime.py:42:def match_condition():
+game/club_import/runtime.py:43:    if not package_mode():
+game/club_import/runtime.py:54:    if not package_mode():
+game/admin.py:155:        if package_mode():
+game/admin.py:1904:            return value.replace("real_life_club", "owner_club") if package_mode() else value
+game/admin.py:1913:        return tuple("package_owner_display" if f == "owner_club" else f for f in fields) if package_mode() else fields
+game/admin.py:1917:        name = owner_name(obj)
+game/admin.py:1918:        return name if owner(obj) else (
+game/admin.py:2124:            ownership_field(),
+game/admin.py:2125:            ownership_field() + '__league',
+game/admin.py:2350:        club = owner(obj) or (obj.club if not package_mode() else None)
+game/admin.py:2391:        club = owner(obj) or (obj.club if not package_mode() else None)
+game/admin.py:2394:                **{"player__" + ownership_field() + "__league": club.league}
+game/admin.py:2395:            ) if package_mode() else (
+game/admin.py:3611:            ownership_field(),
+game/models.py:3374:        if getattr(settings, 'IMPORT_PACKAGE_MODE', False):
+game/models.py:3731:        if getattr(settings, 'IMPORT_PACKAGE_MODE', False):
+game/import_schema.py:4:IMPORT_PACKAGE_MODE flag controls behavior only, never model definitions.
+game/import_schema.py:143:            if not getattr(settings, "IMPORT_PACKAGE_MODE", False):
+game/views_scouting.py:90:    rl_club = owner(p)
+game/views_scouting.py:100:        'rl_club': owner_name(p),
+game/views_scouting.py:146:    qs = (Player.objects.select_related(ownership_field())
+game/views_scouting.py:174:        rl_club = owner(p)
+game/views_scouting.py:184:            'club_name': owner_name(p),
+game/views_scouting.py:245:            'player', 'player__' + ownership_field(), 'player__' + ownership_field() + '__league'
+game/views_scouting.py:284:    ).select_related('player', 'player__' + ownership_field()).order_by('window_date'):
+game/views_scouting.py:286:        rl_club = owner(p)
+game/views_scouting.py:291:            'rl_club': owner_name(p),
+game/views.py:6564:            ownership_field(),
+game/views.py:6565:            ownership_field() + '__league',
+game/views.py:6665:                owner(player).crest_static_path
+game/views.py:6666:                if owner(player)
+game/views.py:6668:                      package_mode() else '')
+import_pilot/settings.py:27:IMPORT_PACKAGE_MODE = True
+game/scouting/service.py:308:        if not can_scout(player):
+game/scouting/service.py:417:    if not can_scout(player):

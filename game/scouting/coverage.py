@@ -17,6 +17,7 @@ from .constants import (
     region_iso_codes,
 )
 from .geo import nationality_to_iso2
+from game.club_import.runtime import scouting_condition
 
 # Skalierungskonstante der Abdeckungs-Sättigung (kalibrierbar).
 _COVERAGE_SATURATION_K = 40
@@ -37,7 +38,7 @@ def pool_counts_by_country():
     counts = {}
     qs = (
         Player.objects
-        .filter(club__isnull=True, pool_status=Player.POOL_STATUS_SCOUTABLE)
+        .filter(scouting_condition())
         .exclude(loan_status='extern_loan')
         .values_list('nationalities', flat=True)
     )

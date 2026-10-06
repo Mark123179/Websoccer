@@ -24,7 +24,7 @@ SECRET_KEY = hmac.new(
 DEBUG = False
 ALLOWED_HOSTS = ["127.0.0.1", "localhost"]
 ROOT_URLCONF = "import_pilot.urls"
-IMPORT_REBUILD_SCHEMA = True
+IMPORT_PACKAGE_MODE = True
 INSTALLED_APPS = [
     "import_pilot.apps.ImportPilotConfig",
     "django.contrib.admin",

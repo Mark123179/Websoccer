@@ -708,6 +708,12 @@ def _build_team_dict(club, tactic_setup, match_strengths: dict | None = None, st
         .prefetch_related('source_ratings')
     )
     players_by_id = {p.pk: p for p in players_qs}
+    from .club_import.runtime import package_mode, match_condition
+    if package_mode():
+        eligible = set(Player.objects.filter(
+            match_condition(), pk__in=player_ids, club=club).values_list("pk", flat=True))
+        if any(pid not in eligible for pid in player_ids):
+            raise ValueError("Package mode: lineup contains a locked, U21, pool or uninitialized player.")
 
     players_list: list[dict] = []
     seen_pids: set[int] = set()

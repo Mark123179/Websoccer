@@ -11,6 +11,7 @@ Dieses Modul stellt vier Hauptfunktionen bereit:
 from decimal import Decimal
 
 from django.utils import timezone
+from .club_import.runtime import match_condition
 
 from .tactics import (
     DEFAULT_FORMATION,
@@ -100,7 +101,7 @@ def has_valid_lineup(tactic_setup, club=None):
     if club is not None:
         from .models import Player
         valid_ids = set(
-            Player.objects.filter(club=club, pk__in=filled_ids).values_list('pk', flat=True)
+            Player.objects.filter(match_condition(), club=club, pk__in=filled_ids).values_list('pk', flat=True)
         )
         if valid_ids != set(filled_ids):
             return False
@@ -312,7 +313,7 @@ def ensure_default_tactic(club, tactic_context='pflicht', squad_scope=SQUAD_PRO)
         tactic.save(update_fields=repair_fields)
 
     all_players = list(
-        Player.objects.filter(club=club).select_related('strength_profile')
+        Player.objects.filter(match_condition(), club=club).select_related('strength_profile')
     )
     # The youth squad does not exist yet.  In particular, do not accidentally
     # use the professional squad to populate a U21 tactic.
@@ -386,7 +387,7 @@ def ensure_default_bench(setup):
     from .models import Player
 
     players = list(
-        Player.objects.filter(club=club).select_related('strength_profile')
+        Player.objects.filter(match_condition(), club=club).select_related('strength_profile')
     )
     if not players:
         return False
@@ -615,7 +616,7 @@ def patch_managed_lineup(club, setup) -> tuple:
     from .models import Player
 
     all_players = list(
-        Player.objects.filter(club=club).select_related('strength_profile')
+        Player.objects.filter(match_condition(), club=club).select_related('strength_profile')
     )
     squad_pks = {p.pk for p in all_players}
     unavailable_pks = {
@@ -765,7 +766,7 @@ def prepare_matchday_lineups(league, matchday, season):
 
                 # Bank-Validierung: ungültige/leere Bänke automatisch neu aufbauen.
                 # Manuell gesetzte Bänke mit ausschließlich gültigen Spielern bleiben unberührt.
-                squad_qs = Player.objects.filter(club=club)
+                squad_qs = Player.objects.filter(match_condition(), club=club)
                 squad_pks = set(squad_qs.values_list('pk', flat=True))
                 injured_pks = set(
                     squad_qs.filter(
@@ -856,7 +857,7 @@ def club_readiness_status(club):
     """
     from .models import Player, TacticSetup
 
-    player_count = Player.objects.filter(club=club).count()
+    player_count = Player.objects.filter(match_condition(), club=club).count()
 
     try:
         setup = TacticSetup.objects.get(

@@ -1,0 +1,11 @@
+{
+  "initial_counts_and_no_placeholder_clubs": true,
+  "identical_second_upload_all_table_fingerprints": true,
+  "invalid_sum_and_identity_conflict_atomic": true,
+  "review_pool_omission_and_automatic_reassignment": true,
+  "controlled_review_assignment": true,
+  "post_start_positive_mask": true,
+  "external_reference_backfill_and_nonplayable_scouting": true,
+  "n35_admin_and_first_team_eligibility": true,
+  "rollback_restores_all_pilot_table_fingerprints": true
+}

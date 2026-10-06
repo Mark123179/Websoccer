@@ -326,6 +326,9 @@ def import_candidate(candidate, user=None, recalculate=True, update_only=False):
     Returns:
         dict {candidate, action, player, errors}
     """
+    from .runtime import package_mode
+    if package_mode():
+        raise ValueError("Legacy candidate import is disabled; use apply_package.")
     from ..models import Player, PlayerEditLog, PlayerSourceRating
 
     nd = candidate.normalized_data or {}

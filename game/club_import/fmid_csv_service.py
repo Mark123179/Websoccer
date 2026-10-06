@@ -344,6 +344,10 @@ def run_fmid_csv_import(csv_text, target_club, dry_run=True):
 
     Returns ``{fatal_error, stats, row_results}``.
     """
+    from .runtime import package_mode
+    if package_mode():
+        return {"fatal_error": "Legacy FM-ID import is disabled; use apply_package.",
+                "stats": {}, "row_results": []}
     rows, fatal = parse_fmid_csv(csv_text)
     if fatal:
         return {'fatal_error': fatal, 'stats': {}, 'row_results': []}

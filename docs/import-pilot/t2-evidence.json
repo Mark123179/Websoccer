@@ -1,0 +1,258 @@
+{
+  "package_sha256": "9d2b87c16389caf12693da07d7644df2c5f7d36e1e8c979b8651ead1e951676d",
+  "applied_run": 16,
+  "counts": {
+    "clubs": 1,
+    "players": 51,
+    "persons": 11,
+    "market_values": 637,
+    "start_values": 6,
+    "real_market_values": 631,
+    "transfers": 322,
+    "records": 24,
+    "title_entries": 30,
+    "aggregated_title_rows": 9,
+    "source_snapshots": 83,
+    "players_with_ratings": 49,
+    "calculated": 35,
+    "issues": {
+      "info": 154,
+      "player_lock": 2
+    }
+  },
+  "squad": {
+    "first": [
+      "Mathis Albert",
+      "Waldemar Anton",
+      "Maximilian Beier",
+      "Jobe Bellingham",
+      "Ramy Bensebaini",
+      "Emre Can",
+      "Carney Chukwuemeka",
+      "Patrick Drewes",
+      "Joane Gadou",
+      "Serhou Guirassy",
+      "Samuele Inácio",
+      "Konstantinos Karetsas",
+      "Gregor Kobel",
+      "Giannis Konstantelias",
+      "Justin Lerma",
+      "Filippo Mane",
+      "Alexander Meyer",
+      "Felix Nmecha",
+      "Ethan Nwaneri",
+      "Silas Ostrzinski",
+      "Kauã Prates",
+      "Luca Reggiani",
+      "Julian Ryerson",
+      "Marcel Sabitzer",
+      "Nico Schlotterbeck",
+      "Fábio Silva",
+      "Daniel Svensson",
+      "Joey Veerman"
+    ],
+    "u21": [
+      "Miguel Adje",
+      "Tim Degener",
+      "Luke Fahrenhorst",
+      "Tom Faust",
+      "Finn Fuchs",
+      "Bjarki Gardarsson",
+      "Aaron Held",
+      "Justin Hoy",
+      "Mussa Kaba",
+      "Mario Pejazic",
+      "Nanitonda Quiala",
+      "Daniel Sumbu",
+      "Levin Vogt",
+      "Jan-Mattis Wehrbein",
+      "Arne Wessels",
+      "Bennedikt Wüstenhagen",
+      "Takato Yamamoto",
+      "Fadi Zarqelain",
+      "Enzo dos Santos"
+    ],
+    "loan_pool": [
+      "Elias Benkara",
+      "Yan Couto",
+      "Almugera Kabar",
+      "Diant Ramaj"
+    ],
+    "borrowed": [
+      "Ethan Nwaneri",
+      "Daniel Sumbu",
+      "Takato Yamamoto"
+    ],
+    "review_pool": []
+  },
+  "locked": [
+    {
+      "name": "Bjarki Gardarsson",
+      "reason": [
+        "Bjarki Gardarsson: Gem ohne FMInside-Eintrag. Erstellt, aber einzeln gesperrt, bis Werte vorliegen (E59). Gesucht über Vereinsseite, Namenssuche und Suche beim abgebenden Verein."
+      ]
+    },
+    {
+      "name": "Takato Yamamoto",
+      "reason": [
+        "Takato Yamamoto: Gem ohne FMInside-Eintrag. Erstellt, aber einzeln gesperrt, bis Werte vorliegen (E59). Gesucht über Vereinsseite, Namenssuche und Suche beim abgebenden Verein."
+      ]
+    }
+  ],
+  "dynamic_uncomputable": [
+    "Miguel Adje",
+    "Tim Degener",
+    "Luke Fahrenhorst",
+    "Tom Faust",
+    "Finn Fuchs",
+    "Aaron Held",
+    "Justin Hoy",
+    "Mario Pejazic",
+    "Daniel Sumbu",
+    "Levin Vogt",
+    "Jan-Mattis Wehrbein",
+    "Arne Wessels",
+    "Bennedikt Wüstenhagen",
+    "Fadi Zarqelain"
+  ],
+  "second_upload": {
+    "same_result": true,
+    "compared_tables": 161,
+    "changed_table_fingerprints": [],
+    "created_rows": 0
+  },
+  "protected_tables": {
+    "compared": 21,
+    "changed": []
+  },
+  "real_life_club_nonempty": 0,
+  "references": {
+    "distinct_external_tm_ids": 227,
+    "names_without_tm_id": [
+      "Ajax Amsterdam",
+      "FC Admira Wacker Mödling",
+      "FC Bayern München",
+      "FC Bayern München II",
+      "FC Chelsea",
+      "FC Energie Cottbus",
+      "FC Liverpool",
+      "FC Red Bull Salzburg",
+      "Juventus Turin",
+      "Montpellier HSC",
+      "Olympique Marseille",
+      "PAOK Thessaloniki",
+      "Preußen Münster"
+    ],
+    "occurrences_without_tm_id": 78,
+    "club_rows": 1,
+    "reference_only_club_rows": 0
+  },
+  "strength_samples": [
+    {
+      "name": "Gregor Kobel",
+      "positions": [
+        "TW"
+      ],
+      "sources": [
+        {
+          "source": "CMTRACKER",
+          "rating": 87,
+          "potential": 89
+        },
+        {
+          "source": "FM",
+          "rating": 81,
+          "potential": 83
+        }
+      ],
+      "base_strength": "168",
+      "max_strength": "171",
+      "persisted_base": "168.00"
+    },
+    {
+      "name": "Alexander Meyer",
+      "positions": [
+        "TW"
+      ],
+      "sources": [
+        {
+          "source": "CMTRACKER",
+          "rating": 74,
+          "potential": 75
+        },
+        {
+          "source": "FM",
+          "rating": 66,
+          "potential": 67
+        }
+      ],
+      "base_strength": "140",
+      "max_strength": "142",
+      "persisted_base": "140.00"
+    },
+    {
+      "name": "Patrick Drewes",
+      "positions": [
+        "TW"
+      ],
+      "sources": [
+        {
+          "source": "CMTRACKER",
+          "rating": 71,
+          "potential": 73
+        },
+        {
+          "source": "FM",
+          "rating": 59,
+          "potential": 63
+        }
+      ],
+      "base_strength": "131",
+      "max_strength": "136",
+      "persisted_base": "131.00"
+    },
+    {
+      "name": "Ethan Nwaneri",
+      "positions": [
+        "OM",
+        "RF"
+      ],
+      "sources": [
+        {
+          "source": "CMTRACKER",
+          "rating": 75,
+          "potential": 86
+        },
+        {
+          "source": "FM",
+          "rating": 70,
+          "potential": null
+        }
+      ],
+      "base_strength": "145",
+      "max_strength": "166",
+      "persisted_base": "145.00"
+    },
+    {
+      "name": "Elias Benkara",
+      "positions": [
+        "IV"
+      ],
+      "sources": [
+        {
+          "source": "CMTRACKER",
+          "rating": 61,
+          "potential": 79
+        },
+        {
+          "source": "FM",
+          "rating": 43,
+          "potential": null
+        }
+      ],
+      "base_strength": "107",
+      "max_strength": "151",
+      "persisted_base": "107.00"
+    }
+  ]
+}

@@ -1,0 +1,2827 @@
+{
+  "auth_group": {
+    "columns": [
+      "id",
+      "name"
+    ],
+    "old_max_id": null,
+    "rows": 0,
+    "digest": "d41d8cd98f00b204e9800998ecf8427e"
+  },
+  "auth_group_permissions": {
+    "columns": [
+      "id",
+      "group_id",
+      "permission_id"
+    ],
+    "old_max_id": null,
+    "rows": 0,
+    "digest": "d41d8cd98f00b204e9800998ecf8427e"
+  },
+  "auth_permission": {
+    "columns": [
+      "id",
+      "name",
+      "content_type_id",
+      "codename"
+    ],
+    "old_max_id": 628,
+    "rows": 628,
+    "digest": "6fc77fea62c1b2e705ed57c86e4fc4c4"
+  },
+  "auth_user": {
+    "columns": [
+      "id",
+      "password",
+      "last_login",
+      "is_superuser",
+      "username",
+      "first_name",
+      "last_name",
+      "email",
+      "is_staff",
+      "is_active",
+      "date_joined"
+    ],
+    "old_max_id": 4,
+    "rows": 3,
+    "digest": "743eef91094802ebb01789bb37492518"
+  },
+  "auth_user_groups": {
+    "columns": [
+      "id",
+      "user_id",
+      "group_id"
+    ],
+    "old_max_id": null,
+    "rows": 0,
+    "digest": "d41d8cd98f00b204e9800998ecf8427e"
+  },
+  "auth_user_user_permissions": {
+    "columns": [
+      "id",
+      "user_id",
+      "permission_id"
+    ],
+    "old_max_id": null,
+    "rows": 0,
+    "digest": "d41d8cd98f00b204e9800998ecf8427e"
+  },
+  "django_admin_log": {
+    "columns": [
+      "id",
+      "action_time",
+      "object_id",
+      "object_repr",
+      "action_flag",
+      "change_message",
+      "content_type_id",
+      "user_id"
+    ],
+    "old_max_id": null,
+    "rows": 0,
+    "digest": "d41d8cd98f00b204e9800998ecf8427e"
+  },
+  "django_content_type": {
+    "columns": [
+      "id",
+      "app_label",
+      "model"
+    ],
+    "old_max_id": 157,
+    "rows": 157,
+    "digest": "cbeca12775aeeecf179262692879e57f"
+  },
+  "django_migrations": {
+    "columns": [
+      "id",
+      "app",
+      "name",
+      "applied"
+    ],
+    "old_max_id": 279,
+    "rows": 215,
+    "digest": "3dcda7b6e29267b38fa9f6f961685d31"
+  },
+  "django_session": {
+    "columns": [
+      "session_key",
+      "session_data",
+      "expire_date"
+    ],
+    "old_max_id": null,
+    "rows": 442,
+    "digest": "e51cc03d375bd0de46e98137aa5fef9c"
+  },
+  "game_aibuyerrun": {
+    "columns": [
+      "id",
+      "saison",
+      "spieltag",
+      "trigger",
+      "dry_run",
+      "window_id",
+      "report",
+      "run_at",
+      "club_id"
+    ],
+    "old_max_id": 26,
+    "rows": 26,
+    "digest": "0e6e638c7fdf57f2191fae8ad95db014"
+  },
+  "game_aitransferoffer": {
+    "columns": [
+      "id",
+      "kauftyp",
+      "bewertung",
+      "max_gebot",
+      "aktuelles_gebot",
+      "stufe",
+      "status",
+      "dry_run",
+      "window_id",
+      "noise_seed",
+      "gueltig_bis",
+      "cooldown_until",
+      "luecken_score",
+      "begruendung",
+      "created_at",
+      "updated_at",
+      "buyer_club_id",
+      "player_id",
+      "seller_club_id",
+      "ki_meta"
+    ],
+    "old_max_id": null,
+    "rows": 0,
+    "digest": "d41d8cd98f00b204e9800998ecf8427e"
+  },
+  "game_apifootballdailyusage": {
+    "columns": [
+      "id",
+      "date",
+      "request_count"
+    ],
+    "old_max_id": null,
+    "rows": 0,
+    "digest": "d41d8cd98f00b204e9800998ecf8427e"
+  },
+  "game_buybackclause": {
+    "columns": [
+      "id",
+      "price",
+      "deadline",
+      "preemption_until",
+      "active",
+      "created_at",
+      "holder_club_id",
+      "player_id"
+    ],
+    "old_max_id": null,
+    "rows": 0,
+    "digest": "d41d8cd98f00b204e9800998ecf8427e"
+  },
+  "game_club": {
+    "columns": [
+      "id",
+      "name",
+      "short_name",
+      "founded_year",
+      "budget",
+      "league_id",
+      "fm_inside_id",
+      "api_football_id",
+      "managed_by_id",
+      "fan_popularity",
+      "job_availability_type",
+      "is_import_placeholder",
+      "transfermarkt_id",
+      "transfermarkt_profile_url",
+      "import_name_provisional",
+      "cmtracker_id",
+      "ai_buyer_paused",
+      "reserved",
+      "color_primary",
+      "color_secondary"
+    ],
+    "old_max_id": 114,
+    "rows": 28,
+    "digest": "e8da32ea4bf1d996e4bd73bbc5b81eb2"
+  },
+  "game_clubcmtprofile": {
+    "columns": [
+      "id",
+      "db_slug",
+      "team_id",
+      "league_id",
+      "name",
+      "league_name",
+      "nation",
+      "country",
+      "foundation_year",
+      "popularity",
+      "domestic_prestige",
+      "international_prestige",
+      "profitability",
+      "home_kit",
+      "away_kit",
+      "third_kit",
+      "raw_payload",
+      "payload_hash",
+      "imported_at",
+      "fetched_at",
+      "last_imported_at",
+      "last_verified_at",
+      "source_priority",
+      "data_quality_flags",
+      "missing_required_fields",
+      "club_id"
+    ],
+    "old_max_id": null,
+    "rows": 0,
+    "digest": "d41d8cd98f00b204e9800998ecf8427e"
+  },
+  "game_clubexternalid": {
+    "columns": [
+      "id",
+      "external_id",
+      "db_slug",
+      "source_url",
+      "created_at",
+      "updated_at",
+      "last_seen_at",
+      "club_id",
+      "source_id"
+    ],
+    "old_max_id": null,
+    "rows": 0,
+    "digest": "d41d8cd98f00b204e9800998ecf8427e"
+  },
+  "game_clubfinancialtransaction": {
+    "columns": [
+      "id",
+      "date",
+      "season",
+      "category",
+      "description",
+      "amount",
+      "created_at",
+      "club_id"
+    ],
+    "old_max_id": 126,
+    "rows": 64,
+    "digest": "b756920cca7baf03d88f1da6852c00ef"
+  },
+  "game_clubnewsitem": {
+    "columns": [
+      "id",
+      "title",
+      "published_at",
+      "thumbnail_static_path",
+      "sort_order",
+      "club_id",
+      "blocks",
+      "card_data",
+      "category",
+      "img_height",
+      "img_path",
+      "is_new",
+      "is_social",
+      "outlet",
+      "subtitle",
+      "views_count",
+      "published_by_id"
+    ],
+    "old_max_id": null,
+    "rows": 0,
+    "digest": "d41d8cd98f00b204e9800998ecf8427e"
+  },
+  "game_clubpartnership": {
+    "columns": [
+      "id",
+      "active",
+      "created_at",
+      "club_a_id",
+      "club_b_id"
+    ],
+    "old_max_id": null,
+    "rows": 0,
+    "digest": "d41d8cd98f00b204e9800998ecf8427e"
+  },
+  "game_clubplayerimportjob": {
+    "columns": [
+      "id",
+      "tm_club_id",
+      "tm_season_id",
+      "season_label",
+      "status",
+      "progress_current",
+      "progress_total",
+      "current_step",
+      "error_message",
+      "lease_token",
+      "claimed_at",
+      "lease_expires_at",
+      "heartbeat_at",
+      "created_at",
+      "updated_at",
+      "completed_at",
+      "created_by_id",
+      "ws_club_id",
+      "tm_club_name",
+      "validation_issues"
+    ],
+    "old_max_id": 16,
+    "rows": 16,
+    "digest": "d54b696316d223d0500dc35dbc2540eb"
+  },
+  "game_clubpublicprofile": {
+    "columns": [
+      "id",
+      "stadium_name",
+      "stadium_capacity",
+      "average_attendance",
+      "city_name",
+      "city_country",
+      "stadium_image_static_path",
+      "city_image_static_path",
+      "club_id",
+      "partner_club_id",
+      "map_lat",
+      "map_lng"
+    ],
+    "old_max_id": 22,
+    "rows": 22,
+    "digest": "e53dcd0cd4ca4064f8bcca867e3a47ae"
+  },
+  "game_clubrecord": {
+    "columns": [
+      "id",
+      "record_key",
+      "source",
+      "value_numeric",
+      "value_display",
+      "holder_name",
+      "opponent_name",
+      "context_line",
+      "record_date",
+      "period_from",
+      "period_to",
+      "season",
+      "competition",
+      "source_note",
+      "is_anonymized",
+      "updated_at",
+      "club_id",
+      "holder_manager_id",
+      "holder_player_id",
+      "linked_match_id",
+      "opponent_club_id",
+      "holder_coach_id",
+      "custom_label"
+    ],
+    "old_max_id": 259,
+    "rows": 259,
+    "digest": "325160dd41ee8090edb859ee02656383"
+  },
+  "game_clubrecordbreak": {
+    "columns": [
+      "id",
+      "record_key",
+      "old_value_numeric",
+      "old_value_display",
+      "old_holder_name",
+      "new_value_numeric",
+      "new_value_display",
+      "new_holder_name",
+      "broke_seed",
+      "season",
+      "occurred_at",
+      "club_id"
+    ],
+    "old_max_id": 36,
+    "rows": 36,
+    "digest": "0f488a3fa9f4139c774c94bd9451e380"
+  },
+  "game_clubrecordcorrectionrequest": {
+    "columns": [
+      "id",
+      "record_key",
+      "old_value",
+      "new_value",
+      "new_holder",
+      "new_date",
+      "source_reference",
+      "requester_note",
+      "status",
+      "decided_at",
+      "decision_note",
+      "created_at",
+      "updated_at",
+      "club_id",
+      "decided_by_id",
+      "requester_id",
+      "custom_label",
+      "new_competition",
+      "new_context",
+      "new_numeric_value",
+      "new_season"
+    ],
+    "old_max_id": null,
+    "rows": 0,
+    "digest": "d41d8cd98f00b204e9800998ecf8427e"
+  },
+  "game_clubsponsor": {
+    "columns": [
+      "id",
+      "name",
+      "sponsor_type",
+      "amount_per_season",
+      "season",
+      "is_active",
+      "club_id"
+    ],
+    "old_max_id": 10,
+    "rows": 5,
+    "digest": "8c5d82094d6a16212dff156b5166a70a"
+  },
+  "game_clubstadionumfeldstate": {
+    "columns": [
+      "id",
+      "state",
+      "updated_at",
+      "club_id"
+    ],
+    "old_max_id": 28,
+    "rows": 28,
+    "digest": "2d028dd3368021398777e53c62227657"
+  },
+  "game_clubtmprofile": {
+    "columns": [
+      "id",
+      "tm_club_id",
+      "tm_club_url",
+      "squad_source_url",
+      "imported_at",
+      "fetched_at",
+      "last_imported_at",
+      "last_verified_at",
+      "data_quality_flags",
+      "missing_required_fields",
+      "club_id"
+    ],
+    "old_max_id": null,
+    "rows": 0,
+    "digest": "d41d8cd98f00b204e9800998ecf8427e"
+  },
+  "game_clubtrophy": {
+    "columns": [
+      "id",
+      "competition_name",
+      "count",
+      "trophy_asset_id",
+      "sort_order",
+      "club_id"
+    ],
+    "old_max_id": 47,
+    "rows": 36,
+    "digest": "0910036ec0999bed28dbc034259c65ee"
+  },
+  "game_cointransaction": {
+    "columns": [
+      "id",
+      "amount",
+      "reason",
+      "description",
+      "created_at",
+      "manager_id"
+    ],
+    "old_max_id": null,
+    "rows": 0,
+    "digest": "d41d8cd98f00b204e9800998ecf8427e"
+  },
+  "game_communitysubmission": {
+    "columns": [
+      "id",
+      "iso2",
+      "tm_url",
+      "player_name",
+      "status",
+      "week_key",
+      "created_at",
+      "reviewed_at",
+      "manager_id"
+    ],
+    "old_max_id": null,
+    "rows": 0,
+    "digest": "d41d8cd98f00b204e9800998ecf8427e"
+  },
+  "game_communitytournament": {
+    "columns": [
+      "id",
+      "name",
+      "description",
+      "season",
+      "squad_scope",
+      "format",
+      "field_size",
+      "home_and_away",
+      "access",
+      "invitation_code",
+      "rules",
+      "schedule",
+      "reward_plan",
+      "rewards_paid_at",
+      "status",
+      "created_at",
+      "opened_at",
+      "started_at",
+      "completed_at",
+      "neutral_venue_id",
+      "organizer_id",
+      "winner_entry_id"
+    ],
+    "old_max_id": null,
+    "rows": 0,
+    "digest": "d41d8cd98f00b204e9800998ecf8427e"
+  },
+  "game_communitytournamentapplication": {
+    "columns": [
+      "id",
+      "status",
+      "created_at",
+      "club_id",
+      "tournament_id"
+    ],
+    "old_max_id": null,
+    "rows": 0,
+    "digest": "d41d8cd98f00b204e9800998ecf8427e"
+  },
+  "game_communitytournamententry": {
+    "columns": [
+      "id",
+      "is_ai",
+      "group",
+      "draw_position",
+      "created_at",
+      "club_id",
+      "tournament_id",
+      "final_rank"
+    ],
+    "old_max_id": null,
+    "rows": 0,
+    "digest": "d41d8cd98f00b204e9800998ecf8427e"
+  },
+  "game_communitytournamentmatch": {
+    "columns": [
+      "id",
+      "status",
+      "counted",
+      "scheduled_at",
+      "home_goals",
+      "away_goals",
+      "away_entry_id",
+      "friendly_fixture_id",
+      "home_entry_id",
+      "home_leg_id",
+      "winner_entry_id",
+      "round_id",
+      "forfeiture",
+      "away_penalties",
+      "home_penalties"
+    ],
+    "old_max_id": null,
+    "rows": 0,
+    "digest": "d41d8cd98f00b204e9800998ecf8427e"
+  },
+  "game_communitytournamentphase": {
+    "columns": [
+      "id",
+      "name",
+      "phase_type",
+      "number",
+      "status",
+      "scheduled_at",
+      "tournament_id"
+    ],
+    "old_max_id": null,
+    "rows": 0,
+    "digest": "d41d8cd98f00b204e9800998ecf8427e"
+  },
+  "game_communitytournamentround": {
+    "columns": [
+      "id",
+      "number",
+      "name",
+      "scheduled_at",
+      "status",
+      "phase_id"
+    ],
+    "old_max_id": null,
+    "rows": 0,
+    "digest": "d41d8cd98f00b204e9800998ecf8427e"
+  },
+  "game_communitytournamentstanding": {
+    "columns": [
+      "id",
+      "group",
+      "played",
+      "wins",
+      "draws",
+      "losses",
+      "goals_for",
+      "goals_against",
+      "points",
+      "random_order",
+      "entry_id",
+      "tournament_id"
+    ],
+    "old_max_id": null,
+    "rows": 0,
+    "digest": "d41d8cd98f00b204e9800998ecf8427e"
+  },
+  "game_countrynetwork": {
+    "columns": [
+      "id",
+      "iso2",
+      "name",
+      "continent",
+      "region",
+      "community_points",
+      "activity_points",
+      "is_paused",
+      "created_at",
+      "updated_at"
+    ],
+    "old_max_id": null,
+    "rows": 0,
+    "digest": "d41d8cd98f00b204e9800998ecf8427e"
+  },
+  "game_creatoractionlog": {
+    "columns": [
+      "id",
+      "action",
+      "target",
+      "details",
+      "created_at",
+      "actor_id"
+    ],
+    "old_max_id": null,
+    "rows": 0,
+    "digest": "d41d8cd98f00b204e9800998ecf8427e"
+  },
+  "game_cupfixture": {
+    "columns": [
+      "id",
+      "bracket_position",
+      "is_bye",
+      "status",
+      "home_goals_90",
+      "away_goals_90",
+      "home_goals_et",
+      "away_goals_et",
+      "home_penalties",
+      "away_penalties",
+      "decided_by",
+      "away_club_id",
+      "home_club_id",
+      "simulated_match_id",
+      "winner_club_id",
+      "cup_round_id",
+      "away_manager_id",
+      "home_manager_id"
+    ],
+    "old_max_id": 46,
+    "rows": 6,
+    "digest": "43e564547e5e62e522005262afd3d36f"
+  },
+  "game_cupround": {
+    "columns": [
+      "id",
+      "round_number",
+      "round_code",
+      "status",
+      "scheduled_date",
+      "cup_season_id"
+    ],
+    "old_max_id": 40,
+    "rows": 5,
+    "digest": "3ade3b5812b350e80dcdbf96672f0477"
+  },
+  "game_cupseason": {
+    "columns": [
+      "id",
+      "season",
+      "status",
+      "competition_id",
+      "winner_club_id"
+    ],
+    "old_max_id": 35,
+    "rows": 1,
+    "digest": "83dc1b6fcc4e29c2ed73a20923d76217"
+  },
+  "game_cupseason_participants": {
+    "columns": [
+      "id",
+      "cupseason_id",
+      "club_id"
+    ],
+    "old_max_id": 101,
+    "rows": 18,
+    "digest": "9bf6d9ccee66f05c0b0794288593b98f"
+  },
+  "game_datasource": {
+    "columns": [
+      "id",
+      "code",
+      "name",
+      "base_url",
+      "notes"
+    ],
+    "old_max_id": 5,
+    "rows": 5,
+    "digest": "c4ca6be4075cfea715ecfd18047bb375"
+  },
+  "game_dayweather": {
+    "columns": [
+      "sim_day",
+      "weather_type",
+      "temperature"
+    ],
+    "old_max_id": null,
+    "rows": 81,
+    "digest": "79c259ed572ffe09f84221473b639203"
+  },
+  "game_dealrequest": {
+    "columns": [
+      "id",
+      "typ",
+      "timing",
+      "cash_from",
+      "cash_to",
+      "loan_until",
+      "loan_fee",
+      "loan_buy_option",
+      "message",
+      "status",
+      "created_at",
+      "expires_at",
+      "resolved_at",
+      "from_club_id",
+      "to_club_id",
+      "counter_offer"
+    ],
+    "old_max_id": null,
+    "rows": 0,
+    "digest": "d41d8cd98f00b204e9800998ecf8427e"
+  },
+  "game_dealrequestplayer": {
+    "columns": [
+      "id",
+      "side",
+      "player_id",
+      "request_id"
+    ],
+    "old_max_id": null,
+    "rows": 0,
+    "digest": "d41d8cd98f00b204e9800998ecf8427e"
+  },
+  "game_economyparameter": {
+    "columns": [
+      "id",
+      "saison",
+      "key",
+      "value"
+    ],
+    "old_max_id": 77,
+    "rows": 77,
+    "digest": "1049b38a456aba10702d21f2118f8402"
+  },
+  "game_facilityconstruction": {
+    "columns": [
+      "id",
+      "facility",
+      "target_level",
+      "cost_paid",
+      "started_at",
+      "completes_at",
+      "status",
+      "created_at",
+      "updated_at",
+      "club_id"
+    ],
+    "old_max_id": 7,
+    "rows": 3,
+    "digest": "bdd8c296aac9925704f79d47551cb523"
+  },
+  "game_financematchdayrun": {
+    "columns": [
+      "id",
+      "saison",
+      "spieltag",
+      "run_at",
+      "club_id",
+      "typ"
+    ],
+    "old_max_id": 1350,
+    "rows": 702,
+    "digest": "832e17757c938f90c4b070cf6c803342"
+  },
+  "game_financereservation": {
+    "columns": [
+      "id",
+      "zweck",
+      "referenz",
+      "betrag",
+      "slots",
+      "status",
+      "created_at",
+      "updated_at",
+      "club_id"
+    ],
+    "old_max_id": 6,
+    "rows": 6,
+    "digest": "d338e9b24d9db8eea75fabc5786c3507"
+  },
+  "game_financetransaction": {
+    "columns": [
+      "id",
+      "saison",
+      "spieltag",
+      "typ",
+      "betrag",
+      "referenz_typ",
+      "referenz_id",
+      "beschreibung",
+      "datum",
+      "created_at",
+      "club_id",
+      "referenz_mw"
+    ],
+    "old_max_id": 752,
+    "rows": 752,
+    "digest": "cd148e27afe43a48bf305c2c46e49f31"
+  },
+  "game_forcedauction": {
+    "columns": [
+      "id",
+      "min_bid",
+      "ends_on",
+      "status",
+      "created_at",
+      "settled_on",
+      "player_id",
+      "seller_club_id",
+      "winning_bid_id",
+      "case_id"
+    ],
+    "old_max_id": null,
+    "rows": 0,
+    "digest": "d41d8cd98f00b204e9800998ecf8427e"
+  },
+  "game_forcedauctionbid": {
+    "columns": [
+      "id",
+      "amount",
+      "created_at",
+      "updated_at",
+      "auction_id",
+      "club_id",
+      "manager_id",
+      "ki_meta"
+    ],
+    "old_max_id": null,
+    "rows": 0,
+    "digest": "d41d8cd98f00b204e9800998ecf8427e"
+  },
+  "game_friendlyfixture": {
+    "columns": [
+      "id",
+      "squad_scope",
+      "offered_role",
+      "venue_type",
+      "kickoff_at",
+      "extra_time",
+      "penalties",
+      "penalties_after_90",
+      "comment",
+      "status",
+      "season",
+      "created_at",
+      "resolved_at",
+      "sender_club_id",
+      "simulated_match_id",
+      "target_club_id",
+      "neutral_stadium_id",
+      "simulation_claim",
+      "simulation_claimed_at",
+      "simulation_attempts",
+      "next_simulation_attempt_at",
+      "simulation_last_error"
+    ],
+    "old_max_id": null,
+    "rows": 0,
+    "digest": "d41d8cd98f00b204e9800998ecf8427e"
+  },
+  "game_gameseasonstate": {
+    "columns": [
+      "id",
+      "current_season",
+      "is_started",
+      "started_at",
+      "updated_at",
+      "transfer_window_id",
+      "transfer_window_open"
+    ],
+    "old_max_id": 1,
+    "rows": 1,
+    "digest": "70d3c10bf1da9cebd58824148a076321"
+  },
+  "game_historiccoach": {
+    "columns": [
+      "id",
+      "fm_inside_id",
+      "name",
+      "nationality",
+      "birth_date",
+      "notes"
+    ],
+    "old_max_id": null,
+    "rows": 0,
+    "digest": "d41d8cd98f00b204e9800998ecf8427e"
+  },
+  "game_hoenesscoin": {
+    "columns": [
+      "id",
+      "amount",
+      "updated_at",
+      "manager_id"
+    ],
+    "old_max_id": 2,
+    "rows": 2,
+    "digest": "cb3e6dd8cbb7c6db4639bbf6930a8cf6"
+  },
+  "game_inactivitypenalty": {
+    "columns": [
+      "id",
+      "given_at",
+      "reason",
+      "manager_id"
+    ],
+    "old_max_id": null,
+    "rows": 0,
+    "digest": "d41d8cd98f00b204e9800998ecf8427e"
+  },
+  "game_inactivityrecord": {
+    "columns": [
+      "id",
+      "squad_scope",
+      "season",
+      "matchday_label",
+      "recorded_at",
+      "club_id",
+      "manager_id"
+    ],
+    "old_max_id": 2,
+    "rows": 2,
+    "digest": "a945da07e658461bf6c729392f3aa745"
+  },
+  "game_insolvencycase": {
+    "columns": [
+      "id",
+      "opened_at",
+      "deadline_at",
+      "betrag_bei_eroeffnung",
+      "status",
+      "resolved_at",
+      "enforced_at",
+      "club_id",
+      "trigger_tx_id",
+      "reminder_sent"
+    ],
+    "old_max_id": null,
+    "rows": 0,
+    "digest": "d41d8cd98f00b204e9800998ecf8427e"
+  },
+  "game_landkoeffizient": {
+    "columns": [
+      "id",
+      "land",
+      "saison",
+      "punkte"
+    ],
+    "old_max_id": 9,
+    "rows": 9,
+    "digest": "2252c0cdc04f38c7b02357226296435e"
+  },
+  "game_league": {
+    "columns": [
+      "id",
+      "name",
+      "country",
+      "coefficient_source",
+      "strength_coefficient",
+      "api_football_id",
+      "cl_spots",
+      "conference_spots",
+      "cup_winner_id",
+      "el_spots",
+      "logo_static_path",
+      "relegation_spots",
+      "season_winner_id",
+      "competition_type",
+      "max_teams",
+      "level"
+    ],
+    "old_max_id": 12,
+    "rows": 5,
+    "digest": "f0eb4d767007c25e0d344f1bedf583ac"
+  },
+  "game_leaguenews": {
+    "columns": [
+      "id",
+      "title",
+      "published_at",
+      "thumbnail_static_path",
+      "body",
+      "sort_order",
+      "league_id"
+    ],
+    "old_max_id": 2,
+    "rows": 2,
+    "digest": "f547e52f37e70f2e8fce213cfe54143a"
+  },
+  "game_leagueseasonstate": {
+    "columns": [
+      "id",
+      "season",
+      "current_matchday",
+      "is_simulated",
+      "updated_at",
+      "league_id",
+      "champion_club_id",
+      "completed_at"
+    ],
+    "old_max_id": 4,
+    "rows": 3,
+    "digest": "d07d88f385dca6d388b7400cc7a553b7"
+  },
+  "game_leaguestandings": {
+    "columns": [
+      "id",
+      "season",
+      "position",
+      "position_change",
+      "played",
+      "won",
+      "drawn",
+      "lost",
+      "goals_for",
+      "goals_against",
+      "points",
+      "point_deduction",
+      "form",
+      "club_id",
+      "league_id"
+    ],
+    "old_max_id": 36,
+    "rows": 18,
+    "digest": "487cf0d40b65788ae67b4104e0a74c2b"
+  },
+  "game_listingpin": {
+    "columns": [
+      "id",
+      "created_at",
+      "club_id",
+      "listing_id"
+    ],
+    "old_max_id": null,
+    "rows": 0,
+    "digest": "d41d8cd98f00b204e9800998ecf8427e"
+  },
+  "game_loan": {
+    "columns": [
+      "id",
+      "fee",
+      "until",
+      "buy_option",
+      "started_via",
+      "started_at",
+      "ended_at",
+      "recall_requested",
+      "recall_requested_at",
+      "loan_club_id",
+      "owner_club_id",
+      "player_id"
+    ],
+    "old_max_id": null,
+    "rows": 0,
+    "digest": "d41d8cd98f00b204e9800998ecf8427e"
+  },
+  "game_loanlisting": {
+    "columns": [
+      "id",
+      "fee_asking",
+      "until",
+      "buy_option_price",
+      "status",
+      "created_at",
+      "owner_club_id",
+      "player_id"
+    ],
+    "old_max_id": null,
+    "rows": 0,
+    "digest": "d41d8cd98f00b204e9800998ecf8427e"
+  },
+  "game_managercareerentry": {
+    "columns": [
+      "id",
+      "started_at",
+      "ended_at",
+      "end_reason",
+      "active",
+      "club_id",
+      "manager_id"
+    ],
+    "old_max_id": null,
+    "rows": 0,
+    "digest": "d41d8cd98f00b204e9800998ecf8427e"
+  },
+  "game_managercareerstation": {
+    "columns": [
+      "id",
+      "order",
+      "city_name",
+      "city_country",
+      "map_x",
+      "map_y",
+      "started_at",
+      "ended_at",
+      "games_played",
+      "club_id",
+      "manager_id",
+      "custom_club_name"
+    ],
+    "old_max_id": 17,
+    "rows": 4,
+    "digest": "ed4d0f9c06741b0da244e6ad70da5404"
+  },
+  "game_managercompetitiontitle": {
+    "columns": [
+      "id",
+      "competition_name",
+      "season",
+      "won_at",
+      "club_id",
+      "competition_id",
+      "manager_id"
+    ],
+    "old_max_id": null,
+    "rows": 0,
+    "digest": "d41d8cd98f00b204e9800998ecf8427e"
+  },
+  "game_managernotes": {
+    "columns": [
+      "id",
+      "data",
+      "updated_at",
+      "manager_id"
+    ],
+    "old_max_id": 1,
+    "rows": 1,
+    "digest": "d960dee70a54538b06fc05f36b4efe74"
+  },
+  "game_managerprofile": {
+    "columns": [
+      "id",
+      "name",
+      "trainer_type",
+      "updated_at",
+      "highscore",
+      "level",
+      "member_since",
+      "nationality_flag",
+      "nationality_name",
+      "profile_image",
+      "user_id",
+      "xp",
+      "xp_max",
+      "name_confirmed",
+      "favourite_club_id",
+      "active_title",
+      "inactivity_season_count",
+      "inactivity_streak",
+      "previous_season_score",
+      "residence",
+      "season_score",
+      "title_progress",
+      "transfer_ban_until",
+      "visibility_settings",
+      "login_day14_awarded",
+      "login_day30_awarded",
+      "login_day30_money_paid",
+      "login_last_date",
+      "login_points_today",
+      "login_streak",
+      "birth_date"
+    ],
+    "old_max_id": 4,
+    "rows": 3,
+    "digest": "da1356467b5a4a2f363668ac30f63ff8"
+  },
+  "game_managerseasonscore": {
+    "columns": [
+      "id",
+      "season",
+      "score",
+      "rank",
+      "total_managers",
+      "updated_at",
+      "manager_id"
+    ],
+    "old_max_id": null,
+    "rows": 0,
+    "digest": "d41d8cd98f00b204e9800998ecf8427e"
+  },
+  "game_managerteamphoto": {
+    "columns": [
+      "id",
+      "season",
+      "roster_names",
+      "image",
+      "generated_at",
+      "created_at",
+      "club_id",
+      "manager_id"
+    ],
+    "old_max_id": null,
+    "rows": 0,
+    "digest": "d41d8cd98f00b204e9800998ecf8427e"
+  },
+  "game_managertimelineentry": {
+    "columns": [
+      "id",
+      "club_name",
+      "event_date",
+      "category",
+      "title",
+      "body",
+      "result_text",
+      "show_trophy",
+      "created_at",
+      "club_id",
+      "manager_id",
+      "player_id",
+      "reviewed_at",
+      "status",
+      "competition_name",
+      "opponent_name",
+      "source_key",
+      "source_type",
+      "system_entry",
+      "tone_override",
+      "cup_fixture_id"
+    ],
+    "old_max_id": 5,
+    "rows": 3,
+    "digest": "76354b4aa9a77c871257d32f12474935"
+  },
+  "game_managertitle": {
+    "columns": [
+      "id",
+      "title_key",
+      "unlocked_at",
+      "manager_id"
+    ],
+    "old_max_id": null,
+    "rows": 0,
+    "digest": "d41d8cd98f00b204e9800998ecf8427e"
+  },
+  "game_managervacationblock": {
+    "columns": [
+      "id",
+      "season",
+      "starts_on",
+      "ends_on",
+      "ended_early_at",
+      "created_at",
+      "manager_id"
+    ],
+    "old_max_id": null,
+    "rows": 0,
+    "digest": "d41d8cd98f00b204e9800998ecf8427e"
+  },
+  "game_matchdayrevenue": {
+    "columns": [
+      "id",
+      "match_label",
+      "competition_name",
+      "auslastung_pct",
+      "attendance",
+      "revenue_standing",
+      "revenue_seating",
+      "revenue_vip",
+      "revenue_total",
+      "created_at",
+      "match_result_id",
+      "stadium_id",
+      "attendance_seating",
+      "attendance_standing",
+      "attendance_vip"
+    ],
+    "old_max_id": 54,
+    "rows": 54,
+    "digest": "10236045f299eeae40bd0a3bd63503f8"
+  },
+  "game_matchevent": {
+    "columns": [
+      "id",
+      "order",
+      "seq",
+      "beat",
+      "minute",
+      "added",
+      "team",
+      "kind",
+      "cls",
+      "level",
+      "visible",
+      "text",
+      "actors",
+      "offset_s",
+      "duration_s",
+      "payload",
+      "story_id"
+    ],
+    "old_max_id": 57679,
+    "rows": 28446,
+    "digest": "e0f2edacb2b54773ea708e05942f0423"
+  },
+  "game_matchresult": {
+    "columns": [
+      "id",
+      "season",
+      "competition_name",
+      "matchday_label",
+      "date_label",
+      "home_goals",
+      "away_goals",
+      "result_label",
+      "sort_order",
+      "away_club_id",
+      "club_id",
+      "home_club_id"
+    ],
+    "old_max_id": null,
+    "rows": 0,
+    "digest": "d41d8cd98f00b204e9800998ecf8427e"
+  },
+  "game_matchstory": {
+    "columns": [
+      "id",
+      "source_key",
+      "version",
+      "kickoff_at",
+      "duration_s",
+      "final_score",
+      "tactic_snapshot",
+      "segments",
+      "state",
+      "issues",
+      "created_at",
+      "notification_sent",
+      "match_id",
+      "round_id"
+    ],
+    "old_max_id": 408,
+    "rows": 201,
+    "digest": "5f7f064a7c3c0fb5111c36758b750e62"
+  },
+  "game_matchstoryround": {
+    "columns": [
+      "id",
+      "key",
+      "label",
+      "kickoff_at",
+      "expected_sources",
+      "terminal_sources",
+      "club_ids",
+      "league_id",
+      "tournament_id",
+      "release_enabled",
+      "historical",
+      "release_at",
+      "created_at"
+    ],
+    "old_max_id": 402,
+    "rows": 201,
+    "digest": "a18486f6c1447506931e9d88c3503396"
+  },
+  "game_mediaoutlet": {
+    "columns": [
+      "id",
+      "name",
+      "slug",
+      "accent_color",
+      "has_logo",
+      "sort_order"
+    ],
+    "old_max_id": 24,
+    "rows": 24,
+    "digest": "f6cd30c4a824a08649c6ba7aebdb9fd7"
+  },
+  "game_neutralvenue": {
+    "columns": [
+      "id",
+      "name",
+      "city",
+      "capacity",
+      "is_active"
+    ],
+    "old_max_id": null,
+    "rows": 0,
+    "digest": "d41d8cd98f00b204e9800998ecf8427e"
+  },
+  "game_notification": {
+    "columns": [
+      "id",
+      "title",
+      "body",
+      "url",
+      "is_read",
+      "created_at",
+      "recipient_id"
+    ],
+    "old_max_id": null,
+    "rows": 0,
+    "digest": "d41d8cd98f00b204e9800998ecf8427e"
+  },
+  "game_pendingtransfer": {
+    "columns": [
+      "id",
+      "execute_at",
+      "source",
+      "status",
+      "created_at",
+      "executed_at",
+      "from_club_id",
+      "player_id",
+      "to_club_id",
+      "record_id"
+    ],
+    "old_max_id": null,
+    "rows": 0,
+    "digest": "d41d8cd98f00b204e9800998ecf8427e"
+  },
+  "game_player": {
+    "columns": [
+      "id",
+      "first_name",
+      "last_name",
+      "age",
+      "potential",
+      "position",
+      "market_value",
+      "club_id",
+      "fm_inside_id",
+      "contract_until",
+      "source_positions",
+      "date_of_birth",
+      "nationalities",
+      "primary_position",
+      "salary_per_match",
+      "transfermarkt_id",
+      "transfermarkt_market_value_url",
+      "transfermarkt_profile_url",
+      "main_position_1",
+      "main_position_2",
+      "main_position_3",
+      "real_life_club_id",
+      "secondary_position_1",
+      "secondary_position_2",
+      "secondary_position_3",
+      "ws_injury_days_remaining",
+      "ws_injury_type",
+      "ws_suspension_matches_remaining",
+      "ws_suspension_reason",
+      "api_football_id",
+      "wsc_player_id",
+      "height_cm",
+      "strong_foot",
+      "shirt_number",
+      "nt_nationality",
+      "loan_partner_club_id",
+      "loan_status",
+      "loan_until",
+      "is_on_loan_list",
+      "is_on_transfer_list",
+      "admin_reviewed",
+      "is_callable",
+      "pool_status",
+      "scouting_category",
+      "wsc_conflict",
+      "sale_category",
+      "sale_visible_to_ai",
+      "transfer_locked_until"
+    ],
+    "old_max_id": 22743,
+    "rows": 828,
+    "digest": "83eaff57f6ee6d6d9cdd908eb858f798"
+  },
+  "game_playerawardtitle": {
+    "columns": [
+      "id",
+      "title",
+      "season",
+      "competition",
+      "trophy_asset_id",
+      "count",
+      "awarded_at",
+      "notes",
+      "player_id"
+    ],
+    "old_max_id": null,
+    "rows": 0,
+    "digest": "d41d8cd98f00b204e9800998ecf8427e"
+  },
+  "game_playerclubhistory": {
+    "columns": [
+      "id",
+      "season",
+      "created_at",
+      "club_id",
+      "player_id"
+    ],
+    "old_max_id": 1000,
+    "rows": 1000,
+    "digest": "be6a62231e8f7fbd11e16be2197150de"
+  },
+  "game_playercmtattributeprofile": {
+    "columns": [
+      "id",
+      "db_slug",
+      "pac",
+      "sho",
+      "pas",
+      "dri",
+      "def_rating",
+      "phy",
+      "acceleration",
+      "sprint_speed",
+      "agility",
+      "balance",
+      "jumping",
+      "stamina",
+      "strength",
+      "reactions",
+      "aggression",
+      "composure",
+      "interceptions",
+      "positioning",
+      "vision",
+      "ball_control",
+      "crossing",
+      "dribbling",
+      "finishing",
+      "freekick_accuracy",
+      "heading_accuracy",
+      "long_passing",
+      "short_passing",
+      "marking",
+      "shot_power",
+      "long_shots",
+      "standing_tackle",
+      "sliding_tackle",
+      "volleys",
+      "curve",
+      "penalties",
+      "gk_diving",
+      "gk_handling",
+      "gk_kicking",
+      "gk_reflexes",
+      "gk_positioning",
+      "raw_attributes",
+      "imported_at",
+      "fetched_at",
+      "payload_hash",
+      "player_id"
+    ],
+    "old_max_id": null,
+    "rows": 0,
+    "digest": "d41d8cd98f00b204e9800998ecf8427e"
+  },
+  "game_playercmtprofile": {
+    "columns": [
+      "id",
+      "db_slug",
+      "database_version",
+      "cmt_player_id",
+      "first_name",
+      "last_name",
+      "known_as",
+      "display_name",
+      "nationality",
+      "second_nationality",
+      "date_of_birth",
+      "overall",
+      "potential",
+      "height_cm",
+      "weight_kg",
+      "preferred_foot",
+      "body_type",
+      "emotion",
+      "real_life_club",
+      "on_loan_from_club",
+      "playstyles",
+      "playstyles_plus",
+      "roles",
+      "role_plus",
+      "role_plus_plus",
+      "player_image_url",
+      "player_image_cached_path",
+      "raw_payload",
+      "payload_hash",
+      "imported_at",
+      "fetched_at",
+      "last_imported_at",
+      "last_verified_at",
+      "source_priority",
+      "data_quality_flags",
+      "missing_required_fields",
+      "player_id"
+    ],
+    "old_max_id": null,
+    "rows": 0,
+    "digest": "d41d8cd98f00b204e9800998ecf8427e"
+  },
+  "game_playereditlog": {
+    "columns": [
+      "id",
+      "changed_at",
+      "category",
+      "summary",
+      "changed_by_id",
+      "player_id"
+    ],
+    "old_max_id": 242,
+    "rows": 226,
+    "digest": "b006c46350fb2524098088bd40b9f33b"
+  },
+  "game_playereditrequest": {
+    "columns": [
+      "id",
+      "field_name",
+      "old_value",
+      "new_value",
+      "requester_name",
+      "requester_note",
+      "status",
+      "decision_note",
+      "decided_at",
+      "created_at",
+      "updated_at",
+      "decided_by_id",
+      "player_id"
+    ],
+    "old_max_id": null,
+    "rows": 0,
+    "digest": "d41d8cd98f00b204e9800998ecf8427e"
+  },
+  "game_playerexternalid": {
+    "columns": [
+      "id",
+      "external_id",
+      "profile_url",
+      "is_primary",
+      "notes",
+      "created_at",
+      "updated_at",
+      "player_id",
+      "source_id",
+      "db_slug",
+      "last_seen_at",
+      "source_url"
+    ],
+    "old_max_id": 20563,
+    "rows": 479,
+    "digest": "3d4ef963c59f5efc32345936cba1d227"
+  },
+  "game_playerfmiprofile": {
+    "columns": [
+      "id",
+      "fmi_id",
+      "fmi_overall",
+      "fmi_potential",
+      "fmi_attributes",
+      "fmi_version",
+      "imported_at",
+      "fetched_at",
+      "last_imported_at",
+      "last_verified_at",
+      "data_quality_flags",
+      "missing_required_fields",
+      "player_id"
+    ],
+    "old_max_id": null,
+    "rows": 0,
+    "digest": "d41d8cd98f00b204e9800998ecf8427e"
+  },
+  "game_playerformsnapshot": {
+    "columns": [
+      "id",
+      "source",
+      "fixture_id",
+      "fixture_date",
+      "league_api_football_id",
+      "team_api_football_id",
+      "team_name",
+      "opponent_name",
+      "minutes_played",
+      "possible_minutes",
+      "minutes_quote",
+      "started",
+      "substituted_in",
+      "captain",
+      "position",
+      "rating",
+      "goals",
+      "assists",
+      "yellow_cards",
+      "red_cards",
+      "raw_payload",
+      "fetched_at",
+      "player_id"
+    ],
+    "old_max_id": 4594,
+    "rows": 2685,
+    "digest": "f964db09a89d2db4cea6d5aeb05098fe"
+  },
+  "game_playerimportcandidate": {
+    "columns": [
+      "id",
+      "tm_player_id",
+      "status",
+      "selected_for_import",
+      "overwrite_existing",
+      "tm_raw",
+      "position_raw",
+      "fmi_raw",
+      "sofifa_raw",
+      "normalized_data",
+      "detected_changes",
+      "validation_errors",
+      "source_warnings",
+      "created_at",
+      "updated_at",
+      "existing_player_id",
+      "job_id"
+    ],
+    "old_max_id": 218,
+    "rows": 218,
+    "digest": "75f0f0d60622d368a952306300f1478c"
+  },
+  "game_playerinjuryrecord": {
+    "columns": [
+      "id",
+      "start_date",
+      "end_date",
+      "injury_type",
+      "days_missed",
+      "competition",
+      "is_active",
+      "notes",
+      "player_id"
+    ],
+    "old_max_id": 20,
+    "rows": 15,
+    "digest": "463ed2b30870210bd016979d6cbbbbd1"
+  },
+  "game_playermarketvaluesnapshot": {
+    "columns": [
+      "id",
+      "recorded_at",
+      "value_eur",
+      "profile_url",
+      "source_version",
+      "update_current",
+      "raw_payload",
+      "notes",
+      "created_at",
+      "player_id",
+      "source_id"
+    ],
+    "old_max_id": 1282,
+    "rows": 424,
+    "digest": "c7008fe6848f7d2b9b64f38f1e183c91"
+  },
+  "game_playerrlformprofile": {
+    "columns": [
+      "id",
+      "api_football_player_id",
+      "api_football_team_id",
+      "api_football_team_name",
+      "api_football_season",
+      "rl_form_score",
+      "rl_form_fit",
+      "rl_form_avg_rating",
+      "rl_form_minutes",
+      "rl_form_minutes_share",
+      "rl_form_games_checked",
+      "rl_form_games_played",
+      "rl_form_status",
+      "rl_form_updated_at",
+      "player_id"
+    ],
+    "old_max_id": 1316,
+    "rows": 426,
+    "digest": "9a858497e434ee255ddfc98cad49dc89"
+  },
+  "game_playerseasonstat": {
+    "columns": [
+      "id",
+      "season",
+      "competition",
+      "matches",
+      "goals",
+      "assists",
+      "yellow_cards",
+      "red_cards",
+      "minutes_played",
+      "created_at",
+      "updated_at",
+      "player_id",
+      "average_grade",
+      "season_number",
+      "substitutions_in",
+      "substitutions_out",
+      "player_of_match_awards",
+      "club_id",
+      "dismissals",
+      "rating_best",
+      "rating_count",
+      "rating_sum",
+      "rating_worst",
+      "starts"
+    ],
+    "old_max_id": 816,
+    "rows": 306,
+    "digest": "fc2d0fd43edb1108d31ecb7e27d4575a"
+  },
+  "game_playersourcerating": {
+    "columns": [
+      "id",
+      "source",
+      "rating",
+      "potential",
+      "source_url",
+      "source_version",
+      "checked_at",
+      "notes",
+      "created_at",
+      "updated_at",
+      "player_id",
+      "abschluss",
+      "ausdauer",
+      "defensivstellung",
+      "dribbling",
+      "ecken",
+      "elfmeter",
+      "flanken",
+      "freistoss",
+      "kopfball",
+      "kraft",
+      "passspiel",
+      "teamwork",
+      "technik",
+      "tempo",
+      "tw_eins_gegen_eins",
+      "tw_fangsicherheit",
+      "tw_passen",
+      "tw_reflexe",
+      "tw_stellungsspiel",
+      "uebersicht",
+      "zweikampf"
+    ],
+    "old_max_id": 22187,
+    "rows": 1287,
+    "digest": "5d86e01b48cca2631d64b98c9e4af0fe"
+  },
+  "game_playersourceratingsnapshot": {
+    "columns": [
+      "id",
+      "recorded_at",
+      "rating",
+      "potential",
+      "source_url",
+      "source_version",
+      "update_current",
+      "raw_payload",
+      "notes",
+      "created_at",
+      "player_id",
+      "source_id"
+    ],
+    "old_max_id": 154,
+    "rows": 49,
+    "digest": "c5291794ac106c18c563056aa743db3d"
+  },
+  "game_playerstrengthprofile": {
+    "columns": [
+      "id",
+      "base_strength",
+      "form_modifier",
+      "final_strength",
+      "updated_at",
+      "player_id",
+      "freshness"
+    ],
+    "old_max_id": 22413,
+    "rows": 504,
+    "digest": "a4a2daa4f239cb7434fc4dc51bf88595"
+  },
+  "game_playerstrengthsnapshot": {
+    "columns": [
+      "id",
+      "recorded_at",
+      "match_reference",
+      "base_strength",
+      "final_strength",
+      "max_strength",
+      "last_10_average_strength",
+      "freshness",
+      "form_modifier",
+      "raw_payload",
+      "notes",
+      "created_at",
+      "player_id"
+    ],
+    "old_max_id": 22889,
+    "rows": 1296,
+    "digest": "b0f53d8a115f0b391e5bc0febadfb46d"
+  },
+  "game_playersuspensionrecord": {
+    "columns": [
+      "id",
+      "start_date",
+      "end_date",
+      "reason",
+      "matches_missed",
+      "competition",
+      "is_active",
+      "notes",
+      "player_id"
+    ],
+    "old_max_id": 10,
+    "rows": 5,
+    "digest": "33ae722d3da6691428ff51b213490cd2"
+  },
+  "game_playertmprofile": {
+    "columns": [
+      "id",
+      "tm_player_id",
+      "tm_club_id",
+      "market_value",
+      "market_value_date",
+      "tm_position_raw",
+      "tm_position_calculated_websoccer",
+      "source_url",
+      "imported_at",
+      "fetched_at",
+      "last_imported_at",
+      "last_verified_at",
+      "data_quality_flags",
+      "missing_required_fields",
+      "player_id"
+    ],
+    "old_max_id": null,
+    "rows": 0,
+    "digest": "d41d8cd98f00b204e9800998ecf8427e"
+  },
+  "game_playertransferhistory": {
+    "columns": [
+      "id",
+      "transfer_date",
+      "season",
+      "fee_eur",
+      "notes",
+      "created_at",
+      "from_club_id",
+      "player_id",
+      "to_club_id"
+    ],
+    "old_max_id": 8,
+    "rows": 1,
+    "digest": "98da414936f72645df42eabe5169c8ce"
+  },
+  "game_playerweightedratingsnapshot": {
+    "columns": [
+      "id",
+      "source",
+      "recorded_at",
+      "fixture_reference",
+      "weighted_rating",
+      "rating_minutes",
+      "match_count",
+      "window_label",
+      "raw_payload",
+      "notes",
+      "created_at",
+      "player_id"
+    ],
+    "old_max_id": null,
+    "rows": 0,
+    "digest": "d41d8cd98f00b204e9800998ecf8427e"
+  },
+  "game_positionbarometer": {
+    "columns": [
+      "id",
+      "position",
+      "supply",
+      "demand",
+      "weight",
+      "updated_at"
+    ],
+    "old_max_id": null,
+    "rows": 0,
+    "digest": "d41d8cd98f00b204e9800998ecf8427e"
+  },
+  "game_presidentsatisfaction": {
+    "columns": [
+      "id",
+      "value",
+      "updated_at",
+      "club_id",
+      "manager_id"
+    ],
+    "old_max_id": 4,
+    "rows": 4,
+    "digest": "28453b09af84b617519bbf14aa9fb62d"
+  },
+  "game_referee": {
+    "columns": [
+      "id",
+      "fm_uid",
+      "name",
+      "nationality",
+      "nationality_code",
+      "schlagwort",
+      "vorsaison_spiele",
+      "vorsaison_gelb_avg",
+      "vorsaison_rot",
+      "vorsaison_elfmeter",
+      "vorsaison_umstritten",
+      "vorsaison_competitions",
+      "birth_date",
+      "quote",
+      "level",
+      "karten_tendenz",
+      "spielfluss_tendenz"
+    ],
+    "old_max_id": 463,
+    "rows": 463,
+    "digest": "c2b6e0c9e1a46c3eda7bb3809a822a20"
+  },
+  "game_rumornews": {
+    "columns": [
+      "id",
+      "event_type",
+      "outlet",
+      "headline",
+      "sum_mode",
+      "reaction",
+      "reaction_at",
+      "published_at",
+      "affected_club_id",
+      "player_id",
+      "published_day"
+    ],
+    "old_max_id": 2,
+    "rows": 2,
+    "digest": "523d9bc28c12e0d957f85d0005bd4e48"
+  },
+  "game_scoutingassignment": {
+    "columns": [
+      "id",
+      "scope_type",
+      "scope_key",
+      "position",
+      "profile",
+      "department_level",
+      "cost",
+      "duration_days",
+      "started_on",
+      "completes_on",
+      "season_id",
+      "status",
+      "finds_generated",
+      "created_at",
+      "club_id",
+      "manager_id"
+    ],
+    "old_max_id": null,
+    "rows": 0,
+    "digest": "d41d8cd98f00b204e9800998ecf8427e"
+  },
+  "game_scoutingbid": {
+    "columns": [
+      "id",
+      "amount",
+      "min_bid",
+      "window_date",
+      "season_id",
+      "coin_earmarked",
+      "coin_used",
+      "status",
+      "created_at",
+      "settled_on",
+      "club_id",
+      "manager_id",
+      "player_id",
+      "find_id"
+    ],
+    "old_max_id": null,
+    "rows": 0,
+    "digest": "d41d8cd98f00b204e9800998ecf8427e"
+  },
+  "game_scoutingdepartment": {
+    "columns": [
+      "id",
+      "level",
+      "created_at",
+      "updated_at",
+      "club_id"
+    ],
+    "old_max_id": 3,
+    "rows": 3,
+    "digest": "06457bf98b47cefdcee45dc370267a21"
+  },
+  "game_scoutingfind": {
+    "columns": [
+      "id",
+      "order",
+      "observer_count",
+      "min_bid",
+      "status",
+      "created_at",
+      "assignment_id",
+      "player_id"
+    ],
+    "old_max_id": null,
+    "rows": 0,
+    "digest": "d41d8cd98f00b204e9800998ecf8427e"
+  },
+  "game_seasoneconomysnapshot": {
+    "columns": [
+      "id",
+      "saison",
+      "mw_median",
+      "staerke_median",
+      "potential_median",
+      "mw_kurve_json",
+      "gehalts_anker",
+      "created_at"
+    ],
+    "old_max_id": 2,
+    "rows": 2,
+    "digest": "6c397a75e5dc7485a9a560ddb7a71222"
+  },
+  "game_seasonfinancestate": {
+    "columns": [
+      "id",
+      "saison",
+      "opened_at",
+      "closed_at",
+      "report_json"
+    ],
+    "old_max_id": 2,
+    "rows": 2,
+    "digest": "2fe6d9c2fd16ba784234b81494744fa1"
+  },
+  "game_seasonfixture": {
+    "columns": [
+      "id",
+      "matchday",
+      "scheduled_date",
+      "scheduled_time",
+      "season",
+      "home_goals",
+      "away_goals",
+      "is_played",
+      "home_lineup_set",
+      "away_lineup_set",
+      "away_club_id",
+      "home_club_id",
+      "league_id",
+      "home_lineup_malus",
+      "away_lineup_malus",
+      "simulated_match_id"
+    ],
+    "old_max_id": 1530,
+    "rows": 306,
+    "digest": "89a93fe8fd75f8e6d84e48f0e3879435"
+  },
+  "game_seasongoal": {
+    "columns": [
+      "id",
+      "season_number",
+      "goal_tier",
+      "rank_in_league",
+      "league_size",
+      "squad_strength",
+      "required_max_rank",
+      "final_rank",
+      "achieved",
+      "declared_at",
+      "evaluated_at",
+      "club_id"
+    ],
+    "old_max_id": 3,
+    "rows": 1,
+    "digest": "205cf39d3d19357bab4892e2deaa6a44"
+  },
+  "game_sellonclause": {
+    "columns": [
+      "id",
+      "percent",
+      "active",
+      "created_at",
+      "beneficiary_club_id",
+      "player_id"
+    ],
+    "old_max_id": null,
+    "rows": 0,
+    "digest": "d41d8cd98f00b204e9800998ecf8427e"
+  },
+  "game_simulatedmatch": {
+    "columns": [
+      "id",
+      "home_goals",
+      "away_goals",
+      "report_data",
+      "simulated_at",
+      "away_club_id",
+      "home_club_id",
+      "match_type",
+      "match_no",
+      "season",
+      "referee_id",
+      "story_source_key",
+      "story_tactic_snapshot",
+      "story_round_id"
+    ],
+    "old_max_id": 249,
+    "rows": 201,
+    "digest": "a10780bb30e9fe293abb042632c78a32"
+  },
+  "game_sourceimportrun": {
+    "columns": [
+      "id",
+      "source",
+      "version",
+      "file_name",
+      "imported_at",
+      "dry_run",
+      "total_rows",
+      "count_new",
+      "count_updated",
+      "count_unchanged",
+      "count_unmatched",
+      "count_error",
+      "unmatched",
+      "notes",
+      "created_by_id"
+    ],
+    "old_max_id": 1,
+    "rows": 1,
+    "digest": "6a207b5b706c134652a00b36100ff745"
+  },
+  "game_sponsor": {
+    "columns": [
+      "id",
+      "slug",
+      "name",
+      "display_name",
+      "bereich",
+      "branche",
+      "aktiv",
+      "created_at",
+      "domain"
+    ],
+    "old_max_id": 504,
+    "rows": 504,
+    "digest": "df2dc25b8364e752142bb27ff760f6ef"
+  },
+  "game_sponsorcontract": {
+    "columns": [
+      "id",
+      "saison",
+      "club_id",
+      "slot",
+      "sponsor_id",
+      "offer_id",
+      "fix_saison",
+      "auto",
+      "abgelaufen",
+      "created_at"
+    ],
+    "old_max_id": 5,
+    "rows": 5,
+    "digest": "1ea1a819172c088fc85ce01a9485ec03"
+  },
+  "game_sponsoroffer": {
+    "columns": [
+      "id",
+      "saison",
+      "typ",
+      "sponsor_name",
+      "fix_betrag",
+      "variable_json",
+      "erwartungswert",
+      "gewaehlt",
+      "angenommen_at",
+      "created_at",
+      "club_id",
+      "slot",
+      "sponsor_id",
+      "fix_start",
+      "fix_aktuell",
+      "var_rate",
+      "var_ziel",
+      "mult",
+      "runde",
+      "status"
+    ],
+    "old_max_id": 445,
+    "rows": 428,
+    "digest": "a0d77f60f98893816b374c59a18e259b"
+  },
+  "game_squadlimitnote": {
+    "columns": [
+      "id",
+      "text",
+      "status",
+      "created_at",
+      "club_id",
+      "player_id"
+    ],
+    "old_max_id": null,
+    "rows": 0,
+    "digest": "d41d8cd98f00b204e9800998ecf8427e"
+  },
+  "game_squadoffer": {
+    "columns": [
+      "id",
+      "status",
+      "updated_at",
+      "player_id"
+    ],
+    "old_max_id": null,
+    "rows": 0,
+    "digest": "d41d8cd98f00b204e9800998ecf8427e"
+  },
+  "game_stadionumfeldconfig": {
+    "columns": [
+      "id",
+      "state",
+      "updated_at"
+    ],
+    "old_max_id": 1,
+    "rows": 1,
+    "digest": "82b4aad46484cee321d27b769e9857ff"
+  },
+  "game_stadium": {
+    "columns": [
+      "id",
+      "name",
+      "city",
+      "lawn_quality",
+      "nord_standing",
+      "nord_seating",
+      "nord_vip",
+      "ost_standing",
+      "ost_seating",
+      "ost_vip",
+      "sued_standing",
+      "sued_seating",
+      "sued_vip",
+      "west_standing",
+      "west_seating",
+      "west_vip",
+      "price_standing",
+      "price_seating",
+      "price_vip",
+      "club_id",
+      "medizin_level",
+      "nlz_level",
+      "office_level",
+      "training_level"
+    ],
+    "old_max_id": 22,
+    "rows": 22,
+    "digest": "18a3a09f091e75b0eed621ca3ae8f290"
+  },
+  "game_stadiumexpansion": {
+    "columns": [
+      "id",
+      "stand",
+      "seat_type",
+      "seats_added",
+      "cost",
+      "ordered_at",
+      "stadium_id",
+      "applied",
+      "completes_at"
+    ],
+    "old_max_id": 1,
+    "rows": 1,
+    "digest": "c5f0e5849b43ed45db5fb4d168be14bd"
+  },
+  "game_storyaudit": {
+    "columns": [
+      "id",
+      "action",
+      "target",
+      "details",
+      "created_at",
+      "actor_id"
+    ],
+    "old_max_id": 4,
+    "rows": 4,
+    "digest": "6161bc145b21a1fb630fcb9f2487e2c9"
+  },
+  "game_storysettings": {
+    "columns": [
+      "id",
+      "story_release_enabled"
+    ],
+    "old_max_id": null,
+    "rows": 0,
+    "digest": "d41d8cd98f00b204e9800998ecf8427e"
+  },
+  "game_strengthformulasettings": {
+    "columns": [
+      "id",
+      "name",
+      "is_active",
+      "rating_modifier_factor",
+      "default_league_median_rating",
+      "default_freshness",
+      "notes",
+      "updated_at"
+    ],
+    "old_max_id": 1,
+    "rows": 1,
+    "digest": "5c264eedffdb9520cb3a661d31717363"
+  },
+  "game_strengthmodifierrule": {
+    "columns": [
+      "id",
+      "category",
+      "label",
+      "min_value",
+      "max_value",
+      "modifier",
+      "risk_label",
+      "sort_order",
+      "is_active",
+      "settings_id"
+    ],
+    "old_max_id": 15,
+    "rows": 15,
+    "digest": "908f1ab28e9cb2c8f71c3b763bc24afe"
+  },
+  "game_supportticket": {
+    "columns": [
+      "id",
+      "title",
+      "description",
+      "screenshot",
+      "status",
+      "admin_response",
+      "created_at",
+      "closed_at",
+      "manager_id"
+    ],
+    "old_max_id": null,
+    "rows": 0,
+    "digest": "d41d8cd98f00b204e9800998ecf8427e"
+  },
+  "game_tacticsetup": {
+    "columns": [
+      "id",
+      "squad_scope",
+      "formation",
+      "lineup",
+      "bench",
+      "standards",
+      "substitutions",
+      "first_half",
+      "second_half",
+      "is_confirmed",
+      "confirmed_at",
+      "updated_at",
+      "club_id",
+      "conditions",
+      "instructions",
+      "is_locked",
+      "lineup_confirmed_matchday",
+      "context"
+    ],
+    "old_max_id": 86,
+    "rows": 22,
+    "digest": "617156c9f457b50c62b9b6f3887a2e9b"
+  },
+  "game_tactictemplate": {
+    "columns": [
+      "id",
+      "squad_scope",
+      "name",
+      "formation",
+      "lineup",
+      "bench",
+      "standards",
+      "substitutions",
+      "first_half",
+      "second_half",
+      "created_at",
+      "updated_at",
+      "club_id",
+      "conditions",
+      "instructions"
+    ],
+    "old_max_id": 2,
+    "rows": 2,
+    "digest": "73750b1d85b182bd1c03d33985d410bf"
+  },
+  "game_transferbid": {
+    "columns": [
+      "id",
+      "amount",
+      "is_leading",
+      "created_at",
+      "club_id",
+      "listing_id"
+    ],
+    "old_max_id": 5,
+    "rows": 5,
+    "digest": "09b7a5ceccbbe2fbf281bfeef8b93be7"
+  },
+  "game_transferlisting": {
+    "columns": [
+      "id",
+      "min_bid",
+      "buy_now",
+      "timing",
+      "duration_days",
+      "listed_at",
+      "ends_at",
+      "extensions",
+      "status",
+      "created_at",
+      "updated_at",
+      "player_id",
+      "seller_id"
+    ],
+    "old_max_id": 5,
+    "rows": 5,
+    "digest": "0167cff1474e60c8c468e374508a742e"
+  },
+  "game_transferlock": {
+    "columns": [
+      "id",
+      "locked_until",
+      "created_at",
+      "player_id",
+      "source_record_id"
+    ],
+    "old_max_id": null,
+    "rows": 0,
+    "digest": "d41d8cd98f00b204e9800998ecf8427e"
+  },
+  "game_transfernegotiation": {
+    "columns": [
+      "id",
+      "status",
+      "runde",
+      "letztes_gebot",
+      "gegenforderung",
+      "noise_seed",
+      "cooldown_until",
+      "created_at",
+      "updated_at",
+      "bidder_club_id",
+      "player_id",
+      "seller_club_id"
+    ],
+    "old_max_id": null,
+    "rows": 0,
+    "digest": "d41d8cd98f00b204e9800998ecf8427e"
+  },
+  "game_transferrecord": {
+    "columns": [
+      "id",
+      "date",
+      "kind",
+      "timing",
+      "cash_a",
+      "cash_b",
+      "loan_event",
+      "loan_until",
+      "is_admin",
+      "is_cancelled",
+      "created_at",
+      "club_a_id",
+      "club_b_id"
+    ],
+    "old_max_id": null,
+    "rows": 0,
+    "digest": "d41d8cd98f00b204e9800998ecf8427e"
+  },
+  "game_transferrecordplayer": {
+    "columns": [
+      "id",
+      "side",
+      "market_value_at_transfer",
+      "player_id",
+      "record_id"
+    ],
+    "old_max_id": null,
+    "rows": 0,
+    "digest": "d41d8cd98f00b204e9800998ecf8427e"
+  },
+  "game_transferreport": {
+    "columns": [
+      "id",
+      "reason",
+      "status",
+      "created_at",
+      "resolved_at",
+      "record_id",
+      "reporter_club_id"
+    ],
+    "old_max_id": null,
+    "rows": 0,
+    "digest": "d41d8cd98f00b204e9800998ecf8427e"
+  },
+  "game_tvpot": {
+    "columns": [
+      "id",
+      "saison",
+      "land",
+      "rang",
+      "gesamt"
+    ],
+    "old_max_id": 18,
+    "rows": 18,
+    "digest": "4360c62aa19e02cea39464239a3e2007"
+  },
+  "game_vereinkoeffizient": {
+    "columns": [
+      "id",
+      "saison",
+      "punkte",
+      "club_id"
+    ],
+    "old_max_id": 19,
+    "rows": 19,
+    "digest": "cc1f1cc31dc649cc3533550ca13886d5"
+  },
+  "game_watchlistentry": {
+    "columns": [
+      "id",
+      "status",
+      "created_at",
+      "updated_at",
+      "manager_id",
+      "player_id"
+    ],
+    "old_max_id": 1,
+    "rows": 1,
+    "digest": "16e97449840b892ec72a8d222fdec75a"
+  },
+  "game_youthlevypayment": {
+    "columns": [
+      "id",
+      "percent",
+      "amount",
+      "payer_club_id",
+      "player_id",
+      "receiver_club_id",
+      "record_id"
+    ],
+    "old_max_id": null,
+    "rows": 0,
+    "digest": "d41d8cd98f00b204e9800998ecf8427e"
+  },
+  "showauction_showauction": {
+    "columns": [
+      "id",
+      "config_snapshot",
+      "type_name",
+      "color_hex",
+      "rules_text",
+      "player_prev_pool_status",
+      "hero_image",
+      "media_logo",
+      "status",
+      "starts_at",
+      "ends_at",
+      "start_price",
+      "market_value_snapshot",
+      "hidden_target",
+      "hidden_width",
+      "hold_step_index",
+      "extension_count",
+      "endspurt_notified",
+      "conditions",
+      "winning_amount",
+      "settled_at",
+      "fail_reason",
+      "created_at",
+      "updated_at",
+      "created_by_id",
+      "player_id",
+      "winner_club_id",
+      "preset_id"
+    ],
+    "old_max_id": 4,
+    "rows": 1,
+    "digest": "68f793926067732dccba67feee0a05ff"
+  },
+  "showauction_showauctionbid": {
+    "columns": [
+      "id",
+      "amount",
+      "is_active",
+      "is_leading",
+      "coin_charged",
+      "reservation_ref",
+      "created_at",
+      "updated_at",
+      "auction_id",
+      "club_id",
+      "manager_id"
+    ],
+    "old_max_id": null,
+    "rows": 0,
+    "digest": "d41d8cd98f00b204e9800998ecf8427e"
+  },
+  "showauction_showauctionpreset": {
+    "columns": [
+      "id",
+      "name",
+      "slug",
+      "color_hex",
+      "icon",
+      "rules_text",
+      "config",
+      "is_active",
+      "sort_order",
+      "created_at",
+      "updated_at"
+    ],
+    "old_max_id": 5,
+    "rows": 5,
+    "digest": "54f3470ecc3fe713e3205027b693e2c6"
+  },
+  "showauction_showauctionwatch": {
+    "columns": [
+      "id",
+      "source",
+      "created_at",
+      "auction_id",
+      "club_id"
+    ],
+    "old_max_id": null,
+    "rows": 0,
+    "digest": "d41d8cd98f00b204e9800998ecf8427e"
+  },
+  "stadium_editor_stadiumdesign": {
+    "columns": [
+      "id",
+      "design",
+      "updated_at",
+      "stadium_id",
+      "blickrichtung"
+    ],
+    "old_max_id": 3,
+    "rows": 2,
+    "digest": "0a720db50f21b4171e80b4bb54aa7bf7"
+  },
+  "stadium_editor_stadiumgeometry": {
+    "columns": [
+      "id",
+      "geometry",
+      "schema_version",
+      "source",
+      "attribution",
+      "last_warning",
+      "updated_at",
+      "stadium_id",
+      "steckbrief"
+    ],
+    "old_max_id": 21,
+    "rows": 20,
+    "digest": "061e93f6ed39197623867b2da5145837"
+  }
+}

@@ -1,8 +1,8 @@
 """Approved N28–N31 extensions of the existing game anchors.
 
-Schema activation is explicit while the current public database is unmigrated.
-The pilot and later live cutover load precisely this same model extension and
-the same Django migration. This is not a parallel app/model set.
+N33: installed unconditionally in every environment. The temporary
+IMPORT_PACKAGE_MODE flag controls behavior only, never model definitions.
+Remove the flag and old behavior branches after the approved live takeover.
 """
 from django.db import models
 
@@ -126,16 +126,29 @@ def install(namespace):
             add("Stadium", "real_" + base + "_basis", models.CharField(
                 max_length=10, null=True, blank=True,
                 choices=[("belegt", "Belegt"), ("berechnet", "Berechnet")]))
-            change("Stadium", base, null=True, blank=True, default=None)
+            # Keep legacy constructor defaults. Package initialization explicitly
+            # writes None for unknown capacity; model state must never depend on mode.
+            change("Stadium", base, null=True, blank=True, default=0)
+    old_capacities = {
+        kind: getattr(namespace["Stadium"], "capacity_" + kind)
+        for kind in ("total", "standing", "seating", "vip")
+    }
     def capacity(stadium, kinds):
         values = [getattr(stadium, side + "_" + kind)
                   for side in ("nord", "ost", "sued", "west") for kind in kinds]
         return None if any(value is None for value in values) else sum(values)
-    namespace["Stadium"].add_to_class("capacity_total", property(
-        lambda stadium: capacity(stadium, ("standing", "seating", "vip"))))
+    def capacity_property(kind, kinds):
+        def get_capacity(stadium):
+            from django.conf import settings
+            if not getattr(settings, "IMPORT_PACKAGE_MODE", False):
+                return old_capacities[kind].fget(stadium)
+            return capacity(stadium, kinds)
+        return property(get_capacity)
+    namespace["Stadium"].add_to_class("capacity_total", capacity_property(
+        "total", ("standing", "seating", "vip")))
     for kind in ("standing", "seating", "vip"):
-        namespace["Stadium"].add_to_class("capacity_" + kind, property(
-            lambda stadium, kind=kind: capacity(stadium, (kind,))))
+        namespace["Stadium"].add_to_class("capacity_" + kind,
+                                        capacity_property(kind, (kind,)))
 
     add("Player", "display_name", text())
     add("Player", "selection_evidence", models.JSONField(default=dict, blank=True))
@@ -145,16 +158,19 @@ def install(namespace):
         add("Player", role, fk("game.Club"))
         add("Player", role + "_tm_id", models.PositiveBigIntegerField(null=True, blank=True))
         add("Player", role + "_original_name", text())
-    add("Player", "import_lock", models.BooleanField(default=True))
+    add("Player", "import_lock", models.BooleanField(default=False))
     add("Player", "import_lock_reasons", models.JSONField(default=list, blank=True))
+    add("Player", "review_pool", models.BooleanField(default=False))
+    change("Player", "potential", null=True, blank=True)
+    add("League", "is_playable", models.BooleanField(default=True))
     constrain("Player", models.CheckConstraint(condition=(
         models.Q(squad_team__isnull=True) | models.Q(squad_team__in=["first", "u21"])),
         name="player_squad_team_valid"))
     # N31: no real_loan_* columns. real_life_club is retained ONLY for old readers.
     namespace["Player"].add_to_class("is_in_loan_pool", property(
-        lambda p: bool(p.owner_club_id and p.loan_club_tm_id and p.owner_club_tm_id
+        lambda p: bool(not p.review_pool and p.club_id is None and p.owner_club_tm_id and p.loan_club_tm_id
                        and p.loan_club_tm_id != p.owner_club_tm_id
-                       and p.club_id != p.owner_club_id)))
+                       and p.loan_club_id is None)))
 
     for model in ("PlayerExternalId", "ClubExternalId"):
         add(model, "status", models.CharField(max_length=20, choices=IDENTITY_STATUS,

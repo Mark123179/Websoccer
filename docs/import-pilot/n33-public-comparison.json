@@ -1,0 +1,5 @@
+{
+  "old_tables": 159,
+  "changed_tables": [],
+  "excluded_activity_column": "game_managerprofile.last_seen"
+}

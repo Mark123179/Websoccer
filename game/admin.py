@@ -11,6 +11,7 @@ from django.utils.html import format_html, format_html_join
 from django.utils.safestring import mark_safe
 from datetime import timedelta
 from decimal import Decimal
+from .club_import.runtime import owner, owner_name, ownership_field, package_mode
 from .models import (
     COUNTRY_FLAG_ASSETS,
     ClubFinancialTransaction,
@@ -151,6 +152,8 @@ class PlayerNationalityForm(forms.ModelForm):
         )
         self.fields['club'].queryset = club_queryset
         self.fields['real_life_club'].queryset = club_queryset
+        if package_mode():
+            self.fields.pop('real_life_club')
 
         nationalities = []
         if self.instance and self.instance.nationalities:
@@ -1894,7 +1897,35 @@ class StrengthFormulaSettingsAdmin(admin.ModelAdmin):
     inlines = [StrengthModifierRuleInline]
 
 
-class PlayerAdmin(admin.ModelAdmin):
+class PackageOwnerAdminMixin:
+    """Runtime field remapping, preserving the legacy form/filter contract."""
+    def _owner_fields(self, value):
+        if isinstance(value, str):
+            return value.replace("real_life_club", "owner_club") if package_mode() else value
+        if isinstance(value, dict):
+            return {k: self._owner_fields(v) for k, v in value.items()}
+        if isinstance(value, (tuple, list)):
+            return type(value)(self._owner_fields(v) for v in value)
+        return value
+
+    def get_list_display(self, request):
+        fields = self._owner_fields(super().get_list_display(request))
+        return tuple("package_owner_display" if f == "owner_club" else f for f in fields) if package_mode() else fields
+
+    @admin.display(description="Stammverein", ordering="owner_club__name")
+    def package_owner_display(self, obj):
+        name = owner_name(obj)
+        return name if owner(obj) else (
+            f"{name} (TM {obj.owner_club_tm_id})" if obj.owner_club_tm_id else name)
+
+    def get_list_filter(self, request):
+        return self._owner_fields(super().get_list_filter(request))
+
+    def get_fieldsets(self, request, obj=None):
+        return self._owner_fields(super().get_fieldsets(request, obj))
+
+
+class PlayerAdmin(PackageOwnerAdminMixin, admin.ModelAdmin):
     form = PlayerNationalityForm
     change_form_template = 'admin/game/player/change_form.html'
     change_list_template = 'admin/game/player/change_list.html'
@@ -2090,8 +2121,8 @@ class PlayerAdmin(admin.ModelAdmin):
         return super().get_queryset(request).select_related(
             'club',
             'club__league',
-            'real_life_club',
-            'real_life_club__league',
+            ownership_field(),
+            ownership_field() + '__league',
             'strength_profile',
         ).prefetch_related('source_ratings', 'form_snapshots')
 
@@ -2316,7 +2347,7 @@ class PlayerAdmin(admin.ModelAdmin):
         return sorted(snapshots, key=lambda snapshot: snapshot.fixture_date)
 
     def _league_coefficient(self, obj):
-        club = obj.real_life_club or obj.club
+        club = owner(obj) or (obj.club if not package_mode() else None)
         if club and club.league_id:
             return club.league.strength_coefficient
 
@@ -2357,14 +2388,14 @@ class PlayerAdmin(admin.ModelAdmin):
             rating__isnull=False,
             minutes_played__gt=0,
         )
-        club = obj.real_life_club or obj.club
+        club = owner(obj) or (obj.club if not package_mode() else None)
         if club and club.league_id:
             snapshot_queryset = snapshot_queryset.filter(
-                player__real_life_club__league=club.league
-            ) | snapshot_queryset.filter(
-                player__real_life_club__isnull=True,
-                player__club__league=club.league,
-            )
+                **{"player__" + ownership_field() + "__league": club.league}
+            ) if package_mode() else (
+                snapshot_queryset.filter(player__real_life_club__league=club.league)
+                | snapshot_queryset.filter(
+                    player__real_life_club__isnull=True, player__club__league=club.league))
 
         player_ratings = []
         grouped_snapshots = {}
@@ -3548,7 +3579,7 @@ class PlayerEditRequestAdmin(admin.ModelAdmin):
         )
 
 
-class PlayerDataReviewAdmin(admin.ModelAdmin):
+class PlayerDataReviewAdmin(PackageOwnerAdminMixin, admin.ModelAdmin):
     list_display = (
         'display_full_name',
         'club',
@@ -3577,7 +3608,7 @@ class PlayerDataReviewAdmin(admin.ModelAdmin):
     def get_queryset(self, request):
         queryset = super().get_queryset(request).select_related(
             'club',
-            'real_life_club',
+            ownership_field(),
         ).prefetch_related('source_ratings')
         queryset = queryset.annotate(
             ea_source_count=models.Count(

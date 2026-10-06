@@ -118,6 +118,20 @@ def retire_player(player, career_end_club, grund: str = GRUND_KARRIEREENDE,
     tx = book_abfindung(player, grund, saison)
     if player.club_id != career_end_club.pk:
         player.club = career_end_club
-        player.real_life_club = None
-        player.save(update_fields=['club', 'real_life_club'])
+        from game.club_import.runtime import package_mode
+        if package_mode():
+            player.owner_club = None
+            player.owner_club_tm_id = player.owner_club_original_name = None
+            player.loan_club = None
+            player.loan_club_tm_id = player.loan_club_original_name = None
+            player.loan_until = None
+            player.loan_status = "none"
+            player.loan_partner_club = None
+            player.save(update_fields=[
+                "club", "owner_club", "owner_club_tm_id", "owner_club_original_name",
+                "loan_club", "loan_club_tm_id", "loan_club_original_name",
+                "loan_until", "loan_status", "loan_partner_club"])
+        else:
+            player.real_life_club = None
+            player.save(update_fields=['club', 'real_life_club'])
     return tx

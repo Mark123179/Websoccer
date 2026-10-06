@@ -19,6 +19,7 @@ from django.shortcuts import redirect, render, get_object_or_404
 from django.db.models import Avg, Count, F, Sum
 from django.utils import timezone
 from .asset_urls import resolve_stadium_url
+from .club_import.runtime import owner, ownership_field, package_mode
 from .club_profile import build_club_profile_context
 from .club_profile_highlights import nt_confederation_badge
 from .competition_assets import (
@@ -6560,8 +6561,8 @@ def player_detail(request, player_id):
         Player.objects.select_related(
             'club',
             'club__league',
-            'real_life_club',
-            'real_life_club__league',
+            ownership_field(),
+            ownership_field() + '__league',
             'strength_profile',
         ),
         id=player_id,
@@ -6661,9 +6662,10 @@ def player_detail(request, player_id):
             'freshness': freshness,
             'shirt_number': player.shirt_number,
             'rl_club_crest': (
-                player.real_life_club.crest_static_path
-                if player.real_life_club
-                else (player.club.crest_static_path if player.club else '')
+                owner(player).crest_static_path
+                if owner(player)
+                else (player.club.crest_static_path if player.club and not
+                      package_mode() else '')
             ),
             'nation_nt_logo': _player_nation_nt_logo(player),
             'nation_nt_name': _player_nation_nt_name(player),

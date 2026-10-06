@@ -32,6 +32,7 @@ from .models import (
     WatchlistEntry,
 )
 from .scouting import coverage, department, geo, service
+from .club_import.runtime import owner, owner_name, ownership_field
 
 
 POSITION_OPTIONS = [
@@ -86,7 +87,7 @@ def _find_card(find, watched_ids):
     np_list = [x for x in (mains[1:] + p.secondary_positions) if x]
     iso2 = geo.player_country_iso2(p) or ''
     primary_nat = p.nationalities.split(',')[0].strip() if p.nationalities else ''
-    rl_club = p.real_life_club if p.real_life_club_id else None
+    rl_club = owner(p)
     return {
         'find_id': find.id,
         'player_id': p.id,
@@ -96,7 +97,7 @@ def _find_card(find, watched_ids):
         'nat': primary_nat,
         'hp': hp,
         'np': ', '.join(np_list) if np_list else '—',
-        'rl_club': rl_club.name if rl_club else '—',
+        'rl_club': owner_name(p),
         'rl_club_crest': rl_club.crest_static_path if rl_club else '',
         'rl_liga': (
             rl_club.league.name
@@ -142,7 +143,7 @@ def _search_players(search, watched_ids):
     Liefert nur öffentliche Felder (Name/Alter/Position/Marktwert/Flagge),
     niemals base_strength/potential. Cappt auf 40 Treffer.
     """
-    qs = (Player.objects.select_related('real_life_club')
+    qs = (Player.objects.select_related(ownership_field())
           .exclude(pool_status='show_auction'))
     if search['q']:
         qs = qs.filter(
@@ -170,7 +171,7 @@ def _search_players(search, watched_ids):
         iso2 = geo.player_country_iso2(p) or ''
         if land and iso2.upper() != land:
             continue
-        rl_club = p.real_life_club if p.real_life_club_id else None
+        rl_club = owner(p)
         results.append({
             'player_id': p.id,
             'name': p.full_name,
@@ -180,7 +181,7 @@ def _search_players(search, watched_ids):
             'portrait': p.portrait_static_path,
             'hp': p.main_position_1 or '—',
             'np': p.main_position_2 or '',
-            'club_name': rl_club.name if rl_club else '—',
+            'club_name': owner_name(p),
             'club_crest': rl_club.crest_static_path if rl_club else '',
             'player_url': reverse('player_detail', args=[p.id]),
             'market_value_fmt': _euro(p.market_value),
@@ -241,7 +242,7 @@ def transfer_scouting(request):
         offered = active.finds.exclude(
             status=ScoutingFind.STATUS_EXPIRED
         ).select_related(
-            'player', 'player__real_life_club', 'player__real_life_club__league'
+            'player', 'player__' + ownership_field(), 'player__' + ownership_field() + '__league'
         ).order_by('order')
         finds = [_find_card(f, watched_ids) for f in offered]
 
@@ -280,14 +281,14 @@ def transfer_scouting(request):
     bids = []
     for b in club.scouting_bids.filter(
         status=ScoutingBid.STATUS_ACTIVE
-    ).select_related('player', 'player__real_life_club').order_by('window_date'):
+    ).select_related('player', 'player__' + ownership_field()).order_by('window_date'):
         p = b.player
-        rl_club = p.real_life_club if p.real_life_club_id else None
+        rl_club = owner(p)
         bids.append({
             'id': b.id,
             'name': p.full_name,
             'portrait': p.portrait_static_path,
-            'rl_club': rl_club.name if rl_club else '—',
+            'rl_club': owner_name(p),
             'rl_club_crest': rl_club.crest_static_path if rl_club else '',
             'amount_fmt': _euro(b.amount),
             'min_bid_fmt': _euro(b.min_bid),

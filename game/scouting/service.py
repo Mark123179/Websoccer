@@ -11,6 +11,7 @@ from datetime import timedelta
 from decimal import Decimal
 
 from django.db import transaction
+from game.club_import.runtime import can_scout
 from django.db.models import Sum
 from django.utils import timezone
 
@@ -304,7 +305,7 @@ def place_bid(club, manager, find, amount, today=None):
             raise ScoutingError('Der zugehörige Auftrag ist nicht mehr aktiv.')
         if find.status != ScoutingFind.STATUS_OFFERED:
             raise ScoutingError('Auf diesen Fund kann nicht mehr geboten werden.')
-        if player.club_id is not None or player.pool_status != Player.POOL_STATUS_SCOUTABLE:
+        if not can_scout(player):
             raise ScoutingError('Dieser Spieler ist nicht mehr verfügbar.')
         if amount < find.min_bid:
             raise ScoutingError('Das Gebot liegt unter dem Mindestgebot.')
@@ -413,7 +414,7 @@ def _settle_win(bid, today):
         Club, Player, ScoutingBid, HoenessCoin, CoinTransaction,
     )
     player = Player.objects.select_for_update().get(pk=bid.player_id)
-    if player.club_id is not None or player.pool_status != Player.POOL_STATUS_SCOUTABLE:
+    if not can_scout(player):
         _settle_loss(bid, today)
         return False
 

@@ -1,0 +1,245 @@
+# T2-Bericht – BVB-Paketimport im Pilot
+
+Stand: 06.10.2026 · Nachtrag 7 ist maßgeblich.
+
+**Halt bei T2. Keine uneingeschränkte Abnahme:** Paketweg und Import sind umgesetzt.
+Der Stärkepunkt bleibt für 14 Dynamic-Spieler offen. Keine Ersatzpotentiale, keine
+Formeländerung und keine künstlichen 50er-Stärken wurden eingeführt. T3–T5 bleiben gesperrt.
+
+## 1. N33, Integration und Altmodus
+
+- Gemeinsames Schema immer geladen; nur `IMPORT_PACKAGE_MODE` schaltet Verhalten.
+  Im Hauptstand false, im Pilot true. T1 liegt im gemeinsamen Hauptstand; es gab
+  keinen getrennten T1-Branch zu mergen. Kein Commit/Push/Server-Deploy durchgeführt.
+- 0187 unverändert. SHA-256:
+  `bd63abb95ad8d985694ae0e82a9c120df8eb5e4784e86ad20f47c76a59e25737`.
+- 0188 auf public und Pilot: vorhandene Spieler ungesperrt; normale Vereine spielbar,
+  bisherige Platzhalter nicht spielbar. Default import_lock=false. Alte Stadion-
+  Konstruktionsdefaults bleiben 0, der Paketweg setzt unbekannte Kapazität explizit NULL.
+- Leih-Pool benötigt fehlenden Spielverein und nicht importierten Leihverein;
+  Spieler bei importierten Leihvereinen und Prüfpool-Spieler sind ausgeschlossen.
+- Feldlisten korrigiert: Positionsspiegel nach Ligastart unberührt; keine Verweis-
+  Club-Zeilen und keine zweite Echtwelt-Leihschicht.
+- 0189 ergänzt review_pool, den Liga-Zustand is_playable und nullable Player.potential
+  (Legacy-Default 50 unverändert). Beide Modi melden keine Migrationsdrift.
+- Vor T2: 1.654 Altmodus-Tests grün, Exit 0. Nach den T2-Änderungen erneut
+  1.654 Tests grün, Exit 0. Direkter Befehl: `python manage.py test game.tests`.
+- Alle direkten Schalter-Abfragen UND indirekten Aufrufer stehen vollständig mit
+  Dateiname und Zeile in `t2-schalterstellen.txt` (Anlage unten).
+  Gruppen: Kapazitätsaggregation; Snapshot-Speicherung; Paket-/Altimport;
+  Eigentümer-Leser/Formular/Filter/Stärkevorschau; Scouting-Pool/-Gebote;
+  erste Mannschaft und Engine-Zulässigkeit; kontrollierte Prüfpool-Zuordnung.
+- Ablaufdatum: bei Übernahme einschalten, anschließend Schalter und sämtliche
+  Altzweige entfernen. Nie wieder Modelle/Spalten hinter diesen Schalter stellen.
+- Die erlaubten t1_saved_*-Sicherungen sind weiterhin vorhanden; nicht entfernt.
+  Keine deploy.sh-Sperre, kein Hetznerzugriff, keine Dortmund-Szenensicherung.
+
+## 2. BVB tatsächlich eingelesen
+
+Paket: `bvb_vereinspaket_2026-10-05_1_1791225377498.zip`.
+data.json-Prüfsumme: `9d2b87c16389caf12693da07d7644df2c5f7d36e1e8c979b8651ead1e951676d`.
+Zielliga Bundesliga, Deutschland, spielbar; für T2 im Pilot als Ziel angelegt.
+Eine atomare Transaktion pro Paket. Keine Netzwerkabfrage, kein Namensmatching.
+
+| Bestand im Pilot | Anzahl |
+|---|---:|
+| Vereine / Ligen | 1 / 1 |
+| Spieler | 51 |
+| Personen | 11 |
+| Marktwertpunkte | 637 |
+| davon echte Paket-Historie | 631 |
+| davon gekennzeichnete Startwerte | 6 |
+| Transfers | 322 |
+| Rekorde | 24 |
+| Titel-Einzeleinträge | 30 |
+| aggregierte Titelzeilen | 9 |
+| Quellstand-Snapshots | 83 |
+| Arbeitsliste: blocking | 0 |
+| Arbeitsliste: player_lock | 2 |
+| Arbeitsliste: info | 154 |
+
+Arbeitsliste: 143 unveränderte Lücken des Pakets (141 Info + 2 Einzelsperren)
+plus 13 Info-Vereinsverweise ohne TM-ID = 156 Einträge. Verschiedene Hinweise
+zu demselben Feld bleiben getrennt; kein Verlust durch Zusammenfassen.
+
+Alle 631 TM-Historienpunkte und 322 Transfers bleiben vollständig.
+Kein zusätzlicher erfundener Marktwert-Erhebungspunkt. NULL bleibt in den
+Quellwerten NULL. Nur N10 erzeugt sechs markierte Spiel-Startwerte von 50.000 €.
+Gehalt wurde für alle Spieler als Marktwert / 1.000.000 × 5.000 € gesetzt.
+`real_life_club` ist für alle importierten Spieler leer.
+
+## 3. Kader und Leihen
+
+- Aktiver BVB-Kader: 47 = 28 erste Mannschaft + 19 U21.
+- Leih-Pool: 4. Diese Spieler zählen nicht zum aktiven BVB-Kader.
+- Geliehene beim BVB: 3.
+- Prüfpool im Referenzimport: 0.
+
+| Fall | Name | Stammverein → Leihverein |
+|---|---|---|
+| Geliehen, erste Mannschaft | Ethan Nwaneri | FC Arsenal (11) → BVB (16) |
+| Geliehen, U21 | Takato Yamamoto | Gamba Osaka (596) → BVB (16) |
+| Geliehen, U21 | Daniel Sumbu | SK Sturm Graz II (4443) → BVB (16) |
+| Leih-Pool, erste Mannschaft | Diant Ramaj | BVB → FC Kopenhagen (190) |
+| Leih-Pool, erste Mannschaft | Almugera Kabar | BVB → NEC Nijmegen (467) |
+| Leih-Pool, erste Mannschaft | Yan Couto | BVB → Como 1907 (1047) |
+| Leih-Pool, U21 | Elias Benkara | BVB → SpVgg Greuther Fürth (65) |
+
+Die vier Leihvereine sind noch nicht importiert: club=NULL, TM-ID + Originalname
+erhalten. Kein Leih-Scheinverein. Bei späterem Import wird der FK über TM-ID
+nachgetragen. Der Leihstand liegt einmal im Spielstand; der Erhebungsstand bleibt
+im unveränderten Paketarchiv.
+
+Erste Mannschaft: Mathis Albert, Waldemar Anton, Maximilian Beier, Jobe Bellingham, Ramy Bensebaini, Emre Can, Carney Chukwuemeka, Patrick Drewes, Joane Gadou, Serhou Guirassy, Samuele Inácio, Konstantinos Karetsas, Gregor Kobel, Giannis Konstantelias, Justin Lerma, Filippo Mane, Alexander Meyer, Felix Nmecha, Ethan Nwaneri, Silas Ostrzinski, Kauã Prates, Luca Reggiani, Julian Ryerson, Marcel Sabitzer, Nico Schlotterbeck, Fábio Silva, Daniel Svensson, Joey Veerman.
+
+U21: Miguel Adje, Tim Degener, Luke Fahrenhorst, Tom Faust, Finn Fuchs, Bjarki Gardarsson, Aaron Held, Justin Hoy, Mussa Kaba, Mario Pejazic, Nanitonda Quiala, Daniel Sumbu, Levin Vogt, Jan-Mattis Wehrbein, Arne Wessels, Bennedikt Wüstenhagen, Takato Yamamoto, Fadi Zarqelain, Enzo dos Santos.
+
+## 4. Identischer Zweitimport
+
+Vorher/Nachher: alle 161 regulären Pilot-Tabellen
+über Zeilenzahl und sortierten Inhalts-Fingerprint verglichen.
+**0 neue Zeilen, 0 geänderte Tabellen-Fingerprints, 0 Änderungen.**
+Auch spätere identische Wiederholungen bleiben ohne Schreibvorgang.
+
+Beleg: `t2-second-upload-fingerprints.json`. Ein früheres Paket nach einem
+zwischenzeitlich anderen Paket wird dagegen erneut verarbeitet: damit kann ein
+Prüfpool-Spieler wieder über seine TM-ID zugeordnet werden.
+
+## 5. Stärke – offener Abnahmepunkt
+
+- 49 Spieler haben Quellwerte; der bestehende Berechnungsweg wurde für alle ausgeführt.
+- 35 Ergebnisse berechnet und im PlayerStrengthProfile gespeichert.
+- 14 Spieler: FM-Rating vorhanden, ausschließlich NULL/Dynamic-Potential; der
+  unveränderte Rechner liefert keinen berechenbaren Bereich und daher keine Basis.
+- 2 Paket-Einzelsperren: Takato Yamamoto und Bjarki Gardarsson (kein FMInside).
+- Die 14 Dynamic-Spieler sind NICHT zusätzlich als player_lock markiert.
+  Ohne Stärkeprofil werden sie nicht mit einer Ersatzstärke in die Engine gegeben.
+  Alle 28 aktiven Spieler der ersten Mannschaft sind berechnet und zulässig.
+
+Dynamic-Fälle: Miguel Adje, Tim Degener, Luke Fahrenhorst, Tom Faust, Finn Fuchs, Aaron Held, Justin Hoy, Mario Pejazic, Daniel Sumbu, Levin Vogt, Jan-Mattis Wehrbein, Arne Wessels, Bennedikt Wüstenhagen, Fadi Zarqelain.
+
+| Stichprobe | FM Rating / Potential | CMTracker Rating / Potential | Basis | Maximum |
+|---|---|---|---:|---:|
+| Gregor Kobel | 81 / 83 | 87 / 89 | 168 | 171 |
+| Alexander Meyer | 66 / 67 | 74 / 75 | 140 | 142 |
+| Patrick Drewes | 59 / 63 | 71 / 73 | 131 | 136 |
+| Ethan Nwaneri | 70 / NULL | 75 / 86 | 145 | 166 |
+| Elias Benkara | 43 / NULL | 61 / 79 | 107 | 151 |
+
+Persistierte Basis entspricht jeweils dem Ergebnis. CMTracker-Attribute laufen
+über dieselbe bestehende API→CSV-Spaltennormalisierung; Rohattribute/Versionen
+bleiben vollständig im Quellstandarchiv. strength_engine.py und seine Formeln
+wurden nicht verändert. Grund des offenen Punkts: calculate_potential_200 gibt
+ohne Quellpotential ausdrücklich None; get_strength_range gibt dann (None,None).
+
+**Erforderliche Klärung vor vollständiger T2-Abnahme:** ob und wie bei Dynamic
+eine Basisstärke ohne berechenbares Potential über den bestehenden Berechnungsweg
+zulässig werden soll. Kein Rating→Potential-Ersatz auf eigene Entscheidung.
+
+## 6. Verweis-Vereine
+
+- 227 verschiedene externe TM-IDs (ohne BVB 16;
+  einschließlich BVB somit 228).
+- 13 verschiedene Namen ohne TM-ID,
+  78 Vorkommen. Je Name ein Info-Arbeitslisteneintrag.
+- game_club enthält **genau eine Zeile: BVB**. Null zusätzliche Verweis-Club-Zeilen.
+- Automatisches Nachtragen getesteter Referenzen erfolgt ausschließlich per TM-ID,
+  auch bei abweichendem Vereinsnamen; kein Namensabgleich.
+
+Namen ohne TM-ID: Ajax Amsterdam, FC Admira Wacker Mödling, FC Bayern München, FC Bayern München II, FC Chelsea, FC Energie Cottbus, FC Liverpool, FC Red Bull Salzburg, Juventus Turin, Montpellier HSC, Olympique Marseille, PAOK Thessaloniki, Preußen Münster.
+
+## 7. Alter Stand und Schutzbereiche
+
+- Altmodus bleibt false und verwendet die bisherigen Leser/Schreiber/Defaults.
+- Vergleich über alle 159 bisherigen public-Tabellen und ihre bisherigen Spalten:
+  0 Abweichungen. Einzige ausdrückliche Ausnahme: akzeptiertes last_seen.
+  Nur neue technische Modell-/Migrationszeilen sind vom Altzeilenvergleich ausgenommen.
+- 21 geschützte Pilot-Tabellen: identische Fingerprints vor/nach Import.
+- Separater Pilot-DB-Login mit Suchpfad import_pilot; kein Schreibrecht nach public.
+  Kein Rechteentzug am Bestand, kein Zugriff auf Hetzner.
+- Backend-Prüfungen bestanden: Initialbestand, identischer Reimport,
+  atomarer Abbruch bei falscher Stadionsumme/split identities, Prüfpool-Erhalt und
+  beide Wiederzuordnungswege, N30-Maske, FK-Nachtrag und Scouting-Zuordnung,
+  N35-Admin-Leser und erste-Mannschaft-Zulässigkeit, vollständiger Fixture-Rollback.
+- Alle ursprünglichen Paket-Lücken und 13 Namensverweise wurden zusätzlich nachgezählt.
+- Startprüfung: Anwendung gestartet, Systemcheck ohne Befund; Anmeldeseite HTTP 200
+  und visuell korrekt. Bei einigen fehlenden Vereinswappen liefert die
+  Staticfiles-Auslieferung HTTP 500 (TypeError: Liste statt Dateipfad).
+  Asset-Finder und Staticfiles-Konfiguration wurden durch diesen Umbau nicht geändert.
+  Dieser separate Befund wurde nicht außerhalb des freigegebenen Umfangs behoben.
+  Der rote Test-Workflow enthält einen älteren Lauf; maßgeblich sind die beiden
+  neuen vollständigen Shell-Läufe mit jeweils 1.654 bestandenen Tests und Exit 0.
+- Creator-Upload, Vorschau, Anzeige-Ausbau, Reset-Befehl und Szene-Backup nicht gebaut.
+  HTTP-Schreibwege des Piloten bleiben absichtlich gesperrt.
+
+Belege: `t2-evidence.json`, `t2-backend-checks.json`,
+`n33-public-comparison.json`, `t2-second-upload-fingerprints.json`.
+
+## Anlage: vollständige Schalterstellen
+
+```text
+game/club_import/import_service.py:330:    if package_mode():
+game/club_import/fmid_csv_service.py:348:    if package_mode():
+core/settings.py:48:IMPORT_PACKAGE_MODE = _env_bool('IMPORT_PACKAGE_MODE', default=False)
+game/scouting/coverage.py:41:        .filter(scouting_condition())
+game/club_import/package_service.py:336:    if not package_mode():
+game/scouting/draw.py:77:        .filter(scouting_condition())
+game/match_engine.py:712:    if package_mode():
+game/match_engine.py:714:            match_condition(), pk__in=player_ids, club=club).values_list("pk", flat=True))
+game/match_readiness.py:104:            Player.objects.filter(match_condition(), club=club, pk__in=filled_ids).values_list('pk', flat=True)
+game/match_readiness.py:316:        Player.objects.filter(match_condition(), club=club).select_related('strength_profile')
+game/match_readiness.py:390:        Player.objects.filter(match_condition(), club=club).select_related('strength_profile')
+game/match_readiness.py:619:        Player.objects.filter(match_condition(), club=club).select_related('strength_profile')
+game/match_readiness.py:769:                squad_qs = Player.objects.filter(match_condition(), club=club)
+game/match_readiness.py:860:    player_count = Player.objects.filter(match_condition(), club=club).count()
+game/economy/severance.py:122:        if package_mode():
+game/club_import/runtime.py:6:def package_mode():
+game/club_import/runtime.py:7:    return getattr(settings, "IMPORT_PACKAGE_MODE", False)
+game/club_import/runtime.py:10:def ownership_field():
+game/club_import/runtime.py:11:    return "owner_club" if package_mode() else "real_life_club"
+game/club_import/runtime.py:14:def owner(player):
+game/club_import/runtime.py:15:    return getattr(player, ownership_field(), None)
+game/club_import/runtime.py:18:def owner_name(player):
+game/club_import/runtime.py:19:    club = owner(player)
+game/club_import/runtime.py:21:        player.owner_club_original_name or "—" if package_mode() else "—")
+game/club_import/runtime.py:24:def scouting_condition():
+game/club_import/runtime.py:26:    if not package_mode():
+game/club_import/runtime.py:33:def can_scout(player):
+game/club_import/runtime.py:34:    if not package_mode():
+game/club_import/runtime.py:42:def match_condition():
+game/club_import/runtime.py:43:    if not package_mode():
+game/club_import/runtime.py:54:    if not package_mode():
+game/admin.py:155:        if package_mode():
+game/admin.py:1904:            return value.replace("real_life_club", "owner_club") if package_mode() else value
+game/admin.py:1913:        return tuple("package_owner_display" if f == "owner_club" else f for f in fields) if package_mode() else fields
+game/admin.py:1917:        name = owner_name(obj)
+game/admin.py:1918:        return name if owner(obj) else (
+game/admin.py:2124:            ownership_field(),
+game/admin.py:2125:            ownership_field() + '__league',
+game/admin.py:2350:        club = owner(obj) or (obj.club if not package_mode() else None)
+game/admin.py:2391:        club = owner(obj) or (obj.club if not package_mode() else None)
+game/admin.py:2394:                **{"player__" + ownership_field() + "__league": club.league}
+game/admin.py:2395:            ) if package_mode() else (
+game/admin.py:3611:            ownership_field(),
+game/models.py:3374:        if getattr(settings, 'IMPORT_PACKAGE_MODE', False):
+game/models.py:3731:        if getattr(settings, 'IMPORT_PACKAGE_MODE', False):
+game/import_schema.py:4:IMPORT_PACKAGE_MODE flag controls behavior only, never model definitions.
+game/import_schema.py:143:            if not getattr(settings, "IMPORT_PACKAGE_MODE", False):
+game/views_scouting.py:90:    rl_club = owner(p)
+game/views_scouting.py:100:        'rl_club': owner_name(p),
+game/views_scouting.py:146:    qs = (Player.objects.select_related(ownership_field())
+game/views_scouting.py:174:        rl_club = owner(p)
+game/views_scouting.py:184:            'club_name': owner_name(p),
+game/views_scouting.py:245:            'player', 'player__' + ownership_field(), 'player__' + ownership_field() + '__league'
+game/views_scouting.py:284:    ).select_related('player', 'player__' + ownership_field()).order_by('window_date'):
+game/views_scouting.py:286:        rl_club = owner(p)
+game/views_scouting.py:291:            'rl_club': owner_name(p),
+game/views.py:6564:            ownership_field(),
+game/views.py:6565:            ownership_field() + '__league',
+game/views.py:6665:                owner(player).crest_static_path
+game/views.py:6666:                if owner(player)
+game/views.py:6668:                      package_mode() else '')
+import_pilot/settings.py:27:IMPORT_PACKAGE_MODE = True
+game/scouting/service.py:308:        if not can_scout(player):
+game/scouting/service.py:417:    if not can_scout(player):
+```

@@ -3,11 +3,11 @@ name: Import-Pilot Freigabegrenzen
 description: Verbindliche Anker-/Feldlistenregeln aus Nachtrag 5 sowie fortgeltende Schutz-, Konten- und Isolationsentscheidungen.
 ---
 
-Nachtrag 6 hat bei Widersprüchen Vorrang vor Teil A, B, C und Nachträgen 1–5. Club, Player und Stadium bleiben die Spielanker; keine neuen Modelle daneben mit späterem Umhängen der Module. Bestehende Tabellen erweitern/reparieren, neue nur bei echter Lücke. Jedes Feld einer Schicht und einem kontrollierten Schreibrecht zuordnen; Spiegel einzeln begründen. Nach Ligastart gilt die bestätigte konkrete Positivliste, nicht pauschal „Echtweltdaten überschreiben“.
+Nachtrag 7 hat bei Widersprüchen Vorrang vor Teil A, B, C und Nachträgen 1–6. Club, Player und Stadium bleiben die Spielanker; keine neuen Modelle daneben mit späterem Umhängen der Module. Bestehende Tabellen erweitern/reparieren, neue nur bei echter Lücke. Jedes Feld einer Schicht und einem kontrollierten Schreibrecht zuordnen; Spiegel einzeln begründen. Nach Ligastart gilt die bestätigte konkrete Positivliste, nicht pauschal „Echtweltdaten überschreiben“.
 
 **Why:** Der Nutzer lehnt die Zwischenstufe ab, in der nach dem Reset die echten Spielanker leer und die Module noch nicht umgehängt wären.
 
-**How to apply:** Der Nutzer hat die Feldliste samt Auflagen ausdrücklich für Modell/Migration/Pilot-Schema freigegeben, danach Halt am Ende der Modellphase. Paketimport, Creator-Upload, Dortmund-Szenensicherung, folgende Import-/UI-Phasen und Hetzner bleiben ohne weitere Freigabe gesperrt. Der Pilot lädt die vollständige game-App und verwendet die echten Seiten sowie dieselben echten Migrationen wie später live. Alte Datenmigrationen normal ausführen, deren Geschäftsdaten im Pilot bereinigen, vor BVB Nullbestand belegen und Schutzkopien erhalten. Neue UI nur für Creator-Upload/Vorschau/Arbeitsliste. Redundante Spalten später modulweise abbauen.
+**How to apply:** T1 ist mit Korrekturen abgenommen. Zuerst die sieben Schema-/Kompatibilitätskorrekturen, gemeinsame Integration und bestehende Altmodus-Tests. Grün: ohne Rückfrage weiter mit T2 inklusive BVB-Paketimport im Pilot; rot: Halt mit Bericht. Regulärer Halt am Ende von T2 mit sieben Berichtspunkten. Creator-Upload, Vorschau, Anzeige, Reset-Befehl und Dortmund-Szenensicherung bleiben gesperrt. Der Pilot lädt die vollständige game-App und dieselben echten Migrationen wie später live. Kein Hetznerzugriff und keine Deploy-Sperre: Mark übernimmt manuell per GitHub-Push, Server-Pull und Deploy. Redundante Spalten später modulweise abbauen.
 
 Nur importierte Vereine stehen in Club. Fremde Historien-/Rekord-/Leihvereine bleiben TM-ID plus Originalname; spätere FK-Verknüpfung ist auch nach Ligastart erlaubt. Der operative Leihstand gehört nach Initialisierung ausschließlich dem Spiel; der Erhebungsstand gehört ins Paketarchiv. Haupt-/Nebenpositionen einschließlich ihrer Spiegel bleiben bei Vereinspaket-Reupload nach Ligastart ebenso gesperrt wie Ratings.
 
@@ -15,7 +15,7 @@ Nur importierte Vereine stehen in Club. Fremde Historien-/Rekord-/Leihvereine bl
 
 **How to apply:** Keine NULL-/Platzhalterliga, keine historischen Mini-Clubs, kein zweiter Stammverein aus real_life_club. Fehlende Vereins-FKs sind kein Anlass für Namensmatching oder erfundene IDs. Paketmaske nach Ligastart nicht eigenmächtig erweitern.
 
-Fortgeltende N14-Isolation: Die Trennung erfolgt über eine neue Pilot-Rolle; bestehende Rollen, Verbindungen, Einstellungen und Prozesse bleiben unangetastet. Pilot → public braucht effektiven Schreibschutz; Bestand → Pilot wird über Suchpfad, Code, Befehle und laufende Prozesse belegt, nicht durch Rechteentzug im Bestand.
+Fortgeltende Isolation: eigene Pilot-Rolle, effektiver Schreibschutz nach public, keine Rechteänderung an der Bestandsrolle. Ausnahme aus Nachtrag 7: additive gemeinsame Migrationen laufen jetzt auch auf public; neue Spalten und zwei leere Tabellen sind erlaubt, bestehende Daten bleiben erhalten.
 
 **Why:** Der Nutzer hat diese Richtung ausdrücklich gewählt und gegenseitige harte Rollenabschirmung verworfen.
 
@@ -44,3 +44,15 @@ Die vorhandenen Pilot-Secrets verwenden; ihre Übernahme nicht an einer starren 
 **Why:** Der Nutzer hat ausdrücklich angeordnet, die Werte auch mit 28, 30 oder 31 Zeichen zu übernehmen.
 
 **How to apply:** Nicht leere, vom Bestand getrennte Pilot-Zugangsdaten und Rollenbeschränkungen beibehalten, aber nicht erneut wegen dieser Mindestlänge Ersatzwerte verlangen. Identische Eingaben innerhalb des Piloten erfordern keine weitere Eingaberunde; die Sitzungs-Signierung zweckgebunden ableiten.
+
+real_life_club wird im neuen Modus sofort stillgelegt, nicht zum Stammvereins-Spiegel. Vier Lesergruppen und die Altschreiber auf owner_club beziehungsweise externe TM-ID/Originalname umstellen; nur Altmodus erhält bisheriges Verhalten.
+
+**Why:** Der Nutzer hat den vorgeschlagenen vorläufigen Spiegel ausdrücklich nicht gewählt.
+
+**How to apply:** Teil von T2, nicht auf die Anzeigephase verschieben. Die physische Spalte bleibt bis späterem Aufräumen.
+
+Fehlende Spieler bei erneutem Paketupload vor Ligastart bleiben mit Identität, IDs, Quellwerten und Historie erhalten, verlassen den Spielverein und kommen in einen eigenen nicht scoutbaren Prüfpool mit Info-Arbeitslisteneintrag.
+
+**Why:** Der Nutzer hat den Prüfpool gewählt, nicht Löschen oder freie Scouting-Freigabe.
+
+**How to apply:** Nach Ligastart keinen Kaderabgleich. Vorstart-Wiederzuordnung per TM-ID in einem anderen Vereinspaket oder kontrolliert über die Arbeitsliste; danach normale Poolregeln.

@@ -82,8 +82,11 @@ def check():
         player.owner_club_tm_id = 17
         player.loan_club_tm_id = 18
         assert player.is_in_loan_pool
-        assert player.import_lock
+        assert not player.import_lock
         stadium = gm.Stadium(club=club)
+        for side in ("nord", "ost", "sued", "west"):
+            for kind in ("standing", "seating", "vip"):
+                setattr(stadium, side + "_" + kind, None)
         assert stadium.capacity_total is None
         for side in ("nord", "ost", "sued", "west"):
             for kind in ("standing", "seating", "vip"):
@@ -111,7 +114,7 @@ def check():
     result["rollback_snapshot_checks"] = {
         "mw_history_rows": 12, "rating_history_rows": 12,
         "same_day_versions_preserved": True, "implicit_writes": 0,
-        "loan_pool_property": True, "default_import_lock": True,
+        "loan_pool_property": True, "default_import_lock_false": True,
         "unknown_capacity_none_and_known_zero_distinct": True,
         "typed_external_identity_spaces": True, "owner_xor_constraint": True,
     }

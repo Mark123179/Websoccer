@@ -8,5 +8,5 @@ class T1ReadOnlyMiddleware:
 
     def __call__(self, request):
         if request.method not in ("GET", "HEAD", "OPTIONS"):
-            return JsonResponse({"error": "Pilot stopped at T1; mutations not authorized."}, status=403)
+            return JsonResponse({"error": "Pilot stopped at T2; Creator uploads and UI mutations not authorized."}, status=403)
         return self.get_response(request)

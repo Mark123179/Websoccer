@@ -3371,7 +3371,7 @@ class PlayerMarketValueSnapshot(models.Model):
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)
         from django.conf import settings
-        if getattr(settings, 'IMPORT_REBUILD_SCHEMA', False):
+        if getattr(settings, 'IMPORT_PACKAGE_MODE', False):
             return  # T1: full history, no market-value/salary side effects.
         if self.update_current:
             salary_per_match = (
@@ -3728,7 +3728,7 @@ class PlayerSourceRatingSnapshot(models.Model):
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)
         from django.conf import settings
-        if getattr(settings, 'IMPORT_REBUILD_SCHEMA', False):
+        if getattr(settings, 'IMPORT_PACKAGE_MODE', False):
             return  # T1: current PSR is an explicit projection, never a save effect.
         if self.update_current and self.source.code in {
             PlayerSourceRating.SOURCE_CMTRACKER,
@@ -8094,9 +8094,6 @@ from game.models_story import (  # noqa: E402,F401
     StorySettings, MatchStoryRound, MatchStory, MatchEvent, StoryAudit,
 )
 
-# One model set, explicitly activated only for databases migrated to N28–N31.
-# The existing public service stays on its existing schema until live cutover.
-from django.conf import settings as _schema_settings
-if getattr(_schema_settings, 'IMPORT_REBUILD_SCHEMA', False):
-    from game.import_schema import install as _install_import_schema
-    _install_import_schema(globals())
+# N33: one schema in every mode. Only runtime behavior is temporary/conditional.
+from game.import_schema import install as _install_import_schema
+_install_import_schema(globals())

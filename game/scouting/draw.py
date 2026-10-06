@@ -7,6 +7,7 @@ Spieler-IDs danach in ``ScoutingFind`` ein und berechnet nie neu.
 
 import math
 import random
+from game.club_import.runtime import scouting_condition
 
 from .constants import (
     COUNTRIES,
@@ -73,7 +74,7 @@ def _eligible_in_isos(isos):
     from game.models import Player
     qs = (
         Player.objects
-        .filter(club__isnull=True, pool_status=Player.POOL_STATUS_SCOUTABLE)
+        .filter(scouting_condition())
         .exclude(loan_status='extern_loan')
         .select_related('strength_profile')
     )

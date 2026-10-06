@@ -14,7 +14,7 @@
     "same_day_versions_preserved": true,
     "implicit_writes": 0,
     "loan_pool_property": true,
-    "default_import_lock": true,
+    "default_import_lock_false": true,
     "unknown_capacity_none_and_known_zero_distinct": true,
     "typed_external_identity_spaces": true,
     "owner_xor_constraint": true

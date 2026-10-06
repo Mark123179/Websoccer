@@ -760,3 +760,17 @@ mtime_ms = 1791267102594
 storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:6e4eaecc-e6c5-4f64-8de5-e8845034f33b/da75e27b-c08e-45be-9c03-4f2d6628d245/c59da494-de2f-4041-937a-5150a4c64d5e"
 storage_version_token = "1791267112472289"
 content_type = "text/markdown"
+
+[[outputs]]
+id = "awmcqr7RHvyr19hsIP_nc"
+uri = "file://docs/import-pilot/t2-bericht.html"
+type = "html"
+title = "T2-Bericht – BVB-Paketimport"
+description = "Sieben Berichtspunkte, Bestandszahlen, Reimport-Nachweis, fünf Stärkeproben und vollständige Schalterstellen. Dynamic-Potential-Abnahme bleibt offen."
+logical_id = "ff648ac1-2fd7-4ba9-8404-66ae5a91368b"
+content_hash = "sha256:87adb9f749d25e41cd88646395311e110cf0ca366af6f5bfb8f5d3452f6db24d"
+size = 16509
+mtime_ms = 1791270811258
+storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:6e4eaecc-e6c5-4f64-8de5-e8845034f33b/ff648ac1-2fd7-4ba9-8404-66ae5a91368b/eda49d57-38f6-445a-8a28-13b4eb34f147"
+storage_version_token = "1791270822285134"
+content_type = "text/html"
