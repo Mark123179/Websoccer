@@ -3,17 +3,23 @@ name: Import-Pilot Freigabegrenzen
 description: Verbindliche Anker-/Feldlistenregeln aus Nachtrag 5 sowie fortgeltende Schutz-, Konten- und Isolationsentscheidungen.
 ---
 
-Nachtrag 9 hat bei Widersprüchen Vorrang vor Teil A, B, C und Nachträgen 1–8. Club, Player und Stadium bleiben die Spielanker; keine neuen Modelle daneben mit späterem Umhängen der Module. Bestehende Tabellen erweitern/reparieren, neue nur bei echter Lücke. Jedes Feld einer Schicht und einem kontrollierten Schreibrecht zuordnen; Spiegel einzeln begründen. Nach Ligastart gilt die bestätigte konkrete Positivliste, nicht pauschal „Echtweltdaten überschreiben“.
+Nachtrag 11 hat bei Widersprüchen Vorrang vor Teil A, B, C und Nachträgen 1–10. Club, Player und Stadium bleiben die Spielanker; keine neuen Modelle daneben mit späterem Umhängen der Module. Bestehende Tabellen erweitern/reparieren, neue nur bei echter Lücke. Jedes Feld einer Schicht und einem kontrollierten Schreibrecht zuordnen; Spiegel einzeln begründen. Nach Ligastart gilt die bestätigte konkrete Positivliste, nicht pauschal „Echtweltdaten überschreiben“.
 
 **Why:** Der Nutzer lehnt die Zwischenstufe ab, in der nach dem Reset die echten Spielanker leer und die Module noch nicht umgehängt wären.
 
-**How to apply:** T2 ist abgenommen. Nachtrag 8 autorisiert T3 und T4 in einem Zug mit anschließendem Halt; T5/Reset, Dortmund-Szenensicherung und Stärkeformeländerungen bleiben gesperrt. Ein ausdrücklich auf Paket-Nachpflege begrenzter Auftrag startet diese App-Arbeiten nicht. Der Pilot lädt die vollständige game-App und dieselben echten Migrationen wie später live. Kein Hetznerzugriff und keine Deploy-Sperre: Mark übernimmt manuell per GitHub-Push, Server-Pull und Deploy. Redundante Spalten später modulweise abbauen.
+**How to apply:** T2 ist abgenommen. T3/T4 gelten erst mit grünem Gesamtlauf als fertig. Nachtrag 11 erlaubt anschließend ohne Zwischenhalt den v2-Creator-Upload im Pilot, nach privatem v1-Dump. T5/Reset, Dortmund-Szenensicherung und Stärkeformeländerungen bleiben gesperrt. Ein ausdrücklich auf Paket-Nachpflege begrenzter Auftrag startet diese App-Arbeiten nicht. Der Pilot lädt die vollständige game-App und dieselben echten Migrationen wie später live. Kein Hetznerzugriff und keine Deploy-Sperre: Mark übernimmt manuell per GitHub-Push, Server-Pull und Deploy. Redundante Spalten später modulweise abbauen.
 
-Nachtrag 9 bestätigt BVB v2 einschließlich der entfernten Dynamic-Info-Lücken. Der Pilot bleibt bis Marks eigenem Creator-Upload auf v1; der Nachweis v1 → v2 → v2 darf dort keine Importspuren hinterlassen.
+Nachtrag 11 autorisiert v2 im echten Pilot nach grünem Gesamtlauf und v1-Dump. v1 wird nicht erneut eingelesen. Bei abweichenden v2-Sollzahlen anhalten und Ursache melden; Dump behalten.
 
-**Why:** Mark will die echte Änderungsvorschau selbst sehen und bestätigen.
+**Why:** Der Nutzer hat den früheren Halt ausdrücklich ersetzt und will danach selbst die vier bestehenden BVB-Seiten kontrollieren.
 
-**How to apply:** Testbestand getrennt halten, Pilot-Paketstand vor und nach der Arbeit nachweisen, Abweichungen mit Ursache melden statt Stärkeformeln zu verändern. Abschlussbericht umfasst zehn Punkte; danach Halt.
+**How to apply:** v1 → v2 → v2 weiterhin separat testen. Im Pilot nur den freigegebenen v2-Upload über Vorschau/Bestätigung durchführen. Soll: 156 Zeilen, 128 offen, 28 paketgeschlossen, 49 Stärken, 2 Sperren. Abschlussbericht mit Dump-Metadaten und echten Pilot-Screenshots; danach Nutzerkontrolle.
+
+Die Bildprüfung ist kein Pilot-Abnahmekriterium. Sie ist im Pilot ausgeschaltet und zeigt keine Dateizahlen beziehungsweise schreibt keine Bild-Infozeilen. Auf dem Live-Server ist sie eingeschaltet; fehlende Dateien sperren niemals.
+
+**Why:** Laut Nutzer liegen die vollständigen Bilddateien auf dem Live-Server; Replits Dateibestand erlaubt keine Aussage über den echten BVB-Bildbestand.
+
+**How to apply:** Die Reihenfolge bleibt BVB-Pilotabnahme → Live-Ausrollung samt Import-Knopf → weitere Vereine direkt live importieren und dort Bilder prüfen. Die Live-Ausrollung ist mit diesem Nachtrag noch nicht freigegeben.
 
 Nur importierte Vereine stehen in Club. Fremde Historien-/Rekord-/Leihvereine bleiben TM-ID plus Originalname; spätere FK-Verknüpfung ist auch nach Ligastart erlaubt. Der operative Leihstand gehört nach Initialisierung ausschließlich dem Spiel; der Erhebungsstand gehört ins Paketarchiv. Haupt-/Nebenpositionen einschließlich ihrer Spiegel bleiben bei Vereinspaket-Reupload nach Ligastart ebenso gesperrt wie Ratings.
 

@@ -788,3 +788,17 @@ mtime_ms = 1791288747736
 storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:6e4eaecc-e6c5-4f64-8de5-e8845034f33b/8ea32fac-e226-40fd-91d8-b0805d596932/75492f44-dbbd-447d-9c52-41123d3372b4"
 storage_version_token = "1791288793103232"
 content_type = "text/html"
+
+[[outputs]]
+id = "fFgJQwnS4KLNToqWY4kb5"
+uri = "file://docs/import-pilot/nachtrag11-bericht.html"
+type = "html"
+title = "T3/T4 – Abschlussbericht nach Nachtrag 11"
+description = "Zehn-Punkte-Nachweis: 1.668 Tests grün, privater v1-Dump, freigegebener v2-Import im echten Pilot und alle fünf Sollzahlen bestätigt. Mit aktuellen Pilot-Screenshots."
+logical_id = "c1190d18-70c0-42d2-9fb5-a4164c3c1699"
+content_hash = "sha256:4e19323f30178b2024bae9e41f88183fca7cf64d23ddc70ffcf0730a6dd7752f"
+size = 897893
+mtime_ms = 1791291102484
+storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:6e4eaecc-e6c5-4f64-8de5-e8845034f33b/c1190d18-70c0-42d2-9fb5-a4164c3c1699/66e16c2e-6db2-4fad-b86d-059531b25e10"
+storage_version_token = "1791291103082478"
+content_type = "text/html"

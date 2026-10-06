@@ -1,0 +1,64 @@
+{
+  "command": "python manage.py test game.tests --verbosity=0 --keepdb",
+  "tests": 1668,
+  "seconds": 425.054,
+  "result": "OK",
+  "exit_code": 0,
+  "prior_report_test_count": 1658,
+  "tests_removed": false,
+  "sequence": {
+    "v1": {
+      "players": 51,
+      "strength": 35,
+      "locks": 16,
+      "source_archive": 83,
+      "market_values": 637,
+      "transfers": 322,
+      "records": 24,
+      "titles": 30,
+      "issues": 156,
+      "open": 156,
+      "package_closed": 0,
+      "clubs": 1
+    },
+    "v2": {
+      "players": 51,
+      "strength": 49,
+      "locks": 2,
+      "source_archive": 132,
+      "market_values": 637,
+      "transfers": 322,
+      "records": 24,
+      "titles": 30,
+      "issues": 156,
+      "open": 128,
+      "package_closed": 28,
+      "clubs": 1
+    },
+    "samples": {
+      "Ethan Nwaneri": [
+        145,
+        181
+      ],
+      "Samuele Inácio": [
+        120,
+        166
+      ],
+      "Luca Reggiani": [
+        116,
+        152
+      ],
+      "Luke Fahrenhorst": [
+        90,
+        160
+      ],
+      "Bennedikt Wüstenhagen": [
+        92,
+        100
+      ]
+    },
+    "replay_unchanged": true,
+    "preview_read_only": true,
+    "n48_cases": true
+  }
+}

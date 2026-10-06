@@ -86,11 +86,13 @@
     </section>
 
     <div class="package-preview-grid package-preview-grid--lower">
+        {% if preview.image_check_enabled %}
         <section class="package-preview-card">
             <p class="package-preview-kicker">Bildprüfung</p><h2>Fehlende Dateien</h2>
             {% if missing_images %}<ul class="package-plain-list">{% for image in missing_images %}<li><strong>{{ image.entity }} · {{ image.ref }}</strong><span>{{ image.note }}</span></li>{% endfor %}</ul>
             {% else %}<p class="package-muted">Keine fehlenden Bilder gemeldet.</p>{% endif %}
         </section>
+        {% endif %}
         <section class="package-preview-card">
             <p class="package-preview-kicker">Nachsicht</p><h2>Prüfpool</h2>
             {% if players_to_review %}<ul class="package-plain-list">{% for player in players_to_review %}<li><strong>{{ player }}</strong><span>Fehlt im Paket; vorhandene Daten bleiben im Prüfpool erhalten.</span></li>{% endfor %}</ul>

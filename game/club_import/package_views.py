@@ -9,7 +9,7 @@ from django.urls import path
 from django.views.decorators.http import require_POST
 from django.utils import timezone
 from game import models as m
-from .runtime import package_mode, assign_review_player
+from .runtime import package_mode, assign_review_player, image_check_enabled, visible_clubs, visible_leagues
 from .package_validation import PackageError
 from .package_preview import preview_package
 from .package_service import apply_package, league_started, source
@@ -37,7 +37,8 @@ def hub(request):
     if request.GET.get("severity") in ("info", "player_lock", "blocking"):
         issues = issues.filter(severity=request.GET["severity"])
     return render(request, "game/package_hub.html", dict(
-        leagues=m.League.objects.order_by("name"), clubs=m.Club.objects.order_by("name"),
+        leagues=visible_leagues().order_by("name"), clubs=visible_clubs().order_by("name"),
+        image_check_enabled=image_check_enabled(),
         issues=issues, success=request.GET.get("success", ""), error=request.GET.get("error", "")))
 
 
@@ -49,7 +50,7 @@ def preview(request):
         if upload.size > 10 * 1024 * 1024:
             raise PackageError("Paket zu groß (maximal 10 MB).")
         raw = upload.read()
-        league = get_object_or_404(m.League, pk=request.POST["league"])
+        league = get_object_or_404(visible_leagues(), pk=request.POST["league"])
         result = preview_package(raw, league)
         token = signing.dumps(dict(zip=base64.b64encode(raw).decode(), league=league.pk,
             user=request.user.pk, baseline=result["baseline"], guard=result["guard"]),
@@ -223,6 +224,8 @@ app_name = "package_creator"
 @creator
 @require_POST
 def images(request):
+    if not image_check_enabled():
+        return HttpResponseForbidden("Die Bildprüfung ist im Pilot ausgeschaltet.")
     from .package_preview import image_gaps
     from .issue_lifecycle import reconcile
     with transaction.atomic():

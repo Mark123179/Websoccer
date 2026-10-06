@@ -1,6 +1,7 @@
 import os
 from datetime import date
 from decimal import Decimal, InvalidOperation
+from .club_import.runtime import visible_clubs, visible_leagues
 
 from django.apps import apps
 from django.contrib import messages
@@ -508,13 +509,14 @@ def _save_as_png(file_obj, dest_path):
 
 
 def creator_index(request):
+    from .club_import.runtime import visible_clubs, visible_leagues
     country_filter = request.GET.get('country', '').strip()
     league_filter = request.GET.get('league', '').strip()
 
     # ── Level 3: Vereine einer Liga ──────────────────────────────────────────
     if league_filter:
-        league = get_object_or_404(League, id=league_filter)
-        clubs = list(league.club_set.order_by('name'))
+        league = get_object_or_404(visible_leagues(), id=league_filter)
+        clubs = list(visible_clubs(league.club_set.all()).order_by('name'))
         flag_code = (
             COUNTRY_FLAG_ASSETS.get(league.country or '', {}).get('code', '').lower()
         )
@@ -533,7 +535,7 @@ def creator_index(request):
 
     # ── Level 2: Ligen eines Landes ──────────────────────────────────────────
     if country_filter:
-        leagues_qs = League.objects.filter(country=country_filter).order_by('name')
+        leagues_qs = visible_leagues().filter(country=country_filter).order_by('name')
         flag_code = (
             COUNTRY_FLAG_ASSETS.get(country_filter, {}).get('code', '').lower()
         )
@@ -541,7 +543,7 @@ def creator_index(request):
         for lg in leagues_qs:
             leagues_data.append({
                 'league': lg,
-                'club_count': lg.club_set.count(),
+                'club_count': visible_clubs(lg.club_set.all()).count(),
             })
         return render(request, 'creator/index.html', {
             'level': 2,
@@ -553,7 +555,7 @@ def creator_index(request):
     # ── Level 1: Länder ───────────────────────────────────────────────────────
     from django.db.models import Count
     country_rows = (
-        League.objects
+        visible_leagues()
         .values('country')
         .annotate(league_count=Count('id'))
         .order_by('country')
@@ -570,7 +572,7 @@ def creator_index(request):
     return render(request, 'creator/index.html', {
         'level': 1,
         'countries_data': countries_data,
-        'total_clubs': Club.objects.count(),
+        'total_clubs': visible_clubs().count(),
         'total_players': Player.objects.count(),
     })
 
@@ -703,7 +705,7 @@ def creator_club_edit(request, club_id):
     trophies = ClubTrophy.objects.filter(club=club).order_by('sort_order', 'competition_name')
     sponsors = ClubSponsor.objects.filter(club=club).order_by('sponsor_type', 'name')
     goals = SeasonGoal.objects.filter(club=club).order_by('-season_number')
-    all_clubs = Club.objects.exclude(id=club_id).order_by('name')
+    all_clubs = visible_clubs().exclude(id=club_id).order_by('name')
 
     active_tab = request.GET.get('tab', 'bilder')
     if active_tab not in {
@@ -772,7 +774,7 @@ def creator_club_edit(request, club_id):
         'goals': goals,
         'all_clubs': all_clubs,
         'active_tab': active_tab,
-        'all_leagues': League.objects.order_by('name'),
+        'all_leagues': visible_leagues().order_by('name'),
         'sponsor_type_choices': ClubSponsor.TYPE_CHOICES,
         'goal_tier_choices': SeasonGoal.TIER_CHOICES,
         'import_defekte': import_defekte,
@@ -940,7 +942,7 @@ def _build_rl_form_tab_context(player):
 
 def creator_player_edit(request, player_id):
     player = get_object_or_404(Player, id=player_id)
-    all_clubs = Club.objects.order_by('name')
+    all_clubs = visible_clubs().order_by('name')
 
     if request.method == 'POST':
         # --- Snapshot vor Änderungen (für Geschichte-Log) ---
@@ -1375,7 +1377,7 @@ def creator_player_recalculate_strength(request, player_id):
 
 def creator_new_player(request, club_id):
     club = get_object_or_404(Club, id=club_id)
-    all_clubs = Club.objects.order_by('name')
+    all_clubs = visible_clubs().order_by('name')
 
     if request.method == 'POST':
         from datetime import date
@@ -2081,8 +2083,8 @@ def creator_manager_edit(request, manager_id):
         coin_balance = 0
     coin_transactions = CoinTransaction.objects.filter(manager=manager).order_by('-created_at')[:30]
     satisfactions = PresidentSatisfaction.objects.filter(manager=manager).select_related('club').order_by('value')
-    all_clubs = Club.objects.select_related('league').order_by('name')
-    free_clubs = Club.objects.filter(managed_by__isnull=True).select_related('league').order_by('name')
+    all_clubs = visible_clubs().select_related('league').order_by('name')
+    free_clubs = visible_clubs().filter(managed_by__isnull=True).select_related('league').order_by('name')
 
     # Compute avatar URL if profile_image is set
     avatar_url = None
@@ -2439,7 +2441,7 @@ def creator_league_edit(request, league_id):
             .prefetch_related('participants', 'rounds__fixtures__home_club', 'rounds__fixtures__away_club', 'rounds__fixtures__winner_club')
             .select_related('winner_club')
         )
-        all_leagues = list(League.objects.order_by('name'))
+        all_leagues = list(visible_leagues().order_by('name'))
 
     return render(request, 'creator/league_edit.html', {
         'league': league,
@@ -3307,8 +3309,8 @@ def creator_import_index(request):
     from .models import League
 
     return render(request, 'creator/import_index.html', {
-        'clubs': Club.objects.order_by('name'),
-        'leagues': League.objects.order_by('country', 'name'),
+        'clubs': visible_clubs().order_by('name'),
+        'leagues': visible_leagues().order_by('country', 'name'),
         'season_id': season_id,
         'season_label': season_label(season_id),
         'job_rows': job_rows,
@@ -4108,7 +4110,7 @@ def creator_search(request):
     if len(q) < 2:
         return JsonResponse({'clubs': [], 'players': []})
 
-    clubs_qs = Club.objects.filter(name__icontains=q).order_by('name')[:8]
+    clubs_qs = visible_clubs().filter(name__icontains=q).order_by('name')[:8]
     from django.db.models import Q
     players_qs = (
         Player.objects
@@ -4438,8 +4440,8 @@ def creator_finanzanalyse(request):
             'budget_fmt': _fmt(c.budget),
         } for c in qs.select_related('league')]
 
-    top_clubs = _club_rows(Club.objects.order_by('-budget')[:10])
-    flop_clubs = _club_rows(Club.objects.order_by('budget')[:10])
+    top_clubs = _club_rows(visible_clubs().order_by('-budget')[:10])
+    flop_clubs = _club_rows(visible_clubs().order_by('budget')[:10])
 
     # ── Saisonbilanzen ───────────────────────────────────────────────
     season_agg = (
@@ -4558,7 +4560,7 @@ def creator_finanzanalyse(request):
     )
     gaps = completeness['gaps']
     gaps_checked = completeness['checked_clubs']
-    all_leagues = list(League.objects.order_by('name').only('id', 'name'))
+    all_leagues = list(visible_leagues().order_by('name').only('id', 'name'))
 
     alarm_count = sum([
         1 if any(v['alarm'] for v in verlauf_rows) else 0,
@@ -5257,7 +5259,7 @@ def creator_ki_transferzentrale(request):
         })
 
     pausierte = list(
-        Club.objects.filter(ai_buyer_paused=True).order_by('name')
+        visible_clubs().filter(ai_buyer_paused=True).order_by('name')
         .values('id', 'name')
     )
 
@@ -5700,7 +5702,7 @@ def creator_transferaufsicht(request):
         .select_related('club_a', 'club_b')
         .order_by('club_a__name')
     )
-    all_clubs = Club.objects.order_by('name')
+    all_clubs = visible_clubs().order_by('name')
 
     # ── Aktionsprotokoll ──────────────────────────────────────────────────
     action_logs = (

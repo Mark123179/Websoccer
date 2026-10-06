@@ -7,6 +7,23 @@ def package_mode():
     return getattr(settings, "IMPORT_PACKAGE_MODE", False)
 
 
+def image_check_enabled():
+    return getattr(settings, "IMPORT_PACKAGE_IMAGE_CHECK_ENABLED", True)
+
+
+def visible_clubs(queryset=None):
+    """Keep the migration-seeded retirement target available to technical code."""
+    from game.models import Club
+    queryset = Club.objects.all() if queryset is None else queryset
+    return queryset.exclude(name__iexact="Karrierende") if package_mode() else queryset
+
+
+def visible_leagues(queryset=None):
+    from game.models import League
+    queryset = League.objects.all() if queryset is None else queryset
+    return queryset.exclude(name__iexact="Sonderstatus", country="System") if package_mode() else queryset
+
+
 def ownership_field():
     return "owner_club" if package_mode() else "real_life_club"
 

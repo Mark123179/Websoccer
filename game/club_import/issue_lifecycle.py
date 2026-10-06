@@ -100,7 +100,8 @@ def candidates(data, club=None):
                 rows.append({"entity": "club_reference", "ref": ref["name"], "field": "tm_id",
                     "note": "Club TM identity missing; original name retained.",
                     "severity": "info", "external_reference": ref})
-    if club and m.ImportIssue.objects.filter(club=club, field="image").exists():
+    from .runtime import image_check_enabled
+    if image_check_enabled() and club and m.ImportIssue.objects.filter(club=club, field="image").exists():
         from .package_preview import image_gaps
         rows.extend(image_gaps(data))
     for player in data["players"]:
@@ -131,6 +132,9 @@ def candidates(data, club=None):
 
 def plan(club, desired, field=None):
     old = list(m.ImportIssue.objects.filter(club=club).order_by("pk")) if club else []
+    from .runtime import image_check_enabled
+    if not image_check_enabled():
+        old = [row for row in old if row.field != "image"]
     if field:
         old = [row for row in old if row.field == field]
     groups = defaultdict(list)

@@ -68,12 +68,16 @@
             <label>Nach Schwere <select name="severity"><option value="">Alle</option><option value="info">Info</option><option value="player_lock">Einzelsperre</option><option value="blocking">Sperrend</option></select></label>
             <button class="package-button" type="submit">Filtern</button>
         </form>
+        {% if image_check_enabled %}
         <form method="post" action="{% url 'package_creator:images' %}" class="package-form">
             {% csrf_token %}
             <label>Bildprüfung <select name="club" required>{% for club in clubs %}<option value="{{ club.pk }}">{{ club.name }}</option>{% endfor %}</select></label>
             <button class="package-button" type="submit">Bildinfos in Arbeitsliste abgleichen</button>
             <p class="package-footnote">Fehlende Dateien werden als zusätzliche Infoeinträge erfasst. Die Vorschau prüft Dateien nur lesend.</p>
         </form>
+        {% else %}
+        <p class="package-footnote">Bildprüfung im Pilot ausgeschaltet. Die Dateien werden beim Import auf dem Live-Server geprüft.</p>
+        {% endif %}
         {% if issues %}
         <div class="package-issue-list">
             {% for issue in issues %}

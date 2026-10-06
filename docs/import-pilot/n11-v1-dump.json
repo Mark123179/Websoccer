@@ -1,0 +1,612 @@
+{
+  "at": "2026-10-06T12:41:21.270293+00:00",
+  "image_check_enabled": false,
+  "package_hashes": [
+    "9d2b87c16389caf12693da07d7644df2c5f7d36e1e8c979b8651ead1e951676d"
+  ],
+  "issues": 156,
+  "issue_status_text_sha256": "c5564c8a8d23a4e89e13286ba2efe78f0bddddb16fd1d6664fb48554b2c0187c",
+  "open": 156,
+  "package_closed": 0,
+  "strengths": 35,
+  "locks": 2,
+  "locked_players": [
+    "Bjarki Gardarsson",
+    "Takato Yamamoto"
+  ],
+  "clubs": 1,
+  "visible_clubs": 1,
+  "visible_leagues": 1,
+  "retirement_clubs": 0,
+  "tables": {
+    "game_aibuyerrun": {
+      "rows": 0,
+      "md5": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "game_aitransferoffer": {
+      "rows": 0,
+      "md5": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "game_apifootballdailyusage": {
+      "rows": 0,
+      "md5": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "game_buybackclause": {
+      "rows": 0,
+      "md5": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "game_club": {
+      "rows": 1,
+      "md5": "fe0668f00a4aaf75235b3339ffbbde3c"
+    },
+    "game_clubcmtprofile": {
+      "rows": 0,
+      "md5": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "game_clubexternalid": {
+      "rows": 4,
+      "md5": "8f728f6333b9f2fbffda125cb1cf0a8e"
+    },
+    "game_clubfinancialtransaction": {
+      "rows": 0,
+      "md5": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "game_clubnewsitem": {
+      "rows": 0,
+      "md5": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "game_clubpartnership": {
+      "rows": 0,
+      "md5": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "game_clubplayerimportjob": {
+      "rows": 0,
+      "md5": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "game_clubpublicprofile": {
+      "rows": 1,
+      "md5": "140ef62300ced090089ea81a3d996542"
+    },
+    "game_clubrecord": {
+      "rows": 24,
+      "md5": "b78456a8ab950b80b9e42dca1035c758"
+    },
+    "game_clubrecordbreak": {
+      "rows": 0,
+      "md5": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "game_clubrecordcorrectionrequest": {
+      "rows": 0,
+      "md5": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "game_clubsponsor": {
+      "rows": 0,
+      "md5": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "game_clubstadionumfeldstate": {
+      "rows": 0,
+      "md5": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "game_clubtmprofile": {
+      "rows": 0,
+      "md5": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "game_clubtrophy": {
+      "rows": 9,
+      "md5": "6a7eb9872bb704de905a1c1296be53ed"
+    },
+    "game_clubtrophyentry": {
+      "rows": 30,
+      "md5": "182a952a37a41be362e104223953c290"
+    },
+    "game_cointransaction": {
+      "rows": 0,
+      "md5": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "game_communitysubmission": {
+      "rows": 0,
+      "md5": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "game_communitytournament": {
+      "rows": 0,
+      "md5": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "game_communitytournamentapplication": {
+      "rows": 0,
+      "md5": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "game_communitytournamententry": {
+      "rows": 0,
+      "md5": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "game_communitytournamentmatch": {
+      "rows": 0,
+      "md5": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "game_communitytournamentphase": {
+      "rows": 0,
+      "md5": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "game_communitytournamentround": {
+      "rows": 0,
+      "md5": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "game_communitytournamentstanding": {
+      "rows": 0,
+      "md5": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "game_countrynetwork": {
+      "rows": 0,
+      "md5": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "game_creatoractionlog": {
+      "rows": 0,
+      "md5": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "game_cupfixture": {
+      "rows": 0,
+      "md5": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "game_cupround": {
+      "rows": 0,
+      "md5": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "game_cupseason": {
+      "rows": 0,
+      "md5": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "game_datasource": {
+      "rows": 5,
+      "md5": "c4ca6be4075cfea715ecfd18047bb375"
+    },
+    "game_dayweather": {
+      "rows": 7,
+      "md5": "7ea32aa56012719d0ad71a57146631cd"
+    },
+    "game_dealrequest": {
+      "rows": 0,
+      "md5": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "game_dealrequestplayer": {
+      "rows": 0,
+      "md5": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "game_economyparameter": {
+      "rows": 77,
+      "md5": "1049b38a456aba10702d21f2118f8402"
+    },
+    "game_facilityconstruction": {
+      "rows": 0,
+      "md5": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "game_financematchdayrun": {
+      "rows": 0,
+      "md5": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "game_financereservation": {
+      "rows": 0,
+      "md5": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "game_financetransaction": {
+      "rows": 0,
+      "md5": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "game_forcedauction": {
+      "rows": 0,
+      "md5": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "game_forcedauctionbid": {
+      "rows": 0,
+      "md5": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "game_friendlyfixture": {
+      "rows": 0,
+      "md5": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "game_gameseasonstate": {
+      "rows": 0,
+      "md5": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "game_historiccoach": {
+      "rows": 11,
+      "md5": "880919538e971dabee7fbdcb6e185096"
+    },
+    "game_hoenesscoin": {
+      "rows": 0,
+      "md5": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "game_importissue": {
+      "rows": 156,
+      "md5": "3e778ca5fc9a84fd90cdc68b3f5d2ee0"
+    },
+    "game_inactivitypenalty": {
+      "rows": 0,
+      "md5": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "game_inactivityrecord": {
+      "rows": 0,
+      "md5": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "game_insolvencycase": {
+      "rows": 0,
+      "md5": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "game_landkoeffizient": {
+      "rows": 9,
+      "md5": "2252c0cdc04f38c7b02357226296435e"
+    },
+    "game_league": {
+      "rows": 1,
+      "md5": "c4565a322c8b49b9c7f61603982f0b8f"
+    },
+    "game_leaguenews": {
+      "rows": 0,
+      "md5": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "game_leagueseasonstate": {
+      "rows": 0,
+      "md5": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "game_leaguestandings": {
+      "rows": 0,
+      "md5": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "game_listingpin": {
+      "rows": 0,
+      "md5": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "game_loan": {
+      "rows": 0,
+      "md5": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "game_loanlisting": {
+      "rows": 0,
+      "md5": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "game_managercareerentry": {
+      "rows": 0,
+      "md5": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "game_managercareerstation": {
+      "rows": 0,
+      "md5": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "game_managercompetitiontitle": {
+      "rows": 0,
+      "md5": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "game_managernotes": {
+      "rows": 0,
+      "md5": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "game_managerprofile": {
+      "rows": 3,
+      "md5": "4cc7b1695c4353c9268f763b3fc4ef66"
+    },
+    "game_managerseasonscore": {
+      "rows": 0,
+      "md5": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "game_managerteamphoto": {
+      "rows": 0,
+      "md5": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "game_managertimelineentry": {
+      "rows": 0,
+      "md5": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "game_managertitle": {
+      "rows": 0,
+      "md5": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "game_managervacationblock": {
+      "rows": 0,
+      "md5": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "game_matchdayrevenue": {
+      "rows": 0,
+      "md5": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "game_matchevent": {
+      "rows": 0,
+      "md5": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "game_matchresult": {
+      "rows": 0,
+      "md5": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "game_matchstory": {
+      "rows": 0,
+      "md5": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "game_matchstoryround": {
+      "rows": 0,
+      "md5": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "game_mediaoutlet": {
+      "rows": 24,
+      "md5": "f6cd30c4a824a08649c6ba7aebdb9fd7"
+    },
+    "game_neutralvenue": {
+      "rows": 0,
+      "md5": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "game_notification": {
+      "rows": 0,
+      "md5": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "game_pendingtransfer": {
+      "rows": 0,
+      "md5": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "game_player": {
+      "rows": 51,
+      "md5": "d7b921fd85b6791f9148a88078cf1207"
+    },
+    "game_playerawardtitle": {
+      "rows": 0,
+      "md5": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "game_playerclubhistory": {
+      "rows": 0,
+      "md5": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "game_playercmtattributeprofile": {
+      "rows": 0,
+      "md5": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "game_playercmtprofile": {
+      "rows": 0,
+      "md5": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "game_playereditlog": {
+      "rows": 0,
+      "md5": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "game_playereditrequest": {
+      "rows": 0,
+      "md5": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "game_playerexternalid": {
+      "rows": 226,
+      "md5": "df4b75559ba6773465ca8d048b535334"
+    },
+    "game_playerfmiprofile": {
+      "rows": 0,
+      "md5": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "game_playerformsnapshot": {
+      "rows": 0,
+      "md5": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "game_playerimportcandidate": {
+      "rows": 0,
+      "md5": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "game_playerinjuryrecord": {
+      "rows": 0,
+      "md5": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "game_playermarketvaluesnapshot": {
+      "rows": 637,
+      "md5": "51ce143464a28d640a394c6f1280f2ab"
+    },
+    "game_playerrlformprofile": {
+      "rows": 0,
+      "md5": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "game_playerseasonstat": {
+      "rows": 0,
+      "md5": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "game_playersourcerating": {
+      "rows": 83,
+      "md5": "ca2b1a3f5cf35f330ebec0f77edd4019"
+    },
+    "game_playersourceratingsnapshot": {
+      "rows": 83,
+      "md5": "03471ece4176edcb7dc5ec3021c519db"
+    },
+    "game_playerstrengthprofile": {
+      "rows": 35,
+      "md5": "b5b3ec6704a8116f51de712aaa213375"
+    },
+    "game_playerstrengthsnapshot": {
+      "rows": 0,
+      "md5": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "game_playersuspensionrecord": {
+      "rows": 0,
+      "md5": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "game_playertmprofile": {
+      "rows": 0,
+      "md5": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "game_playertransferhistory": {
+      "rows": 322,
+      "md5": "5a9d85fcb00005c2ed13720f55f116d5"
+    },
+    "game_playerweightedratingsnapshot": {
+      "rows": 0,
+      "md5": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "game_positionbarometer": {
+      "rows": 0,
+      "md5": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "game_presidentsatisfaction": {
+      "rows": 0,
+      "md5": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "game_referee": {
+      "rows": 463,
+      "md5": "c2b6e0c9e1a46c3eda7bb3809a822a20"
+    },
+    "game_rumornews": {
+      "rows": 0,
+      "md5": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "game_scoutingassignment": {
+      "rows": 0,
+      "md5": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "game_scoutingbid": {
+      "rows": 0,
+      "md5": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "game_scoutingdepartment": {
+      "rows": 0,
+      "md5": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "game_scoutingfind": {
+      "rows": 0,
+      "md5": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "game_seasoneconomysnapshot": {
+      "rows": 0,
+      "md5": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "game_seasonfinancestate": {
+      "rows": 0,
+      "md5": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "game_seasonfixture": {
+      "rows": 0,
+      "md5": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "game_seasongoal": {
+      "rows": 0,
+      "md5": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "game_sellonclause": {
+      "rows": 0,
+      "md5": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "game_simulatedmatch": {
+      "rows": 0,
+      "md5": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "game_sourceimportrun": {
+      "rows": 1,
+      "md5": "568a88c3daaf0809a8e5f9166ac89587"
+    },
+    "game_sponsor": {
+      "rows": 504,
+      "md5": "df2dc25b8364e752142bb27ff760f6ef"
+    },
+    "game_sponsorcontract": {
+      "rows": 0,
+      "md5": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "game_sponsoroffer": {
+      "rows": 0,
+      "md5": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "game_squadlimitnote": {
+      "rows": 0,
+      "md5": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "game_squadoffer": {
+      "rows": 0,
+      "md5": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "game_stadionumfeldconfig": {
+      "rows": 1,
+      "md5": "82b4aad46484cee321d27b769e9857ff"
+    },
+    "game_stadium": {
+      "rows": 1,
+      "md5": "85b489c571a46ab23b77f9c4fdb53387"
+    },
+    "game_stadiumexpansion": {
+      "rows": 0,
+      "md5": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "game_storyaudit": {
+      "rows": 0,
+      "md5": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "game_storysettings": {
+      "rows": 0,
+      "md5": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "game_strengthformulasettings": {
+      "rows": 1,
+      "md5": "5c264eedffdb9520cb3a661d31717363"
+    },
+    "game_strengthmodifierrule": {
+      "rows": 15,
+      "md5": "908f1ab28e9cb2c8f71c3b763bc24afe"
+    },
+    "game_supportticket": {
+      "rows": 0,
+      "md5": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "game_tacticsetup": {
+      "rows": 0,
+      "md5": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "game_tactictemplate": {
+      "rows": 0,
+      "md5": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "game_transferbid": {
+      "rows": 0,
+      "md5": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "game_transferlisting": {
+      "rows": 0,
+      "md5": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "game_transferlock": {
+      "rows": 0,
+      "md5": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "game_transfernegotiation": {
+      "rows": 0,
+      "md5": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "game_transferrecord": {
+      "rows": 0,
+      "md5": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "game_transferrecordplayer": {
+      "rows": 0,
+      "md5": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "game_transferreport": {
+      "rows": 0,
+      "md5": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "game_tvpot": {
+      "rows": 0,
+      "md5": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "game_vereinkoeffizient": {
+      "rows": 0,
+      "md5": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "game_watchlistentry": {
+      "rows": 0,
+      "md5": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "game_youthlevypayment": {
+      "rows": 0,
+      "md5": "d41d8cd98f00b204e9800998ecf8427e"
+    }
+  },
+  "full_suite": {
+    "tests": 1668,
+    "seconds": 425.054,
+    "result": "OK"
+  },
+  "dump": {
+    "path": "backups/import-pilot/bvb-v1-20261006T124120Z.dump",
+    "bytes": 1029187,
+    "sha256": "0fc545cf8cd9e9405f864719ca799966268b0856d88343b70aa7b1d3eeea4b67",
+    "mode": "0o600",
+    "schema": "import_pilot",
+    "archive_list_verified": true
+  }
+}

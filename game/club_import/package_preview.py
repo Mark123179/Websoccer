@@ -8,9 +8,12 @@ from django.conf import settings
 from game import models as m
 from .package_validation import read_package
 from .issue_lifecycle import candidates, plan
+from .runtime import image_check_enabled
 
 
 def image_gaps(data):
+    if not image_check_enabled():
+        return []
     from game.asset_urls import assets_root
     root = Path(assets_root())
     checks = []
@@ -152,6 +155,7 @@ def preview_package(raw, league):
     state = dict(league=(league.pk, league.is_playable, league_started(league)),
                  package=last.data_sha256 if last else "")
     state["plan"] = rows
+    state["image_check_enabled"] = image_check_enabled()
     state["images"] = image_gaps(data)
     if club:
         state["issues"] = list(m.ImportIssue.objects.filter(club=club).order_by("pk").values())
@@ -162,6 +166,7 @@ def preview_package(raw, league):
         state["seasons"] = list(m.LeagueSeasonState.objects.filter(league=league).order_by("pk").values())
     guard = hashlib.sha256(json.dumps(state, sort_keys=True, default=str).encode()).hexdigest()
     return dict(manifest=manifest, data=display_data, changes=changes, issue_balance=balance,
+        image_check_enabled=image_check_enabled(),
         missing_images=image_gaps(data), players_to_review=review,
         new_strengths=new_strength, new_strength_players=new_strength_players, guard=guard,
         baseline=last.data_sha256 if last else "",

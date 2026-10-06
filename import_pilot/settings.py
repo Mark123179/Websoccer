@@ -27,6 +27,7 @@ if os.environ.get("REPLIT_DEV_DOMAIN"):
     ALLOWED_HOSTS.append(os.environ["REPLIT_DEV_DOMAIN"])
 ROOT_URLCONF = "import_pilot.urls"
 IMPORT_PACKAGE_MODE = True
+IMPORT_PACKAGE_IMAGE_CHECK_ENABLED = False
 INSTALLED_APPS = [
     "import_pilot.apps.ImportPilotConfig",
     "django.contrib.admin",

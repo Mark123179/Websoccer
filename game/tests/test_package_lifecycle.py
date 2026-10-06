@@ -32,7 +32,8 @@ def counts(baseline_clubs=()):
         titles=m.ClubTrophyEntry.objects.count(), issues=m.ImportIssue.objects.count(),
         open=m.ImportIssue.objects.filter(resolution_status="open").count(),
         package_closed=m.ImportIssue.objects.filter(resolution_status="package").count(),
-        clubs=m.Club.objects.exclude(pk__in=baseline_clubs).count())
+        clubs=m.Club.objects.filter(pk__in=m.SourceImportRun.objects.filter(
+            source="club_package", status="applied").values("club_id")).count())
 
 
 @override_settings(IMPORT_PACKAGE_MODE=True)
@@ -157,6 +158,35 @@ class IssueMatchingTests(TestCase):
         reconcile(self.run, [dict(entity="player", ref="tm:1", field="image", note="Missing", severity="info")], field="image")
         row.refresh_from_db()
         self.assertEqual(row.resolution_status, "open")
+        from game.club_import.package_preview import image_gaps
+        from game.club_import.package_validation import read_package
+        from django.urls import reverse
+        _, data = read_package(V2)
+        self.run.package_data = data
+        self.run.status = "applied"
+        self.run.save()
+        user = get_user_model().objects.create_user("image-switch", is_staff=True)
+        self.client.force_login(user)
+        before = fingerprint()
+        with override_settings(IMPORT_PACKAGE_IMAGE_CHECK_ENABLED=False):
+            self.assertEqual(image_gaps(data), [])
+            preview = preview_package(V2, self.league)
+            self.assertFalse(preview["image_check_enabled"])
+            self.assertEqual(preview["missing_images"], [])
+            self.assertEqual(plan(self.club, [])[2]["closed"], 0)
+            from django.test import RequestFactory
+            from game.club_import.package_views import images
+            request = RequestFactory().post(reverse("package_creator:images"), {"club": self.club.pk})
+            request.user = user
+            response = images(request)
+            self.assertEqual(response.status_code, 403)
+            self.assertEqual(before, fingerprint())
+            response = self.client.get(reverse("package_creator:hub"))
+            self.assertNotContains(response, "Bildinfos in Arbeitsliste abgleichen")
+        with override_settings(IMPORT_PACKAGE_IMAGE_CHECK_ENABLED=True):
+            self.assertTrue(image_gaps(data))
+            response = self.client.get(reverse("package_creator:hub"))
+            self.assertContains(response, "Bildinfos in Arbeitsliste abgleichen")
 
     def test_identity_conflict_never_reidentifies_existing_player(self):
         from game.club_import.package_validation import read_package
@@ -220,6 +250,24 @@ class IssueMatchingTests(TestCase):
         self.assertContains(response, "SOURCE CUP")
         response = self.client.get(reverse("management_halloffame"), dict(club="invalid"))
         self.assertEqual(response.status_code, 404)
+        from game.club_import.runtime import visible_clubs, visible_leagues
+        system, _ = m.League.objects.get_or_create(name="Sonderstatus", country="System")
+        retired, _ = m.Club.objects.get_or_create(name="Karrierende",
+            defaults=dict(league=system, founded_year=0, budget=0))
+        self.assertFalse(visible_clubs().filter(pk=retired.pk).exists())
+        self.assertFalse(visible_leagues().filter(pk=system.pk).exists())
+        response = self.client.get(reverse("club_list"))
+        self.assertNotContains(response, "Karrierende")
+        self.assertNotContains(response, "Sonderstatus")
+        response = self.client.get(reverse("creator_index"))
+        self.assertNotContains(response, "Sonderstatus")
+        self.assertEqual(response.context["total_clubs"], visible_clubs().count())
+        response = self.client.get(reverse("package_creator:hub"))
+        self.assertNotContains(response, "Karrierende")
+        self.assertNotContains(response, "Sonderstatus")
+        with override_settings(IMPORT_PACKAGE_MODE=False):
+            self.assertTrue(visible_clubs().filter(pk=retired.pk).exists())
+            self.assertTrue(visible_leagues().filter(pk=system.pk).exists())
 
     def test_manual_lock_label_and_open_balance_follow_actual_data(self):
         from game.club_import.package_validation import read_package

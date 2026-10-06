@@ -5,6 +5,7 @@ from collections import OrderedDict
 from datetime import date, timedelta
 from django.db import models as _db_models
 from itertools import product
+from .club_import.runtime import visible_clubs, visible_leagues
 
 from django.contrib import messages
 from django.urls import reverse
@@ -2294,12 +2295,13 @@ def home(request):
                 'is_current_club': bool(primary_club and _s.club_id == primary_club.id),
             })
 
+    from .club_import.runtime import visible_clubs, visible_leagues
     totals = {
-        'league_count': League.objects.count(),
-        'club_count': Club.objects.count(),
+        'league_count': visible_leagues().count(),
+        'club_count': visible_clubs().count(),
         'player_count': Player.objects.count(),
         'manager_count': get_user_model().objects.filter(is_active=True).count(),
-        'total_budget': Club.objects.aggregate(total=Sum('budget'))['total'] or 0,
+        'total_budget': visible_clubs().aggregate(total=Sum('budget'))['total'] or 0,
         'total_market_value': (
             Player.objects.aggregate(total=Sum('market_value'))['total'] or 0
         ),
@@ -2500,9 +2502,10 @@ def home(request):
 
 @login_required
 def club_list(request):
+    from .club_import.runtime import visible_clubs
     user_has_no_club = current_manager_club(user=request.user) is None
 
-    clubs_qs = Club.objects.select_related('league', 'managed_by').order_by('league__name', 'name')
+    clubs_qs = visible_clubs().select_related('league', 'managed_by').order_by('league__name', 'name')
 
     if user_has_no_club:
         # Group by league for the "Verein wählen" screen — no strength shown
@@ -3123,7 +3126,7 @@ def build_tactics_context(
     profile_context = build_club_profile_context(club)
     profile = profile_context['profile']
     opponent_club = profile_context['opponent_club'] or (
-        Club.objects.exclude(id=club.id).order_by('name').first()
+        visible_clubs().exclude(id=club.id).order_by('name').first()
     )
     next_match = profile['nextMatch']
     if friendly_fixture is not None:
@@ -5795,7 +5798,7 @@ def club_match_report(request, club_id):
     if _last_fx:
         latest = _last_fx.simulated_match
 
-    all_clubs = Club.objects.order_by('name')
+    all_clubs = visible_clubs().order_by('name')
 
     _PLAN_LABELS = {
         'ausgewogen':          'Ausgewogen',
@@ -7713,10 +7716,10 @@ def manager_profile(request):
     timeline_clubs_json = json.loads(json.dumps(_tl_clubs, default=str))
     timeline_ticket_options_json = {
         'clubs': list(
-            Club.objects.order_by('name').values_list('name', flat=True)
+            visible_clubs().order_by('name').values_list('name', flat=True)
         ),
         'competitions': list(
-            League.objects.order_by('name').values_list('name', flat=True).distinct()
+            visible_leagues().order_by('name').values_list('name', flat=True).distinct()
         ),
     }
 
@@ -8664,7 +8667,7 @@ def league_detail(request, league_id):
     from .models import GameSeasonState
 
     league = get_object_or_404(
-        League.objects.select_related('season_winner', 'cup_winner'),
+        visible_leagues().select_related('season_winner', 'cup_winner'),
         id=league_id,
     )
 

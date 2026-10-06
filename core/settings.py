@@ -46,6 +46,7 @@ DEBUG = _env_bool('DEBUG', default=True)
 # N33: schema is unconditional. Only package behavior is off in the old game.
 # Enable at approved takeover, then remove the flag and legacy branches.
 IMPORT_PACKAGE_MODE = _env_bool('IMPORT_PACKAGE_MODE', default=False)
+IMPORT_PACKAGE_IMAGE_CHECK_ENABLED = _env_bool('IMPORT_PACKAGE_IMAGE_CHECK_ENABLED', default=True)
 
 # SECURITY WARNING: keep the secret key used in production secret!
 # Read from the environment. In production (DEBUG=False) SECRET_KEY MUST be set
