@@ -730,6 +730,14 @@ class LeagueAdmin(admin.ModelAdmin):
         from game.schedule_generator import create_round_robin_schedule, matchday_date
 
         league = get_object_or_404(League, pk=league_id)
+        if request.method == "POST":
+            from game.club_import.league_guard import ensure_ready
+            from django.core.exceptions import ValidationError
+            try:
+                ensure_ready(league)
+            except ValidationError as exc:
+                self.message_user(request, "; ".join(exc.messages), level=messages.ERROR)
+                return redirect(request.path)
         clubs = list(league.club_set.order_by('name'))
 
         class SpielplanForm(forms.Form):

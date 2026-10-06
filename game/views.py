@@ -1045,6 +1045,7 @@ def market_chart_points(rows, current_value):
         {
             'value': float(row.value_eur),
             'date': row.recorded_at,
+            'is_start_value': bool(getattr(row, 'is_start_value', False)),
         }
         for row in rows
         if row.value_eur is not None
@@ -1077,6 +1078,7 @@ def market_chart_points(rows, current_value):
             'axis_value': compact_money_axis(value),
             'date_label': date.strftime('%m/%y') if date else 'aktuell',
             'full_date_label': date.strftime('%d.%m.%Y') if date else 'aktuell',
+            'is_start_value': entry['is_start_value'],
         })
 
     return points
@@ -3303,6 +3305,31 @@ def club_detail(request, club_id):
         f'Saison 2026/27 · {club.league.name}',
         '/clubs/',
     )
+    if package_mode():
+        stadium = getattr(club, 'stadium', None)
+        from .club_profile import format_number
+        if stadium:
+            context['profile']['stadium'].update(
+                name=stadium.name or 'Stadion nicht hinterlegt',
+                capacityFormatted=(format_number(stadium.real_capacity_national)
+                                   if stadium.real_capacity_national is not None else '-'),
+            )
+        context['package_mode'] = True
+        context['package_stadium_capacities'] = []
+        for side, side_label in (
+            ('nord', 'Nord'), ('ost', 'Ost'), ('sued', 'Süd'), ('west', 'West'),
+        ):
+            for kind, kind_label in (
+                ('standing', 'Stehplätze'), ('seating', 'Sitzplätze'), ('vip', 'VIP'),
+            ):
+                field = f'real_{side}_{kind}'
+                value = getattr(stadium, field, None) if stadium else None
+                context['package_stadium_capacities'].append({
+                    'side': side_label,
+                    'kind': kind_label,
+                    'value': value,
+                    'basis': getattr(stadium, field + '_basis', None) if stadium else None,
+                })
 
     return render(
         request,
@@ -3915,6 +3942,15 @@ def _build_squad_context(request, club, squad_title):
     is_youth = squad_title == 'Jugendkader'
     qs = Player.objects.filter(club=club).select_related(
         'strength_profile', 'loan_partner_club', 'cmt_profile')
+    if package_mode():
+        is_creator = bool(
+            request.user.is_authenticated
+            and (request.user.is_staff or request.user.is_superuser)
+        )
+        if is_youth:
+            qs = qs.filter(squad_team='u21') if is_creator else qs.none()
+        else:
+            qs = qs.filter(squad_team='first')
     if is_youth:
         qs = qs.filter(age__lte=YOUTH_AGE_LIMIT)
     all_club_players = list(qs)
@@ -4010,7 +4046,7 @@ def _build_squad_context(request, club, squad_title):
                 row['sale_category'] = pl.sale_category
                 row['sale_visible_to_ai'] = pl.sale_visible_to_ai
 
-    return {
+    context = {
         'viewer_club': viewer_club,
         'transfer_market_url': reverse('transfer_market'),
         'sale_status_url': reverse('squad_set_sale_status', args=[club.id]),
@@ -4037,6 +4073,29 @@ def _build_squad_context(request, club, squad_title):
             reverse_club_detail(club),
         ),
     }
+    if package_mode():
+        context['package_mode'] = True
+        from django.db.models import Q
+        context['package_first_roster'] = (
+            Player.objects.filter(squad_team='first')
+            .filter(Q(club=club) | Q(owner_club=club))
+            .select_related('club', 'owner_club', 'loan_club')
+            .order_by('shirt_number', 'last_name', 'first_name')
+            .distinct()
+        )
+        context['package_u21_players'] = (
+            Player.objects.filter(club=club, squad_team='u21')
+            .select_related('strength_profile').order_by('shirt_number', 'last_name', 'first_name')
+            if is_creator else []
+        )
+        context['package_loan_pool'] = [
+            player for player in Player.objects.filter(
+                club__isnull=True, review_pool=False,
+            ).select_related('owner_club', 'loan_club').order_by('last_name', 'first_name')
+            if getattr(player, 'is_in_loan_pool', False)
+            and (player.owner_club_id == club.pk or player.loan_club_id == club.pk)
+        ]
+    return context
 
 
 def club_professional_squad(request, club_id):
@@ -4046,6 +4105,10 @@ def club_professional_squad(request, club_id):
 
 
 def club_youth_squad(request, club_id):
+    from .club_import.runtime import package_mode
+    if package_mode() and not (request.user.is_authenticated and (request.user.is_staff or request.user.is_superuser)):
+        from django.http import HttpResponseForbidden
+        return HttpResponseForbidden("U21 nur für Creator.")
     club = get_object_or_404(Club.objects.select_related('league'), id=club_id)
     return render(request, 'game/club_profile/squad_page.html',
                   _build_squad_context(request, club, 'Jugendkader'))
@@ -6596,13 +6659,21 @@ def player_detail(request, player_id):
         for row in all_season_rows
         if row.season_number == selected_season_number and row.matches > 0
     ]
-    market_rows = latest_in_chronological_order(
-        player.market_value_snapshots.select_related('source')
+    market_queryset = player.market_value_snapshots.select_related('source')
+    market_rows = (
+        list(market_queryset.order_by('recorded_at', 'id'))
+        if package_mode()
+        else latest_in_chronological_order(market_queryset)
     )
-    transfer_rows = PlayerTransferHistory.objects.select_related(
+    transfer_queryset = PlayerTransferHistory.objects.select_related(
         'from_club',
         'to_club',
-    ).filter(player=player)[:6]
+    ).filter(player=player)
+    if package_mode():
+        transfer_queryset = transfer_queryset.order_by('-transfer_date', '-pk')
+        transfer_rows = transfer_queryset
+    else:
+        transfer_rows = transfer_queryset[:6]
     injury_rows = PlayerInjuryRecord.objects.filter(player=player)[:5]
     suspension_rows = PlayerSuspensionRecord.objects.filter(player=player)[:5]
     all_award_rows = list(PlayerAwardTitle.objects.filter(player=player))
@@ -6622,6 +6693,30 @@ def player_detail(request, player_id):
         player.nt_nationality
         or (player.nationalities.split(',')[0].strip() if player.nationalities else None)
     )
+
+    package_transfer_rows = []
+    package_start_values = []
+    if package_mode():
+        package_transfer_rows = [{
+            'date': row.transfer_date,
+            'season': row.season,
+            'from_name': row.from_club.name if row.from_club_id else (
+                row.from_original_name or 'Unbekannter Verein'
+            ),
+            'to_name': row.to_club.name if row.to_club_id else (
+                row.to_original_name or 'Unbekannter Verein'
+            ),
+            'external_from': not bool(row.from_club_id),
+            'external_to': not bool(row.to_club_id),
+            'is_loan': row.is_loan,
+            'fee': row.fee_text or (
+                f'{int(row.fee_eur):,} €'.replace(',', '.')
+                if row.fee_eur is not None else 'Unbekannt'
+            ),
+        } for row in transfer_rows]
+        package_start_values = [
+            row for row in market_rows if getattr(row, 'is_start_value', False)
+        ]
 
     return render(
         request,
@@ -6645,6 +6740,9 @@ def player_detail(request, player_id):
             'market_polyline': market_polyline(market_points),
             'market_area_points': market_area_points(market_points),
             'transfer_rows': transfer_display_rows(transfer_rows),
+            'package_mode': package_mode(),
+            'package_transfer_rows': package_transfer_rows,
+            'package_start_values': package_start_values,
             'injury_rows': injury_rows,
             'suspension_rows': suspension_rows,
             'award_rows': award_page.object_list,

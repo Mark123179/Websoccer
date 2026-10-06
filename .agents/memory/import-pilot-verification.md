@@ -3,6 +3,12 @@ name: Import pilot verification
 description: Shared-model activation, proxy metadata, and honest source equality evidence.
 ---
 
+Paket-Clubzahlen in einem migrierten Testbestand beziehen sich auf zusätzlich importierte Vereine gegenüber der Baseline, nicht blind auf alle Club-Zeilen.
+
+**Why:** Der vollständige Migrationslauf kann bereits einen Systemverein anlegen. Ein korrekter Paketimport ist dann fälschlich als zusätzlicher Verweisverein aufgefallen, obwohl der frische Minimalbestand dieselbe Importstrecke korrekt zeigte.
+
+**How to apply:** Baseline-IDs vor der Importfolge erfassen; Systembestand separat berichten und nicht löschen, um eine Sollzahl zu erzwingen. Bei den Stichproben rohe gemeinsame 0–200-Basis-/Potenzialwerte von positions-/profilgewichteten Engine-Ergebnissen unterscheiden.
+
 Install the shared schema unconditionally. One temporary flag controls behavior, not fields or models; remove it and legacy branches after takeover.
 
 For FMInside Dynamic, use the observed tooltip range's upper bound as source potential. Include potential_range with min/max/code and preserve raw.potential_text verbatim. This is standard package scope, including players with CMTracker values. Never fill potential from rating or introduce a special strength calculation.

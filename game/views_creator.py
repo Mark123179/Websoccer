@@ -2492,6 +2492,13 @@ def creator_league_spielplan_generate(request, league_id):
     from game.schedule_generator import create_round_robin_schedule, matchday_date
 
     league = get_object_or_404(League, id=league_id)
+    from game.club_import.league_guard import ensure_ready
+    from django.core.exceptions import ValidationError
+    try:
+        ensure_ready(league)
+    except ValidationError as exc:
+        messages.error(request, "; ".join(exc.messages))
+        return redirect("creator_league_edit", league_id=league.pk)
     clubs = list(league.club_set.order_by('name'))
 
     season = request.POST.get('season', '').strip()

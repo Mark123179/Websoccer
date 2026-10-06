@@ -1,0 +1,151 @@
+{% extends 'base.html' %}
+
+{% block title %}Paket-Creator · Import{% endblock %}
+
+{% block content %}
+<main class="package-creator package-hub">
+    <header class="package-creator__masthead">
+        <p class="package-creator__eyebrow">Creator-Werkstatt / Datenpflege</p>
+        <h1>Vereinspakete</h1>
+        <p>Importierte Vereinsgeschichte bleibt als Quelle erkennbar. Erst die Bestätigung schreibt den Paketstand in die gewählte Liga.</p>
+    </header>
+
+    {% if error %}<div class="package-alert package-alert--error" role="alert">{{ error }}</div>{% endif %}
+    {% if success %}<div class="package-alert package-alert--success" role="status">{{ success }}</div>{% endif %}
+
+    <div class="package-hub-grid">
+        <section class="package-surface package-upload">
+            <div class="package-section-head">
+                <span class="package-index">01</span>
+                <div><h2>Paket prüfen</h2><p>Schreibfreie Prüfung und Vorschau vor jeder Übernahme.</p></div>
+            </div>
+            <form method="post" action="{% url 'package_creator:preview' %}" enctype="multipart/form-data" class="package-form">
+                {% csrf_token %}
+                <label for="package-file">Vereinspaket</label>
+                <input id="package-file" type="file" name="package" required accept=".zip,.json,application/zip,application/json">
+                <label for="package-league">Zielliga</label>
+                <select id="package-league" name="league" required>
+                    <option value="">Liga auswählen</option>
+                    {% for league in leagues %}
+                    <option value="{{ league.pk }}">{{ league.name }}{% if league.country %} · {{ league.country }}{% endif %}</option>
+                    {% endfor %}
+                </select>
+                <button class="package-button package-button--primary" type="submit">Vorschau erstellen</button>
+            </form>
+            <p class="package-footnote">Bis zur Bestätigung werden keine fachlichen Importdaten angelegt.</p>
+        </section>
+
+        <section class="package-surface package-leagues">
+            <div class="package-section-head">
+                <span class="package-index">02</span>
+                <div><h2>Ligen</h2><p>Spielbarkeit wird beim Anlegen festgelegt.</p></div>
+            </div>
+            <form method="post" action="{% url 'package_creator:league' %}" class="package-form package-league-form">
+                {% csrf_token %}
+                <label for="league-name">Name</label>
+                <input id="league-name" name="name" type="text" maxlength="100" required>
+                <label for="league-country">Land</label>
+                <input id="league-country" name="country" type="text" maxlength="100">
+                <label class="package-check"><input type="checkbox" name="is_playable" value="true" checked> Als spielbar markieren</label>
+                <button class="package-button" type="submit">Liga anlegen</button>
+            </form>
+            <ul class="package-league-list">
+                {% for league in leagues %}
+                <li><a href="{% url 'package_creator:hub' %}?league={{ league.pk }}">{{ league.name }}</a><span>{% if league.is_playable %}Spielbar{% else %}Nicht spielbar{% endif %}</span></li>
+                {% empty %}<li class="package-empty">Noch keine Ligen angelegt.</li>{% endfor %}
+            </ul>
+        </section>
+    </div>
+
+    <section class="package-surface package-issues">
+        <div class="package-section-head">
+            <span class="package-index">03</span>
+            <div><h2>Arbeitsliste</h2><p>Offene Paketlücken und Identitätsfragen, nach Schwere eingeordnet.</p></div>
+        </div>
+        <form method="get" class="package-form">
+            <label>Nach Liga <select name="league"><option value="">Alle</option>{% for league in leagues %}<option value="{{ league.pk }}">{{ league.name }}</option>{% endfor %}</select></label>
+            <label>Nach Verein <select name="club"><option value="">Alle</option>{% for club in clubs %}<option value="{{ club.pk }}">{{ club.name }}</option>{% endfor %}</select></label>
+            <label>Nach Schwere <select name="severity"><option value="">Alle</option><option value="info">Info</option><option value="player_lock">Einzelsperre</option><option value="blocking">Sperrend</option></select></label>
+            <button class="package-button" type="submit">Filtern</button>
+        </form>
+        <form method="post" action="{% url 'package_creator:images' %}" class="package-form">
+            {% csrf_token %}
+            <label>Bildprüfung <select name="club" required>{% for club in clubs %}<option value="{{ club.pk }}">{{ club.name }}</option>{% endfor %}</select></label>
+            <button class="package-button" type="submit">Bildinfos in Arbeitsliste abgleichen</button>
+            <p class="package-footnote">Fehlende Dateien werden als zusätzliche Infoeinträge erfasst. Die Vorschau prüft Dateien nur lesend.</p>
+        </form>
+        {% if issues %}
+        <div class="package-issue-list">
+            {% for issue in issues %}
+            <article class="package-issue">
+                <div class="package-issue__meta">
+                    <span class="package-severity package-severity--{{ issue.severity }}">{{ issue.get_severity_display|default:issue.severity }}</span>
+                    <span>{{ issue.package.club.name|default:issue.entity_ref|default:"Paket" }}</span>
+                    <span>{{ issue.get_resolution_status_display|default:issue.resolution_status }}</span>
+                </div>
+                <h3>{{ issue.field }}</h3>
+                <p>{{ issue.note }}</p>
+                {% if issue.entity_ref %}<small>Bezug: {{ issue.entity_ref }}</small>{% endif %}
+                {% if issue.resolution_status == 'open' %}
+                <div class="package-issue-actions">
+                <form method="post" action="{% url 'package_creator:issue' issue.pk %}" class="package-issue-action">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="value">
+                    <label for="issue-value-{{ issue.pk }}">Wert nachpflegen</label>
+                    <input id="issue-value-{{ issue.pk }}" name="value" type="text" value="{{ issue.proposed_tm_id|default:'' }}">
+                    <button class="package-button" type="submit">Wert speichern</button>
+                </form>
+                <form method="post" action="{% url 'package_creator:issue' issue.pk %}" class="package-issue-action">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="link">
+                    <label for="issue-link-{{ issue.pk }}">Vereinsverweis / Verknüpfung</label>
+                    <input id="issue-link-{{ issue.pk }}" name="link" type="text" value="{{ issue.link_value|default:'' }}">
+                    <button class="package-button" type="submit">Verknüpfung übernehmen</button>
+                </form>
+                <form method="post" action="{% url 'package_creator:issue' issue.pk %}" class="package-issue-action">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="review">
+                    <label for="issue-review-{{ issue.pk }}">Prüfpool-Zuordnung</label>
+                    <input id="issue-review-{{ issue.pk }}" name="review" type="text" value="{{ issue.review_value|default:'' }}">
+                    <button class="package-button" type="submit">Prüfpool zuordnen</button>
+                </form>
+                <form method="post" action="{% url 'package_creator:issue' issue.pk %}" class="package-issue-resolve">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="resolve">
+                    <button class="package-button package-button--quiet" type="submit">Als erledigt markieren</button>
+                </form>
+                </div>
+                {% endif %}
+            </article>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="package-empty-state"><strong>Keine offenen Einträge</strong><span>Neue Paketlücken erscheinen nach einer bestätigten Übernahme hier.</span></div>
+        {% endif %}
+    </section>
+</main>
+
+<style>
+    .package-creator{--pc-ink:var(--text,#f4fbff);--pc-muted:var(--muted,rgba(244,251,255,.64));--pc-faint:var(--faint,rgba(244,251,255,.38));--pc-panel:var(--panel,rgba(9,23,34,.82));--pc-panel-strong:var(--panel-strong,rgba(12,31,45,.94));--pc-panel-soft:var(--panel-soft,rgba(17,43,58,.72));--pc-line:var(--line,rgba(44,231,255,.18));--pc-line-strong:var(--line-strong,rgba(44,231,255,.38));--pc-cyan:var(--cyan,#22e6ff);--pc-green:var(--green,#30f29c);--pc-yellow:var(--yellow,#ffd166);--pc-red:var(--red,#ff5570);max-width:1180px;margin:0 auto;padding:clamp(1rem,4vw,3.2rem);color:var(--pc-ink)}
+    .package-creator__masthead{max-width:760px;margin:0 0 2rem}.package-creator__eyebrow{margin:0 0 .6rem;color:var(--pc-cyan);font-size:.72rem;font-weight:800;letter-spacing:.16em;text-transform:uppercase}
+    .package-creator__masthead h1{margin:0;font-size:clamp(2rem,5vw,3.7rem);letter-spacing:-.045em}.package-creator__masthead>p:last-child{max-width:650px;color:var(--pc-muted);line-height:1.65}
+    .package-hub-grid{display:grid;grid-template-columns:1.05fr .95fr;gap:1rem}.package-surface{padding:clamp(1rem,2.5vw,1.6rem);background:var(--pc-panel);border:1px solid var(--pc-line);border-radius:var(--radius,8px)}
+    .package-section-head{display:flex;align-items:flex-start;gap:.8rem;margin-bottom:1.2rem}.package-index{display:grid;place-items:center;width:2rem;height:2rem;border-radius:50%;background:rgba(34,230,255,.08);color:var(--pc-cyan);border:1px solid var(--pc-line);font-size:.72rem;font-weight:900}
+    .package-section-head h2{margin:0;font-size:1.2rem}.package-section-head p{margin:.2rem 0 0;color:var(--pc-muted);font-size:.83rem}
+    .package-form{display:grid;gap:.55rem}.package-form label,.package-issue-action label{font-size:.8rem;font-weight:700}
+    .package-form input:not([type=checkbox]),.package-form select,.package-issue-action input{width:100%;min-height:2.7rem;padding:.6rem .7rem;border:1px solid var(--pc-line-strong);border-radius:var(--radius,8px);background:var(--pc-panel-strong);color:var(--pc-ink);font:inherit}
+    .package-form input:focus,.package-form select:focus,.package-issue-action input:focus{outline:2px solid var(--pc-cyan);outline-offset:2px}
+    .package-button{display:inline-flex;justify-content:center;align-items:center;min-height:2.55rem;padding:.6rem .9rem;border:1px solid var(--pc-line-strong);border-radius:var(--radius,8px);background:var(--pc-panel-soft);color:var(--pc-ink);font:inherit;font-weight:800;cursor:pointer}
+    .package-button:hover{border-color:var(--pc-cyan);color:var(--pc-cyan)}.package-button--primary{margin-top:.4rem;background:var(--pc-cyan);border-color:var(--pc-cyan);color:var(--app-bg,#03070c)}.package-button--primary:hover{background:var(--pc-cyan);color:var(--app-bg,#03070c);filter:brightness(1.08)}
+    .package-button--quiet{background:transparent}.package-footnote{margin:.8rem 0 0;color:var(--pc-muted);font-size:.75rem}
+    .package-check{display:flex;align-items:center;gap:.55rem;margin:.35rem 0}.package-league-list{list-style:none;padding:0;margin:1.1rem 0 0;border-top:1px solid var(--pc-line)}
+    .package-league-list li{display:flex;justify-content:space-between;gap:1rem;padding:.65rem 0;border-bottom:1px solid var(--pc-line);font-size:.83rem}.package-league-list a{color:var(--pc-cyan);font-weight:750}.package-league-list span{color:var(--pc-muted)}
+    .package-issues{margin-top:1rem}.package-issue-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 1.25rem}.package-issue{padding:1rem 0;border-top:1px solid var(--pc-line)}
+    .package-issue__meta{display:flex;flex-wrap:wrap;gap:.4rem .7rem;color:var(--pc-muted);font-size:.7rem}.package-severity{font-weight:800}.package-severity--blocking,.package-severity--player_lock{color:var(--pc-red)}.package-severity--info{color:var(--pc-cyan)}
+    .package-issue h3{margin:.65rem 0 .25rem;font-size:.95rem}.package-issue p{margin:.2rem 0 .45rem;color:var(--pc-muted);font-size:.83rem;line-height:1.5}.package-issue small{color:var(--pc-faint)}
+    .package-issue-actions{display:grid;gap:.5rem;margin-top:.8rem}.package-issue-action{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:end;gap:.4rem .5rem}.package-issue-action label{grid-column:1/-1}.package-issue-resolve{margin-top:.35rem}.package-alert{padding:.8rem 1rem;margin:0 0 1rem;border:1px solid var(--pc-line);border-radius:var(--radius,8px);background:var(--pc-panel)}
+    .package-alert--error{border-color:rgba(255,85,112,.45);color:var(--pc-red)}.package-alert--success{border-color:rgba(48,242,156,.4);color:var(--pc-green)}
+    .package-empty,.package-empty-state{color:var(--pc-muted)}.package-empty-state{display:grid;gap:.3rem;padding:1.2rem;border:1px dashed var(--pc-line-strong);border-radius:var(--radius,8px)}.package-empty-state strong{color:var(--pc-ink)}
+    @media(max-width:760px){.package-hub-grid,.package-issue-list{grid-template-columns:1fr}.package-issue-action{grid-template-columns:1fr}.package-issue-action label{grid-column:auto}.package-league-list li{align-items:flex-start}}
+</style>
+{% endblock %}

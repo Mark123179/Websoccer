@@ -688,6 +688,8 @@ def write_simulated_match_stats(simulated_match, data: dict) -> None:
 def get_season_state(league, season: str):
     """Gibt den LeagueSeasonState zurück, erstellt ihn bei Bedarf (ST1, offen)."""
     from .models import LeagueSeasonState
+    from .club_import.league_guard import ensure_ready
+    ensure_ready(league)
     state, _ = LeagueSeasonState.objects.get_or_create(
         league=league,
         season=season,
@@ -729,6 +731,8 @@ def simulate_matchday(league, season: str, matchday: int) -> dict:
     from .management.commands.play_matchday import (
         _update_standings, _recalculate_positions,
     )
+    from .club_import.league_guard import ensure_ready
+    ensure_ready(league)
 
     qs = (
         SeasonFixture.objects

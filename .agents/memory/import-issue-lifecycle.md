@@ -1,13 +1,13 @@
 ---
 name: Arbeitsliste bei Paket-Reupload
-description: Nutzerentscheidungen zu stabilen Einträgen, Handeinträgen und datenabhängigen Einzelsperren aus Nachtrag 9.
+description: Nutzerentscheidungen zu stabilen Einträgen, Handeinträgen und datenabhängigen Einzelsperren aus Nachträgen 9 und 10.
 ---
 
-Ein Arbeitslisteneintrag gehört zum Verein, nicht zum Upload. Sein Schlüssel besteht aus Verein, Gegenstandsart, Gegenstandsbezug und Feld; Text und Schwere sind kein Teil des Schlüssels.
+Ein Arbeitslisteneintrag gehört zum Verein, nicht zum Upload. Sein Hauptschlüssel besteht aus Verein, Gegenstandsart, Gegenstandsbezug und Feld. Bei einer einzelnen Lücke sind Text und Schwere keine Schlüsselbestandteile. Mehrere Lücken zum selben Hauptschlüssel erhalten nach Nachtrag 10 einen Unter-Schlüssel aus dem exakten Text.
 
 **Why:** Ein Upload darf die bisherigen Erledigt-Status und Nacharbeiten nicht verlieren oder dieselbe Lücke duplizieren.
 
-**How to apply:** Gleiche Lücke behält Zeile und Status. Fehlende Lücke wird nachvollziehbar durch neues Paket erledigt. Neue Lücke wird offen angelegt. Wiederkehr öffnet einen paketgeschlossenen Eintrag erneut; eine handerledigte Lücke bleibt erledigt, solange der Handeintrag erhalten bleibt. Alle Eintragsarten einschließlich Prüfpool und fehlender Bilder mitführen.
+**How to apply:** Gleiche Lücke behält Zeile und Status. Fehlende Lücke wird nachvollziehbar durch neues Paket erledigt. Neue Lücke wird offen angelegt. Wiederkehr öffnet einen paketgeschlossenen Eintrag erneut; eine handerledigte Lücke bleibt erledigt, solange der Handeintrag erhalten bleibt. Beim Wechsel Einzel-/Mehrfachlücke den gleichtextigen Eintrag bewahren und die übrige Historie erhalten. Alle Eintragsarten einschließlich Prüfpool und fehlender Bilder mitführen.
 
 Handeinträge füllen Lücken, das Paket gewinnt bei gelieferten Werten.
 
@@ -19,4 +19,4 @@ Einzelsperren sind aus benötigten Quellwerten und berechneter Stärke abzuleite
 
 **Why:** Eine manuell ergänzte ID liefert noch kein Rating und darf nicht die Aufstellbarkeit vortäuschen.
 
-**How to apply:** Solche Einträge sind nicht von Hand abhakbar und schließen sich mit dem Wegfall der Daten-Sperre. Vor Bestätigung zeigt die Vorschau neue, bleibende und durch Paket geschlossene Einträge.
+**How to apply:** N48 sperrt bei FM/TM/CMTRACKER-Status nicht_gefunden, vorhandener FM-/CMTRACKER-ID ohne Rating oder fehlender berechneter Stärke. CMTRACKER nicht_vorhanden allein sperrt nicht. Solche Einträge sind nicht von Hand abhakbar und schließen sich mit dem Wegfall der Daten-Sperre. Vor Bestätigung zeigt die Vorschau neue, bleibende und durch Paket geschlossene Einträge.

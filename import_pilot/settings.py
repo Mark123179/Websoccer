@@ -23,6 +23,8 @@ SECRET_KEY = hmac.new(
 ).hexdigest()
 DEBUG = False
 ALLOWED_HOSTS = ["127.0.0.1", "localhost"]
+if os.environ.get("REPLIT_DEV_DOMAIN"):
+    ALLOWED_HOSTS.append(os.environ["REPLIT_DEV_DOMAIN"])
 ROOT_URLCONF = "import_pilot.urls"
 IMPORT_PACKAGE_MODE = True
 INSTALLED_APPS = [
@@ -57,10 +59,15 @@ TEMPLATES = [{
         "game.context_processors.posthog_settings",
     ]},
 }]
-STATIC_URL = "/static/"
-LOGIN_URL = "/auth/login/"
-LOGIN_REDIRECT_URL = "/"
-ASSETS_BASE_URL = os.environ.get("ASSETS_BASE_URL", "/assets/")
+STATIC_URL = "/import-pilot/static/"
+LOGIN_URL = "/import-pilot/auth/login/"
+FORCE_SCRIPT_NAME = "/import-pilot"
+SESSION_COOKIE_PATH = "/import-pilot/"
+CSRF_COOKIE_PATH = "/import-pilot/"
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+CSRF_TRUSTED_ORIGINS = ["https://*.replit.dev", "https://*.replit.app"]
+LOGIN_REDIRECT_URL = "/import-pilot/creator/packages/"
+ASSETS_BASE_URL = "/import-pilot/assets/"
 X_FRAME_OPTIONS = "SAMEORIGIN"
 
 # Reuse only the server/database location, not the maintenance identity.

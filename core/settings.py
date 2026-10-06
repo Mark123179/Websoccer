@@ -146,6 +146,7 @@ INSTALLED_APPS = [
     'stadium_editor',
 ]
 MIDDLEWARE = [
+    'import_pilot.proxy.PilotProxyMiddleware',
     'game.middleware.DevNoCacheMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -158,6 +159,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'game.middleware.LastSeenMiddleware',
 ]
+IMPORT_PILOT_PROXY_ENABLED = bool(os.environ.get("REPL_ID") or os.environ.get("REPLIT_DEV_DOMAIN"))
 
 LOGIN_URL = '/auth/login/'
 LOGIN_REDIRECT_URL = '/'

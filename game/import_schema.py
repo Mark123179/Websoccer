@@ -53,8 +53,12 @@ class ClubTrophyEntry(models.Model):
 
 
 class ImportIssue(models.Model):
+    club = models.ForeignKey("game.Club", on_delete=models.CASCADE, related_name="import_issues")
     package = models.ForeignKey("game.SourceImportRun", on_delete=models.CASCADE,
                                 related_name="issues")
+    last_seen_package = fk("game.SourceImportRun")
+    subkey = models.CharField(max_length=64, blank=True, default="")
+    manual_value = models.JSONField(null=True, blank=True)
     entity = models.CharField(max_length=40)
     entity_ref = models.CharField(max_length=200, blank=True)
     field = models.CharField(max_length=200)
@@ -66,11 +70,14 @@ class ImportIssue(models.Model):
     resolved_at = models.DateTimeField(null=True, blank=True)
     resolved_by = fk("auth.User")
     resolution_status = models.CharField(max_length=20, default="open",
-                                       choices=[("open", "Open"), ("resolved", "Resolved")])
+        choices=[("open", "Open"), ("resolved", "Von Hand erledigt"),
+                 ("package", "Durch neues Paket erledigt")])
 
     class Meta:
         app_label = "game"
         constraints = [
+            models.UniqueConstraint(fields=["club", "entity", "entity_ref", "field", "subkey"],
+                                    name="unique_club_issue_subkey"),
             models.CheckConstraint(condition=models.Q(
                 severity__in=["info", "player_lock", "blocking"]), name="import_issue_severity_valid"),
         ]

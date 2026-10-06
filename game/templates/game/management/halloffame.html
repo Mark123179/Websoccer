@@ -133,6 +133,28 @@
           </div>
         {% endfor %}
       </section>
+      {% if package_mode and hall_real_titles %}
+      <section class="package-hall-titles" aria-labelledby="package-hall-titles-heading">
+        <p>Belegte Vereinshistorie</p>
+        <h2 id="package-hall-titles-heading">Titel aus Einzeleinträgen</h2>
+        <ul>
+          {% for title in hall_real_titles %}
+          <li><strong>{{ title.competition_name }}</strong><span>{{ title.season }}</span><small>{{ title.category }}</small></li>
+          {% endfor %}
+        </ul>
+        <p class="package-hall-titles__total">{{ hall_real_title_count }} belegte Titel-Einträge</p>
+      </section>
+      <style>
+        .package-hall-titles{position:relative;z-index:2;max-width:1000px;margin:1rem auto 5rem;padding:1.2rem 1.5rem;background:#edf1e9;border:1px solid #c7d2c5;border-radius:14px;color:#26372e}
+        .package-hall-titles>p:first-child{margin:0;color:#657468;font-size:.68rem;font-weight:800;letter-spacing:.14em;text-transform:uppercase}
+        .package-hall-titles h2{margin:.3rem 0 1rem;font-size:1.15rem}
+        .package-hall-titles ul{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.4rem 1.2rem;list-style:none;padding:0;margin:0}
+        .package-hall-titles li{display:grid;grid-template-columns:1fr auto;gap:.2rem .6rem;padding:.6rem 0;border-top:1px solid #d2dbd0}
+        .package-hall-titles li strong{font-size:.85rem}.package-hall-titles li span{font-size:.8rem;font-variant-numeric:tabular-nums}.package-hall-titles li small{color:#667468;font-size:.7rem}
+        .package-hall-titles__total{margin:1rem 0 0!important;font-weight:800;color:#315a43!important;letter-spacing:normal!important;text-transform:none!important}
+        @media(max-width:620px){.package-hall-titles ul{grid-template-columns:1fr}}
+      </style>
+      {% endif %}
     {% endif %}
 
     <nav class="rh-bodenleiste" aria-label="Ruhmeshalle Navigation">

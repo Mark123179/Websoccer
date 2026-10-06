@@ -1,0 +1,76 @@
+{
+  "date": "2026-10-06",
+  "isolated_test_result": "14 tests, 42.710s, OK",
+  "v1": {
+    "players": 51,
+    "strength": 35,
+    "locks": 16,
+    "source_archive": 83,
+    "market_values": 637,
+    "transfers": 322,
+    "records": 24,
+    "titles": 30,
+    "issues": 156,
+    "open": 156,
+    "package_closed": 0,
+    "clubs": 1
+  },
+  "v2": {
+    "players": 51,
+    "strength": 49,
+    "locks": 2,
+    "source_archive": 132,
+    "market_values": 637,
+    "transfers": 322,
+    "records": 24,
+    "titles": 30,
+    "issues": 156,
+    "open": 128,
+    "package_closed": 28,
+    "clubs": 1
+  },
+  "samples": {
+    "Ethan Nwaneri": [
+      145,
+      181
+    ],
+    "Samuele Inácio": [
+      120,
+      166
+    ],
+    "Luca Reggiani": [
+      116,
+      152
+    ],
+    "Luke Fahrenhorst": [
+      90,
+      160
+    ],
+    "Bennedikt Wüstenhagen": [
+      92,
+      100
+    ]
+  },
+  "replay_unchanged": true,
+  "preview_read_only": true,
+  "n48_cases": true,
+  "pilot": {
+    "version": "v1",
+    "issues": 156,
+    "subkeys": 10,
+    "data_sha256": "9d2b87c16389caf12693da07d7644df2c5f7d36e1e8c979b8651ead1e951676d",
+    "status_text_sha256": "c5564c8a8d23a4e89e13286ba2efe78f0bddddb16fd1d6664fb48554b2c0187c",
+    "migration_0190": "applied"
+  },
+  "missing_images": {
+    "club": 0,
+    "players": 51,
+    "persons": 11
+  },
+  "legacy": {
+    "existing_tests_passed": 1657,
+    "total_in_run": 1658,
+    "new_test_failure_corrected_in_targeted_run": true,
+    "full_run_repeated": false
+  }
+}

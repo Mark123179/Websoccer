@@ -44,10 +44,14 @@ def resolve_club(reference):
 
 
 def issue(run, entity, ref, field, note, severity="info", reference=None):
+    from .issue_lifecycle import text_key
+    duplicates = sum(g["entity"] == entity and g["ref"] == ref and g["field"] == field
+                     for g in run.package_data["gaps"])
     return m.ImportIssue.objects.get_or_create(
-        package=run, entity=entity, entity_ref=ref, field=field,
-        note=note, severity=severity,
-        defaults={"external_reference": reference or {}})[0]
+        club=run.club, entity=entity, entity_ref=ref, field=field,
+        subkey=text_key(note) if duplicates > 1 else "",
+        defaults={"package": run, "last_seen_package": run, "note": note,
+                  "severity": severity, "external_reference": reference or {}})[0]
 
 
 def identity(ids, model, kind="spieler"):
@@ -73,7 +77,11 @@ def identity(ids, model, kind="spieler"):
         found.discard(None)
     if len(found) > 1:
         raise PackageError("Conflicting external identities; no automatic merge.")
-    return model.objects.select_for_update().filter(pk=next(iter(found))).first() if found else None
+    row = model.objects.select_for_update().filter(pk=next(iter(found))).first() if found else None
+    tm = (ids.get("tm") or {}).get("value")
+    if row and model in (m.Player, m.Club) and tm is not None and row.transfermarkt_id not in (None, tm):
+        raise PackageError("A known TM identity cannot be changed through another source ID.")
+    return row
 
 
 def sync_ids(obj, ids, run, kind="spieler"):
@@ -85,13 +93,18 @@ def sync_ids(obj, ids, run, kind="spieler"):
     for provider, entry in ids.items():
         ds = source(PROVIDERS[provider])
         value = entry.get("value")
+        old = table.objects.filter(**{owner_key: obj}, source=ds).first()
+        if value is None and old and old.status == "von_hand":
+            continue
         if value is not None:
             conflict = table.objects.filter(source=ds, external_id=str(value))
             if table is m.PlayerExternalId:
                 conflict = conflict.filter(identity_kind=kind)
             if conflict.exclude(**{owner_key: obj}).exists():
-                issue(run, owner_key, str(obj.pk), "ids." + provider,
-                      "ID already belongs to another identity.", "player_lock", entry)
+                ref = f"tm:{getattr(obj, 'transfermarkt_id', None)}"
+                issue(run, owner_key, ref, "identity." + provider,
+                      "ID already belongs to another identity.",
+                      "blocking" if table is m.ClubExternalId else "player_lock", entry)
                 if isinstance(obj, m.Player):
                     obj.import_lock = True
                     obj.save(update_fields=["import_lock"])
@@ -179,7 +192,7 @@ def reference_issue(run, ref):
         gap = next((g for g in run.package_data["gaps"]
                     if g["entity"] == "club" and ref["name"] in g["ref"]), None)
         if gap:
-            m.ImportIssue.objects.filter(package=run, entity="club",
+            m.ImportIssue.objects.filter(club=run.club, entity="club",
                 entity_ref=gap["ref"], field=gap["field"]).update(external_reference=ref)
             return
         issue(run, "club_reference", ref["name"], "tm_id",
@@ -188,16 +201,31 @@ def reference_issue(run, ref):
 
 def real_histories(player, data, run):
     ds = source("TM")
-    for point in data["market_values"]:
+    original = next((p for p in run.package_data["players"]
+                     if p["ids"]["tm"]["value"] == data["ids"]["tm"]["value"]), data)
+    for index, point in enumerate(data["market_values"]):
         reference = point.get("club")
         reference_issue(run, reference)
-        m.PlayerMarketValueSnapshot.objects.get_or_create(
-            player=player, origin="real", source_row_key=digest(point), defaults={
+        key = digest(original["market_values"][index])
+        existing = m.PlayerMarketValueSnapshot.objects.filter(
+            player=player, origin="real", source_row_key=key).first()
+        if existing is None and (reference or {}).get("tm_id") is not None:
+            existing = m.PlayerMarketValueSnapshot.objects.filter(player=player,
+                origin="real", recorded_at=point["date"], value_eur=point["value_eur"],
+                club_original_name=reference.get("name")).first()
+        if existing:
+            if (reference or {}).get("tm_id") is not None:
+                existing.club_tm_id = reference["tm_id"]
+                existing.club = resolve_club(reference)
+                existing.save(update_fields=["club_tm_id", "club"])
+        else:
+            m.PlayerMarketValueSnapshot.objects.get_or_create(
+            player=player, origin="real", source_row_key=key, defaults={
                 "source": ds, "recorded_at": point["date"], "value_eur": point["value_eur"],
                 "club": resolve_club(reference),
                 "club_tm_id": (reference or {}).get("tm_id"),
                 "club_original_name": (reference or {}).get("name"),
-                "raw_payload": point, "package": run, "update_current": False})
+                       "raw_payload": original["market_values"][index], "package": run, "update_current": False})
     current = data.get("market_value_eur")
     if current is None:
         m.PlayerMarketValueSnapshot.objects.get_or_create(
@@ -210,12 +238,26 @@ def real_histories(player, data, run):
     player.market_value = Decimal(current)
     player.salary_per_match = Decimal(current) / 1_000_000 * 5000
     player.save(update_fields=["market_value", "salary_per_match"])
-    for fact in data["transfers"]:
+    for index, fact in enumerate(data["transfers"]):
         origin, destination = fact.get("from"), fact.get("to")
         reference_issue(run, origin)
         reference_issue(run, destination)
-        m.PlayerTransferHistory.objects.get_or_create(
-            player=player, origin="real", source_row_key=digest(fact), defaults={
+        key = digest(original["transfers"][index])
+        existing = m.PlayerTransferHistory.objects.filter(player=player, origin="real", source_row_key=key).first()
+        if existing is None and any((ref or {}).get("tm_id") is not None for ref in (origin, destination)):
+            existing = m.PlayerTransferHistory.objects.filter(player=player, origin="real",
+                transfer_date=fact["date"], season=fact.get("season") or "",
+                from_original_name=(origin or {}).get("name"), to_original_name=(destination or {}).get("name"),
+                is_loan=fact.get("is_loan", False), fee_eur=fact.get("fee_eur"), fee_text=fact.get("fee_text")).first()
+        if existing:
+            for side, reference in (("from", origin), ("to", destination)):
+                if (reference or {}).get("tm_id") is not None:
+                    setattr(existing, side + "_tm_id", reference["tm_id"])
+                    setattr(existing, side + "_club", resolve_club(reference))
+            existing.save(update_fields=["from_tm_id", "from_club", "to_tm_id", "to_club"])
+        else:
+            m.PlayerTransferHistory.objects.get_or_create(
+            player=player, origin="real", source_row_key=key, defaults={
                 "transfer_date": fact["date"], "season": fact.get("season") or "",
                 "from_club": resolve_club(origin), "to_club": resolve_club(destination),
                 "from_tm_id": (origin or {}).get("tm_id"),
@@ -261,7 +303,10 @@ def initialize_player(player, data, club, run):
         field="review_pool", resolution_status="open").update(
             resolution_status="resolved", resolved_at=timezone.now(), resolved_by=run.created_by)
     real_histories(player, data, run)
-    return project_ratings(player, data, run)
+    result = project_ratings(player, data, run)
+    from .issue_lifecycle import refresh_lock
+    refresh_lock(player)
+    return result
 
 
 def link_references(club):
@@ -344,7 +389,18 @@ def apply_package(path_or_bytes, target_league, *, user=None):
         if existing and existing.data_sha256 == manifest["data_sha256"]:
             return {"run": existing.pk, "club": existing.club_id, "unchanged": True}
         after_start = league_started(league)
-        club = identity(data["club"]["ids"], m.Club)
+        try:
+            club = identity(data["club"]["ids"], m.Club)
+        except PackageError:
+            club = m.Club.objects.select_for_update().filter(
+                transfermarkt_id=data["club"]["ids"]["tm"]["value"]).first()
+            if club is None:
+                raise
+        from .package_preview import preserved_manual
+        effective, _ = preserved_manual(data, club)
+        # Keep original package evidence; only the projection uses preserved manual values.
+        original_data = data
+        data = effective
         if club is None:
             if after_start:
                 raise PackageError("New club initialization is not allowed after league start.")
@@ -356,7 +412,7 @@ def apply_package(path_or_bytes, target_league, *, user=None):
             values["import_state"] = "spielbar" if league.is_playable else "nicht_spielbar"
         patch(club, values, after_start)
         run = m.SourceImportRun.objects.create(source="club_package", club=club, target_league=league,
-            manifest=manifest, package_data=data, data_sha256=manifest["data_sha256"],
+            manifest=manifest, package_data=original_data, data_sha256=manifest["data_sha256"],
             format=manifest["format"], format_version=manifest["format_version"], package_type="club",
             collected_at=timezone.make_aware(datetime.combine(date.fromisoformat(manifest["collected_at"]), time())),
             titles_through_season=manifest["titles_through_season"],
@@ -387,11 +443,24 @@ def apply_package(path_or_bytes, target_league, *, user=None):
             stadium_values["real_total_" + name] = point["value"]
             stadium_values["real_total_" + name + "_basis"] = point["basis"]
         patch(stadium, stadium_values, after_start)
-        for gap in data["gaps"]:
-            issue(run, gap["entity"], gap["ref"], gap["field"], gap["note"], gap["severity"])
+        from .issue_lifecycle import candidates, reconcile
+        reconcile(run, candidates(data, club))
         included = set()
         for pdata in data["players"]:
-            player = identity(pdata["ids"], m.Player)
+            try:
+                player = identity(pdata["ids"], m.Player)
+            except PackageError:
+                from .issue_lifecycle import conflicting_providers, refresh_lock
+                player = m.Player.objects.select_for_update().filter(
+                    transfermarkt_id=pdata["ids"]["tm"]["value"]).first()
+                if player:
+                    included.add(player.pk)
+                    for provider in conflicting_providers(pdata["ids"], m.Player):
+                        m.PlayerExternalId.objects.update_or_create(player=player,
+                            source=source(PROVIDERS[provider]),
+                            defaults={"status": "nicht_gefunden"})
+                    refresh_lock(player)
+                continue
             if player is None and after_start:
                 issue(run, "player", f"tm:{pdata['ids']['tm']['value']}", "identity",
                       "New player ignored after league start.")
@@ -410,6 +479,9 @@ def apply_package(path_or_bytes, target_league, *, user=None):
             included.add(player.pk)
             if not after_start:
                 initialize_player(player, pdata, club, run)
+            else:
+                from .issue_lifecycle import refresh_lock
+                refresh_lock(player)
         if not after_start:
             missing = m.Player.objects.filter(Q(club=club) | Q(owner_club=club)).exclude(pk__in=included)
             for player in missing:
@@ -422,6 +494,15 @@ def apply_package(path_or_bytes, target_league, *, user=None):
                       "Missing from pre-start reupload; retained in review pool.")
         persons_and_facts(data, club, run, after_start)
         link_references(club)
+        for ref_issue in m.ImportIssue.objects.filter(entity="club_reference", resolution_status="open"):
+            matches = list(m.Club.objects.filter(name__iexact=ref_issue.entity_ref,
+                           transfermarkt_id__isnull=False).values_list("transfermarkt_id", flat=True)[:2])
+            proposed = matches[0] if len(matches) == 1 else None
+            if proposed != ref_issue.proposed_tm_id:
+                ref_issue.proposed_tm_id = proposed
+                ref_issue.save(update_fields=["proposed_tm_id"])
+        from .package_preview import clear_superseded_manual
+        clear_superseded_manual(original_data, club)
         run.status = "applied"
         run.applied_at = timezone.now()
         run.save(update_fields=["status", "applied_at"])

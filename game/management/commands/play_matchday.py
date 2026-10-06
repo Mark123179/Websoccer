@@ -61,6 +61,8 @@ class Command(BaseCommand):
         out(f"\nLiga: {league.name} | Spieltag {matchday} | Saison {season}"
             + (' [FORCE]' if force else '')
             + (' [DRY-RUN]' if dry_run else ''))
+        from game.club_import.league_guard import ensure_ready
+        ensure_ready(league)
         out('─' * 60)
 
         # ── Regressions-Diff Pre-Check ────────────────────────────────────────

@@ -2439,8 +2439,16 @@ def management_sponsoring_push(request):
 @login_required(login_url='/auth/login/')
 def management_halloffame(request):
     from .models import ClubRecord
+    from .club_import.runtime import package_mode
 
     club = current_manager_club(user=request.user)
+    if package_mode() and (request.user.is_staff or request.user.is_superuser) and request.GET.get('club'):
+        from django.http import Http404
+        try:
+            club_id = int(request.GET['club'])
+        except (ValueError, TypeError):
+            raise Http404("Ungültiger Verein.")
+        club = get_object_or_404(Club, pk=club_id)
     mode = request.GET.get('modus', 'echt').lower()
     if mode not in {'echt', 'neu'}:
         mode = 'echt'
@@ -2659,6 +2667,12 @@ def management_halloffame(request):
         'show_record_request_form': request.GET.get('antrag') == '1',
         'record_request_slots': HALL_RECORD_SLOTS,
     }
+    from .club_import.runtime import package_mode
+    if package_mode():
+        from .models import ClubTrophyEntry
+        titles = ClubTrophyEntry.objects.filter(club=club, origin="real").order_by(
+            "-season", "competition_name")
+        context.update(package_mode=True, hall_real_titles=titles, hall_real_title_count=titles.count())
     return render(request, 'game/management/halloffame.html', context)
 
 

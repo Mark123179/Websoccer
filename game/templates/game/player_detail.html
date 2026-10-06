@@ -188,7 +188,9 @@
                 <div class="aaa-card-heading">
                     <h2>Marktwert</h2>
                     <span class="market-value-group">
-                        {% if player.transfermarkt_profile_url %}
+                        {% if package_mode and player.market_value == None %}
+                            <strong class="market-value-large">Unbekannt</strong>
+                        {% elif player.transfermarkt_profile_url %}
                             <a class="market-value-large" href="{{ player.transfermarkt_profile_url }}" target="_blank" rel="noopener" title="Transfermarkt-Profil von {{ player.full_name }}">{{ player.market_value|floatformat:0|intcomma }} &euro;</a>
                         {% else %}
                             <strong class="market-value-large">{{ player.market_value|floatformat:0|intcomma }} &euro;</strong>
@@ -216,7 +218,7 @@
                             </svg>
                             <div class="market-crosshair" id="marketCrosshair" aria-hidden="true"></div>
                             {% for point in market_points %}
-                                <i class="{% if forloop.first %}is-edge-start{% endif %}{% if forloop.last %} is-edge-end{% endif %}" style="left: {{ point.x }}%; top: {{ point.y }}%;" tabindex="0" aria-label="{{ point.full_date_label }}: {{ point.value }}">
+                                <i class="{% if forloop.first %}is-edge-start{% endif %}{% if forloop.last %} is-edge-end{% endif %}{% if package_mode and point.is_start_value %} is-package-start-value{% endif %}" style="left: {{ point.x }}%; top: {{ point.y }}%;" tabindex="0" aria-label="{{ point.full_date_label }}: {{ point.value }}{% if package_mode and point.is_start_value %}, Spielstartwert{% endif %}">
                                     <span class="market-point-label">
                                         <em class="market-point-date">{{ point.full_date_label }}</em>
                                         <b class="market-point-value">{{ point.value }}</b>
@@ -234,6 +236,25 @@
                         <span>Keine Marktwert-Snapshots vorhanden</span>
                     {% endif %}
                 </div>
+                {% if package_mode %}
+                <div class="package-market-ledger">
+                    <h3>Quellverlauf</h3>
+                    <p>Jeder Punkt des importierten Marktwertverlaufs bleibt sichtbar. Der gekennzeichnete Startwert ist ein Spielwert, kein recherchierter Vereinswert.</p>
+                    {% for start_value in package_start_values %}
+                    <p class="package-start-marker"><b>Startwert markiert</b> · {{ start_value.recorded_at|date:"d.m.Y" }} · {{ start_value.value_eur|floatformat:0|intcomma }} €</p>
+                    {% endfor %}
+                    <ul>
+                        {% for point in market_rows %}
+                        <li>
+                            <time>{{ point.recorded_at|date:"d.m.Y" }}</time>
+                            <strong>{% if point.value_eur != None %}{{ point.value_eur|floatformat:0|intcomma }} €{% else %}Unbekannt{% endif %}</strong>
+                            <span class="package-market-club">{{ point.club.name|default:point.club_original_name|default:"Unbekannter Verein" }}{% if not point.club_id and point.club_original_name %} · externe Referenz ohne Wappen{% endif %}</span>
+                            <span>{% if point.is_start_value %}Spielstartwert{% elif point.origin == 'real' %}Importierte Vereinsgeschichte{% else %}Simulation{% endif %}</span>
+                        </li>
+                        {% empty %}<li>Keine Werte dokumentiert.</li>{% endfor %}
+                    </ul>
+                </div>
+                {% endif %}
             </article>
 
             <div class="aaa-history-grid">
@@ -269,6 +290,25 @@
 
                 <article class="aaa-card aaa-transfer-card">
                     <div class="aaa-card-heading"><h2>Transferhistorie</h2></div>
+                    {% if package_mode %}
+                    <ol class="package-transfer-list">
+                        {% for row in package_transfer_rows %}
+                        <li>
+                            <time>{{ row.date|date:"d.m.Y" }}</time>
+                            <div>
+                                <strong>{{ row.from_name }}</strong>
+                                {% if row.external_from %}<small>Externe Referenz · ohne Wappen</small>{% endif %}
+                            </div>
+                            <b aria-hidden="true">→</b>
+                            <div>
+                                <strong>{{ row.to_name }}</strong>
+                                {% if row.external_to %}<small>Externe Referenz · ohne Wappen</small>{% endif %}
+                            </div>
+                            <span>{% if row.is_loan %}Leihe{% else %}{{ row.fee }}{% endif %}</span>
+                        </li>
+                        {% empty %}<li>Keine Transferfakten im Paket vorhanden.</li>{% endfor %}
+                    </ol>
+                    {% else %}
                     <div class="aaa-transfer-track">
                         {% for row in transfer_rows %}
                             <details class="aaa-transfer-node{% if row.is_preview %} is-preview{% endif %}">
@@ -326,6 +366,7 @@
                             <p class="empty-copy">Noch keine Websoccer-Transfers vorhanden.</p>
                         {% endfor %}
                     </div>
+                    {% endif %}
                 </article>
             </div>
         </aside>
@@ -541,4 +582,19 @@
 }());
 </script>
 
+{% if package_mode %}
+<style>
+    .package-market-ledger{margin:1rem 0 0;padding-top:.9rem;border-top:1px solid #d3d8d0}
+    .package-market-ledger h3{margin:0;font-size:.95rem}.package-market-ledger p{font-size:.78rem;color:#6d786e;line-height:1.5}
+    .package-market-ledger ul{list-style:none;padding:0;margin:0;max-height:13rem;overflow:auto}
+    .package-market-ledger li{display:grid;grid-template-columns:5rem minmax(5rem,.8fr) minmax(6rem,1.3fr) auto;gap:.4rem;padding:.4rem 0;border-top:1px solid #e2e5df;font-size:.75rem}
+    .package-market-ledger li time{color:#737d73}.package-market-ledger li strong{font-variant-numeric:tabular-nums}.package-market-ledger li span{color:#667267}
+    .package-market-ledger .package-market-club{color:#34483a}
+    .market-plot i.is-package-start-value{z-index:4;width:.8rem;height:.8rem;border:2px solid #315a43;background:#e1eadb;box-shadow:0 0 0 3px rgba(49,90,67,.16)}
+    .package-transfer-list{list-style:none;padding:0;margin:.5rem 0}
+    .package-transfer-list li{display:grid;grid-template-columns:5.5rem minmax(0,1fr) auto minmax(0,1fr) auto;align-items:center;gap:.65rem;padding:.75rem .35rem;border-top:1px solid #dfe3dc}
+    .package-transfer-list time,.package-transfer-list small{font-size:.72rem;color:#737d73}.package-transfer-list div strong{display:block;font-size:.83rem}.package-transfer-list div small{display:block;margin-top:.15rem}.package-transfer-list>li>span{font-size:.75rem;color:#58675a}
+    @media(max-width:620px){.package-transfer-list li{grid-template-columns:4.5rem 1fr auto 1fr}.package-transfer-list>li>span{grid-column:2/-1}.package-market-ledger li{grid-template-columns:4.3rem 1fr}.package-market-ledger li span{grid-column:2}}
+</style>
+{% endif %}
 {% endblock %}

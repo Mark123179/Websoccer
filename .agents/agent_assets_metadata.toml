@@ -774,3 +774,17 @@ mtime_ms = 1791270811258
 storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:6e4eaecc-e6c5-4f64-8de5-e8845034f33b/ff648ac1-2fd7-4ba9-8404-66ae5a91368b/eda49d57-38f6-445a-8a28-13b4eb34f147"
 storage_version_token = "1791270822285134"
 content_type = "text/html"
+
+[[outputs]]
+id = "Ls7FY3SV5s-NtKx_HrYAi"
+uri = "file://docs/import-pilot/t3-t4-bericht.html"
+type = "html"
+title = "T3/T4 – Zehn-Punkte-Abschlussnachweis"
+description = "Vollständiger Bericht mit eingebetteten Screenshots, Import-Messwerten, Testnachweisen und ausdrücklich unverändertem BVB-v1-Pilot."
+logical_id = "8ea32fac-e226-40fd-91d8-b0805d596932"
+content_hash = "sha256:eac0705d7428cfc402f18dc944c5678783cdcc13ef4fc38b5cfe184b042d33fd"
+size = 1416352
+mtime_ms = 1791288747736
+storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:6e4eaecc-e6c5-4f64-8de5-e8845034f33b/8ea32fac-e226-40fd-91d8-b0805d596932/75492f44-dbbd-447d-9c52-41123d3372b4"
+storage_version_token = "1791288793103232"
+content_type = "text/html"
