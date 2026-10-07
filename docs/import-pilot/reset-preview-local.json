@@ -1,0 +1,997 @@
+{
+  "kind": "read_only_reset_preview",
+  "vendor": "postgresql",
+  "scope": "configured_database_not_verified_hetzner",
+  "tables": [
+    {
+      "table": "auth_group",
+      "rows": 0,
+      "action": "keep"
+    },
+    {
+      "table": "auth_group_permissions",
+      "rows": 0,
+      "action": "keep"
+    },
+    {
+      "table": "auth_permission",
+      "rows": 636,
+      "action": "keep"
+    },
+    {
+      "table": "auth_user",
+      "rows": 3,
+      "action": "keep"
+    },
+    {
+      "table": "auth_user_groups",
+      "rows": 0,
+      "action": "keep"
+    },
+    {
+      "table": "auth_user_user_permissions",
+      "rows": 0,
+      "action": "keep"
+    },
+    {
+      "table": "django_admin_log",
+      "rows": 0,
+      "action": "delete"
+    },
+    {
+      "table": "django_content_type",
+      "rows": 159,
+      "action": "keep"
+    },
+    {
+      "table": "django_migrations",
+      "rows": 220,
+      "action": "keep"
+    },
+    {
+      "table": "django_session",
+      "rows": 442,
+      "action": "delete"
+    },
+    {
+      "table": "game_aibuyerrun",
+      "rows": 26,
+      "action": "delete"
+    },
+    {
+      "table": "game_aitransferoffer",
+      "rows": 0,
+      "action": "delete"
+    },
+    {
+      "table": "game_apifootballdailyusage",
+      "rows": 0,
+      "action": "delete"
+    },
+    {
+      "table": "game_buybackclause",
+      "rows": 0,
+      "action": "delete"
+    },
+    {
+      "table": "game_club",
+      "rows": 28,
+      "action": "delete"
+    },
+    {
+      "table": "game_clubcmtprofile",
+      "rows": 0,
+      "action": "delete"
+    },
+    {
+      "table": "game_clubexternalid",
+      "rows": 0,
+      "action": "delete"
+    },
+    {
+      "table": "game_clubfinancialtransaction",
+      "rows": 64,
+      "action": "delete"
+    },
+    {
+      "table": "game_clubnewsitem",
+      "rows": 0,
+      "action": "delete"
+    },
+    {
+      "table": "game_clubpartnership",
+      "rows": 0,
+      "action": "delete"
+    },
+    {
+      "table": "game_clubplayerimportjob",
+      "rows": 16,
+      "action": "delete"
+    },
+    {
+      "table": "game_clubpublicprofile",
+      "rows": 22,
+      "action": "delete"
+    },
+    {
+      "table": "game_clubrecord",
+      "rows": 259,
+      "action": "delete"
+    },
+    {
+      "table": "game_clubrecordbreak",
+      "rows": 36,
+      "action": "delete"
+    },
+    {
+      "table": "game_clubrecordcorrectionrequest",
+      "rows": 0,
+      "action": "delete"
+    },
+    {
+      "table": "game_clubsponsor",
+      "rows": 5,
+      "action": "delete"
+    },
+    {
+      "table": "game_clubstadionumfeldstate",
+      "rows": 28,
+      "action": "delete"
+    },
+    {
+      "table": "game_clubtmprofile",
+      "rows": 0,
+      "action": "delete"
+    },
+    {
+      "table": "game_clubtrophy",
+      "rows": 36,
+      "action": "delete"
+    },
+    {
+      "table": "game_clubtrophyentry",
+      "rows": 0,
+      "action": "delete"
+    },
+    {
+      "table": "game_cointransaction",
+      "rows": 0,
+      "action": "delete"
+    },
+    {
+      "table": "game_communitysubmission",
+      "rows": 0,
+      "action": "delete"
+    },
+    {
+      "table": "game_communitytournament",
+      "rows": 0,
+      "action": "delete"
+    },
+    {
+      "table": "game_communitytournamentapplication",
+      "rows": 0,
+      "action": "delete"
+    },
+    {
+      "table": "game_communitytournamententry",
+      "rows": 0,
+      "action": "delete"
+    },
+    {
+      "table": "game_communitytournamentmatch",
+      "rows": 0,
+      "action": "delete"
+    },
+    {
+      "table": "game_communitytournamentphase",
+      "rows": 0,
+      "action": "delete"
+    },
+    {
+      "table": "game_communitytournamentround",
+      "rows": 0,
+      "action": "delete"
+    },
+    {
+      "table": "game_communitytournamentstanding",
+      "rows": 0,
+      "action": "delete"
+    },
+    {
+      "table": "game_countrynetwork",
+      "rows": 0,
+      "action": "keep"
+    },
+    {
+      "table": "game_creatoractionlog",
+      "rows": 0,
+      "action": "delete"
+    },
+    {
+      "table": "game_cupfixture",
+      "rows": 6,
+      "action": "delete"
+    },
+    {
+      "table": "game_cupround",
+      "rows": 5,
+      "action": "delete"
+    },
+    {
+      "table": "game_cupseason",
+      "rows": 1,
+      "action": "delete"
+    },
+    {
+      "table": "game_cupseason_participants",
+      "rows": 18,
+      "action": "delete"
+    },
+    {
+      "table": "game_datasource",
+      "rows": 5,
+      "action": "keep"
+    },
+    {
+      "table": "game_dayweather",
+      "rows": 82,
+      "action": "delete"
+    },
+    {
+      "table": "game_dealrequest",
+      "rows": 0,
+      "action": "delete"
+    },
+    {
+      "table": "game_dealrequestplayer",
+      "rows": 0,
+      "action": "delete"
+    },
+    {
+      "table": "game_economyparameter",
+      "rows": 77,
+      "action": "keep"
+    },
+    {
+      "table": "game_facilityconstruction",
+      "rows": 3,
+      "action": "delete"
+    },
+    {
+      "table": "game_financematchdayrun",
+      "rows": 702,
+      "action": "delete"
+    },
+    {
+      "table": "game_financereservation",
+      "rows": 6,
+      "action": "delete"
+    },
+    {
+      "table": "game_financetransaction",
+      "rows": 752,
+      "action": "delete"
+    },
+    {
+      "table": "game_forcedauction",
+      "rows": 0,
+      "action": "delete"
+    },
+    {
+      "table": "game_forcedauctionbid",
+      "rows": 0,
+      "action": "delete"
+    },
+    {
+      "table": "game_friendlyfixture",
+      "rows": 0,
+      "action": "delete"
+    },
+    {
+      "table": "game_gameseasonstate",
+      "rows": 1,
+      "action": "delete"
+    },
+    {
+      "table": "game_historiccoach",
+      "rows": 0,
+      "action": "delete"
+    },
+    {
+      "table": "game_hoenesscoin",
+      "rows": 2,
+      "action": "delete"
+    },
+    {
+      "table": "game_importissue",
+      "rows": 0,
+      "action": "delete"
+    },
+    {
+      "table": "game_inactivitypenalty",
+      "rows": 0,
+      "action": "delete"
+    },
+    {
+      "table": "game_inactivityrecord",
+      "rows": 2,
+      "action": "delete"
+    },
+    {
+      "table": "game_insolvencycase",
+      "rows": 0,
+      "action": "delete"
+    },
+    {
+      "table": "game_landkoeffizient",
+      "rows": 9,
+      "action": "season_zero_only"
+    },
+    {
+      "table": "game_league",
+      "rows": 5,
+      "action": "delete"
+    },
+    {
+      "table": "game_leaguenews",
+      "rows": 2,
+      "action": "delete"
+    },
+    {
+      "table": "game_leagueseasonstate",
+      "rows": 3,
+      "action": "delete"
+    },
+    {
+      "table": "game_leaguestandings",
+      "rows": 18,
+      "action": "delete"
+    },
+    {
+      "table": "game_listingpin",
+      "rows": 0,
+      "action": "delete"
+    },
+    {
+      "table": "game_loan",
+      "rows": 0,
+      "action": "delete"
+    },
+    {
+      "table": "game_loanlisting",
+      "rows": 0,
+      "action": "delete"
+    },
+    {
+      "table": "game_managercareerentry",
+      "rows": 0,
+      "action": "delete"
+    },
+    {
+      "table": "game_managercareerstation",
+      "rows": 4,
+      "action": "delete"
+    },
+    {
+      "table": "game_managercompetitiontitle",
+      "rows": 0,
+      "action": "delete"
+    },
+    {
+      "table": "game_managernotes",
+      "rows": 1,
+      "action": "delete"
+    },
+    {
+      "table": "game_managerprofile",
+      "rows": 3,
+      "action": "profile_reset"
+    },
+    {
+      "table": "game_managerseasonscore",
+      "rows": 0,
+      "action": "delete"
+    },
+    {
+      "table": "game_managerteamphoto",
+      "rows": 0,
+      "action": "delete"
+    },
+    {
+      "table": "game_managertimelineentry",
+      "rows": 3,
+      "action": "delete"
+    },
+    {
+      "table": "game_managertitle",
+      "rows": 0,
+      "action": "delete"
+    },
+    {
+      "table": "game_managervacationblock",
+      "rows": 0,
+      "action": "delete"
+    },
+    {
+      "table": "game_matchdayrevenue",
+      "rows": 54,
+      "action": "delete"
+    },
+    {
+      "table": "game_matchevent",
+      "rows": 28446,
+      "action": "delete"
+    },
+    {
+      "table": "game_matchresult",
+      "rows": 0,
+      "action": "delete"
+    },
+    {
+      "table": "game_matchstory",
+      "rows": 201,
+      "action": "delete"
+    },
+    {
+      "table": "game_matchstoryround",
+      "rows": 201,
+      "action": "delete"
+    },
+    {
+      "table": "game_mediaoutlet",
+      "rows": 24,
+      "action": "keep"
+    },
+    {
+      "table": "game_neutralvenue",
+      "rows": 0,
+      "action": "keep"
+    },
+    {
+      "table": "game_notification",
+      "rows": 0,
+      "action": "delete"
+    },
+    {
+      "table": "game_pendingtransfer",
+      "rows": 0,
+      "action": "delete"
+    },
+    {
+      "table": "game_player",
+      "rows": 828,
+      "action": "delete"
+    },
+    {
+      "table": "game_playerawardtitle",
+      "rows": 0,
+      "action": "delete"
+    },
+    {
+      "table": "game_playerclubhistory",
+      "rows": 1000,
+      "action": "delete"
+    },
+    {
+      "table": "game_playercmtattributeprofile",
+      "rows": 0,
+      "action": "delete"
+    },
+    {
+      "table": "game_playercmtprofile",
+      "rows": 0,
+      "action": "delete"
+    },
+    {
+      "table": "game_playereditlog",
+      "rows": 226,
+      "action": "delete"
+    },
+    {
+      "table": "game_playereditrequest",
+      "rows": 0,
+      "action": "delete"
+    },
+    {
+      "table": "game_playerexternalid",
+      "rows": 479,
+      "action": "delete"
+    },
+    {
+      "table": "game_playerfmiprofile",
+      "rows": 0,
+      "action": "delete"
+    },
+    {
+      "table": "game_playerformsnapshot",
+      "rows": 2685,
+      "action": "delete"
+    },
+    {
+      "table": "game_playerimportcandidate",
+      "rows": 218,
+      "action": "delete"
+    },
+    {
+      "table": "game_playerinjuryrecord",
+      "rows": 15,
+      "action": "delete"
+    },
+    {
+      "table": "game_playermarketvaluesnapshot",
+      "rows": 424,
+      "action": "delete"
+    },
+    {
+      "table": "game_playerrlformprofile",
+      "rows": 426,
+      "action": "delete"
+    },
+    {
+      "table": "game_playerseasonstat",
+      "rows": 306,
+      "action": "delete"
+    },
+    {
+      "table": "game_playersourcerating",
+      "rows": 1287,
+      "action": "delete"
+    },
+    {
+      "table": "game_playersourceratingsnapshot",
+      "rows": 49,
+      "action": "delete"
+    },
+    {
+      "table": "game_playerstrengthprofile",
+      "rows": 504,
+      "action": "delete"
+    },
+    {
+      "table": "game_playerstrengthsnapshot",
+      "rows": 1296,
+      "action": "delete"
+    },
+    {
+      "table": "game_playersuspensionrecord",
+      "rows": 5,
+      "action": "delete"
+    },
+    {
+      "table": "game_playertmprofile",
+      "rows": 0,
+      "action": "delete"
+    },
+    {
+      "table": "game_playertransferhistory",
+      "rows": 1,
+      "action": "delete"
+    },
+    {
+      "table": "game_playerweightedratingsnapshot",
+      "rows": 0,
+      "action": "delete"
+    },
+    {
+      "table": "game_positionbarometer",
+      "rows": 0,
+      "action": "delete"
+    },
+    {
+      "table": "game_presidentsatisfaction",
+      "rows": 4,
+      "action": "delete"
+    },
+    {
+      "table": "game_referee",
+      "rows": 463,
+      "action": "keep"
+    },
+    {
+      "table": "game_rumornews",
+      "rows": 2,
+      "action": "delete"
+    },
+    {
+      "table": "game_scoutingassignment",
+      "rows": 0,
+      "action": "delete"
+    },
+    {
+      "table": "game_scoutingbid",
+      "rows": 0,
+      "action": "delete"
+    },
+    {
+      "table": "game_scoutingdepartment",
+      "rows": 3,
+      "action": "delete"
+    },
+    {
+      "table": "game_scoutingfind",
+      "rows": 0,
+      "action": "delete"
+    },
+    {
+      "table": "game_seasoneconomysnapshot",
+      "rows": 2,
+      "action": "delete"
+    },
+    {
+      "table": "game_seasonfinancestate",
+      "rows": 2,
+      "action": "delete"
+    },
+    {
+      "table": "game_seasonfixture",
+      "rows": 306,
+      "action": "delete"
+    },
+    {
+      "table": "game_seasongoal",
+      "rows": 1,
+      "action": "delete"
+    },
+    {
+      "table": "game_sellonclause",
+      "rows": 0,
+      "action": "delete"
+    },
+    {
+      "table": "game_simulatedmatch",
+      "rows": 201,
+      "action": "delete"
+    },
+    {
+      "table": "game_sourceimportrun",
+      "rows": 1,
+      "action": "delete"
+    },
+    {
+      "table": "game_sponsor",
+      "rows": 504,
+      "action": "keep"
+    },
+    {
+      "table": "game_sponsorcontract",
+      "rows": 5,
+      "action": "delete"
+    },
+    {
+      "table": "game_sponsoroffer",
+      "rows": 428,
+      "action": "delete"
+    },
+    {
+      "table": "game_squadlimitnote",
+      "rows": 0,
+      "action": "delete"
+    },
+    {
+      "table": "game_squadoffer",
+      "rows": 0,
+      "action": "delete"
+    },
+    {
+      "table": "game_stadionumfeldconfig",
+      "rows": 1,
+      "action": "keep"
+    },
+    {
+      "table": "game_stadium",
+      "rows": 22,
+      "action": "delete"
+    },
+    {
+      "table": "game_stadiumexpansion",
+      "rows": 1,
+      "action": "delete"
+    },
+    {
+      "table": "game_storyaudit",
+      "rows": 4,
+      "action": "delete"
+    },
+    {
+      "table": "game_storysettings",
+      "rows": 0,
+      "action": "keep"
+    },
+    {
+      "table": "game_strengthformulasettings",
+      "rows": 1,
+      "action": "keep"
+    },
+    {
+      "table": "game_strengthmodifierrule",
+      "rows": 15,
+      "action": "keep"
+    },
+    {
+      "table": "game_supportticket",
+      "rows": 0,
+      "action": "delete"
+    },
+    {
+      "table": "game_tacticsetup",
+      "rows": 22,
+      "action": "delete"
+    },
+    {
+      "table": "game_tactictemplate",
+      "rows": 2,
+      "action": "delete"
+    },
+    {
+      "table": "game_transferbid",
+      "rows": 5,
+      "action": "delete"
+    },
+    {
+      "table": "game_transferlisting",
+      "rows": 5,
+      "action": "delete"
+    },
+    {
+      "table": "game_transferlock",
+      "rows": 0,
+      "action": "delete"
+    },
+    {
+      "table": "game_transfernegotiation",
+      "rows": 0,
+      "action": "delete"
+    },
+    {
+      "table": "game_transferrecord",
+      "rows": 0,
+      "action": "delete"
+    },
+    {
+      "table": "game_transferrecordplayer",
+      "rows": 0,
+      "action": "delete"
+    },
+    {
+      "table": "game_transferreport",
+      "rows": 0,
+      "action": "delete"
+    },
+    {
+      "table": "game_tvpot",
+      "rows": 18,
+      "action": "delete"
+    },
+    {
+      "table": "game_vereinkoeffizient",
+      "rows": 19,
+      "action": "delete"
+    },
+    {
+      "table": "game_watchlistentry",
+      "rows": 1,
+      "action": "delete"
+    },
+    {
+      "table": "game_youthlevypayment",
+      "rows": 0,
+      "action": "delete"
+    },
+    {
+      "table": "showauction_showauction",
+      "rows": 1,
+      "action": "delete"
+    },
+    {
+      "table": "showauction_showauctionbid",
+      "rows": 0,
+      "action": "delete"
+    },
+    {
+      "table": "showauction_showauctionpreset",
+      "rows": 5,
+      "action": "keep"
+    },
+    {
+      "table": "showauction_showauctionwatch",
+      "rows": 0,
+      "action": "delete"
+    },
+    {
+      "table": "stadium_editor_stadiumdesign",
+      "rows": 2,
+      "action": "delete"
+    },
+    {
+      "table": "stadium_editor_stadiumgeometry",
+      "rows": 20,
+      "action": "delete"
+    }
+  ],
+  "profile_keep_columns": [
+    "birth_date",
+    "id",
+    "member_since",
+    "name",
+    "name_confirmed",
+    "nationality_flag",
+    "nationality_name",
+    "profile_image",
+    "residence",
+    "trainer_type",
+    "user_id",
+    "visibility_settings"
+  ],
+  "profile_reset": {
+    "level": "1",
+    "xp": "0",
+    "xp_max": "800",
+    "highscore": "'–'",
+    "active_title": "NULL",
+    "title_progress": "'{}'::jsonb",
+    "season_score": "0",
+    "previous_season_score": "0",
+    "inactivity_season_count": "0",
+    "inactivity_streak": "0",
+    "transfer_ban_until": "NULL",
+    "login_streak": "0",
+    "login_points_today": "0",
+    "login_last_date": "NULL",
+    "login_day14_awarded": "false",
+    "login_day30_awarded": "false",
+    "login_day30_money_paid": "false",
+    "last_seen": "NULL",
+    "favourite_club_id": "NULL",
+    "updated_at": "CURRENT_TIMESTAMP"
+  },
+  "delete_order": [
+    "django_admin_log",
+    "django_session",
+    "game_aibuyerrun",
+    "game_aitransferoffer",
+    "game_apifootballdailyusage",
+    "game_buybackclause",
+    "game_clubcmtprofile",
+    "game_clubexternalid",
+    "game_clubfinancialtransaction",
+    "game_clubnewsitem",
+    "game_clubpartnership",
+    "game_clubpublicprofile",
+    "game_clubrecord",
+    "game_clubrecordbreak",
+    "game_clubrecordcorrectionrequest",
+    "game_clubsponsor",
+    "game_clubstadionumfeldstate",
+    "game_clubtmprofile",
+    "game_clubtrophy",
+    "game_clubtrophyentry",
+    "game_cointransaction",
+    "game_communitysubmission",
+    "game_communitytournamentapplication",
+    "game_communitytournamentmatch",
+    "game_communitytournamentstanding",
+    "game_creatoractionlog",
+    "game_cupseason_participants",
+    "game_dayweather",
+    "game_dealrequestplayer",
+    "game_facilityconstruction",
+    "game_financematchdayrun",
+    "game_financereservation",
+    "game_gameseasonstate",
+    "game_hoenesscoin",
+    "game_importissue",
+    "game_inactivitypenalty",
+    "game_inactivityrecord",
+    "game_leaguenews",
+    "game_leagueseasonstate",
+    "game_leaguestandings",
+    "game_listingpin",
+    "game_loan",
+    "game_loanlisting",
+    "game_managercareerentry",
+    "game_managercareerstation",
+    "game_managercompetitiontitle",
+    "game_managernotes",
+    "game_managerseasonscore",
+    "game_managerteamphoto",
+    "game_managertimelineentry",
+    "game_managertitle",
+    "game_managervacationblock",
+    "game_matchdayrevenue",
+    "game_matchevent",
+    "game_notification",
+    "game_pendingtransfer",
+    "game_playerawardtitle",
+    "game_playerclubhistory",
+    "game_playercmtattributeprofile",
+    "game_playercmtprofile",
+    "game_playereditlog",
+    "game_playereditrequest",
+    "game_playerexternalid",
+    "game_playerfmiprofile",
+    "game_playerformsnapshot",
+    "game_playerimportcandidate",
+    "game_playerinjuryrecord",
+    "game_playermarketvaluesnapshot",
+    "game_playerrlformprofile",
+    "game_playerseasonstat",
+    "game_playersourcerating",
+    "game_playersourceratingsnapshot",
+    "game_playerstrengthprofile",
+    "game_playerstrengthsnapshot",
+    "game_playersuspensionrecord",
+    "game_playertmprofile",
+    "game_playertransferhistory",
+    "game_playerweightedratingsnapshot",
+    "game_positionbarometer",
+    "game_presidentsatisfaction",
+    "game_rumornews",
+    "game_scoutingbid",
+    "game_scoutingdepartment",
+    "game_seasoneconomysnapshot",
+    "game_seasonfinancestate",
+    "game_seasonfixture",
+    "game_seasongoal",
+    "game_sellonclause",
+    "game_sponsorcontract",
+    "game_squadlimitnote",
+    "game_squadoffer",
+    "game_stadiumexpansion",
+    "game_storyaudit",
+    "game_supportticket",
+    "game_tacticsetup",
+    "game_tactictemplate",
+    "game_transferbid",
+    "game_transferlock",
+    "game_transfernegotiation",
+    "game_transferrecordplayer",
+    "game_transferreport",
+    "game_tvpot",
+    "game_vereinkoeffizient",
+    "game_watchlistentry",
+    "game_youthlevypayment",
+    "showauction_showauctionbid",
+    "showauction_showauctionwatch",
+    "stadium_editor_stadiumdesign",
+    "stadium_editor_stadiumgeometry",
+    "game_clubplayerimportjob",
+    "game_communitytournamentround",
+    "game_cupfixture",
+    "game_dealrequest",
+    "game_friendlyfixture",
+    "game_historiccoach",
+    "game_matchresult",
+    "game_matchstory",
+    "game_scoutingfind",
+    "game_sourceimportrun",
+    "game_sponsoroffer",
+    "game_stadium",
+    "game_transferlisting",
+    "game_transferrecord",
+    "showauction_showauction",
+    "game_communitytournamentphase",
+    "game_cupround",
+    "game_scoutingassignment",
+    "game_simulatedmatch",
+    "game_cupseason",
+    "game_matchstoryround",
+    "game_club",
+    "game_communitytournament",
+    "game_communitytournamententry",
+    "game_financetransaction",
+    "game_forcedauction",
+    "game_forcedauctionbid",
+    "game_insolvencycase",
+    "game_league",
+    "game_player"
+  ],
+  "blockers": [],
+  "sql_ready": true,
+  "warnings": [
+    "Keine Freigabe und kein ausgeführter Reset.",
+    "Writer vor Live-Vorschau pausieren; neue Änderungen machen den Entwurf ungültig.",
+    "Datenbank, Medien, Assets und Dortmund-Geometrie/Design vorher privat sichern.",
+    "Keine Pilotdaten oder privaten Dumps als Importpaket übertragen."
+  ]
+}

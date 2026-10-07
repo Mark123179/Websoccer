@@ -66,6 +66,12 @@ Rechte für im Pilot noch nicht geladene Zielmodelle als Metadaten erhalten, ohn
 
 **How to apply:** Natürliche Schlüssel erhalten und technische IDs zuordnen; keine Rechte verwerfen und keine Spielmodelle oder Rechteauswertung allein zur Katalogübernahme einschalten. Die Entscheidung hebt den Halt vor der Modellplan-Freigabe nicht auf.
 
+Pilot-Kopie und späteren In-place-Live-Reset nicht gleich behandeln: Beim Reset derselben Datenbank bleiben Rechte-/ContentType-IDs und der vorhandene Migrationsstand erhalten.
+
+**Why:** Die natürliche Schlüsselzuordnung und der unabhängige Migrationsstand schützen eine getrennte Pilot-Struktur. Im vorhandenen Live-Schema wäre eine Neuvergabe der Rechte-IDs oder das Löschen der Migrationseinträge dagegen ein unnötiger Eingriff in erhaltene Konten und Schemahistorie.
+
+**How to apply:** Vor einer späteren Umstellung Datenbankidentität und Schutzliste prüfen. Keine Pilot-Kopieranleitung als Live-Reset ausführen; keine private Sicherung als Vereinspaket importieren. Vorbereitung und SQL-Entwurf ersetzen weder Sicherungsprüfung noch separate Reset-Freigabe.
+
 Die vorhandenen Pilot-Secrets verwenden; ihre Übernahme nicht an einer starren 32-Zeichen-Grenze blockieren.
 
 **Why:** Der Nutzer hat ausdrücklich angeordnet, die Werte auch mit 28, 30 oder 31 Zeichen zu übernehmen.
