@@ -95,3 +95,15 @@ Der Nutzer hat den Gegenprüfungs-Halt ausdrücklich aufgehoben: Gegenprüfung a
 **Why:** Explizite Freigabe und Scope-Korrektur des Nutzers am 07.10.2026.
 
 **How to apply:** Gegenprüfung und BVB-Abnahme nicht wieder als offene Freigaben einfordern. Reihenfolge beibehalten: Replit sichert den aktiven v2-Pilot, danach lädt Mark v3 hoch und bestätigt selbst nach der Vorschau. Offene Auditbefunde vor einem Umstellungstermin in drei Sätzen benennen; Sicherheitsaudit bleibt separates Hindernis für die Live-Freigabe, nicht für die fachliche BVB-Abnahme.
+
+Mark wählt „Nach Vorbereitung resetten, live nachfüllen“, nicht das vorherige Bereitstellen und Prüfen aller 18 Bundesliga-Pakete im Pilot.
+
+**Why:** Explizite Auswahl des Nutzers am 07.10.2026 nach Erklärung, dass die Live-Liga während der noch ausstehenden Paketvorbereitung nicht spielbereit ist.
+
+**How to apply:** Nach Vorbereitung die manuelle Live-Umstellung vorsehen, ohne auf alle 18 Pakete zu warten; anschließend fertige Pakete schrittweise live importieren. Sicherheitsfreigabe, Live-Sicherung und konkrete Reset-Freigabe bleiben vorgeschaltet. Die Vorbereitung selbst führt keinen Reset, Push oder Hetznerzugriff aus.
+
+Sicherheitsbefunde in zwei Gruppen teilen: vor der Umstellung alles beheben, was Anmeldung, Sitzungen, Datei-Uploads oder den neuen Importweg betrifft; danach veraltete Pakete und Framework-Versionen ohne bekannten Angriffsweg im Aufbau.
+
+**Why:** Der Nutzer verlangt diese risikobasierte Reihenfolge ausdrücklich; vorhandene Versionswartung ohne neuen Angriffsweg soll die Umstellung nicht pauschal blockieren.
+
+**How to apply:** Nicht jede Versions-/CVE-Meldung automatisch als Vorab-Blocker werten, sondern betroffene Funktion und erreichbaren Angriffsweg prüfen. Ungeprüfte Einsatzbedingungen nicht als erwiesene Nichterreichbarkeit ausgeben. Die ZIP-Importannahme auf dem echten Server besonders berücksichtigen.
