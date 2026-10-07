@@ -9,6 +9,12 @@ Als Grundlage verwenden: EZ-Tree Oak Medium, Oak Large, Ash Medium und Aspen Sma
 
 **How to apply:** Gemeinsame, einmal vorbereitete Assets von der geografischen Anordnung pro Stadion trennen. Diese Auswahl ist die Grafikgrundlage, kein Nachweis realer Baumarten oder Fassadenmaterialien; Lizenzen, Baumtexturherkunft und Exportmöglichkeiten bei Übernahme erneut prüfen. Ein reiner Himmel darf keine fremde Landschaft an die Stelle der realen Umgebung setzen. Die getrennten Regeln für Admin-Test und produktiven Neon-Editor bleiben bestehen.
 
+Die umgesetzte natürliche Testansicht ist visuell nicht abgenommen und darf nicht als bestätigte Qualitätsreferenz für weitere Stadien verwendet werden.
+
+**Why:** Der Nutzer lehnte die gezeigte Darstellung am 2026-10-07 ab: „Sieht aus wie auf einem Gamboy Pocket aus 1990.“ Die bestätigte Assetauswahl war keine Bestätigung der erzielten Bildqualität.
+
+**How to apply:** Technische Funktionsprüfungen nicht mit visueller Abnahme gleichsetzen. Vor einer Übertragung auf weitere Stadien die gewünschte Bildqualität anhand einer tatsächlich gerenderten Ansicht klären.
+
 Tree Small 02 war nur ein frühes Quellenbeispiel und ist nicht ausgewählt.
 
 **Why:** Die Detailprüfung ergab eine afrikanische Baumart und ein sehr schweres Ausgangsmodell; für den Dortmunder Standardsatz wurden stattdessen die genannten Laubbaumvorlagen vorgeschlagen und bestätigt.
