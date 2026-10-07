@@ -83,3 +83,9 @@ Fehlende Spieler bei erneutem Paketupload vor Ligastart bleiben mit Identität, 
 **Why:** Der Nutzer hat den Prüfpool gewählt, nicht Löschen oder freie Scouting-Freigabe.
 
 **How to apply:** Nach Ligastart keinen Kaderabgleich. Vorstart-Wiederzuordnung per TM-ID in einem anderen Vereinspaket oder kontrolliert über die Arbeitsliste; danach normale Poolregeln.
+
+Der Nutzer hat den Pilot-BVB-Stand als „geglückt und fertig“ bestätigt und möchte als nächsten Schritt scharfschalten.
+
+**Why:** Ausdrückliche fachliche Pilotabnahme des Nutzers am 07.10.2026 nach den Source-ID-Ergänzungen.
+
+**How to apply:** Die erfolgreiche BVB-Piloterprobung als abgenommen behandeln, nicht erneut als ungeklärten Grundsatzversuch darstellen. Bei der Live-Vorbereitung den Umfang der Scharfschaltung klären; eine konkrete destruktive Reset-Handlung erst nach informierter Freigabe ihrer Lösch-/Schutzliste durchführen. Die bisherige manuelle Server-Übergabe an Mark bleibt maßgeblich.
