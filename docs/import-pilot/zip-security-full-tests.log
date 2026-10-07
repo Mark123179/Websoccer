@@ -1,0 +1,194 @@
+Finale 1253 übersprungen: Spieldatum fehlt.
+Finale 1255 übersprungen: Spieldatum fehlt.
+Freundschaftsspiel 3216 konnte nicht simuliert werden; der Tick fährt mit der nächsten Partie fort.
+Traceback (most recent call last):
+  File "/home/runner/workspace/game/friendlies/services.py", line 421, in run_tick
+    simulate_fixture(fixture_id)
+  File "/home/runner/workspace/game/friendlies/services.py", line 275, in simulate_fixture
+    report = simulate_match(home, away, tactic_context='freundschaft',
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/nix/store/iizfzmqjdfvbyx82gqw92glb5zl6m4my-python3-3.12.12/lib/python3.12/unittest/mock.py", line 1139, in __call__
+    return self._mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/nix/store/iizfzmqjdfvbyx82gqw92glb5zl6m4my-python3-3.12.12/lib/python3.12/unittest/mock.py", line 1143, in _mock_call
+    return self._execute_mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/nix/store/iizfzmqjdfvbyx82gqw92glb5zl6m4my-python3-3.12.12/lib/python3.12/unittest/mock.py", line 1202, in _execute_mock_call
+    raise result
+RuntimeError: poison fixture
+referee_pool_exhausted level=2 (tier_limit_lifted) league_pk=10747 matchday=1
+Mannschaftsfoto-Erzeugung für Saison 0 konnte nicht abgeschlossen werden.
+Traceback (most recent call last):
+  File "/home/runner/workspace/game/season_service.py", line 922, in simulate_matchday
+    call_command('generate_manager_team_photos', season=int(season))
+  File "/home/runner/workspace/.pythonlibs/lib/python3.12/site-packages/django/core/management/__init__.py", line 195, in call_command
+    return command.execute(*args, **defaults)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.12/site-packages/django/core/management/base.py", line 466, in execute
+    output = self.handle(*args, **options)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/game/management/commands/generate_manager_team_photos.py", line 25, in handle
+    raise CommandError('GEMINI_API_KEY fehlt. Es gibt bewusst keinen Bild-Fallback.')
+django.core.management.base.CommandError: GEMINI_API_KEY fehlt. Es gibt bewusst keinen Bild-Fallback.
+Narrator failed for match 3562
+Traceback (most recent call last):
+  File "/home/runner/workspace/game/match_story/django_bridge.py", line 156, in build_story_for
+    result = narrate(export_for(sm, snapshot))
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/nix/store/iizfzmqjdfvbyx82gqw92glb5zl6m4my-python3-3.12.12/lib/python3.12/unittest/mock.py", line 1139, in __call__
+    return self._mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/nix/store/iizfzmqjdfvbyx82gqw92glb5zl6m4my-python3-3.12.12/lib/python3.12/unittest/mock.py", line 1143, in _mock_call
+    return self._execute_mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/nix/store/iizfzmqjdfvbyx82gqw92glb5zl6m4my-python3-3.12.12/lib/python3.12/unittest/mock.py", line 1198, in _execute_mock_call
+    raise effect
+ValueError: fixture error
+Admin ticker test reset failed
+Traceback (most recent call last):
+  File "/home/runner/workspace/game/views_story_test.py", line 147, in reset
+    run = generate_run()
+          ^^^^^^^^^^^^^^
+  File "/nix/store/iizfzmqjdfvbyx82gqw92glb5zl6m4my-python3-3.12.12/lib/python3.12/unittest/mock.py", line 1139, in __call__
+    return self._mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/nix/store/iizfzmqjdfvbyx82gqw92glb5zl6m4my-python3-3.12.12/lib/python3.12/unittest/mock.py", line 1143, in _mock_call
+    return self._execute_mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/nix/store/iizfzmqjdfvbyx82gqw92glb5zl6m4my-python3-3.12.12/lib/python3.12/unittest/mock.py", line 1198, in _execute_mock_call
+    raise effect
+ValueError: test failure
+Finale 1379 übersprungen: Wettbewerb nicht abgeschlossen.
+News image storage failed
+Traceback (most recent call last):
+  File "/home/runner/workspace/game/views.py", line 6489, in club_news_publish
+    card, blocks = persist_news_images(card, blocks)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/game/news_image_storage.py", line 50, in persist_news_images
+    name = default_storage.save(
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/nix/store/iizfzmqjdfvbyx82gqw92glb5zl6m4my-python3-3.12.12/lib/python3.12/unittest/mock.py", line 1139, in __call__
+    return self._mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/nix/store/iizfzmqjdfvbyx82gqw92glb5zl6m4my-python3-3.12.12/lib/python3.12/unittest/mock.py", line 1143, in _mock_call
+    return self._execute_mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/nix/store/iizfzmqjdfvbyx82gqw92glb5zl6m4my-python3-3.12.12/lib/python3.12/unittest/mock.py", line 1198, in _execute_mock_call
+    raise effect
+OSError: offline
+referee_pool_exhausted level=2 (tier_limit_lifted) league_pk=10923 matchday=1
+Transfer-Nach-Commit-Hook fehlgeschlagen
+Traceback (most recent call last):
+  File "/home/runner/workspace/game/transfer_v2/services.py", line 46, in _run
+    hook()
+  File "/home/runner/workspace/game/transfer_v2/services.py", line 515, in <lambda>
+    lambda: _notify_conflict_expiry(listing, grund, bidder_ids))
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/game/transfer_v2/services.py", line 527, in _notify_conflict_expiry
+    notify_club(listing.seller, 'Auktion ohne Zuschlag beendet', msg)
+  File "/nix/store/iizfzmqjdfvbyx82gqw92glb5zl6m4my-python3-3.12.12/lib/python3.12/unittest/mock.py", line 1139, in __call__
+    return self._mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/nix/store/iizfzmqjdfvbyx82gqw92glb5zl6m4my-python3-3.12.12/lib/python3.12/unittest/mock.py", line 1143, in _mock_call
+    return self._execute_mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/nix/store/iizfzmqjdfvbyx82gqw92glb5zl6m4my-python3-3.12.12/lib/python3.12/unittest/mock.py", line 1198, in _execute_mock_call
+    raise effect
+RuntimeError: Push kaputt
+Transfer-Push fehlgeschlagen
+Traceback (most recent call last):
+  File "/home/runner/workspace/game/transfer_v2/push.py", line 32, in _safe
+    fn()
+  File "/home/runner/workspace/game/transfer_v2/push.py", line 64, in <lambda>
+    _safe(lambda: notify_club(club, title, body, url))
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/nix/store/iizfzmqjdfvbyx82gqw92glb5zl6m4my-python3-3.12.12/lib/python3.12/unittest/mock.py", line 1139, in __call__
+    return self._mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/nix/store/iizfzmqjdfvbyx82gqw92glb5zl6m4my-python3-3.12.12/lib/python3.12/unittest/mock.py", line 1143, in _mock_call
+    return self._execute_mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/nix/store/iizfzmqjdfvbyx82gqw92glb5zl6m4my-python3-3.12.12/lib/python3.12/unittest/mock.py", line 1198, in _execute_mock_call
+    raise effect
+RuntimeError: Push kaputt
+Transfer-Push fehlgeschlagen
+Traceback (most recent call last):
+  File "/home/runner/workspace/game/transfer_v2/push.py", line 32, in _safe
+    fn()
+  File "/home/runner/workspace/game/transfer_v2/push.py", line 64, in <lambda>
+    _safe(lambda: notify_club(club, title, body, url))
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/nix/store/iizfzmqjdfvbyx82gqw92glb5zl6m4my-python3-3.12.12/lib/python3.12/unittest/mock.py", line 1139, in __call__
+    return self._mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/nix/store/iizfzmqjdfvbyx82gqw92glb5zl6m4my-python3-3.12.12/lib/python3.12/unittest/mock.py", line 1143, in _mock_call
+    return self._execute_mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/nix/store/iizfzmqjdfvbyx82gqw92glb5zl6m4my-python3-3.12.12/lib/python3.12/unittest/mock.py", line 1198, in _execute_mock_call
+    raise effect
+  File "/home/runner/workspace/game/transfer_v2/push.py", line 32, in _safe
+    fn()
+  File "/home/runner/workspace/game/transfer_v2/push.py", line 64, in <lambda>
+    _safe(lambda: notify_club(club, title, body, url))
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/nix/store/iizfzmqjdfvbyx82gqw92glb5zl6m4my-python3-3.12.12/lib/python3.12/unittest/mock.py", line 1139, in __call__
+    return self._mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/nix/store/iizfzmqjdfvbyx82gqw92glb5zl6m4my-python3-3.12.12/lib/python3.12/unittest/mock.py", line 1143, in _mock_call
+    return self._execute_mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/nix/store/iizfzmqjdfvbyx82gqw92glb5zl6m4my-python3-3.12.12/lib/python3.12/unittest/mock.py", line 1198, in _execute_mock_call
+    raise effect
+RuntimeError: Push kaputt
+----------------------------------------------------------------------
+Ran 1696 tests in 355.460s
+
+OK
+System check identified no issues (0 silenced).
+── Stapel-Bericht ───────────────────────────
+  ✓ a_good.csv: Hamburger SV [1+/0~/0>/0!] (Val: 0E/0W)
+  ✗ b_bad.csv: Kein Verein gefunden (TM-ID=999999, Name='Unbekannt FC'). Dieser Import legt keine neuen Vereine an.
+Gesamt: 1 ok, 1 fehlgeschlagen, 2 Dateien.
+Abfindung gebucht: 6000000.00 € an FC Abschied (Abfindung Todesfall Willi Weg).
+Abfindung gebucht: 6000000.00 € an FC Abschied (Abfindung Todesfall Willi Weg).
+Willi Weg → Karrierende.
+Willi Weg ist bereits beim Karrierende-Pseudo-Verein — nichts zu tun.
+N12_V3_EVIDENCE=6 categories; 0 other facts; 156/128/28; v3 replay unchanged
+N46_EVIDENCE={"v1": {"players": 51, "strength": 35, "locks": 16, "source_archive": 83, "market_values": 637, "transfers": 322, "records": 24, "titles": 30, "issues": 156, "open": 156, "package_closed": 0, "clubs": 1}, "v2": {"players": 51, "strength": 49, "locks": 2, "source_archive": 132, "market_values": 637, "transfers": 322, "records": 24, "titles": 30, "issues": 156, "open": 128, "package_closed": 28, "clubs": 1}, "samples": {"Ethan Nwaneri": [145, 181], "Samuele Inácio": [120, 166], "Luca Reggiani": [116, 152], "Luke Fahrenhorst": [90, 160], "Bennedikt Wüstenhagen": [92, 100]}, "replay_unchanged": true, "preview_read_only": true, "n48_cases": true}
+  [dry-run] DE Deutschland: würde anlegen (community=70, activity=40).
+  [dry-run] TR Türkei: würde anlegen (community=55, activity=25).
+  [dry-run] BE Belgien: würde anlegen (community=30, activity=15).
+  [dry-run] BR Brasilien: würde anlegen (community=45, activity=30).
+  [dry-run] AR Argentinien: würde anlegen (community=20, activity=10).
+Dry-run – keine Änderungen geschrieben.
+  DE Deutschland: angelegt.
+  TR Türkei: angelegt.
+  BE Belgien: angelegt.
+  BR Brasilien: angelegt.
+  AR Argentinien: angelegt.
+Fertig: 5 angelegt, 0 aktualisiert, 0 unverändert.
+  DE Deutschland: existiert bereits – unverändert.
+  TR Türkei: existiert bereits – unverändert.
+  BE Belgien: existiert bereits – unverändert.
+  BR Brasilien: existiert bereits – unverändert.
+  AR Argentinien: existiert bereits – unverändert.
+Fertig: 0 angelegt, 0 aktualisiert, 5 unverändert.
+  DE Deutschland: angelegt.
+  TR Türkei: angelegt.
+  BE Belgien: angelegt.
+  BR Brasilien: angelegt.
+  AR Argentinien: angelegt.
+Fertig: 5 angelegt, 0 aktualisiert, 0 unverändert.
+loan_anfragen: {'abgelaufen': 1}
+listings: {'abgeschlossen': 0, 'fehler': 0}
+deals: {'abgelaufen': 0}
+loan_anfragen: {'abgelaufen': 1}
+loans: {'beendet': 0}
+pendings: {'vollzogen': 0}
+locks: {'geloescht': 0}
+barometer: {'positionen': 1}
+ki_deals: {'angenommen': 0, 'abgelehnt': 0, 'gegenforderungen': 0, 'fehler': 0, 'uebersprungen': 0, 'dry_run': True}
+Wetter gewürfelt: 8 neue Sim-Tage.
+Wetter vollständig — nichts zu würfeln.
+
+TEST_EXIT_CODE=0

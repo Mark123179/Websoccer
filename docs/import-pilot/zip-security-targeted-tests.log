@@ -1,0 +1,28 @@
+Using existing test database for alias 'default' ('test_heliumdb')...
+test_accepted_club_and_gap_text_stays_text_in_preview_and_worklist (game.tests.test_package_security.PackageSecurityTests.test_accepted_club_and_gap_text_stays_text_in_preview_and_worklist) ... ok
+test_csrf_and_user_binding_still_enforced (game.tests.test_package_security.PackageSecurityTests.test_csrf_and_user_binding_still_enforced) ... ok
+test_date_numeric_and_combined_errors_are_plain_on_both_endpoints (game.tests.test_package_security.PackageSecurityTests.test_date_numeric_and_combined_errors_are_plain_on_both_endpoints) ... ok
+test_n67_no_fmi_is_one_player_lock_not_league_lock (game.tests.test_package_security.PackageSecurityTests.test_n67_no_fmi_is_one_player_lock_not_league_lock) ... ok
+test_n68_fmi_only_professional_not_present_is_unlocked (game.tests.test_package_security.PackageSecurityTests.test_n68_fmi_only_professional_not_present_is_unlocked) ... ok
+test_n68_not_found_professional_without_lock_still_rejected (game.tests.test_package_security.PackageSecurityTests.test_n68_not_found_professional_without_lock_still_rejected) ... ok
+test_new_gap_refs_visible_without_foreign_club_misattribution (game.tests.test_package_security.PackageSecurityTests.test_new_gap_refs_visible_without_foreign_club_misattribution) ... ok
+test_package_blocking_gap_rejected_before_writes (game.tests.test_package_security.PackageSecurityTests.test_package_blocking_gap_rejected_before_writes) ... ok
+test_package_records_and_transfer_names_are_escaped_in_actual_pages (game.tests.test_package_security.PackageSecurityTests.test_package_records_and_transfer_names_are_escaped_in_actual_pages) ... ok
+test_reference_substring_collision_is_reported_not_silently_fixed (game.tests.test_package_security.PackageSecurityTests.test_reference_substring_collision_is_reported_not_silently_fixed) ... ok
+test_role_mode_method_not_found_and_other_bad_requests_are_plain (game.tests.test_package_security.PackageSecurityTests.test_role_mode_method_not_found_and_other_bad_requests_are_plain) ... ok
+
+----------------------------------------------------------------------
+Ran 11 tests in 3.633s
+
+OK
+Preserving test database for alias 'default' ('test_heliumdb')...
+Found 11 test(s).
+Operations to perform:
+  Synchronize unmigrated apps: humanize, messages, staticfiles
+  Apply all migrations: admin, auth, contenttypes, game, sessions, showauction, stadium_editor
+Synchronizing apps without migrations:
+  Creating tables...
+    Running deferred SQL...
+Running migrations:
+  No migrations to apply.
+System check identified no issues (0 silenced).

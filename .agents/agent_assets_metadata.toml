@@ -886,3 +886,45 @@ mtime_ms = 1791351598560
 storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:6e4eaecc-e6c5-4f64-8de5-e8845034f33b/cbe4f5ed-081c-45a2-8fc0-0a605740fb10/6c5e5aeb-46cf-4411-809e-ddd64e37d812"
 storage_version_token = "1791351649261475"
 content_type = "application/octet-stream"
+
+[[outputs]]
+id = "542mEwKyYIEpy4di9cFOA"
+uri = "file://docs/import-pilot/zip-security-report.md"
+type = "text"
+title = "ZIP-Import: Abschlussbericht"
+description = "Sicherheitsfix, N68-Tests, Vorlagenprüfung, Namens-Fundstellen und ausdrücklich dokumentierte Abweichungen."
+logical_id = "0b34bc7e-4c3d-467f-b980-f89bf6ec90ff"
+content_hash = "sha256:831c40894f5ce2bcd9982cc62681bb3bc12e3a22d7684c6caeb6d34090206253"
+size = 11229
+mtime_ms = 1791366827676
+storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:6e4eaecc-e6c5-4f64-8de5-e8845034f33b/0b34bc7e-4c3d-467f-b980-f89bf6ec90ff/048fb795-7de6-433b-b539-d43414753971"
+storage_version_token = "1791366874240874"
+content_type = "text/markdown"
+
+[[outputs]]
+id = "7jsRAo3oXda3UeNWK8VwM"
+uri = "file://docs/import-pilot/package-name-display-inventory.csv"
+type = "table"
+title = "Namensanzeige: Fundstellenliste"
+description = "Dateien, Zeilen und Originalstellen; keine Namensanzeige geändert."
+logical_id = "a7ddfd6c-554e-4ec0-8938-d554d57d3bee"
+content_hash = "sha256:fbce3fbbc0dfb9763e3e5a647af392c45923addb89047bc4c9363d6db34557fa"
+size = 28520
+mtime_ms = 1791366607872
+storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:6e4eaecc-e6c5-4f64-8de5-e8845034f33b/a7ddfd6c-554e-4ec0-8938-d554d57d3bee/e51391cb-8e55-40d1-ac1c-8ce9b7617626"
+storage_version_token = "1791366875015249"
+content_type = "text/csv"
+
+[[outputs]]
+id = "5BRdduXoYeAJEZTHD7Aex"
+uri = "file://docs/import-pilot/zip-security-full-tests.log"
+type = "unspecified"
+title = "Gesamttest: vollständiges Protokoll"
+description = "1696 Tests in 355,460 Sekunden; OK und Exit-Code 0."
+logical_id = "e8cae309-c6e0-4fe2-a4f9-9da6ed462c3c"
+content_hash = "sha256:bc99be7638b89bbcbd9c40e9039d413d21e22e897e8b00e4a03a485ad50fcd97"
+size = 12083
+mtime_ms = 1791366793424
+storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:6e4eaecc-e6c5-4f64-8de5-e8845034f33b/e8cae309-c6e0-4fe2-a4f9-9da6ed462c3c/5e36fb29-7984-4d4f-9216-071001362422"
+storage_version_token = "1791366875555364"
+content_type = "application/octet-stream"

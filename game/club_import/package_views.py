@@ -3,7 +3,7 @@ from functools import wraps
 from django.contrib.auth.decorators import login_required
 from django.core import signing
 from django.db import transaction
-from django.http import HttpResponseForbidden, HttpResponseBadRequest
+from django.http import Http404, HttpResponseForbidden, HttpResponseBadRequest, HttpResponseNotFound
 from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import path
 from django.views.decorators.http import require_POST
@@ -21,9 +21,20 @@ def creator(fn):
     @wraps(fn)
     def guarded(request, *args, **kwargs):
         if not package_mode() or not (request.user.is_staff or request.user.is_superuser):
-            return HttpResponseForbidden("Nur Creator im Paketmodus.")
-        return fn(request, *args, **kwargs)
+            return _plain_error(HttpResponseForbidden("Nur Creator im Paketmodus."))
+        try:
+            response = fn(request, *args, **kwargs)
+        except Http404 as exc:
+            response = HttpResponseNotFound(str(exc))
+        return _plain_error(response) if response.status_code >= 400 else response
     return guarded
+
+
+def _plain_error(response):
+    """One response-boundary policy for every package-module error, not field escaping."""
+    response["Content-Type"] = "text/plain; charset=utf-8"
+    response["X-Content-Type-Options"] = "nosniff"
+    return response
 
 
 @creator

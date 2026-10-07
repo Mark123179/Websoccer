@@ -117,7 +117,9 @@ def validate_package(manifest, data, raw_checksum):
                     raise PackageError("Invalid monetary value.")
             if player["ids"]["fmi"]["value"] is None and f"tm:{tm}" not in locks:
                 raise PackageError("Missing FMI must have an explicit player lock.")
-            if player["squad"]["team"] == "first" and player["ids"]["cmtracker"]["value"] is None:
+            if (player["squad"]["team"] == "first"
+                    and player["ids"]["cmtracker"]["value"] is None
+                    and player["ids"]["cmtracker"]["status"] != "nicht_vorhanden"):
                 if f"tm:{tm}" not in locks:
                     raise PackageError("Missing first-team CMTracker must have a player lock.")
         for gap in data["gaps"]:

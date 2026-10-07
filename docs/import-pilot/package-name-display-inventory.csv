@@ -1,0 +1,319 @@
+Datei,Zeile,Fundstelle
+game/admin.py,273,"'first_name',"
+game/admin.py,274,"'last_name',"
+game/admin.py,1942,"'first_name',"
+game/admin.py,1943,"'last_name',"
+game/admin.py,1963,"'first_name',"
+game/admin.py,1964,"'last_name',"
+game/admin.py,1997,"'first_name',"
+game/admin.py,1998,"'last_name',"
+game/admin.py,2189,"obj.full_name,"
+game/admin.py,2200,"obj.full_name,"
+game/admin.py,3606,"'first_name',"
+game/admin.py,3607,"'last_name',"
+game/admin.py,3612,"@admin.display(description='Name', ordering='last_name')"
+game/admin.py,3614,return obj.full_name
+game/club_import/field_schema.py,57,"'first_name':       ('Player', 'first_name', 'Vorname.'),"
+game/club_import/field_schema.py,58,"'last_name':        ('Player', 'last_name', 'Nachname.'),"
+game/club_import/field_schema.py,136,"'tm_url', 'fmi_url', 'sofifa_id', 'sofifa_url', 'first_name', 'last_name',"
+game/club_import/fmid_csv_service.py,221,"first_name, last_name = _split_name(row['raw_name'])"
+game/club_import/fmid_csv_service.py,246,"first_name=first_name,"
+game/club_import/fmid_csv_service.py,247,"last_name=last_name,"
+game/club_import/import_ready_csv.py,308,"'first_name': _clean(row.get('first_name')),"
+game/club_import/import_ready_csv.py,309,"'last_name': _clean(row.get('last_name')),"
+game/club_import/import_ready_csv.py,381,"or f""{nd['first_name']} {nd['last_name']}"".strip(),"
+game/club_import/import_service.py,14,"first_name, last_name, date_of_birth (""YYYY-MM-DD"")"
+game/club_import/import_service.py,309,if not (nd.get('first_name') or '').strip() and not (nd.get('last_name') or '').strip():
+game/club_import/import_service.py,352,"name=f""{nd.get('first_name', '')} {nd.get('last_name', '')}"","
+game/club_import/import_service.py,389,player.first_name = (nd.get('first_name') or '').strip()
+game/club_import/import_service.py,390,player.last_name = (nd.get('last_name') or '').strip()
+game/club_import/matching.py,67,if normalize_name(player.full_name) == target:
+game/club_import/package_service.py,501,"patch(player, {""first_name"": pdata[""first_name""], ""last_name"": pdata[""last_name""],"
+game/club_import/package_validation.py,79,"for field in (""first_name"", ""last_name"", ""date_of_birth"", ""squad"", ""ratings""):"
+game/club_import/presentation.py,67,"slug = slugify(player.full_name) or ""player"""
+game/club_import/review.py,89,first = (tm.get('first_name') or '').strip()
+game/club_import/review.py,90,last = (tm.get('last_name') or '').strip()
+game/club_import/review.py,116,"first_name, last_name = _split_name(tm)"
+game/club_import/review.py,147,"'first_name': first_name,"
+game/club_import/review.py,148,"'last_name': last_name,"
+game/club_import/review.py,237,"f'{player.first_name} {player.last_name}'.strip(),"
+game/club_import/review.py,238,"f""{nd.get('first_name', '')} {nd.get('last_name', '')}"".strip()),"
+game/club_import/review.py,311,"name=f""{nd.get('first_name', '')} {nd.get('last_name', '')}"","
+game/club_import/validation.py,132,ref = f'{player.first_name} {player.last_name}'.strip() or str(player.pk)
+game/club_import/validation.py,179,"ref = f""{nd.get('first_name', '')} {nd.get('last_name', '')}"".strip()"
+game/club_profile.py,37,"'last_name',"
+game/club_profile.py,38,"'first_name',"
+game/club_profile_highlights.py,58,"'playerName': player.full_name,"
+game/club_profile_highlights.py,204,"getattr(player, 'full_name', repr(player)),"
+game/club_profile_highlights.py,214,"getattr(player, 'full_name', repr(player)),"
+game/cmt_profile_service.py,378,"profile.first_name = _str(_dig(raw, 'info.name.firstname'))"
+game/cmt_profile_service.py,379,"profile.last_name = _str(_dig(raw, 'info.name.lastname'))"
+game/cmt_profile_service.py,588,"first_name = _str(_dig(raw, 'info.name.firstname') or"
+game/cmt_profile_service.py,590,"last_name  = _str(_dig(raw, 'info.name.lastname')  or"
+game/cmt_profile_service.py,594,f'{first_name} {last_name}'.strip()
+game/cmt_profile_service.py,737,"first_name=first_name,"
+game/cmt_profile_service.py,738,"last_name=last_name,"
+game/cup_service.py,175,"first_name='Dummy',"
+game/cup_service.py,176,"last_name=f'{position}{j}',"
+game/economy/ai_buyer/offers.py,73,"'player_name': offer.player.full_name,"
+game/economy/ai_buyer/pruflauf.py,193,"'player': player.full_name,"
+game/economy/ai_buyer/pruflauf.py,214,"'player': player.full_name,"
+game/economy/ai_buyer/pruflauf.py,239,"'player': player.full_name,"
+game/economy/forced_auction.py,344,"player.full_name, player.pk,"
+game/economy/forced_auction.py,352,"'übersprungen.', player.full_name, auction.min_bid,"
+game/economy/forced_auction.py,396,"club.name, gebot, player.full_name,"
+game/economy/forced_auction.py,401,"club.name, player.full_name, exc,"
+game/economy/forced_auction.py,462,f'bereinigt — {player.full_name} bleibt im '
+game/economy/forced_auction.py,492,title=(f'Zwangsversteigerung: {player.full_name} für '
+game/economy/forced_auction.py,498,title=(f'Zuschlag: {player.full_name} für {betrag} € '
+game/economy/forced_auction.py,509,f'{player.full_name} bleibt im Kader')
+game/economy/forced_auction.py,512,f'{player.full_name} hat den Verein bereits '
+game/economy/severance.py,76,beschreibung = f'Abfindung Karriereende {player.first_name} {player.last_name}'
+game/economy/severance.py,80,beschreibung = f'Abfindung Todesfall {player.first_name} {player.last_name}'
+game/economy/transfers.py,142,f'{player.first_name} {player.last_name} hat eine '
+game/economy/transfers.py,245,text = f'Transfer {player.full_name}'
+game/economy/transfers.py,260,"beschreibung=f'Ausbildungsabgabe {player.full_name}',"
+game/economy/transfers.py,300,"beschreibung=f'Ausbildungsabgabe (ablösefrei) {player.full_name}',"
+game/economy/transfers.py,354,"beschreibung=f'Ausbildungsabgabe (Tausch) {player_a.full_name}',"
+game/economy/transfers.py,359,"beschreibung=f'Ausbildungsabgabe (Tausch) {player_b.full_name}',"
+game/import_schema.py,18,"""Player"": frozenset((""first_name"", ""last_name"", ""display_name"", ""date_of_birth"","
+game/manager_timeline_service.py,234,f'{player.full_name} · {age} Jahre · '
+game/match_engine.py,271,"'name': f""{p.first_name} {p.last_name}"".strip() or str(p),"
+game/match_engine.py,741,"'name': f'{p.first_name} {p.last_name}'.strip() or str(p),"
+game/match_engine.py,3062,"'name':               f'{p.first_name} {p.last_name}'.strip() or str(p),"
+game/match_preview.py,87,name = snapshot.get('name') or (player.full_name if player else '')
+game/models.py,1937,first_name = models.CharField(max_length=100)
+game/models.py,1938,last_name = models.CharField(max_length=100)
+game/models.py,2246,"return f""{self.first_name} {self.last_name}"""
+game/models.py,2257,def full_name(self):
+game/models.py,2258,"return f""{self.first_name} {self.last_name}"".strip()"
+game/models.py,2765,"first_name = models.CharField(max_length=100, blank=True)"
+game/models.py,2766,"last_name = models.CharField(max_length=100, blank=True)"
+game/records/engine.py,244,"holder_name=player.full_name,"
+game/records/engine.py,329,"holder_name=item['player'].full_name,"
+game/records/engine.py,385,"holder_name=snapshot.player.full_name,"
+game/records/engine.py,560,"holder_name=row.player.full_name,"
+game/records/engine.py,609,"holder_name=row.player.full_name,"
+game/scouting/service.py,52,return f'{player.first_name} {player.last_name}'.strip()
+game/sofifa_import.py,68,"'long_name': 'name', 'name': 'name', 'full_name': 'name',"
+game/sofifa_import.py,361,"score = name_similarity(target, normalize_name(p.full_name))"
+game/sofifa_import.py,556,"'name': player.full_name,"
+game/sofifa_import_service.py,174,"((name_similarity(target_dob, normalize_name(p.full_name)), p)"
+game/sofifa_import_service.py,213,"score = name_similarity(target, normalize_name(p.full_name))"
+game/sofifa_import_service.py,416,"'player_name': player.full_name,"
+game/system_diagnostics.py,771,"return sorted(files, key=lambda p: str(p))"
+game/tactics.py,763,".order_by('last_name', 'first_name', 'id')"
+game/tactics.py,815,"'name': player.full_name,"
+game/tactics.py,836,"'last_name',"
+game/tactics.py,837,"'first_name',"
+game/tactics.py,849,"'name': player.full_name,"
+game/tactics.py,856,"'name': player.full_name,"
+game/templates/creator/club_edit.html,113,"<option value=""{{ player.id }}""{% if row.record.holder_player_id == player.id %} selected{% endif %}>{{ player.full_name }}</option>"
+game/templates/creator/club_edit.html,975,"<img class=""creator-portrait-thumb"" src=""{{ player.portrait_static_path }}"" alt=""{{ player.last_name }}"">"
+game/templates/creator/club_edit.html,977,"<div class=""creator-portrait-placeholder"">{{ player.first_name|first }}{{ player.last_name|first }}</div>"
+game/templates/creator/club_edit.html,980,"<td class=""creator-name-cell""><strong>{{ player.last_name }}</strong>, {{ player.first_name }}</td>"
+game/templates/creator/club_edit.html,992,"onsubmit=""return confirm('Spieler „{{ player.first_name }} {{ player.last_name }}“ und alle zugehörigen Daten endgültig löschen? Das kann nicht rückgängig gemacht werden.');"">"
+game/templates/creator/club_edit.html,1028,"<strong>{{ entry.player.last_name }}</strong>, {{ entry.player.first_name }}"
+game/templates/creator/player_edit.html,4,{% block title %}Creator · {% if player %}{{ player.first_name }} {{ player.last_name }}{% else %}Neuer Spieler{% endif %}{% endblock %}
+game/templates/creator/player_edit.html,17,<span>{{ player.first_name }} {{ player.last_name }}</span>
+game/templates/creator/player_edit.html,34,"<h1 class=""cpe-title"">{% if player %}{{ player.first_name }} {{ player.last_name }}{% else %}Neuer Spieler{% endif %}</h1>"
+game/templates/creator/player_edit.html,37,"onsubmit=""return confirm('Spieler „{{ player.first_name }} {{ player.last_name }}“ und alle zugehörigen Daten endgültig löschen? Das kann nicht rückgängig gemacht werden.');"">"
+game/templates/creator/player_edit.html,74,<strong>{% if player %}{{ player.first_name }} {{ player.last_name }}{% endif %}</strong>
+game/templates/creator/player_edit.html,91,"<input class=""cpe-input"" type=""text"" name=""first_name"" value=""{{ player.first_name|default:'' }}"">"
+game/templates/creator/player_edit.html,98,"<input class=""cpe-input cpe-input-medium"" type=""text"" name=""last_name"" value=""{{ player.last_name|default:'' }}"">"
+game/templates/creator/sportgericht.html,163,"<option value=""{{ p.id }}"">{{ p.last_name }}, {{ p.first_name }} ({{ p.position }}, MW {{ p.mv_fmt }})</option>"
+game/templates/creator/sportgericht.html,240,<td>{{ row.auction.player.full_name }}</td>
+game/templates/creator/sportgericht.html,392,"{{ rp.player.full_name }}{% if not forloop.last %}, {% endif %}"
+game/templates/creator/sportgericht.html,457,"<td>{% if note.player %}{{ note.player.full_name }}{% else %}<span style=""color:#8a9bb0;"">—</span>{% endif %}</td>"
+game/templates/creator/transferaufsicht.html,130,"{{ rp.player.full_name|default:""(gelöscht)"" }} (Seite {{ rp.side }}, MW {{ rp.market_value_at_transfer|floatformat:0 }} €){% if not forloop.last %}, {% endif %}"
+game/templates/creator/transferaufsicht.html,266,<td>{{ lst.player.full_name }}</td>
+game/templates/creator/transferaufsicht.html,303,<td>{{ lst.player.full_name }}</td>
+game/templates/creator/transferaufsicht.html,336,"<td>{{ note.player.full_name|default:""—"" }}</td>"
+game/templates/creator/vereinslose.html,75,{{ player.first_name }} {{ player.last_name }}
+game/templates/game/club_profile/squad_page.html,34,"<td><a href=""{% url 'player_detail' row.id %}"">{{ row.full_name }}</a></td>"
+game/templates/game/club_profile/squad_page.html,50,"<a href=""{% url 'player_detail' player.id %}"">{{ player.full_name }}{% if player|loan_line %}<small>{{ player|loan_line }}</small>{% endif %}</a>"
+game/templates/game/club_profile/squad_page.html,58,"<a href=""{% url 'player_detail' player.id %}"">{% if player.shirt_number != None %}{{ player.shirt_number }} · {% endif %}{{ player.full_name }}</a>"
+game/templates/game/home.html,314,"<a class=""overview-transfer-avatar"" href=""{% url 'player_detail' row.player.id %}"" onclick=""event.stopPropagation();"" aria-label=""Spielerprofil von {{ row.player.full_name }}"">"
+game/templates/game/home.html,315,"<img src=""{{ row.player.portrait_static_path }}"" alt=""{{ row.player.full_name }}"" onerror=""this.onerror=null;this.src='{{ default_player_url }}'"">"
+game/templates/game/home.html,318,<strong>{{ row.player.full_name }}</strong>
+game/templates/game/liga/league_detail.html,552,"<img class=""liga-stat-portrait"" src=""{{ s.player.portrait_static_path }}"" alt=""{{ s.player.full_name }}"" onerror=""this.onerror=null;this.src='{{ default_player_url }}'"">"
+game/templates/game/liga/league_detail.html,556,"<a class=""liga-stat-name"" href=""{% url 'player_detail' s.player.id %}"">{{ s.player.full_name }}</a>"
+game/templates/game/liga/league_detail.html,580,"<img class=""liga-stat-portrait"" src=""{{ s.player.portrait_static_path }}"" alt=""{{ s.player.full_name }}"" onerror=""this.onerror=null;this.src='{{ default_player_url }}'"">"
+game/templates/game/liga/league_detail.html,584,"<a class=""liga-stat-name"" href=""{% url 'player_detail' s.player.id %}"">{{ s.player.full_name }}</a>"
+game/templates/game/liga/league_detail.html,614,"<img class=""liga-stat-portrait"" src=""{{ s.player.portrait_static_path }}"" alt=""{{ s.player.full_name }}"" onerror=""this.onerror=null;this.src='{{ default_player_url }}'"">"
+game/templates/game/liga/league_detail.html,618,"<a class=""liga-stat-name"" href=""{% url 'player_detail' s.player.id %}"">{{ s.player.full_name }}</a>"
+game/templates/game/liga/league_detail.html,642,"<img class=""liga-stat-portrait"" src=""{{ s.player.portrait_static_path }}"" alt=""{{ s.player.full_name }}"" onerror=""this.onerror=null;this.src='{{ default_player_url }}'"">"
+game/templates/game/liga/league_detail.html,646,"<a class=""liga-stat-name"" href=""{% url 'player_detail' s.player.id %}"">{{ s.player.full_name }}</a>"
+game/templates/game/management/sportgericht.html,46,"{% for rp in players %}{{ rp.player.full_name }}{% if not forloop.last %}, {% endif %}{% endfor %}"
+game/templates/game/management/sportgericht.html,94,"<p class=""sg-report-player"">{{ note.player.full_name }}</p>"
+game/templates/game/management/sportgericht.html,149,{{ auction.player.full_name }} —
+game/templates/game/player_detail.html,8,{{ player.full_name }}
+game/templates/game/player_detail.html,35,"<img class=""aaa-player-portrait"" src=""{{ player.portrait_static_path }}"" alt=""{{ player.full_name }}"" onerror=""this.onerror=null;this.src='{{ default_player_url }}'"">"
+game/templates/game/player_detail.html,38,"<span class=""pn-first"">{{ player.first_name }}</span>"
+game/templates/game/player_detail.html,39,"<span class=""pn-last"">{{ player.last_name }}</span>"
+game/templates/game/player_detail.html,202,"<a class=""market-value-large"" href=""{{ player.transfermarkt_profile_url }}"" target=""_blank"" rel=""noopener"" title=""Transfermarkt-Profil von {{ player.full_name }}"">{% if package_mode %}{{ player.market_value|euro_de }}{% else %}{{ player.market_value|floatformat:0|intcomma }}{% endif %} &euro;</a>"
+game/transfer_v2/admin_actions.py,145,f'Spieler {player_obj.full_name} ist nicht mehr beim '
+game/transfer_v2/admin_actions.py,399,msg = (f'Admin-Transfer: {player_obj.full_name} → {to_club.name}.'
+game/transfer_v2/admin_actions.py,411,"f'{player_obj.full_name} → {to_club.name}',"
+game/transfer_v2/admin_actions.py,443,msg = (f'Die Auktion für {lst.player.full_name} wurde von der '
+game/transfer_v2/events.py,246,"'spieler': player.full_name if player else 'Ein Spieler',"
+game/transfer_v2/execution.py,77,"'betrag': -gesamt, 'beschreibung': f'Jugendabgabe {player.full_name}',"
+game/transfer_v2/execution.py,85,"'betrag': betrag, 'beschreibung': f'Jugendabgabe {player.full_name}',"
+game/transfer_v2/execution.py,181,text = f'Transfer {player.full_name}'
+game/transfer_v2/execution.py,194,"'beschreibung': f'Vereinsloser-Erlös an Verband {player.full_name}',"
+game/transfer_v2/execution.py,288,text = f'Kaufoption gezogen {player.full_name}'
+game/transfer_v2/execution.py,415,konflikt = f'{pl.full_name} ist nicht mehr beim abgebenden Verein.'
+game/transfer_v2/execution.py,418,konflikt = f'{pl.full_name} ist wechselgesperrt.'
+game/transfer_v2/execution.py,423,konflikt = f'{pl.full_name} ist verliehen.'
+game/transfer_v2/execution.py,500,text = f'Storno WP/SE-Transfer {p.player.full_name} (Kadergrenze)'
+game/transfer_v2/execution.py,534,note_text = (f'WP/SE-Transfer {p.player.full_name} storniert: '
+game/transfer_v2/execution.py,548,msg = (f'Der WP/SE-Wechsel von {p.player.full_name} wurde storniert: '
+game/transfer_v2/push.py,94,"m, f'Beobachtet: {player.full_name} auf der Transferliste',"
+game/transfer_v2/push.py,102,"m, f'Beobachtet: {player.full_name} auf dem Leihmarkt',"
+game/transfer_v2/push.py,110,"m, f'Beobachtet: {player.full_name} — Status geändert',"
+game/transfer_v2/push.py,130,"c, f'Gepinnt: neues Gebot für {listing.player.full_name}',"
+game/transfer_v2/push.py,138,"c, f'Gepinnt: Auktion verlängert — {listing.player.full_name}',"
+game/transfer_v2/push.py,147,"c, f'Gepinnt: Sofortkauf — {listing.player.full_name}',"
+game/transfer_v2/push.py,155,"c, f'Gepinnt: Auktion beendet — {listing.player.full_name}',"
+game/transfer_v2/push.py,164,"prev_club, f'Überboten: {listing.player.full_name}',"
+game/transfer_v2/push.py,172,"club, f'Zuschlag erhalten: {listing.player.full_name}',"
+game/transfer_v2/push.py,179,"club, f'Auktion beendet: {listing.player.full_name}',"
+game/transfer_v2/push.py,232,"loan.loan_club, f'Rückruf-Anfrage: {loan.player.full_name}',"
+game/transfer_v2/push.py,241,"loan.owner_club, f'Rückruf angenommen: {loan.player.full_name}',"
+game/transfer_v2/push.py,246,"loan.owner_club, f'Rückruf abgelehnt: {loan.player.full_name}',"
+game/transfer_v2/services.py,167,f'{player.full_name} gehört nicht {seller.name}.')
+game/transfer_v2/services.py,176,f'{player.full_name} ist verliehen und kann nicht '
+game/transfer_v2/services.py,523,msg = (f'Die Auktion für {listing.player.full_name} konnte nicht '
+game/transfer_v2/services.py,549,"f'{player.full_name} gehört nicht {expected_club.name if expected_club else ""—""}.'"
+game/transfer_v2/services.py,552,raise TransferActionError(f'{player.full_name} ist wechselgesperrt.')
+game/transfer_v2/services.py,554,raise TransferActionError(f'{player.full_name} ist verliehen.')
+game/transfer_v2/services.py,556,raise TransferActionError(f'{player.full_name} ist verliehen.')
+game/transfer_v2/services.py,560,f'{player.full_name} hat bereits einen ausstehenden Transfer.')
+game/transfer_v2/services.py,1157,f'{player.full_name} ist bereits auf dem Leihmarkt.')
+game/transfer_v2/services.py,1162,f'{player.full_name} ist bereits auf dem Transfermarkt.')
+game/transfer_v2/services.py,1215,"'beschreibung': f'Leihgebühr {player.full_name}', 'saison': saison,"
+game/transfer_v2/services.py,1218,"'beschreibung': f'Leihgebühr {player.full_name}', 'saison': saison,"
+game/transfer_v2/services.py,1391,"f'{player.full_name} gehört nicht {club.name if club else ""—""}.')"
+game/transfer_v2/services.py,1432,f'{hp} | {p.full_name} | {p.age} | {mw_fmt} | '
+game/transfer_v2/services.py,1511,"'name': rp.full_name,"
+game/views.py,1841,player.full_name
+game/views.py,1858,".order_by('-market_value', 'last_name', 'first_name')[:36]"
+game/views.py,2122,"'last_name',"
+game/views.py,2123,"'first_name',"
+game/views.py,2132,outgoing_players = [player.full_name]
+game/views.py,2161,"'last_name',"
+game/views.py,2162,"'first_name',"
+game/views.py,2177,".order_by('-total_goals', '-market_value', 'last_name', 'first_name')"
+game/views.py,2179,") or primary_players.order_by('-market_value', 'last_name', 'first_name').first()"
+game/views.py,2183,"'last_name',"
+game/views.py,2184,"'first_name',"
+game/views.py,2189,".order_by('best_grade', '-market_value', 'last_name', 'first_name')"
+game/views.py,2197,f'{primary_top_scorer.first_name[:1]}. '
+game/views.py,2198,f'{primary_top_scorer.last_name}'
+game/views.py,2207,f'{primary_market_player.first_name[:1]}. '
+game/views.py,2208,f'{primary_market_player.last_name}'
+game/views.py,2220,f'{primary_grade_player.first_name[:1]}. '
+game/views.py,2221,f'{primary_grade_player.last_name}'
+game/views.py,2836,").order_by('-value', 'last_name', 'first_name')[:3]"
+game/views.py,2838,"{'name': player.full_name, 'value': player.value, 'portrait': player.portrait_static_path}"
+game/views.py,2844,").order_by('-value', 'last_name', 'first_name')[:3]"
+game/views.py,2846,"{'name': player.full_name, 'value': player.value, 'portrait': player.portrait_static_path}"
+game/views.py,2852,").order_by('value', 'last_name', 'first_name')[:3]"
+game/views.py,2854,"{'name': player.full_name, 'value': f'{player.value:.2f}', 'portrait': player.portrait_static_path}"
+game/views.py,2949,".order_by('last_name', 'first_name', 'id')"
+game/views.py,2955,"'name': player.full_name,"
+game/views.py,2967,"'name': player.full_name,"
+game/views.py,3581,"return (group, shirt, p.last_name, p.first_name)"
+game/views.py,3898,"'name': player.full_name,"
+game/views.py,3935,"'name': player.full_name,"
+game/views.py,4089,".order_by('shirt_number', 'last_name', 'first_name')"
+game/views.py,4094,".select_related('strength_profile').order_by('shirt_number', 'last_name', 'first_name')"
+game/views.py,4100,").select_related('owner_club', 'loan_club').order_by('last_name', 'first_name')"
+game/views.py,4161,'error': f'Nummer {number} ist bereits an {clash.full_name} '
+game/views.py,4194,'message': f'{player.full_name} ist als Jugendspieler geführt.'})
+game/views.py,4499,"'name': f'{p.first_name} {p.last_name}'.strip() or str(p),"
+game/views.py,5256,"for p in _Player.objects.filter(pk__in=missing).values('id', 'first_name', 'last_name'):"
+game/views.py,5257,"name_lookup[p['id']] = f""{p['first_name']} {p['last_name']}"".strip()"
+game/views.py,6184,full_name = f'{p.first_name} {p.last_name}'.strip() if p.last_name else p.first_name or ''
+game/views.py,6207,"'n':    full_name,"
+game/views.py,6781,"f""{player.full_name} · {player.club.name if player.club else 'ohne Verein'}"","
+game/views.py,6839,"'name': player.full_name,"
+game/views.py,7119,transfer_in_str = f'{fee_fmt} – {best_in.player.full_name} ({date_fmt})'
+game/views.py,7123,transfer_out_str = f'{fee_fmt} – {best_out.player.full_name} ({date_fmt})'
+game/views.py,7211,"'body': f'{fee_fmt} für {t.player.full_name}',"
+game/views.py,7680,"'title': 'Einkauf', 'body': f'{_fee_tl} für {_tl_t.player.full_name}',"
+game/views.py,7706,"{'id': _p.id, 'name': _p.full_name}"
+game/views.py,7708,".only('id', 'first_name', 'last_name')"
+game/views.py,7709,".order_by('last_name', 'first_name')"
+game/views.py,7716,"{'id': _p.id, 'name': _p.full_name}"
+game/views.py,7718,".only('id', 'first_name', 'last_name')"
+game/views.py,7719,".order_by('last_name', 'first_name')"
+game/views_creator.py,631,").exclude(pool_status='show_auction').order_by('last_name', 'first_name')"
+game/views_creator.py,693,".order_by('last_name', 'first_name')"
+game/views_creator.py,967,"'first_name':   player.first_name,"
+game/views_creator.py,968,"'last_name':    player.last_name,"
+game/views_creator.py,986,"player.first_name = request.POST.get('first_name', player.first_name).strip()"
+game/views_creator.py,987,"player.last_name = request.POST.get('last_name', player.last_name).strip()"
+game/views_creator.py,1083,_new_name = f'{player.first_name} {player.last_name}'
+game/views_creator.py,1084,"_old_name = f'{_old[""first_name""]} {_old[""last_name""]}'"
+game/views_creator.py,1205,"messages.success(request, f'{player.first_name} {player.last_name} gespeichert.')"
+game/views_creator.py,1211,"messages.success(request, f'{player.first_name} {player.last_name} gespeichert.')"
+game/views_creator.py,1364,f'{player.first_name} {player.last_name}: '
+game/views_creator.py,1388,f'Stärke neu berechnet: {player.first_name} {player.last_name} — '
+game/views_creator.py,1402,"first_name=request.POST.get('first_name', '').strip(),"
+game/views_creator.py,1403,"last_name=request.POST.get('last_name', '').strip(),"
+game/views_creator.py,1457,"messages.success(request, f'{player.first_name} {player.last_name} hinzugefügt.')"
+game/views_creator.py,1490,name = f'{player.first_name} {player.last_name}'.strip() or 'Spieler'
+game/views_creator.py,3265,"'name': f""{nd.get('first_name', '')} {nd.get('last_name', '')}"".strip()"
+game/views_creator.py,4136,".order_by('last_name', 'first_name')[:10]"
+game/views_creator.py,4153,"'name': (p.first_name + ' ' + p.last_name).strip(),"
+game/views_creator.py,5143,"f'Angebot #{offer.pk} ({offer.player.full_name}) storniert.',"
+game/views_creator.py,5238,"'player_name': o.player.full_name,"
+game/views_creator.py,5349,"f'Zwangsversteigerung angesetzt: {player.full_name}, '"
+game/views_creator.py,5374,".order_by('-market_value', 'last_name')"
+game/views_creator.py,5375,".values('id', 'first_name', 'last_name', 'position',"
+game/views_creator.py,5848,"messages.success(request, f'{player.full_name} → {to_club.name} (Admin-Transfer).')"
+game/views_importer_api.py,54,"'profile_url', 'display_name', 'first_name', 'last_name', 'date_of_birth',"
+game/views_importer_api.py,235,".only('fm_inside_id', 'first_name', 'last_name', 'date_of_birth')"
+game/views_importer_api.py,236,".order_by('last_name', 'first_name')"
+game/views_importer_api.py,241,"'first_name': p.first_name,"
+game/views_importer_api.py,242,"'last_name': p.last_name,"
+game/views_management.py,2969,"'top_player_name':    _tp.full_name if _tp else '',"
+game/views_scouting.py,94,"'name': p.full_name,"
+game/views_scouting.py,162,"qs = qs.order_by('last_name', 'first_name')"
+game/views_scouting.py,177,"'name': p.full_name,"
+game/views_scouting.py,268,"'player_name': fa.player.full_name,"
+game/views_scouting.py,289,"'name': p.full_name,"
+game/views_scouting.py,483,"'name': p.full_name,"
+game/views_scouting.py,555,"messages.success(request, f'{player.full_name} zur Beobachtungsliste hinzugefügt.')"
+game/views_scouting.py,574,"messages.success(request, f'{player.full_name} von der Beobachtungsliste entfernt.')"
+game/views_transfer_v2.py,192,"'name': p.full_name,"
+game/views_transfer_v2.py,206,"'tm_url': _tm_url(p.full_name),"
+game/views_transfer_v2.py,235,"'name': p.full_name,"
+game/views_transfer_v2.py,283,"parts.append({'t': p.full_name, 'kind': 'player',"
+game/views_transfer_v2.py,522,"'name': p.full_name,"
+game/views_transfer_v2.py,529,"'tm_url': _tm_url(p.full_name),"
+game/views_transfer_v2.py,787,f'Sofortkauf abgeschlossen — {listing.player.full_name} '
+game/views_transfer_v2_deals.py,62,"'name': player.full_name,"
+game/views_transfer_v2_deals.py,176,".order_by('-market_value', 'last_name')"
+game/views_transfer_v2_deals.py,216,"'name': p.full_name,"
+game/views_transfer_v2_deals.py,272,"messages.success(request, f'Status für {player.full_name} gespeichert.')"
+game/views_transfer_v2_deals.py,303,f'{player.full_name} steht ab sofort auf dem Transfermarkt.')
+game/views_transfer_v2_deals.py,342,"'player': listing.player.full_name,"
+game/views_transfer_v2_deals.py,399,"'player': loan.player.full_name,"
+game/views_transfer_v2_deals.py,412,"'player': loan.player.full_name,"
+game/views_transfer_v2_deals.py,424,"'player': p.full_name,"
+game/views_transfer_v2_deals.py,592,f'Kaufoption gezogen — {loan.player.full_name} gehört jetzt '
+game/views_transfer_v2_deals.py,649,"'tm_url': _tm_url(p.full_name),"
+game/views_transfer_v2_deals.py,697,note = (f'Leihanfrage für {listing.player.full_name} gesendet'
+game/views_transfer_v2_deals.py,726,"request, f'{player.full_name} steht ab sofort auf dem Leihmarkt.')"
+game/views_transfer_v2_deals.py,745,f'{listing.player.full_name} vom Leihmarkt zurückgezogen.')
+game/views_transfer_v2_deals.py,785,f'Rückruf angenommen — {loan.player.full_name} kehrt zu '
+game/views_transfer_v2_deals.py,842,".order_by('-market_value', 'last_name')):"
+game/views_transfer_v2_deals.py,874,".order_by('-market_value', 'last_name')):"
+game/views_transfermarkt.py,139,message = (f'Transfer perfekt! {player.full_name} wechselt für '
+game/views_transfermarkt.py,192,'message': (f'Transfer perfekt! {nego.player.full_name} wechselt für '
+game/views_transfermarkt.py,265,'message': (f'Transfer perfekt! {o.player.full_name} wechselt für '
+game/views_transfermarkt.py,292,f'{_fmt_euro(o.aktuelles_gebot)} für {o.player.full_name} '
+game/views_transfermarkt.py,296,f'{o.player.full_name} zurück.')
+game/views_transfermarkt.py,324,"'player_name': o.player.full_name,"
