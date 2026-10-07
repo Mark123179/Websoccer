@@ -1,5 +1,5 @@
 const sceneURL = new URL('../../stadium_editor/dortmund_editor_scene.js', import.meta.url);
-sceneURL.searchParams.set('v', `ticker-${new URL(import.meta.url).searchParams.get('v') || '7'}`);
+sceneURL.searchParams.set('v', `ticker-${new URL(import.meta.url).searchParams.get('v') || '9'}`);
 
 const canvasHost = document.getElementById('ticker-stadium-preview');
 const statusHost = document.getElementById('ticker-stadium-status');
@@ -8,6 +8,29 @@ if (canvasHost && statusHost) {
   let sceneHandle = null;
   let attempt = 0;
   let stopped = false;
+  const heightControl = document.getElementById('ticker-camera-height');
+  const heightValue = document.getElementById('ticker-camera-height-value');
+  const heightReset = document.getElementById('ticker-camera-reset');
+  const defaultHeight = Number(heightControl?.defaultValue || 60);
+  let cameraFrame = 0;
+  const controlsEnabled = enabled => {
+    if (heightControl) heightControl.disabled = !enabled;
+    if (heightReset) heightReset.disabled = !enabled;
+  };
+  const updateCamera = () => {
+    const degrees = Number(heightControl?.value || defaultHeight);
+    if (heightValue) heightValue.textContent = `Neigung: ${degrees}°`;
+    heightControl?.setAttribute('aria-valuetext', `${degrees} Grad`);
+    cancelAnimationFrame(cameraFrame);
+    cameraFrame = requestAnimationFrame(() => {
+      if (!stopped) sceneHandle?.setTickerCameraHeight(degrees);
+    });
+  };
+  heightControl?.addEventListener('input', updateCamera);
+  heightReset?.addEventListener('click', () => {
+    if (heightControl) heightControl.value = String(defaultHeight);
+    updateCamera();
+  });
 
   statusHost.className = 'ticker-stadium-status';
   statusHost.setAttribute('role', 'status');
@@ -31,6 +54,9 @@ if (canvasHost && statusHost) {
 
   const dispose = () => {
     stopped = true;
+    cancelAnimationFrame(cameraFrame);
+    heightControl?.removeEventListener('input', updateCamera);
+    controlsEnabled(false);
     sceneHandle?.dispose();
     sceneHandle = null;
   };
@@ -39,6 +65,7 @@ if (canvasHost && statusHost) {
     const thisAttempt = ++attempt;
     sceneHandle?.dispose();
     sceneHandle = null;
+    controlsEnabled(false);
     statusHost.querySelector('[data-retry]')?.remove();
     setState('loading', 'Originales Dortmunder Stadion wird geladen …');
     try {
@@ -69,10 +96,13 @@ if (canvasHost && statusHost) {
       sceneHandle = mounted;
       // This view is a still preview: first frame and ResizeObserver redraws only.
       sceneHandle?.setActive(false);
+      controlsEnabled(true);
+      if (Number(heightControl?.value || defaultHeight) !== defaultHeight) updateCamera();
       setState('ready', 'SIGNAL IDUNA PARK · Unity-Modell · Offene Kamerastudie');
     } catch (error) {
       if (stopped || thisAttempt !== attempt) return;
       canvasHost.replaceChildren();
+      controlsEnabled(false);
       setState('error', error?.message || 'Das Stadion konnte nicht geladen werden.');
       const retry = document.createElement('button');
       retry.type = 'button';

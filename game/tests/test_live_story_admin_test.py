@@ -84,8 +84,11 @@ class AdminLiveStoryTestTests(TestCase):
         self.store(sample_run())
         response = self.client.get(reverse('story_test_start'))
         self.assertContains(response, 'id="ticker-stadium-preview"')
-        self.assertContains(response, 'ticker_stadium_preview.js?v=7')
-        self.assertContains(response, 'ticker_stadium_preview.css?v=7')
+        self.assertContains(response, 'ticker_stadium_preview.js?v=9')
+        self.assertContains(response, 'ticker_stadium_preview.css?v=9')
+        self.assertContains(response, 'id="ticker-camera-height"')
+        self.assertContains(response, 'id="ticker-camera-reset"')
+        self.assertContains(response, 'Neigung: 60°')
         self.assertContains(response, 'stage/vendor/three.module.js')
         self.assertContains(response, 'noch ohne Spieleranimation')
         self.assertContains(response, 'id="ticker-stadium-environment"')
@@ -99,6 +102,7 @@ class AdminLiveStoryTestTests(TestCase):
         self.assertNotIn('ticker-stadium-preview', normal)
         self.assertNotIn('ticker_stadium_preview', normal)
         self.assertNotIn('type="importmap"', normal)
+        self.assertNotIn('ticker-camera-height', normal)
 
     def test_original_clock_offset_gate_order_and_conference_aggregation(self):
         self.client.force_login(self.admin)

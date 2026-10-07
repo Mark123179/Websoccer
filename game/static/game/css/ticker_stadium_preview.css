@@ -9,6 +9,17 @@
   border: 1px solid #244448; padding: 6px 8px; white-space: nowrap;
 }
 .ticker-stadium-note { color: #8da7b1; font-size: 12px; line-height: 1.6; margin: 10px 2px 0; }
+.ticker-camera-controls { padding: 14px 2px 4px; }
+.ticker-camera-label { display: flex; justify-content: space-between; gap: 12px; font-size: 12px; }
+.ticker-camera-label label { color: #dbeff4; font-weight: 700; }
+.ticker-camera-label output { color: #76d9df; font-variant-numeric: tabular-nums; }
+.ticker-camera-inputs { display: flex; align-items: center; gap: 12px; margin-top: 8px; }
+.ticker-camera-inputs > span { font-size: 11px; color: #8da7b1; }
+#ticker-camera-height { flex: 1; min-width: 0; height: 32px; margin: 0; accent-color: #22c4d6; cursor: pointer; }
+#ticker-camera-height:focus-visible { outline: 2px solid #22e6ff; outline-offset: 3px; }
+#ticker-camera-height:disabled { cursor: wait; opacity: .45; }
+#ticker-camera-hint { color: #8da7b1; font-size: 11px; line-height: 1.5; margin: 6px 0 0; }
+#ticker-camera-reset:disabled { opacity: .45; cursor: default; }
 
 #ticker-stadium-preview {
   position: relative;
@@ -106,6 +117,8 @@
 
   #ticker-stadium-preview canvas { min-height: 0; }
   #ticker-stadium-status { font-size: 8px; letter-spacing: .07em; }
+  .ticker-camera-inputs { flex-wrap: wrap; gap: 8px; }
+  #ticker-camera-reset { margin-left: auto; }
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -20,3 +20,9 @@ Die weitere Dortmund-Bildreferenz konkretisiert den Bildausschnitt: Stadion nahe
 **Why:** Der Nutzer: „So wäre zumindest die Proportion, unterer Rand usw. vllt. die Kamera noch tiefer“.
 
 **How to apply:** Den Ausschnitt an dieser Referenz ausrichten, statt das vollständige Stadion samt großem Vorplatz ins Bild einzupassen. Die Kameraabsenkung gegen die Sichtbarkeit des Spielfelds abwägen; diesen Framing-Schritt nicht mit einer bereits erreichten Materialqualität gleichsetzen.
+
+Die Kamerahöhe soll vom Nutzer einstellbar bleiben; der hintere Spielfeldbereich braucht mehr sichtbare Fläche.
+
+**Why:** Der Nutzer: „hinten brauchen wir mehr Feld, gibt mir eine Option die Kamera einzustellen von der Höhe her.“
+
+**How to apply:** Eine Höhenvorgabe nicht als endgültig freigegeben behandeln. Bei weiteren Darstellungsänderungen die direkte Kameraeinstellung erhalten und die Sicht auf das hintere Spielfeld mitprüfen.

@@ -3,7 +3,7 @@ import {buildConcept, warpShell, ROOF_NAMES, SHELL_NAMES} from './dortmund_conce
 import {previewSupportsMaterial, sourceOpaqueColor} from './dortmund_source_materials.js';
 import {addReconstructedFacade, reconstructedFacadeVisible, sourceFacadePreviewColor} from './dortmund_reconstructed_facade.js?v=2';
 import {buildDortmundSurroundings} from './dortmund_surroundings.js?v=51';
-import {tickerCameraFrame, TICKER_ELEVATION, TICKER_AZIMUTH} from './dortmund_ticker_camera.js?v=1';
+import {tickerCameraFrame, tickerHeightElevation, TICKER_ELEVATION, TICKER_AZIMUTH} from './dortmund_ticker_camera.js?v=2';
 
 const ASSET_BASE = new URL('./dortmund_original/', import.meta.url);
 const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
@@ -112,7 +112,7 @@ export async function mountDortmundScene({
     camera.aspect = width / height;
     if (tickerPreview) {
       // Pitch's goal-to-goal Z axis is horizontal from this fixed side view.
-       const framing = tickerCameraFrame(camera.aspect);
+       const framing = tickerCameraFrame(camera.aspect, elevation);
        camera.left = framing.left;
        camera.right = framing.right;
        camera.top = framing.top;
@@ -283,6 +283,11 @@ export async function mountDortmundScene({
     animate(performance.now());
     return {
       kind: 'three', stage: {renderer, render}, dispose,
+      setTickerCameraHeight(degrees) {
+        if (disposed || !tickerPreview) return;
+        elevation = tickerHeightElevation(degrees);
+        resize();
+      },
       setActive(active) {
         if (disposed || Boolean(active) === animationActive) return;
         animationActive = Boolean(active);

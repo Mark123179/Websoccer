@@ -2,11 +2,11 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {
-  tickerCameraFrame, TICKER_ELEVATION, TICKER_AZIMUTH,
+  tickerCameraFrame, tickerHeightElevation, TICKER_ELEVATION, TICKER_AZIMUTH,
 } from '../static/stadium_editor/dortmund_ticker_camera.js';
 
-test('ticker camera is modestly lower and keeps the horizontal pitch axis', () => {
-  assert.ok(TICKER_ELEVATION < .96 && TICKER_ELEVATION > .8);
+test('ticker camera starts higher to reveal more field, retaining the horizontal axis', () => {
+  assert.equal(TICKER_ELEVATION, Math.PI / 3);
   assert.equal(TICKER_AZIMUTH, -Math.PI / 2);
 });
 
@@ -43,5 +43,35 @@ test('invalid dimensions fail explicitly; other viewers retain their defaults', 
   assert.match(source, /tickerPreview = false/);
   assert.match(source, /tickerPreview \? TICKER_ELEVATION : \.56/);
   assert.match(source, /tickerPreview \? TICKER_AZIMUTH : \.88/);
-  assert.match(source, /if \(tickerPreview\) \{[\s\S]*?tickerCameraFrame\(camera\.aspect\)/);
+  assert.match(source, /if \(tickerPreview\) \{[\s\S]*?tickerCameraFrame\(camera\.aspect, elevation\)/);
+});
+
+test('height slider clamps extremes and rejects invalid values', () => {
+  assert.equal(tickerHeightElevation(0), tickerHeightElevation(35));
+  assert.equal(tickerHeightElevation(100), tickerHeightElevation(75));
+  for (const value of [NaN, Infinity, '60', undefined]) {
+    assert.throws(() => tickerHeightElevation(value), RangeError);
+  }
+});
+
+test('entire pitch fits at every height and aspect, anchored at the lower edge', () => {
+  for (let degrees = 35; degrees <= 75; degrees++) {
+    const e = tickerHeightElevation(degrees);
+    for (const aspect of [16 / 8.4, 1.32, .8]) {
+      const f = tickerCameraFrame(aspect, e);
+      const y = x => Math.sin(e) * x - Math.cos(e) * f.targetY;
+      assert.ok(y(-37.900013) >= f.bottom - 1e-9);
+      assert.ok(y(37.900013) <= f.top);
+      assert.ok(Math.abs(y(-37.900013) - f.bottom - 2.5) < 1e-9);
+    }
+  }
+});
+
+test('raising the camera reveals more field towards the back', () => {
+  const top = degrees => {
+    const e = tickerHeightElevation(degrees), f = tickerCameraFrame(16 / 8.4, e);
+    return Math.sin(e) * 37.900013 - Math.cos(e) * f.targetY;
+  };
+  assert.ok(top(60) > top(49));
+  assert.ok(top(75) > top(60));
 });
