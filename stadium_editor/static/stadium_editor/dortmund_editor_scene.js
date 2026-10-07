@@ -3,7 +3,7 @@ import {buildConcept, warpShell, ROOF_NAMES, SHELL_NAMES} from './dortmund_conce
 import {previewSupportsMaterial, sourceOpaqueColor} from './dortmund_source_materials.js';
 import {addReconstructedFacade, reconstructedFacadeVisible, sourceFacadePreviewColor} from './dortmund_reconstructed_facade.js?v=2';
 import {buildDortmundSurroundings} from './dortmund_surroundings.js?v=51';
-import {tickerCameraFrame, tickerHeightElevation, TICKER_ELEVATION, TICKER_AZIMUTH} from './dortmund_ticker_camera.js?v=2';
+import {tickerCameraFrame, tickerHeightElevation, TICKER_ELEVATION, TICKER_AZIMUTH, TICKER_VIEW_OFFSET} from './dortmund_ticker_camera.js?v=3';
 
 const ASSET_BASE = new URL('./dortmund_original/', import.meta.url);
 const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
@@ -57,9 +57,7 @@ export async function mountDortmundScene({
   const sun = new THREE.DirectionalLight(0xfff3d4, 1.5);
   sun.position.set(-135, 210, 100);
   scene.add(sun);
-  const camera = tickerPreview
-    ? new THREE.OrthographicCamera(-150, 150, 90, -90, 1, 2400)
-    : new THREE.PerspectiveCamera(42, 1, 1, 2400);
+  const camera = new THREE.PerspectiveCamera(tickerPreview ? 27 : 42, 1, 1, 2400);
   const target = new THREE.Vector3(0, 25, 0);
    let azimuth = tickerPreview ? TICKER_AZIMUTH : .88;
    let elevation = tickerPreview ? TICKER_ELEVATION : .56, distance = 490;
@@ -113,15 +111,14 @@ export async function mountDortmundScene({
     if (tickerPreview) {
       // Pitch's goal-to-goal Z axis is horizontal from this fixed side view.
        const framing = tickerCameraFrame(camera.aspect, elevation);
-       camera.left = framing.left;
-       camera.right = framing.right;
-       camera.top = framing.top;
-       camera.bottom = framing.bottom;
-       target.set(0, framing.targetY, 0);
+       camera.fov = framing.fov;
+       distance = framing.distance;
+       target.set(framing.target.x, framing.target.y, framing.target.z);
     }
     // Shift projection, not the canvas or model: shared viewers stay unchanged.
-    if (verticalFraming) camera.setViewOffset(width, height, 0,
-      height * clamp(verticalFraming, -0.25, 0.25), width, height);
+     const viewOffset = tickerPreview ? TICKER_VIEW_OFFSET : verticalFraming;
+     if (viewOffset) camera.setViewOffset(width, height, 0,
+       height * clamp(viewOffset, -0.25, 0.25), width, height);
     else camera.clearViewOffset();
     camera.updateProjectionMatrix();
     if (compact) fitCompactCamera();

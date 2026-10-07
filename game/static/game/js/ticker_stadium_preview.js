@@ -1,5 +1,5 @@
 const sceneURL = new URL('../../stadium_editor/dortmund_editor_scene.js', import.meta.url);
-sceneURL.searchParams.set('v', `ticker-${new URL(import.meta.url).searchParams.get('v') || '9'}`);
+sceneURL.searchParams.set('v', `ticker-${new URL(import.meta.url).searchParams.get('v') || '10'}`);
 
 const canvasHost = document.getElementById('ticker-stadium-preview');
 const statusHost = document.getElementById('ticker-stadium-status');
@@ -11,7 +11,7 @@ if (canvasHost && statusHost) {
   const heightControl = document.getElementById('ticker-camera-height');
   const heightValue = document.getElementById('ticker-camera-height-value');
   const heightReset = document.getElementById('ticker-camera-reset');
-  const defaultHeight = Number(heightControl?.defaultValue || 60);
+  const defaultHeight = Number(heightControl?.defaultValue || 50);
   let cameraFrame = 0;
   const controlsEnabled = enabled => {
     if (heightControl) heightControl.disabled = !enabled;
@@ -98,7 +98,7 @@ if (canvasHost && statusHost) {
       sceneHandle?.setActive(false);
       controlsEnabled(true);
       if (Number(heightControl?.value || defaultHeight) !== defaultHeight) updateCamera();
-      setState('ready', 'SIGNAL IDUNA PARK · Unity-Modell · Offene Kamerastudie');
+      setState('ready', 'SIGNAL IDUNA PARK · Unity-Modell · Perspektivische Kamera');
     } catch (error) {
       if (stopped || thisAttempt !== attempt) return;
       canvasHost.replaceChildren();

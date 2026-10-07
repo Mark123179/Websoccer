@@ -26,3 +26,9 @@ Die Kamerahöhe soll vom Nutzer einstellbar bleiben; der hintere Spielfeldbereic
 **Why:** Der Nutzer: „hinten brauchen wir mehr Feld, gibt mir eine Option die Kamera einzustellen von der Höhe her.“
 
 **How to apply:** Eine Höhenvorgabe nicht als endgültig freigegeben behandeln. Bei weiteren Darstellungsänderungen die direkte Kameraeinstellung erhalten und die Sicht auf das hintere Spielfeld mitprüfen.
+
+Die Kamera der Test-Spielansicht soll perspektivisch sein, nicht orthografisch. Der Monitorfoto-Blick ist eine visuelle Referenz, keine Quelle für einen exakt bekannten Kamerawinkel.
+
+**Why:** Nach dem Vergleich der Neigungen gefiel dem Nutzer weiterhin die ursprüngliche Spielansicht; auf die Frage nach der Umstellung antwortete er „Ja, perspektivische Kamera verwenden“.
+
+**How to apply:** Bei weiteren Kameraanpassungen die perspektivische Tiefenwirkung erhalten. Einen aus dem schräg fotografierten Monitor geschätzten Winkel nicht als gemessenen oder final freigegebenen Wert behandeln.

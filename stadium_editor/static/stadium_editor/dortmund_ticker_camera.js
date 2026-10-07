@@ -1,9 +1,10 @@
 // Camera-only framing for the admin ticker. Source stadium geometry is untouched.
 export const TICKER_MIN_HEIGHT = 35;
 export const TICKER_MAX_HEIGHT = 75;
-export const TICKER_DEFAULT_HEIGHT = 60;
+export const TICKER_DEFAULT_HEIGHT = 50;
 export const TICKER_ELEVATION = TICKER_DEFAULT_HEIGHT * Math.PI / 180;
 export const TICKER_AZIMUTH = -Math.PI / 2;
+export const TICKER_VIEW_OFFSET = -.18;
 
 export function tickerHeightElevation(degrees) {
   if (!Number.isFinite(degrees)) throw new RangeError('Die Kamerahöhe muss endlich sein.');
@@ -18,16 +19,14 @@ export function tickerCameraFrame(aspect, elevation = TICKER_ELEVATION) {
       || elevation > tickerHeightElevation(TICKER_MAX_HEIGHT)) {
     throw new RangeError('Die Kameraneigung liegt außerhalb des Vorschau-Bereichs.');
   }
-  const viewHeight = Math.max(132, 246 / aspect);
-  const halfHeight = viewHeight / 2;
-  // Measured grass edge in the original mesh: keep a small lower margin.
-  // The actual touchline (X=-34.08) stays further inside the viewport.
-  const targetUp = halfHeight - 37.900013 * Math.sin(elevation) - 2.5;
+  // Keep aim and distance fixed while adjusting height: unlike the old
+  // orthographic view, the near touchline now grows relative to the far one.
+  // Widen the vertical lens on narrow screens rather than cropping pitch sides.
+  const tanHalfFov = Math.tan(27 * Math.PI / 360) * Math.max(1, 1.85 / aspect);
   return {
-    left: -viewHeight * aspect / 2,
-    right: viewHeight * aspect / 2,
-    top: halfHeight,
-    bottom: -halfHeight,
-    targetY: targetUp / Math.cos(elevation),
+    fov: 2 * Math.atan(tanHalfFov) * 180 / Math.PI,
+    distance: 285,
+    target: {x: 0, y: 0, z: 0},
+    offsetY: TICKER_VIEW_OFFSET,
   };
 }
