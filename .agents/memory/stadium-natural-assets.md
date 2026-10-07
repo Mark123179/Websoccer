@@ -14,3 +14,9 @@ Tree Small 02 war nur ein frühes Quellenbeispiel und ist nicht ausgewählt.
 **Why:** Die Detailprüfung ergab eine afrikanische Baumart und ein sehr schweres Ausgangsmodell; für den Dortmunder Standardsatz wurden stattdessen die genannten Laubbaumvorlagen vorgeschlagen und bestätigt.
 
 **How to apply:** Frühere Erwähnungen dieses Beispiels nicht als Freigabe behandeln.
+
+Vorbereitete gzip-Assetdateien können vom Webserver bereits mit `Content-Encoding: gzip` ausgeliefert werden; `fetch` liefert dann schon entpackte Bytes.
+
+**Why:** Django versah die komprimierte Baumdatei automatisch mit diesem Header. Eine zusätzliche bedingungslose Browser-Dekompression scheiterte, obwohl der Download korrekt war.
+
+**How to apply:** Tatsächliche gzip-Signatur vor einer manuellen Dekompression prüfen und beide Auslieferungsarten testen; Serverheader nicht mit dem Zustand des von `fetch` gelieferten Bodys gleichsetzen.

@@ -26,7 +26,9 @@ export async function mountDortmundScene({
   element, onStatus = () => {}, surroundings, frame: editorFrame,
   includeSurroundings = true, interactive = true, autoRotate = false, compact = false,
   transparentBackground = false, compactZoom = 1, verticalFraming = 0, tickerPreview = false,
+  naturalPackage = null,
 }) {
+  if (naturalPackage && !tickerPreview) throw new Error('Natürliches Umfeld ist nur im Admin-Ticker-Test freigegeben.');
   if (!window.WebGLRenderingContext) throw new Error('WebGL ist auf diesem Gerät nicht verfügbar.');
   let renderer;
   try {
@@ -54,7 +56,8 @@ export async function mountDortmundScene({
   if (transparentBackground) renderer.setClearColor(0x000000, 0);
   const world = new THREE.Group();
   scene.add(world);
-  scene.add(new THREE.HemisphereLight(0xe7f1f2, 0x344045, 1.35));
+   const hemisphere = new THREE.HemisphereLight(0xe7f1f2, 0x344045, 1.35);
+   scene.add(hemisphere);
   const sun = new THREE.DirectionalLight(0xfff3d4, 1.5);
   sun.position.set(-135, 210, 100);
   scene.add(sun);
@@ -63,8 +66,9 @@ export async function mountDortmundScene({
    let azimuth = tickerPreview ? TICKER_AZIMUTH : .88;
    let elevation = tickerPreview ? TICKER_ELEVATION : .56, distance = 490;
   let frame = 0, disposed = false, concept = null, colorBands = null, facade = null, environment = null, roofOn = true;
+  let naturalLighting = null;
   let lastWeights = '', lastColors = '';
-  const geometries = [], textures = [], materials = new Map(), facadeMaterials = new Map();
+  const geometries = [], textures = [], materials = new Map(), facadeMaterials = new Map(), cutawayMaterials = [];
   const facadeSourceParts = [], roof = [], shell = [], tickerRoof = [];
   let resizeObserver;
   let animationActive = true, lastAnimationTime = null;
@@ -117,15 +121,26 @@ export async function mountDortmundScene({
        target.set(framing.target.x, framing.target.y, framing.target.z);
     }
     // Shift projection, not the canvas or model: shared viewers stay unchanged.
-     const viewOffset = tickerPreview ? TICKER_VIEW_OFFSET : verticalFraming;
-     if (viewOffset) camera.setViewOffset(width, height, 0,
-       height * clamp(viewOffset, -0.25, 0.25), width, height);
+      const viewOffset = tickerPreview ? TICKER_VIEW_OFFSET : verticalFraming;
+      const scopedViewOffset = naturalPackage ? -.24 : viewOffset;
+      if (scopedViewOffset) camera.setViewOffset(width, height, 0,
+        height * clamp(scopedViewOffset, -0.25, 0.25), width, height);
     else camera.clearViewOffset();
     camera.updateProjectionMatrix();
     if (compact) fitCompactCamera();
     if (!animationActive) render();
   };
-  const render = () => { positionCamera(); renderer.render(scene, camera); };
+  const render = () => {
+    positionCamera();
+    environment?.updateLOD?.(camera);
+    const started = performance.now();
+    renderer.render(scene, camera);
+    if (naturalPackage) element.dataset.metrics = JSON.stringify({
+      ...environment?.metrics, renderSubmitMs: Math.round((performance.now() - started) * 100) / 100,
+      triangles: renderer.info.render.triangles, drawCalls: renderer.info.render.calls,
+      geometries: renderer.info.memory.geometries, textures: renderer.info.memory.textures,
+    });
+  };
   const controls = renderer.domElement;
   let dragging = false, lastX = 0, lastY = 0;
   const down = e => { dragging = true; lastX = e.clientX; lastY = e.clientY; controls.setPointerCapture(e.pointerId); };
@@ -156,19 +171,30 @@ export async function mountDortmundScene({
     if (concept) concept.dispose();
     facade?.dispose();
     environment?.dispose();
+    naturalLighting?.dispose();
     if (colorBands) {
       colorBands.traverse(object => { object.geometry?.dispose(); object.material?.dispose(); });
     }
     geometries.forEach(item => item.dispose());
     materials.forEach(item => item.dispose());
     facadeMaterials.forEach(item => item.dispose());
+    cutawayMaterials.forEach(item => item.dispose());
     textures.forEach(item => item.dispose());
     renderer.dispose();
     if (controls.parentNode === element) element.removeChild(controls);
   };
   try {
     if (includeSurroundings) {
-      environment = buildDortmundSurroundings(THREE, surroundings, editorFrame);
+      if (naturalPackage) {
+        const [{buildNaturalSurroundings}, {configureNaturalLighting}] = await Promise.all([
+          import('./natural_surroundings.js?v=1'), import('./natural_lighting.js?v=1'),
+        ]);
+        const naturalAssets = new URL('./natural_assets/', import.meta.url);
+        environment = await buildNaturalSurroundings(THREE, naturalPackage, {assetBase: naturalAssets, camera});
+        naturalLighting = await configureNaturalLighting(THREE, scene, renderer, naturalAssets);
+        hemisphere.intensity = .7;
+        sun.intensity = .9;
+      } else environment = buildDortmundSurroundings(THREE, surroundings, editorFrame);
       scene.add(environment.group);
     }
     const [manifestResponse, binaryResponse] = await Promise.all([
@@ -233,6 +259,7 @@ export async function mountDortmundScene({
         const cutaway = groupMaterials.map(original => {
           const copy = original.clone();
           copy.transparent = true; copy.opacity = .026; copy.depthWrite = false;
+           cutawayMaterials.push(copy);
           return copy;
         });
         mesh.userData.cutaway = cutaway;

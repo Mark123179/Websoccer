@@ -1,0 +1,252 @@
+{
+  "results": [
+    {
+      "name": "desktop-roof-on",
+      "finishMs": 8790.400000000373,
+      "width": 998,
+      "height": 611,
+      "overflow": false,
+      "status": "SIGNAL IDUNA PARK · Unity-Modell · Natürliches OSM-Umfeld",
+      "metrics": "{\"roads\":230,\"buildings\":148,\"green\":67,\"water\":0,\"trees\":248,\"shrubs\":0,\"treeDrawBatches\":24,\"roadHalfWidthScale\":1.25,\"triangleCountsByLOD\":{\"0\":45232,\"160\":24764,\"330\":14638},\"geometryBufferBytes\":5577592,\"mappedBoundsMeters\":{\"width\":1226.3,\"depth\":926.1},\"renderSubmitMs\":32.1,\"triangles\":694438,\"drawCalls\":339,\"geometries\":355,\"textures\":23}"
+    },
+    {
+      "name": "desktop-roof-off",
+      "finishMs": 6845.199999999255,
+      "width": 998,
+      "height": 611,
+      "overflow": false,
+      "status": "SIGNAL IDUNA PARK · Unity-Modell · Natürliches OSM-Umfeld",
+      "metrics": "{\"roads\":230,\"buildings\":148,\"green\":67,\"water\":0,\"trees\":248,\"shrubs\":0,\"treeDrawBatches\":24,\"roadHalfWidthScale\":1.25,\"triangleCountsByLOD\":{\"0\":45232,\"160\":24764,\"330\":14638},\"geometryBufferBytes\":5577592,\"mappedBoundsMeters\":{\"width\":1226.3,\"depth\":926.1},\"renderSubmitMs\":20.2,\"triangles\":620031,\"drawCalls\":306,\"geometries\":355,\"textures\":23}"
+    },
+    {
+      "name": "desktop-height-35",
+      "finishMs": 7828.300000000745,
+      "width": 998,
+      "height": 611,
+      "overflow": false,
+      "status": "SIGNAL IDUNA PARK · Unity-Modell · Natürliches OSM-Umfeld",
+      "metrics": "{\"roads\":230,\"buildings\":148,\"green\":67,\"water\":0,\"trees\":248,\"shrubs\":0,\"treeDrawBatches\":24,\"roadHalfWidthScale\":1.25,\"triangleCountsByLOD\":{\"0\":45232,\"160\":24764,\"330\":14638},\"geometryBufferBytes\":5577592,\"mappedBoundsMeters\":{\"width\":1226.3,\"depth\":926.1},\"renderSubmitMs\":22.1,\"triangles\":633517,\"drawCalls\":313,\"geometries\":360,\"textures\":23}"
+    },
+    {
+      "name": "desktop-height-75",
+      "finishMs": 3775,
+      "width": 998,
+      "height": 611,
+      "overflow": false,
+      "status": "SIGNAL IDUNA PARK · Unity-Modell · Natürliches OSM-Umfeld",
+      "metrics": "{\"roads\":230,\"buildings\":148,\"green\":67,\"water\":0,\"trees\":248,\"shrubs\":0,\"treeDrawBatches\":24,\"roadHalfWidthScale\":1.25,\"triangleCountsByLOD\":{\"0\":45232,\"160\":24764,\"330\":14638},\"geometryBufferBytes\":5577592,\"mappedBoundsMeters\":{\"width\":1226.3,\"depth\":926.1},\"renderSubmitMs\":13.5,\"triangles\":502693,\"drawCalls\":289,\"geometries\":361,\"textures\":23}"
+    },
+    {
+      "name": "desktop-restored",
+      "finishMs": 6432.89999999851,
+      "width": 998,
+      "height": 611,
+      "overflow": false,
+      "status": "SIGNAL IDUNA PARK · Unity-Modell · Natürliches OSM-Umfeld",
+      "metrics": "{\"roads\":230,\"buildings\":148,\"green\":67,\"water\":0,\"trees\":248,\"shrubs\":0,\"treeDrawBatches\":24,\"roadHalfWidthScale\":1.25,\"triangleCountsByLOD\":{\"0\":45232,\"160\":24764,\"330\":14638},\"geometryBufferBytes\":5577592,\"mappedBoundsMeters\":{\"width\":1226.3,\"depth\":926.1},\"renderSubmitMs\":9.2,\"triangles\":694438,\"drawCalls\":339,\"geometries\":361,\"textures\":23}"
+    },
+    {
+      "name": "mobile-roof-off",
+      "finishMs": 6696.699999999255,
+      "width": 360,
+      "height": 220,
+      "overflow": false,
+      "status": "SIGNAL IDUNA PARK · Unity-Modell · Natürliches OSM-Umfeld",
+      "metrics": "{\"roads\":230,\"buildings\":148,\"green\":67,\"water\":0,\"trees\":248,\"shrubs\":0,\"treeDrawBatches\":24,\"roadHalfWidthScale\":1.25,\"triangleCountsByLOD\":{\"0\":45232,\"160\":24764,\"330\":14638},\"geometryBufferBytes\":5577592,\"mappedBoundsMeters\":{\"width\":1226.3,\"depth\":926.1},\"renderSubmitMs\":8.3,\"triangles\":620031,\"drawCalls\":306,\"geometries\":361,\"textures\":23}"
+    }
+  ],
+  "errors": [],
+  "failures": [],
+  "resources": [
+    {
+      "file": "dortmund_editor_scene.js?v=ticker-12",
+      "bytes": 21137,
+      "durationMs": 25
+    },
+    {
+      "file": "three.module.js",
+      "bytes": 1314681,
+      "durationMs": 215
+    },
+    {
+      "file": "dortmund_concept.js?v=49",
+      "bytes": 12681,
+      "durationMs": 181
+    },
+    {
+      "file": "dortmund_source_materials.js",
+      "bytes": 572,
+      "durationMs": 109
+    },
+    {
+      "file": "dortmund_reconstructed_facade.js?v=2",
+      "bytes": 2314,
+      "durationMs": 72
+    },
+    {
+      "file": "dortmund_surroundings.js?v=51",
+      "bytes": 10322,
+      "durationMs": 85
+    },
+    {
+      "file": "dortmund_ticker_camera.js?v=3",
+      "bytes": 1498,
+      "durationMs": 63
+    },
+    {
+      "file": "dortmund_ticker_roof.js?v=1",
+      "bytes": 677,
+      "durationMs": 104
+    },
+    {
+      "file": "natural_surroundings.js?v=1",
+      "bytes": 32541,
+      "durationMs": 25
+    },
+    {
+      "file": "natural_lighting.js?v=1",
+      "bytes": 1051,
+      "durationMs": 32
+    },
+    {
+      "file": "RGBELoader.js",
+      "bytes": 11377,
+      "durationMs": 18
+    },
+    {
+      "file": "library.json",
+      "bytes": 9598,
+      "durationMs": 15
+    },
+    {
+      "file": "trees.bin.gz",
+      "bytes": 3219699,
+      "durationMs": 240
+    },
+    {
+      "file": "grass_color.webp",
+      "bytes": 74196,
+      "durationMs": 201
+    },
+    {
+      "file": "grass_normal.webp",
+      "bytes": 104304,
+      "durationMs": 229
+    },
+    {
+      "file": "grass_roughness.webp",
+      "bytes": 84158,
+      "durationMs": 262
+    },
+    {
+      "file": "asphalt_color.webp",
+      "bytes": 68776,
+      "durationMs": 266
+    },
+    {
+      "file": "asphalt_roughness.webp",
+      "bytes": 54404,
+      "durationMs": 206
+    },
+    {
+      "file": "asphalt_normal.webp",
+      "bytes": 156964,
+      "durationMs": 284
+    },
+    {
+      "file": "paving_color.webp",
+      "bytes": 27124,
+      "durationMs": 256
+    },
+    {
+      "file": "paving_normal.webp",
+      "bytes": 9032,
+      "durationMs": 215
+    },
+    {
+      "file": "paving_roughness.webp",
+      "bytes": 29216,
+      "durationMs": 254
+    },
+    {
+      "file": "brick_color.webp",
+      "bytes": 81742,
+      "durationMs": 267
+    },
+    {
+      "file": "brick_normal.webp",
+      "bytes": 72466,
+      "durationMs": 296
+    },
+    {
+      "file": "brick_roughness.webp",
+      "bytes": 8038,
+      "durationMs": 275
+    },
+    {
+      "file": "bark_color.webp",
+      "bytes": 54236,
+      "durationMs": 374
+    },
+    {
+      "file": "bark_roughness.webp",
+      "bytes": 46324,
+      "durationMs": 319
+    },
+    {
+      "file": "bark_normal.webp",
+      "bytes": 55250,
+      "durationMs": 335
+    },
+    {
+      "file": "leaf_ash.webp",
+      "bytes": 32442,
+      "durationMs": 309
+    },
+    {
+      "file": "leaf_oak.webp",
+      "bytes": 57778,
+      "durationMs": 360
+    },
+    {
+      "file": "leaf_aspen.webp",
+      "bytes": 45820,
+      "durationMs": 345
+    },
+    {
+      "file": "overcast_soil_puresky_1k.hdr",
+      "bytes": 1195816,
+      "durationMs": 81
+    },
+    {
+      "file": "manifest.json",
+      "bytes": 92779,
+      "durationMs": 33
+    },
+    {
+      "file": "geometry.bin",
+      "bytes": 17682432,
+      "durationMs": 742
+    },
+    {
+      "file": "au_seat.webp",
+      "bytes": 6590,
+      "durationMs": 39
+    },
+    {
+      "file": "st051_irpl003_bsm.webp",
+      "bytes": 552,
+      "durationMs": 31
+    },
+    {
+      "file": "st051_pllr001_bsm.webp",
+      "bytes": 8842,
+      "durationMs": 46
+    },
+    {
+      "file": "st_coat_band_2018Sig_bsm.webp",
+      "bytes": 8704,
+      "durationMs": 52
+    }
+  ]
+}

@@ -33,7 +33,7 @@
   isolation: isolate;
   width: 100%;
   min-height: 270px;
-  aspect-ratio: 16 / 8.4;
+   aspect-ratio: 16 / 9.8;
   overflow: hidden;
   border: 1px solid rgba(54, 193, 214, .28);
   background:
@@ -119,7 +119,7 @@
 @media (max-width: 700px) {
   #ticker-stadium-preview {
     min-height: 180px;
-    aspect-ratio: 16 / 8.4;
+     aspect-ratio: 16 / 9.8;
   }
 
   #ticker-stadium-preview canvas { min-height: 0; }

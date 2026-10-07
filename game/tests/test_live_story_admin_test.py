@@ -84,8 +84,8 @@ class AdminLiveStoryTestTests(TestCase):
         self.store(sample_run())
         response = self.client.get(reverse('story_test_start'))
         self.assertContains(response, 'id="ticker-stadium-preview"')
-        self.assertContains(response, 'ticker_stadium_preview.js?v=11')
-        self.assertContains(response, 'ticker_stadium_preview.css?v=11')
+        self.assertContains(response, 'ticker_stadium_preview.js?v=12')
+        self.assertContains(response, 'ticker_stadium_preview.css?v=12')
         self.assertContains(response, 'id="ticker-camera-height"')
         self.assertContains(response, 'id="ticker-camera-reset"')
         self.assertContains(response, 'Neigung: 50°')
@@ -96,6 +96,7 @@ class AdminLiveStoryTestTests(TestCase):
         self.assertContains(response, 'noch ohne Spieleranimation')
         self.assertContains(response, 'id="ticker-stadium-environment"')
         self.assertIn('trees', response.context['ticker_stadium_environment']['surroundings'])
+        self.assertEqual(response.context['ticker_stadium_environment']['naturalPackage']['id'], 'dortmund')
         self.assertNotContains(
             self.client.get(reverse('story_test_conference')), 'ticker-stadium-preview')
         normal = render_to_string('game/live_ticker.html', {

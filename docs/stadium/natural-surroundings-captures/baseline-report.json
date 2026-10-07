@@ -1,0 +1,132 @@
+{
+  "results": [
+    {
+      "name": "desktop-roof-on",
+      "finishMs": 5836.5,
+      "width": 998,
+      "height": 611,
+      "overflow": false,
+      "status": "SIGNAL IDUNA PARK · Unity-Modell · Natürliches OSM-Umfeld",
+      "metrics": "{\"renderSubmitMs\":14.199999999254942,\"triangles\":492516,\"drawCalls\":336,\"geometries\":336,\"textures\":4}"
+    },
+    {
+      "name": "desktop-roof-off",
+      "finishMs": 5334.199999999255,
+      "width": 998,
+      "height": 611,
+      "overflow": false,
+      "status": "SIGNAL IDUNA PARK · Unity-Modell · Natürliches OSM-Umfeld",
+      "metrics": "{\"renderSubmitMs\":12.200000001117587,\"triangles\":418109,\"drawCalls\":303,\"geometries\":336,\"textures\":4}"
+    },
+    {
+      "name": "desktop-height-35",
+      "finishMs": 4931.699999999255,
+      "width": 998,
+      "height": 611,
+      "overflow": false,
+      "status": "SIGNAL IDUNA PARK · Unity-Modell · Natürliches OSM-Umfeld",
+      "metrics": "{\"renderSubmitMs\":12.200000001117587,\"triangles\":418161,\"drawCalls\":308,\"geometries\":341,\"textures\":4}"
+    },
+    {
+      "name": "desktop-height-75",
+      "finishMs": 3246,
+      "width": 998,
+      "height": 611,
+      "overflow": false,
+      "status": "SIGNAL IDUNA PARK · Unity-Modell · Natürliches OSM-Umfeld",
+      "metrics": "{\"renderSubmitMs\":9.099999999627471,\"triangles\":408259,\"drawCalls\":284,\"geometries\":342,\"textures\":4}"
+    },
+    {
+      "name": "desktop-restored",
+      "finishMs": 5431.4000000003725,
+      "width": 998,
+      "height": 611,
+      "overflow": false,
+      "status": "SIGNAL IDUNA PARK · Unity-Modell · Natürliches OSM-Umfeld",
+      "metrics": "{\"renderSubmitMs\":4.800000000745058,\"triangles\":492516,\"drawCalls\":336,\"geometries\":342,\"textures\":4}"
+    },
+    {
+      "name": "mobile-roof-off",
+      "finishMs": 3829.300000000745,
+      "width": 360,
+      "height": 220,
+      "overflow": false,
+      "status": "SIGNAL IDUNA PARK · Unity-Modell · Natürliches OSM-Umfeld",
+      "metrics": "{\"renderSubmitMs\":4.099999999627471,\"triangles\":418109,\"drawCalls\":303,\"geometries\":342,\"textures\":4}"
+    }
+  ],
+  "errors": [],
+  "failures": [],
+  "resources": [
+    {
+      "file": "dortmund_editor_scene.js?v=ticker-12",
+      "bytes": 19952,
+      "durationMs": 137
+    },
+    {
+      "file": "three.module.js",
+      "bytes": 1314681,
+      "durationMs": 307
+    },
+    {
+      "file": "dortmund_concept.js?v=49",
+      "bytes": 12681,
+      "durationMs": 121
+    },
+    {
+      "file": "dortmund_source_materials.js",
+      "bytes": 572,
+      "durationMs": 145
+    },
+    {
+      "file": "dortmund_surroundings.js?v=51",
+      "bytes": 10322,
+      "durationMs": 134
+    },
+    {
+      "file": "dortmund_reconstructed_facade.js?v=2",
+      "bytes": 2314,
+      "durationMs": 389
+    },
+    {
+      "file": "dortmund_ticker_roof.js?v=1",
+      "bytes": 677,
+      "durationMs": 148
+    },
+    {
+      "file": "dortmund_ticker_camera.js?v=3",
+      "bytes": 1498,
+      "durationMs": 295
+    },
+    {
+      "file": "manifest.json",
+      "bytes": 92779,
+      "durationMs": 304
+    },
+    {
+      "file": "geometry.bin",
+      "bytes": 17682432,
+      "durationMs": 1048
+    },
+    {
+      "file": "au_seat.webp",
+      "bytes": 6590,
+      "durationMs": 170
+    },
+    {
+      "file": "st051_irpl003_bsm.webp",
+      "bytes": 552,
+      "durationMs": 153
+    },
+    {
+      "file": "st051_pllr001_bsm.webp",
+      "bytes": 8842,
+      "durationMs": 176
+    },
+    {
+      "file": "st_coat_band_2018Sig_bsm.webp",
+      "bytes": 8704,
+      "durationMs": 213
+    }
+  ]
+}

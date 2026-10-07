@@ -17,22 +17,13 @@ logger = logging.getLogger(__name__)
 
 
 def _stadium_preview_environment():
-    """Read the existing Dortmund reference; never create/alter stadium rows."""
-    from stadium_editor.blueprints.v2.dortmund_preview import load_preview
-    from stadium_editor.surroundings import with_dortmund_mapped_trees
-    geometry = with_dortmund_mapped_trees(load_preview(), club_id=3)
-    surroundings = geometry.get('surroundings') or geometry.get('bg') or {}
-    buildings = surroundings.get('buildings') or []
-    # The measured reference stores {poly, h}; the existing renderer expects
-    # parallel footprint/height lists. Normalize only this response.
-    surroundings = {
-        **surroundings,
-        'buildings': [b['poly'] if isinstance(b, dict) else b for b in buildings],
-        'buildingHeights': [b.get('h', 9) if isinstance(b, dict) else 9 for b in buildings],
-    }
+    """Read the prepared local package; no ORM mutation or runtime acquisition."""
+    from stadium_editor.natural_packages import load_natural_package
+    package = load_natural_package('dortmund')
     return {
-        'surroundings': surroundings,
-        'frame': geometry.get('meta') or {},
+        'naturalPackage': package,
+        'surroundings': package['data'],
+        'frame': package['frame'],
     }
 
 
