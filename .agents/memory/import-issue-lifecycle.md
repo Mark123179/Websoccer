@@ -20,3 +20,15 @@ Einzelsperren sind aus benötigten Quellwerten und berechneter Stärke abzuleite
 **Why:** Eine manuell ergänzte ID liefert noch kein Rating und darf nicht die Aufstellbarkeit vortäuschen.
 
 **How to apply:** N48 sperrt bei FM/TM/CMTRACKER-Status nicht_gefunden, vorhandener FM-/CMTRACKER-ID ohne Rating oder fehlender berechneter Stärke. CMTRACKER nicht_vorhanden allein sperrt nicht. Solche Einträge sind nicht von Hand abhakbar und schließen sich mit dem Wegfall der Daten-Sperre. Vor Bestätigung zeigt die Vorschau neue, bleibende und durch Paket geschlossene Einträge.
+
+Nachgewiesenes CMTracker-nicht_vorhanden gilt ebenso für Profis: FMInside allein ist zulässig, ohne dadurch verursachte Sperre oder Lücke. Ein Profi ohne FMInside erhält hingegen eine Einzelsperre, niemals allein deshalb eine Ligasperre.
+
+**Why:** Nachtrag 14 erweitert die bestätigten Quellregeln auf Fälle weiterer Vereine; die Stärkeformel und datenabhängige Sperrregel bleiben unverändert.
+
+**How to apply:** Nichtvorhandensein von erfolgloser Suche unterscheiden und andere Sperrgründe erhalten. Die Validierungsergänzung blockiert nicht die BVB-v3-Umstellung, muss aber vor dem ersten betroffenen weiteren Vereinsimport fertig sein. BVB-v3 nicht neu bauen.
+
+Die Anzeige bürgerlicher Namen statt display_name zunächst nur inventarisieren; jede Änderung daran benötigt Marks nachfolgende Entscheidung.
+
+**Why:** Nachtrag 14 autorisiert die Prüfung ausdrücklich, nicht die Änderung der Namensanzeige.
+
+**How to apply:** Listen, Aufstellung, Ticker und Suche getrennt berichten. Paketseitige Regeln zu Namen, Leihende und Marktwert-Vereins-ID sind kein Auftrag für neue serverseitige Ersatzwert- oder Namensmatching-Logik.
