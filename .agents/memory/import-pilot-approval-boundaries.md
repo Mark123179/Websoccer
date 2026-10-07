@@ -89,3 +89,9 @@ Der Nutzer hat den Pilot-BVB-Stand als „geglückt und fertig“ bestätigt und
 **Why:** Ausdrückliche fachliche Pilotabnahme des Nutzers am 07.10.2026 nach den Source-ID-Ergänzungen.
 
 **How to apply:** Die erfolgreiche BVB-Piloterprobung als abgenommen behandeln, nicht erneut als ungeklärten Grundsatzversuch darstellen. Bei der Live-Vorbereitung den Umfang der Scharfschaltung klären; eine konkrete destruktive Reset-Handlung erst nach informierter Freigabe ihrer Lösch-/Schutzliste durchführen. Die bisherige manuelle Server-Übergabe an Mark bleibt maßgeblich.
+
+Der Nutzer hat den Gegenprüfungs-Halt ausdrücklich aufgehoben: Gegenprüfung abgeschlossen, R1–R4 umgesetzt, kein die BVB-Abnahme aufhaltender Befund. Vorbereitung bleibt begrenzt auf Sicherung, Reset-Vorschau und Anleitung; kein Reset, Push oder Zugriff auf Hetzner.
+
+**Why:** Explizite Freigabe und Scope-Korrektur des Nutzers am 07.10.2026.
+
+**How to apply:** Gegenprüfung und BVB-Abnahme nicht wieder als offene Freigaben einfordern. Reihenfolge beibehalten: Replit sichert den aktiven v2-Pilot, danach lädt Mark v3 hoch und bestätigt selbst nach der Vorschau. Offene Auditbefunde vor einem Umstellungstermin in drei Sätzen benennen; Sicherheitsaudit bleibt separates Hindernis für die Live-Freigabe, nicht für die fachliche BVB-Abnahme.
