@@ -8,7 +8,7 @@
   <title>Live-Ticker · {{ home_name }} – {{ away_name }}</title>
   <link rel="stylesheet" href="{% static 'game/css/live_story.css' %}?v=3">
   {% if is_test %}
-  <link rel="stylesheet" href="{% static 'game/css/ticker_stadium_preview.css' %}?v=10">
+  <link rel="stylesheet" href="{% static 'game/css/ticker_stadium_preview.css' %}?v=11">
   <script type="importmap">{"imports":{"three":"{% static 'stadium_editor/stage/vendor/three.module.js' %}"}}</script>
   {% endif %}
 </head>
@@ -51,6 +51,15 @@
           <button id="ticker-camera-reset" type="button" class="ticker-stadium-retry" disabled>Zurücksetzen</button>
         </div>
         <p id="ticker-camera-hint">Höher zeigt mehr vom hinteren Spielfeld. Der Regler verändert den Blickwinkel direkt, ohne den Test neu zu starten.</p>
+        <div class="ticker-roof-controls">
+          <label class="ticker-roof-toggle" for="ticker-roof-visible">
+            <input id="ticker-roof-visible" type="checkbox" role="switch" checked disabled
+                   aria-describedby="ticker-roof-hint">
+            <span>Dach anzeigen</span>
+          </label>
+          <output id="ticker-roof-state" for="ticker-roof-visible">Mit Dach</output>
+        </div>
+        <p id="ticker-roof-hint">Ohne Dach werden auch Dachträger und Dachaufbauten ausgeblendet. Kamera und Modell bleiben unverändert.</p>
       </div>
       <p class="ticker-stadium-note">Statische Kamerastudie mit dem Dortmund-Modell – unabhängig vom Testspiel-Paar, noch ohne Spieleranimation. Fassade teilweise rekonstruiert, Umfeld schematisch. Das vollständige 3D-Modell bleibt erhalten.</p>
     </section>
@@ -93,7 +102,7 @@
   <script src="{% static 'game/js/live_story.js' %}?v=3" defer></script>
   {% if is_test %}
   {{ ticker_stadium_environment|json_script:"ticker-stadium-environment" }}
-  <script type="module" src="{% static 'game/js/ticker_stadium_preview.js' %}?v=10"></script>
+  <script type="module" src="{% static 'game/js/ticker_stadium_preview.js' %}?v=11"></script>
   {% endif %}
 </body>
 </html>

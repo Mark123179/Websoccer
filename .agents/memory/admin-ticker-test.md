@@ -29,6 +29,18 @@ Die Kamerahöhe soll vom Nutzer einstellbar bleiben; der hintere Spielfeldbereic
 
 Die Kamera der Test-Spielansicht soll perspektivisch sein, nicht orthografisch. Der Monitorfoto-Blick ist eine visuelle Referenz, keine Quelle für einen exakt bekannten Kamerawinkel.
 
-**Why:** Nach dem Vergleich der Neigungen gefiel dem Nutzer weiterhin die ursprüngliche Spielansicht; auf die Frage nach der Umstellung antwortete er „Ja, perspektivische Kamera verwenden“.
+**Why:** Nach dem Vergleich der Neigungen gefiel dem Nutzer weiterhin die ursprüngliche Spielansicht; auf die Frage nach der Umstellung antwortete er „Ja, perspektivische Kamera verwenden“. Nach der Umstellung bestätigte er „besser“.
 
 **How to apply:** Bei weiteren Kameraanpassungen die perspektivische Tiefenwirkung erhalten. Einen aus dem schräg fotografierten Monitor geschätzten Winkel nicht als gemessenen oder final freigegebenen Wert behandeln.
+
+Die perspektivische Ansicht mit optionalem Dach ist positiv bestätigt. Für das Live-Ticker-Umfeld möchte der Nutzer oben mehr sichtbare Umgebung und eine natürliche Darstellungsqualität wie in der Spielansichts-Referenz, auf OSM-Grundlage.
+
+**Why:** Nach der Dachoption sagte der Nutzer „sehr stark“ und fragte nach mehr Umgebung oben sowie „gemessen an OSM aber in der qualität wie im Screenshot“.
+
+**How to apply:** Perspektive und Dachwahl bei der Umfelddarstellung erhalten. Die natürliche Referenz gilt für den Live-Ticker-Test; sie hebt die getrennte Neon-Vorgabe des produktiven Stadioneditors nicht auf. Kartendaten von grafisch angenäherten Formen und Materialien unterscheiden.
+
+Die Umfelddarstellung muss auf andere Stadien übertragbar sein und deren jeweils reale Umgebung berücksichtigen. Ein einmaliger Vorbereitungsschritt je Stadion ist akzeptabel.
+
+**Why:** Der Nutzer: „Das muss immer multiplizierbar sein, jedes Stadion hat ja in RL eine andere Umgebung. Zur Not eine Variante, die wir für jedes Stadion einmal machen müssen.“
+
+**How to apply:** Dortmund nicht als einmalige fest verdrahtete Kulisse bauen. Gemeinsame Darstellung und wiederverwendbare Assets von den geografischen Daten und der Modell-Kalibrierung pro Stadion trennen; individuelle Nachpflege ermöglichen.

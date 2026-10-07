@@ -20,6 +20,13 @@
 #ticker-camera-height:disabled { cursor: wait; opacity: .45; }
 #ticker-camera-hint { color: #8da7b1; font-size: 11px; line-height: 1.5; margin: 6px 0 0; }
 #ticker-camera-reset:disabled { opacity: .45; cursor: default; }
+.ticker-roof-controls { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 12px; }
+.ticker-roof-toggle { display: flex; align-items: center; gap: 10px; min-height: 40px; color: #dbeff4; font-size: 12px; cursor: pointer; }
+#ticker-roof-visible { width: 20px; height: 20px; margin: 0; accent-color: #22c4d6; cursor: pointer; }
+#ticker-roof-visible:focus-visible { outline: 2px solid #22e6ff; outline-offset: 3px; }
+#ticker-roof-visible:disabled { opacity: .45; cursor: wait; }
+#ticker-roof-state { color: #76d9df; font-size: 12px; }
+#ticker-roof-hint { color: #8da7b1; font-size: 11px; line-height: 1.5; margin: 0; }
 
 #ticker-stadium-preview {
   position: relative;

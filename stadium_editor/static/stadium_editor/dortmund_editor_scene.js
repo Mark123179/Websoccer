@@ -4,6 +4,7 @@ import {previewSupportsMaterial, sourceOpaqueColor} from './dortmund_source_mate
 import {addReconstructedFacade, reconstructedFacadeVisible, sourceFacadePreviewColor} from './dortmund_reconstructed_facade.js?v=2';
 import {buildDortmundSurroundings} from './dortmund_surroundings.js?v=51';
 import {tickerCameraFrame, tickerHeightElevation, TICKER_ELEVATION, TICKER_AZIMUTH, TICKER_VIEW_OFFSET} from './dortmund_ticker_camera.js?v=3';
+import {TICKER_ROOF_NAMES, setTickerRoofVisibility} from './dortmund_ticker_roof.js?v=1';
 
 const ASSET_BASE = new URL('./dortmund_original/', import.meta.url);
 const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
@@ -64,7 +65,7 @@ export async function mountDortmundScene({
   let frame = 0, disposed = false, concept = null, colorBands = null, facade = null, environment = null, roofOn = true;
   let lastWeights = '', lastColors = '';
   const geometries = [], textures = [], materials = new Map(), facadeMaterials = new Map();
-  const facadeSourceParts = [], roof = [], shell = [];
+  const facadeSourceParts = [], roof = [], shell = [], tickerRoof = [];
   let resizeObserver;
   let animationActive = true, lastAnimationTime = null;
   const fitCompactCamera = () => {
@@ -224,6 +225,7 @@ export async function mountDortmundScene({
       const mesh = new THREE.Mesh(geometry, groupMaterials);
       mesh.name = `ORIGINAL_${entry.name}`;
       world.add(mesh);
+      if (tickerPreview && TICKER_ROOF_NAMES.has(entry.name)) tickerRoof.push(mesh);
       sourcePartSlots.forEach(slot => facadeSourceParts.push({mesh, ...slot}));
       if (ROOF_NAMES.has(entry.name)) {
         roof.push(mesh);
@@ -284,6 +286,12 @@ export async function mountDortmundScene({
         if (disposed || !tickerPreview) return;
         elevation = tickerHeightElevation(degrees);
         resize();
+      },
+      setTickerRoofVisible(visible) {
+        if (disposed || !tickerPreview) return;
+        setTickerRoofVisibility(tickerRoof, visible);
+        roofOn = visible;
+        if (!animationActive) render();
       },
       setActive(active) {
         if (disposed || Boolean(active) === animationActive) return;

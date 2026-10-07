@@ -1,5 +1,5 @@
 const sceneURL = new URL('../../stadium_editor/dortmund_editor_scene.js', import.meta.url);
-sceneURL.searchParams.set('v', `ticker-${new URL(import.meta.url).searchParams.get('v') || '10'}`);
+sceneURL.searchParams.set('v', `ticker-${new URL(import.meta.url).searchParams.get('v') || '11'}`);
 
 const canvasHost = document.getElementById('ticker-stadium-preview');
 const statusHost = document.getElementById('ticker-stadium-status');
@@ -11,12 +11,21 @@ if (canvasHost && statusHost) {
   const heightControl = document.getElementById('ticker-camera-height');
   const heightValue = document.getElementById('ticker-camera-height-value');
   const heightReset = document.getElementById('ticker-camera-reset');
+  const roofControl = document.getElementById('ticker-roof-visible');
+  const roofValue = document.getElementById('ticker-roof-state');
   const defaultHeight = Number(heightControl?.defaultValue || 50);
   let cameraFrame = 0;
   const controlsEnabled = enabled => {
     if (heightControl) heightControl.disabled = !enabled;
     if (heightReset) heightReset.disabled = !enabled;
+    if (roofControl) roofControl.disabled = !enabled;
   };
+  const updateRoof = () => {
+    const visible = roofControl?.checked ?? true;
+    sceneHandle?.setTickerRoofVisible(visible);
+    if (roofValue) roofValue.textContent = visible ? 'Mit Dach' : 'Ohne Dach';
+  };
+  roofControl?.addEventListener('change', updateRoof);
   const updateCamera = () => {
     const degrees = Number(heightControl?.value || defaultHeight);
     if (heightValue) heightValue.textContent = `Neigung: ${degrees}°`;
@@ -56,6 +65,7 @@ if (canvasHost && statusHost) {
     stopped = true;
     cancelAnimationFrame(cameraFrame);
     heightControl?.removeEventListener('input', updateCamera);
+    roofControl?.removeEventListener('change', updateRoof);
     controlsEnabled(false);
     sceneHandle?.dispose();
     sceneHandle = null;
@@ -98,6 +108,7 @@ if (canvasHost && statusHost) {
       sceneHandle?.setActive(false);
       controlsEnabled(true);
       if (Number(heightControl?.value || defaultHeight) !== defaultHeight) updateCamera();
+      if (roofControl && !roofControl.checked) updateRoof();
       setState('ready', 'SIGNAL IDUNA PARK · Unity-Modell · Perspektivische Kamera');
     } catch (error) {
       if (stopped || thisAttempt !== attempt) return;
