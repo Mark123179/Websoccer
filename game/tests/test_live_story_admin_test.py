@@ -6,6 +6,7 @@ from unittest.mock import patch
 from django.contrib.auth import get_user_model
 from django.db import transaction
 from django.test import Client, TestCase
+from django.template.loader import render_to_string
 from django.urls import reverse
 from django.utils import timezone
 
@@ -77,6 +78,27 @@ class AdminLiveStoryTestTests(TestCase):
             self.assertEqual(self.client.session[SESSION_KEY]['run_id'], second['run_id'])
         self.assertEqual(SimulatedMatch.objects.count(), 0)
         self.assertEqual(MatchStory.objects.count(), 0)
+
+    def test_dortmund_preview_is_only_in_admin_test_ticker(self):
+        self.client.force_login(self.admin)
+        self.store(sample_run())
+        response = self.client.get(reverse('story_test_start'))
+        self.assertContains(response, 'id="ticker-stadium-preview"')
+        self.assertContains(response, 'ticker_stadium_preview.js?v=6')
+        self.assertContains(response, 'ticker_stadium_preview.css?v=6')
+        self.assertContains(response, 'stage/vendor/three.module.js')
+        self.assertContains(response, 'noch ohne Spieleranimation')
+        self.assertContains(response, 'id="ticker-stadium-environment"')
+        self.assertIn('trees', response.context['ticker_stadium_environment']['surroundings'])
+        self.assertNotContains(
+            self.client.get(reverse('story_test_conference')), 'ticker-stadium-preview')
+        normal = render_to_string('game/live_ticker.html', {
+            'home_name': 'Home', 'away_name': 'Away', 'match_id': 1,
+            'api_url': '/api/live/matches/1/', 'is_test': False,
+        })
+        self.assertNotIn('ticker-stadium-preview', normal)
+        self.assertNotIn('ticker_stadium_preview', normal)
+        self.assertNotIn('type="importmap"', normal)
 
     def test_original_clock_offset_gate_order_and_conference_aggregation(self):
         self.client.force_login(self.admin)

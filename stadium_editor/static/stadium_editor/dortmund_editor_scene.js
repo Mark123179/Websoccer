@@ -23,7 +23,7 @@ const sideOrder = ['NORD', 'SUED', 'OST', 'WEST'];
 export async function mountDortmundScene({
   element, onStatus = () => {}, surroundings, frame: editorFrame,
   includeSurroundings = true, interactive = true, autoRotate = false, compact = false,
-  transparentBackground = false, compactZoom = 1, verticalFraming = 0,
+  transparentBackground = false, compactZoom = 1, verticalFraming = 0, tickerPreview = false,
 }) {
   if (!window.WebGLRenderingContext) throw new Error('WebGL ist auf diesem Gerät nicht verfügbar.');
   let renderer;
@@ -38,6 +38,7 @@ export async function mountDortmundScene({
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
   renderer.toneMappingExposure = 1.2;
+  renderer.localClippingEnabled = tickerPreview;
   renderer.domElement.setAttribute('aria-label', interactive
     ? 'Drehbarer Unity-Mesh-Auszug des Signal Iduna Parks mit vereinfachten Materialien und konzeptioneller Erweiterung'
     : 'Automatisch rotierende 3D-Ansicht des Signal Iduna Parks');
@@ -53,9 +54,12 @@ export async function mountDortmundScene({
   const sun = new THREE.DirectionalLight(0xfff3d4, 1.5);
   sun.position.set(-135, 210, 100);
   scene.add(sun);
-  const camera = new THREE.PerspectiveCamera(42, 1, 1, 2400);
+  const camera = tickerPreview
+    ? new THREE.OrthographicCamera(-150, 150, 90, -90, 1, 2400)
+    : new THREE.PerspectiveCamera(42, 1, 1, 2400);
   const target = new THREE.Vector3(0, 25, 0);
-  let azimuth = .88, elevation = .56, distance = 490;
+  let azimuth = tickerPreview ? -Math.PI / 2 : .88;
+  let elevation = tickerPreview ? .96 : .56, distance = 490;
   let frame = 0, disposed = false, concept = null, colorBands = null, facade = null, environment = null, roofOn = true;
   let lastWeights = '', lastColors = '';
   const geometries = [], textures = [], materials = new Map(), facadeMaterials = new Map();
@@ -103,6 +107,14 @@ export async function mountDortmundScene({
     if (!width || !height) return;
     renderer.setSize(width, height, false);
     camera.aspect = width / height;
+    if (tickerPreview) {
+      // Pitch's goal-to-goal Z axis is horizontal from this fixed side view.
+      const viewHeight = 174;
+      camera.left = -viewHeight * camera.aspect / 2;
+      camera.right = viewHeight * camera.aspect / 2;
+      camera.top = viewHeight / 2;
+      camera.bottom = -viewHeight / 2;
+    }
     // Shift projection, not the canvas or model: shared viewers stay unchanged.
     if (verticalFraming) camera.setViewOffset(width, height, 0,
       height * clamp(verticalFraming, -0.25, 0.25), width, height);
@@ -228,6 +240,30 @@ export async function mountDortmundScene({
       });
     }
     facade = addReconstructedFacade(THREE, world);
+    if (tickerPreview) {
+      // GPU clipping cuts even source triangles spanning the entire front roof.
+      // Keep source indices/UVs intact. Exempt the measured pitch meshes so
+      // their full playing surface survives the deeper roof/truss cut.
+      const frontCut = new THREE.Plane(new THREE.Vector3(1, 0, 0), 32);
+      world.traverse(object => {
+        if (!object.isMesh) return;
+        const list = Array.isArray(object.material) ? object.material : [object.material];
+        list.forEach(material => {
+          if (object.name.startsWith('ORIGINAL_st081_pitch_')) {
+            material.clippingPlanes = [];
+            material.color.set(object.name === 'ORIGINAL_st081_pitch_0' ? '#438c32' : '#f3f5e8');
+            if (object.name === 'ORIGINAL_st081_pitch_1') {
+              material.emissive.set('#b9c3a9');
+              material.emissiveIntensity = .35;
+            }
+            material.needsUpdate = true;
+            return;
+          }
+          material.clippingPlanes = [frontCut];
+          material.needsUpdate = true;
+        });
+      });
+    }
     if (disposed) return null;
     resizeObserver = new ResizeObserver(resize);
     resizeObserver.observe(element); resize();

@@ -16,6 +16,26 @@ from .views_story import _no_cache
 logger = logging.getLogger(__name__)
 
 
+def _stadium_preview_environment():
+    """Read the existing Dortmund reference; never create/alter stadium rows."""
+    from stadium_editor.blueprints.v2.dortmund_preview import load_preview
+    from stadium_editor.surroundings import with_dortmund_mapped_trees
+    geometry = with_dortmund_mapped_trees(load_preview(), club_id=3)
+    surroundings = geometry.get('surroundings') or geometry.get('bg') or {}
+    buildings = surroundings.get('buildings') or []
+    # The measured reference stores {poly, h}; the existing renderer expects
+    # parallel footprint/height lists. Normalize only this response.
+    surroundings = {
+        **surroundings,
+        'buildings': [b['poly'] if isinstance(b, dict) else b for b in buildings],
+        'buildingHeights': [b.get('h', 9) if isinstance(b, dict) else 9 for b in buildings],
+    }
+    return {
+        'surroundings': surroundings,
+        'frame': geometry.get('meta') or {},
+    }
+
+
 def admin_only(view):
     @login_required
     @wraps(view)
@@ -84,6 +104,12 @@ def ticker_page(request, slot=1):
         'conference_url': reverse('story_test_conference'),
         'is_admin': False,
     })
+    try:
+        context['ticker_stadium_environment'] = _stadium_preview_environment()
+    except (OSError, ValueError, KeyError):
+        # A missing preview must not stop the original sandbox match playback.
+        logger.exception('Dortmund ticker preview reference unavailable')
+        context['ticker_stadium_environment'] = {'unavailable': True}
     response = render(request, 'game/live_ticker.html', context)
     response['Cache-Control'] = 'private, no-store'
     return response

@@ -7,6 +7,10 @@
   <meta name="theme-color" content="#03070c">
   <title>Live-Ticker · {{ home_name }} – {{ away_name }}</title>
   <link rel="stylesheet" href="{% static 'game/css/live_story.css' %}?v=3">
+  {% if is_test %}
+  <link rel="stylesheet" href="{% static 'game/css/ticker_stadium_preview.css' %}?v=6">
+  <script type="importmap">{"imports":{"three":"{% static 'stadium_editor/stage/vendor/three.module.js' %}"}}</script>
+  {% endif %}
 </head>
 <body class="ls-page">
   <main class="ls-shell" data-story-type="ticker" data-api-url="{{ api_url }}" data-match-id="{{ match_id }}" {% if is_test %}data-test-mode="true"{% endif %}>
@@ -22,6 +26,21 @@
       <p class="ls-subline" id="match-subline">Ereignisse werden live synchronisiert.</p>
       <div class="ls-progress" aria-hidden="true"><span id="match-progress"></span></div>
     </section>
+
+    {% if is_test %}
+    <section class="ticker-stadium-panel" aria-labelledby="ticker-stadium-heading">
+      <div class="ticker-stadium-heading">
+        <div>
+          <span class="ls-overline">2D-ANSICHT · ERSTER ENTWURF</span>
+          <h2 id="ticker-stadium-heading">Signal Iduna Park</h2>
+        </div>
+        <span class="ticker-stadium-tag">Drei Tribünenseiten</span>
+      </div>
+      <div id="ticker-stadium-preview" aria-label="Dortmund-Stadion mit freier Vorderseite und waagerechtem Spielfeld"></div>
+      <p id="ticker-stadium-status" role="status" aria-live="polite">Dortmund-Modell wird geladen …</p>
+      <p class="ticker-stadium-note">Statische Kamerastudie mit dem Dortmund-Modell – unabhängig vom Testspiel-Paar, noch ohne Spieleranimation. Fassade teilweise rekonstruiert, Umfeld schematisch. Das vollständige 3D-Modell bleibt erhalten.</p>
+    </section>
+    {% endif %}
 
     <section class="ls-content">
       <div class="ls-section-head">
@@ -58,5 +77,9 @@
     <footer class="ls-footer"><span>Websoccer · {% if is_test %}Isolierter Admin-Test{% else %}Spieltag in Echtzeit{% endif %}</span>{% if not is_test %}<a href="{{ report_url }}" id="report-fallback" hidden>Spielbericht öffnen</a>{% endif %}</footer>
   </main>
   <script src="{% static 'game/js/live_story.js' %}?v=3" defer></script>
+  {% if is_test %}
+  {{ ticker_stadium_environment|json_script:"ticker-stadium-environment" }}
+  <script type="module" src="{% static 'game/js/ticker_stadium_preview.js' %}?v=6"></script>
+  {% endif %}
 </body>
 </html>
