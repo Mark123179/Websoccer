@@ -53,9 +53,17 @@ def source_identity_rows(player):
     """Canonical IDs and display-only links; never backfill legacy URL fields."""
     from urllib.parse import urlsplit
     from django.utils.text import slugify
+    from .issue_lifecycle import lock_reasons
 
     identities = {row.source.code: row
                   for row in player.external_ids.select_related("source").all()}
+    reasons = lock_reasons(player)
+    status_labels = {
+        "gefunden": "gefunden",
+        "nicht_gefunden": "nicht gefunden",
+        "nicht_vorhanden": "dort nicht vorhanden",
+        "von_hand": "von Hand eingetragen",
+    }
     slug = slugify(player.full_name) or "player"
     providers = (
         ("TM", "Transfermarkt",
@@ -68,6 +76,9 @@ def source_identity_rows(player):
     result = []
     for code, label, make_url in providers:
         identity = identities.get(code)
+        status = identity.status if identity else ""
+        source_reasons = [reason.split(": ", 1)[1] for reason in reasons
+                          if reason.startswith(code + ": ")]
         external_id = str(identity.external_id or "") if identity else ""
         url = (identity.profile_url or identity.source_url or "") if identity else ""
         derived = False
@@ -82,5 +93,10 @@ def source_identity_rows(player):
         result.append({
             "code": code, "label": label, "external_id": external_id,
             "url": url, "derived": derived, "safe_link": safe_link,
+            "status": status,
+            "status_label": status_labels.get(status, status or "kein Status gespeichert"),
+            "checked_at": identity.checked_at if identity else None,
+            "blocks": bool(source_reasons),
+            "lock_reasons": source_reasons,
         })
     return result

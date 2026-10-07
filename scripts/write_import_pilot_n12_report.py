@@ -115,7 +115,7 @@ def generate():
         "- BVB-ID ist 8. Keine Managerzuweisung oder sonstige Kontoänderung für die Fotos. Nur eine befristete technische Browser-Sitzung wurde verwendet und anschließend entfernt.",
         "## 4. Alle 51 Spieler",
         "- Datei: `n12-staerken-51.csv`, UTF-8 mit BOM, Semikolon für Tabellenprogramme.",
-        "- Enthält Name, TM-ID, beide Quell-Ratings/Potenziale, FMInside-Spanne, gemeinsame Rohbasis und Rohpotenzial 0–200, Sperre und Grund.",
+        "- Enthält Name, TM-/FMInside-/CMTracker-ID mit Status, ID-Prüfdatum und Quellen-Sperre, beide Quell-Ratings/Potenziale, FMInside-Spanne, gemeinsame Rohbasis und Rohpotenzial 0–200, Einzelsperre und Grund.",
         "- 51 Zeilen; 49 mit beiden berechenbaren Rohwerten, zwei gesperrt. Fehlende Quellen bleiben leer, keine Stärke wird erfunden. Export verwendet ausschließlich die unveränderten reinen Rechenfunktionen, keine persistierende Neuberechnung.",
         f"- CSV-SHA256: `{hashlib.sha256(csv_path.read_bytes()).hexdigest()}`.",
         "| Stichprobe | Basis | Potenzial |", "|---|---:|---:|",

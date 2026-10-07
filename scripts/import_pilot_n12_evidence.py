@@ -12,6 +12,7 @@ from scripts.import_pilot_n11_evidence import capture, assert_local_pilot
 from django.db import transaction
 from game import models as m
 from game import strength_engine as se
+from game.club_import.presentation import source_identity_rows
 
 V2 = "ab3925f40f1b84ddd103a25928d61aa7feb3c36d9036890ff802131896751391"
 
@@ -60,8 +61,19 @@ def export_strengths():
             fm.potential if fm else None, cm.potential if cm else None, base)
         original_fm = source["ratings"].get("fminside") or {}
         span = original_fm.get("potential_range")
+        identities = {row["code"]: row for row in source_identity_rows(player)}
+        id_columns = {}
+        for code, label in (("TM", "TM"), ("FM", "FMInside"), ("CMTRACKER", "CMTracker")):
+            identity = identities[code]
+            id_columns.update({
+                label + "-ID": identity["external_id"],
+                label + "-ID-Status": identity["status"],
+                label + "-ID geprüft am": (
+                    identity["checked_at"].isoformat() if identity["checked_at"] else ""),
+                label + "-Quelle sperrt": "Ja" if identity["blocks"] else "Nein",
+            })
         rows.append({
-            "Name": player.display_name, "TM-ID": player.transfermarkt_id,
+            "Name": player.display_name, **id_columns,
             "FMInside-Rating": fm.rating if fm else "",
             "FMInside-Potenzial": fm.potential if fm and fm.potential is not None else "",
             "FMInside-Potenzialspanne": f'{span["min"]}–{span["max"]}' if span else "",
@@ -75,7 +87,7 @@ def export_strengths():
     assert len(rows) == 51
     path = ROOT / "docs/import-pilot/n12-staerken-51.csv"
     with path.open("w", encoding="utf-8-sig", newline="") as handle:
-        writer = csv.DictWriter(handle, fieldnames=list(rows[0]), delimiter=";")
+        writer = csv.DictWriter(handle, fieldnames=list(rows[0]), delimiter=";", lineterminator="\n")
         writer.writeheader()
         writer.writerows(rows)
     return {"rows": len(rows), "sha256": hashlib.sha256(path.read_bytes()).hexdigest(),

@@ -847,8 +847,18 @@
       {% for identity in source_identity_rows %}
       <div class="cpe-field-row">
         <div class="cpe-label">{{ identity.label }}-ID</div>
-        <input class="cpe-input cpe-input-medium" type="text" readonly
-               aria-label="{{ identity.label }}-ID" value="{{ identity.external_id|default:'—' }}">
+        <div class="cpe-field" data-source-identity="{{ identity.code }}"
+             data-source-status="{{ identity.status }}"
+             data-source-blocks="{{ identity.blocks|yesno:'true,false' }}"
+             data-source-checked-at="{{ identity.checked_at|date:'Y-m-d' }}">
+          <input class="cpe-input cpe-input-medium" type="text" readonly
+                 aria-label="{{ identity.label }}-ID" value="{{ identity.external_id|default:'—' }}">
+          <div class="cpe-hint">Status: {{ identity.status_label }} · {% if identity.blocks %}sperrt{% else %}sperrt nicht{% endif %}</div>
+          <div class="cpe-hint">ID geprüft: {% if identity.checked_at %}<time datetime="{{ identity.checked_at|date:'Y-m-d' }}">{{ identity.checked_at|date:'d.m.Y' }}</time>{% else %}—{% endif %}</div>
+          {% if identity.blocks %}
+          <div class="cpe-hint">Sperrgrund: {{ identity.lock_reasons|join:' · ' }}</div>
+          {% endif %}
+        </div>
       </div>
       <div class="cpe-field-row">
         <div class="cpe-label">{{ identity.label }}</div>

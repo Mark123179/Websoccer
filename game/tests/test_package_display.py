@@ -175,6 +175,84 @@ class PackageDisplayTests(TestCase):
         rows = {row["code"]: row for row in source_identity_rows(player)}
         self.assertFalse(rows["TM"]["safe_link"])
 
+    def test_gardarsson_id_status_dates_and_source_lock_are_visible(self):
+        from django.test import RequestFactory
+        from game.views_creator import creator_player_edit
+        from game.tests.source_identity_html import SourceIdentityParser
+        player = m.Player.objects.get(last_name="Gardarsson")
+        request = RequestFactory().get(reverse("creator_player_edit", args=[player.pk]))
+        request.user, request.session = self.user, {}
+        response = creator_player_edit(request, player.pk)
+        self.assertEqual(response.status_code, 200)
+        rows = SourceIdentityParser(response.content.decode()).rows
+        for code, status, label, blocks in (
+            ("FM", "nicht_gefunden", "nicht gefunden", True),
+            ("CMTRACKER", "nicht_vorhanden", "dort nicht vorhanden", False),
+        ):
+            self.assertEqual(rows[code]["external_id"], "—")
+            self.assertEqual(rows[code]["status"], status)
+            self.assertEqual(rows[code]["blocks"], blocks)
+            self.assertEqual(rows[code]["checked_at"], "2026-10-05")
+            self.assertIn("Status: " + label, rows[code]["text"])
+            self.assertIn("sperrt" if blocks else "sperrt nicht", rows[code]["text"])
+            self.assertIn("ID geprüft: 05.10.2026", rows[code]["text"])
+            self.assertTrue(rows[code]["readonly"])
+
+    def test_source_id_date_is_not_rating_date_and_rating_gap_still_blocks(self):
+        from game.club_import.presentation import source_identity_rows
+        player = m.Player.objects.get(last_name="Kobel")
+        player.external_ids.filter(source__code="FM").update(checked_at=None)
+        self.assertIsNotNone(player.source_ratings.get(source="FM").checked_at)
+        self.assertIsNone(next(r for r in source_identity_rows(player)
+                               if r["code"] == "FM")["checked_at"])
+        player.source_ratings.filter(source="FM").delete()
+        before = fingerprint()
+        rows = {r["code"]: r for r in source_identity_rows(player)}
+        self.assertEqual(fingerprint(), before)
+        self.assertEqual(rows["FM"]["status"], "gefunden")
+        self.assertIsNone(rows["FM"]["checked_at"])
+        self.assertTrue(rows["FM"]["blocks"])
+        self.assertIn("ID vorhanden, Rating fehlt", rows["FM"]["lock_reasons"])
+        self.assertFalse(rows["TM"]["blocks"])
+        player.external_ids.filter(source__code="TM").delete()
+        tm = next(r for r in source_identity_rows(player) if r["code"] == "TM")
+        self.assertEqual(tm["status"], "")
+        self.assertEqual(tm["status_label"], "kein Status gespeichert")
+        self.assertIsNone(tm["checked_at"])
+        self.assertTrue(tm["blocks"])
+
+    def test_all_34_cmtracker_ids_match_package_database_and_source_html(self):
+        from django.test import RequestFactory
+        from game.views_creator import creator_player_edit, _build_source_tab_context
+        from game.tests.source_identity_html import SourceIdentityParser
+        _, package = read_package(V2)
+        players = [p for p in package["players"]
+                   if p["ids"]["cmtracker"].get("value") is not None]
+        self.assertEqual(len(players), 34)
+        before = fingerprint()
+        for source in players:
+            player = m.Player.objects.get(transfermarkt_id=source["ids"]["tm"]["value"])
+            expected = source["ids"]["cmtracker"]
+            identity = player.external_ids.get(source__code="CMTRACKER")
+            self.assertEqual(identity.external_id, str(expected["value"]))
+            _build_source_tab_context(player)
+        self.assertEqual(fingerprint(), before)
+        for source in players:
+            player = m.Player.objects.get(transfermarkt_id=source["ids"]["tm"]["value"])
+            expected = source["ids"]["cmtracker"]
+            request = RequestFactory().get(reverse("creator_player_edit", args=[player.pk]))
+            request.user, request.session = self.user, {}
+            response = creator_player_edit(request, player.pk)
+            self.assertEqual(response.status_code, 200)
+            row = SourceIdentityParser(response.content.decode()).rows["CMTRACKER"]
+            self.assertEqual(row["external_id"], str(expected["value"]), source["display_name"])
+            self.assertEqual(row["status"], expected["status"])
+            self.assertEqual(row["checked_at"], expected.get("checked_at") or "")
+            self.assertTrue(row["readonly"])
+        after = fingerprint()
+        for table in ("game_player", "game_playerexternalid", "game_playersourcerating"):
+            self.assertEqual(after[table], before[table], table)
+
     def test_package_source_save_never_persists_projected_addresses(self):
         from django.test import RequestFactory
         from game.views_creator import _save_player_source_ratings

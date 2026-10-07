@@ -40,3 +40,29 @@ Am 06.10.2026 wurde der vollständige aktuelle Stand erneut geprüft:
 Dieser Abschluss ersetzt die vorherigen Zwischenstände „kein neuer Gesamtlauf“. Er ersetzt nicht die noch ausstehende Claude-Gegenprüfung oder Live-Freigabe.
 
 Vollständiges Protokoll: `n12-r1-r4-full-tests.log`. Maschinenbeleg: `n12-r1-r4-full-verification.json`.
+
+## Ergänzung: ID-Status, ID-Prüfdatum und vollständiger CMTracker-Abgleich
+
+Der Nutzer hat zwei verbleibende Lücken benannt: fehlende Unterscheidung leerer Source-IDs anhand ihres Status und fehlendes ID-Prüfdatum; außerdem war bisher nur Kobels CMTracker-ID in der gerenderten Source-Ansicht geprüft.
+
+Nun stehen kompakt unter jeder kanonischen ID der Status, die quellenbezogene Sperrwirkung und das ID-Prüfdatum. Ein fehlendes ID-Prüfdatum wird nicht aus Rating- oder Importdaten ergänzt. Vorhandene IDs mit fehlendem Rating zeigen weiterhin die Sperrwirkung der unveränderten bestehenden Sperrregeln. Der Altmodus bleibt unverändert.
+
+**Gardarsson, echter v2-Pilot:**
+
+| Quelle | ID | Status | Quellen-Sperre | ID geprüft |
+|---|---|---|---|---|
+| FMInside | — | nicht gefunden | sperrt | 05.10.2026 |
+| CMTracker | — | dort nicht vorhanden | sperrt nicht | 05.10.2026 |
+
+**Vollständiger Abgleich, keine Stichprobe:**
+
+- Alle **51 echten Pilot-Creatoransichten** wurden ohne Login/Sitzungsänderung in einer schreibgeschützten Transaktion gerendert.
+- **153 ID-Blöcke** wurden anhand des v2-Pakets auf ID, Status, ID-Prüfdatum und readonly Eingabefeld geprüft.
+- Alle **34 vorhandenen CMTracker-IDs** stimmen zwischen v2-Paket, kanonischer Datenbank und tatsächlich gerendertem Source-Eingabefeld überein: **null Abweichungen**.
+- Die Stärkentabelle `n12-staerken-51.csv` enthält jetzt TM-, FMInside- und CMTracker-ID, jeweils mit Status, ID-Prüfdatum und Quellen-Sperre. Alle 51 CSV-Zeilen wurden gegen das Paket geprüft.
+- Einzelbeleg je CMTracker-ID: `n12-cmtracker-id-abgleich-34.csv`.
+- Maschinenbeleg: `n12-source-id-status-verification.json`.
+- **17 gezielte Tests bestanden**, 21,887 Sekunden. Testprotokoll: `n12-source-id-status-tests.log`.
+- Alle **144 Pilot-Fachtabellen**, Paket-Hashes und Arbeitslisten-Status-/Text-Fingerprints unverändert; weiterhin v2, 156/128/28 Einträge, 49 Stärken, zwei Einzelsperren.
+
+Diese CSV-Erweiterung ersetzt den vorherigen Export mit ausschließlich TM-ID; frühere CSV-Hashes beziehen sich auf diesen vorherigen Export. Der zuletzt dokumentierte vollständige Lauf mit 1.682 Tests war **vor dieser Ergänzung**; er wird nicht als Prüfung der neuen Metadatenanzeige ausgegeben. Kein neuer Gesamtlauf, Paketimport, Reset oder Live-Eingriff. Der vereinbarte Halt gilt weiterhin.

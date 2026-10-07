@@ -1,0 +1,47 @@
+{
+  "active_package": "v2",
+  "package_hash": "ab3925f40f1b84ddd103a25928d61aa7feb3c36d9036890ff802131896751391",
+  "creator_pages_rendered_read_only": 51,
+  "canonical_source_identity_blocks_verified": 153,
+  "cmtracker_ids_matched_package_database_and_rendered_input": 34,
+  "cmtracker_mismatches": 0,
+  "cmtracker_comparison_sha256": "4827f69e3eb821dc5726cc097cddbab3da324385798ad550d573b6bdbbdc3ebf",
+  "gardarsson": {
+    "TM": {
+      "status": "gefunden",
+      "blocks": false,
+      "checked_at": "2026-10-05",
+      "external_id": "1334363",
+      "readonly": true,
+      "text": "Status: gefunden · sperrt nicht ID geprüft: 05.10.2026"
+    },
+    "FM": {
+      "status": "nicht_gefunden",
+      "blocks": true,
+      "checked_at": "2026-10-05",
+      "external_id": "—",
+      "readonly": true,
+      "text": "Status: nicht gefunden · sperrt ID geprüft: 05.10.2026 Sperrgrund: ID nicht_gefunden"
+    },
+    "CMTRACKER": {
+      "status": "nicht_vorhanden",
+      "blocks": false,
+      "checked_at": "2026-10-05",
+      "external_id": "—",
+      "readonly": true,
+      "text": "Status: dort nicht vorhanden · sperrt nicht ID geprüft: 05.10.2026"
+    }
+  },
+  "strength_csv": {
+    "rows": 51,
+    "sha256": "04c628b51cd697a91537f69b70c0fdb23b7abfd86a858341b2fef535eb910c14",
+    "locked": 2
+  },
+  "pilot_game_tables_unchanged": 144,
+  "issues": 156,
+  "open": 128,
+  "package_closed": 28,
+  "strengths": 49,
+  "locks": 2,
+  "verification": "Read-only transaction, existing staff object, no login/session/account mutation."
+}
