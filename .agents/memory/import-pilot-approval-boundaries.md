@@ -1,6 +1,9 @@
 ---
+name: Import-Pilot Freigabegrenzen
+description: Verbindliche Import-, Schutz- und Umstellungsregeln; Pilot bleibt v2, BVB-v3 startet direkt live.
+---
 
-## Supercup-Korrektur: Gegenprüfung und manuelle Bestätigung
+## Historischer Supercup-Korrekturstand (durch spätere Freigaben ersetzt)
 
 Nach dem Anzeige-Korrekturbericht gilt Halt zur Gegenprüfung durch Claude.
 Das Supercup-Korrekturpaket darf der Agent nur im getrennten Testbestand einlesen,
@@ -14,9 +17,6 @@ Stärkentabelle und Paketvorschau vor der Pilot-Abnahme getrennt zu prüfen.
 Pilot oder die vorgezogene Sicherung. Keine zusätzlichen Fachwerte zur
 Vorwegnahme des Kategorie-Pakets ändern; die bestehende Spielwert- und
 Stärkeformel-Freigabe bleibt unverändert.
-name: Import-Pilot Freigabegrenzen
-description: Verbindliche Anker-/Feldlistenregeln aus Nachtrag 5 sowie fortgeltende Schutz-, Konten- und Isolationsentscheidungen.
----
 
 Nachtrag 11 hat bei Widersprüchen Vorrang vor Teil A, B, C und Nachträgen 1–10. Club, Player und Stadium bleiben die Spielanker; keine neuen Modelle daneben mit späterem Umhängen der Module. Bestehende Tabellen erweitern/reparieren, neue nur bei echter Lücke. Jedes Feld einer Schicht und einem kontrollierten Schreibrecht zuordnen; Spiegel einzeln begründen. Nach Ligastart gilt die bestätigte konkrete Positivliste, nicht pauschal „Echtweltdaten überschreiben“.
 
@@ -94,7 +94,7 @@ Der Nutzer hat den Gegenprüfungs-Halt ausdrücklich aufgehoben: Gegenprüfung a
 
 **Why:** Explizite Freigabe und Scope-Korrektur des Nutzers am 07.10.2026.
 
-**How to apply:** Gegenprüfung und BVB-Abnahme nicht wieder als offene Freigaben einfordern. Reihenfolge beibehalten: Replit sichert den aktiven v2-Pilot, danach lädt Mark v3 hoch und bestätigt selbst nach der Vorschau. Offene Auditbefunde vor einem Umstellungstermin in drei Sätzen benennen; Sicherheitsaudit bleibt separates Hindernis für die Live-Freigabe, nicht für die fachliche BVB-Abnahme.
+**How to apply:** Gegenprüfung und BVB-Abnahme nicht wieder als offene Freigaben einfordern. Die frühere vorgeschaltete Pilot-v2-Sicherung mit anschließendem Pilot-v3-Upload ist durch die unten festgehaltene direkte Live-Reihenfolge ersetzt. Sicherheitsfreigabe bleibt getrennt von der fachlichen BVB-Abnahme.
 
 Mark wählt „Nach Vorbereitung resetten, live nachfüllen“, nicht das vorherige Bereitstellen und Prüfen aller 18 Bundesliga-Pakete im Pilot.
 
@@ -113,3 +113,15 @@ Vor der Umstellung den ZIP-Sicherheitsfix mit einheitlich reinen Text-Fehlerantw
 **Why:** Der Nutzer präzisiert die Umstellungsregel ausdrücklich; datumsfeldbezogene Korrekturen und alte grüne Tests reichen nicht.
 
 **How to apply:** Paketvorschau, Arbeitsliste, Ruhmeshalle und Transferhistorie einschließlich ihrer HTML-Helfer berücksichtigen. Mark prüft bei der manuellen Umstellung ausgehende HTTPS-Proxys und abweichende Zieladressen auf Hetzner; bei Abweichungen die Erreichbarkeit neu bewerten. Den nginx-Reverse-Proxy nicht mit einem ausgehenden HTTPS-Forward-Proxy verwechseln.
+
+Der Pilot bleibt auf v2 stehen. BVB-v3 geht als erstes Paket direkt live; vorgeschaltete Pilot-Sicherung und Pilot-v3-Upload entfallen. Bestehende Sicherungen bleiben erhalten. Die Umstellung folgt nach Sicherheitsfix mit grünem Gesamtlauf und Vorbereitung; die 18 Vereine werden danach live nach und nach eingefüllt.
+
+**Why:** Der Nutzer ersetzt die frühere Pilot-v3-Reihenfolge ausdrücklich durch den direkten Live-Erstimport.
+
+**How to apply:** Keine zusätzliche Pilot-Abnahme verlangen. Live-Sicherung, konkrete Reset-Freigabe und manuelle Server-Umstellung bleiben vorgeschaltet. Einzelsperren nicht mit Liga-Startsperren verwechseln; fehlende Live-Bilder sind zusätzliche Infos, keine Sperren.
+
+Pakete entstehen im Chat „Verein Import Praxis“; das lokale Werkzeug ist zurückgestellt. CMTracker-Daten kommen je Liga in einem Lauf.
+
+**Why:** Der Nutzer hat diese Arbeitsteilung ausdrücklich festgelegt.
+
+**How to apply:** Kein lokales Importwerkzeug als Voraussetzung der Umstellung oder der weiteren Paketproduktion einplanen.
