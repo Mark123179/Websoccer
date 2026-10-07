@@ -11,6 +11,11 @@ from stadium_editor.blueprints.v2.dortmund_preview import load_preview
 from stadium_editor.surroundings import with_dortmund_mapped_trees
 from stadium_editor.natural_packages import validate_natural_package
 
+if (ROOT / "stadium_editor/blueprints/natural/sources/dortmund_umfeld.json").exists():
+    from scripts.import_dortmund_environment import main
+    main()
+    raise SystemExit(0)
+
 geometry = with_dortmund_mapped_trees(load_preview(), club_id=3)
 source = geometry.get("surroundings") or geometry.get("bg")
 data = deepcopy(source)

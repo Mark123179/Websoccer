@@ -1,0 +1,62 @@
+{
+  "generator": "local Three.js r170 + GLTFLoader",
+  "createdAt": "2026-10-07T20:32:13.395Z",
+  "atlasSize": 2048,
+  "viewLayout": "8x8 hemi-octahedron",
+  "results": [
+    {
+      "file": "realistic_oak_large_2048.webp",
+      "width": 2048,
+      "height": 2048,
+      "bytes": 2075682,
+      "source": "realistic_trees_collection/Tree_EZTree0Large",
+      "views": 64,
+      "format": "RGBA WebP alpha"
+    },
+    {
+      "file": "realistic_maple_medium_2048.webp",
+      "width": 2048,
+      "height": 2048,
+      "bytes": 1081592,
+      "source": "realistic_trees_collection/Tree_EZTree0Medium010",
+      "views": 64,
+      "format": "RGBA WebP alpha"
+    },
+    {
+      "file": "oak_tree_large_2048.webp",
+      "width": 2048,
+      "height": 2048,
+      "bytes": 695100,
+      "source": "oak_trees/treelarge",
+      "views": 64,
+      "format": "RGBA WebP alpha"
+    },
+    {
+      "file": "forest_birch_2048.webp",
+      "width": 2048,
+      "height": 2048,
+      "bytes": 362538,
+      "source": "various_forest_assets_pack/Birch2_21",
+      "views": 64,
+      "format": "RGBA WebP alpha"
+    },
+    {
+      "file": "forest_maple_2048.webp",
+      "width": 2048,
+      "height": 2048,
+      "bytes": 815728,
+      "source": "various_forest_assets_pack/Maple_24",
+      "views": 64,
+      "format": "RGBA WebP alpha"
+    },
+    {
+      "file": "forest_deciduous_shrub_2048.webp",
+      "width": 2048,
+      "height": 2048,
+      "bytes": 107410,
+      "source": "various_forest_assets_pack/DeciduousShrub_27",
+      "views": 64,
+      "format": "RGBA WebP alpha"
+    }
+  ]
+}

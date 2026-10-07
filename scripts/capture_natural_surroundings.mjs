@@ -4,13 +4,15 @@ import fs from 'node:fs';
 import {execFileSync} from 'node:child_process';
 import {chromium} from 'playwright-core';
 const dir = process.env.CAPTURE_DIR || '/tmp/natural-surroundings';
+const captureSet = process.env.CAPTURE_SET || 'all';
 fs.mkdirSync(dir, {recursive: true});
 const browser = await chromium.launch({
   executablePath: '/repl/tools/bin/chromium', headless: true,
   args: ['--no-sandbox', '--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'],
 });
 try {
-  const context = await browser.newContext({viewport: {width: 1440, height: 1000}});
+  const context = await browser.newContext({viewport: captureSet === 'mobile'
+    ? {width: 390, height: 850} : {width: 1440, height: 1000}});
   const url = `https://${process.env.REPLIT_DEV_DOMAIN}`;
   await context.addCookies([{...JSON.parse(fs.readFileSync(process.env.SESSION_FILE)),
     url, httpOnly: true, secure: true, sameSite: 'Lax'}]);
@@ -68,7 +70,10 @@ try {
     });
     fs.writeFileSync(`${dir}/${name}.png`, Buffer.from(data.image.split(',')[1], 'base64'));
     delete data.image; results.push({name,...data});
+    fs.writeFileSync(`${dir}/checkpoint.json`, JSON.stringify({results,errors,failures},null,2));
+    console.log(`Captured ${name}: ${Math.round(data.finishMs)} ms GPU finish`);
   }
+  if (captureSet === 'all' || captureSet === 'desktop') {
   await capture('desktop-roof-on');
   await page.locator('#ticker-roof-visible').uncheck();
   await capture('desktop-roof-off');
@@ -79,9 +84,23 @@ try {
   await page.locator('#ticker-camera-reset').click();
   await page.locator('#ticker-roof-visible').check();
   await capture('desktop-restored');
+  }
+  if (captureSet === 'all' || captureSet === 'mobile') {
   await page.setViewportSize({width:390,height:850});
   await page.locator('#ticker-roof-visible').uncheck();
   await capture('mobile-roof-off');
+  }
+  if (captureSet === 'lighting' || captureSet === 'mobile') {
+    await page.locator('#ticker-roof-visible').uncheck();
+    await page.getByRole('button',{name:'Flutlicht-Abend',exact:true}).click();
+    await capture(captureSet === 'mobile' ? 'mobile-night' : 'desktop-night');
+    await page.locator('#ticker-camera-height').evaluate(e=>{
+      e.value=35;e.dispatchEvent(new Event('input'));
+    });
+    await capture(captureSet === 'mobile' ? 'mobile-night-height-35' : 'desktop-night-height-35');
+    await page.getByRole('button',{name:'Tageslicht',exact:true}).click();
+    await capture(captureSet === 'mobile' ? 'mobile-day-restored' : 'desktop-day-restored');
+  }
   const resources = await page.evaluate(() => performance.getEntriesByType('resource')
     .filter(e=>/stadium_editor/.test(e.name)).map(e=>({file:e.name.split('/').pop(),bytes:e.encodedBodySize,durationMs:Math.round(e.duration)})));
   const report={results,errors,failures,resources};

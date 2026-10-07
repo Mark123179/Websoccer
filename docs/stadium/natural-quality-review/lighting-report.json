@@ -1,0 +1,420 @@
+{
+  "results": [
+    {
+      "name": "desktop-night",
+      "finishMs": 303.79999999701977,
+      "width": 998,
+      "height": 611,
+      "overflow": false,
+      "status": "SIGNAL IDUNA PARK · Unity-Modell · Natürliches OSM-Umfeld",
+      "metrics": "{\"trees\":338,\"mappedTreeNodes\":334,\"forestRepresentatives\":4,\"scrubRepresentatives\":26,\"treeModelVariants\":[\"realistic-oak-large\",\"realistic-maple-medium\",\"oak-trees-large\",\"forest-birch\",\"forest-maple\"],\"shrubModelVariants\":[\"forest-deciduous-shrub\"],\"treeMeshInstances\":0,\"treeImpostorInstances\":338,\"shrubImpostorInstances\":26,\"carShadowProxyInstances\":975,\"carShadowProxyTriangles\":11700,\"parkedCars\":975,\"eligibleParkingBays\":1419,\"graphicParkingFillTarget\":0.7,\"realizedParkingFillFraction\":0.6871035940803383,\"mappedParkingLots\":14,\"rejectedNonSurfaceParkingLots\":6,\"roads\":230,\"buildings\":148,\"mappedBoundsMeters\":{\"width\":2396.9,\"depth\":1939.5},\"renderSubmitMs\":6422.4,\"triangles\":7178018,\"drawCalls\":402,\"geometries\":443,\"textures\":55}"
+    },
+    {
+      "name": "desktop-night-height-35",
+      "finishMs": 5436.300000000745,
+      "width": 998,
+      "height": 611,
+      "overflow": false,
+      "status": "SIGNAL IDUNA PARK · Unity-Modell · Natürliches OSM-Umfeld",
+      "metrics": "{\"trees\":338,\"mappedTreeNodes\":334,\"forestRepresentatives\":4,\"scrubRepresentatives\":26,\"treeModelVariants\":[\"realistic-oak-large\",\"realistic-maple-medium\",\"oak-trees-large\",\"forest-birch\",\"forest-maple\"],\"shrubModelVariants\":[\"forest-deciduous-shrub\"],\"treeMeshInstances\":0,\"treeImpostorInstances\":338,\"shrubImpostorInstances\":26,\"carShadowProxyInstances\":975,\"carShadowProxyTriangles\":11700,\"parkedCars\":975,\"eligibleParkingBays\":1419,\"graphicParkingFillTarget\":0.7,\"realizedParkingFillFraction\":0.6871035940803383,\"mappedParkingLots\":14,\"rejectedNonSurfaceParkingLots\":6,\"roads\":230,\"buildings\":148,\"mappedBoundsMeters\":{\"width\":2396.9,\"depth\":1939.5},\"renderSubmitMs\":12.9,\"triangles\":7178070,\"drawCalls\":407,\"geometries\":446,\"textures\":55}"
+    },
+    {
+      "name": "desktop-day-restored",
+      "finishMs": 6209,
+      "width": 998,
+      "height": 611,
+      "overflow": false,
+      "status": "SIGNAL IDUNA PARK · Unity-Modell · Natürliches OSM-Umfeld",
+      "metrics": "{\"trees\":338,\"mappedTreeNodes\":334,\"forestRepresentatives\":4,\"scrubRepresentatives\":26,\"treeModelVariants\":[\"realistic-oak-large\",\"realistic-maple-medium\",\"oak-trees-large\",\"forest-birch\",\"forest-maple\"],\"shrubModelVariants\":[\"forest-deciduous-shrub\"],\"treeMeshInstances\":0,\"treeImpostorInstances\":338,\"shrubImpostorInstances\":26,\"carShadowProxyInstances\":975,\"carShadowProxyTriangles\":11700,\"parkedCars\":975,\"eligibleParkingBays\":1419,\"graphicParkingFillTarget\":0.7,\"realizedParkingFillFraction\":0.6871035940803383,\"mappedParkingLots\":14,\"rejectedNonSurfaceParkingLots\":6,\"roads\":230,\"buildings\":148,\"mappedBoundsMeters\":{\"width\":2396.9,\"depth\":1939.5},\"renderSubmitMs\":692,\"triangles\":7170230,\"drawCalls\":406,\"geometries\":446,\"textures\":55}"
+    }
+  ],
+  "errors": [],
+  "failures": [],
+  "resources": [
+    {
+      "file": "dortmund_editor_scene.js?v=ticker-14",
+      "bytes": 26081,
+      "durationMs": 25
+    },
+    {
+      "file": "three.module.js",
+      "bytes": 1314681,
+      "durationMs": 123
+    },
+    {
+      "file": "dortmund_source_materials.js",
+      "bytes": 572,
+      "durationMs": 70
+    },
+    {
+      "file": "dortmund_concept.js?v=49",
+      "bytes": 12681,
+      "durationMs": 101
+    },
+    {
+      "file": "dortmund_surroundings.js?v=51",
+      "bytes": 10322,
+      "durationMs": 40
+    },
+    {
+      "file": "dortmund_reconstructed_facade.js?v=2",
+      "bytes": 2314,
+      "durationMs": 45
+    },
+    {
+      "file": "dortmund_ticker_camera.js?v=3",
+      "bytes": 1498,
+      "durationMs": 77
+    },
+    {
+      "file": "natural_profile.js?v=1",
+      "bytes": 222,
+      "durationMs": 86
+    },
+    {
+      "file": "dortmund_ticker_roof.js?v=1",
+      "bytes": 677,
+      "durationMs": 89
+    },
+    {
+      "file": "natural_surroundings.js?v=3",
+      "bytes": 32758,
+      "durationMs": 64
+    },
+    {
+      "file": "natural_surroundings_v2.js?v=4",
+      "bytes": 28213,
+      "durationMs": 15
+    },
+    {
+      "file": "library_v2.json",
+      "bytes": 5501,
+      "durationMs": 56
+    },
+    {
+      "file": "aerial_grass_rock_color_2k.jpg",
+      "bytes": 2624635,
+      "durationMs": 246
+    },
+    {
+      "file": "aerial_asphalt_01_color_2k.jpg",
+      "bytes": 2802005,
+      "durationMs": 239
+    },
+    {
+      "file": "grass_ground_color_2k.jpg",
+      "bytes": 3787330,
+      "durationMs": 281
+    },
+    {
+      "file": "realistic_oak_large_2048.webp",
+      "bytes": 2075682,
+      "durationMs": 183
+    },
+    {
+      "file": "realistic_maple_medium_2048.webp",
+      "bytes": 1081592,
+      "durationMs": 28
+    },
+    {
+      "file": "oak_tree_large_2048.webp",
+      "bytes": 695100,
+      "durationMs": 56
+    },
+    {
+      "file": "forest_birch_2048.webp",
+      "bytes": 362538,
+      "durationMs": 61
+    },
+    {
+      "file": "forest_maple_2048.webp",
+      "bytes": 815728,
+      "durationMs": 63
+    },
+    {
+      "file": "forest_deciduous_shrub_2048.webp",
+      "bytes": 107410,
+      "durationMs": 54
+    },
+    {
+      "file": "natural_car_models.js?v=4",
+      "bytes": 7102,
+      "durationMs": 17
+    },
+    {
+      "file": "GLTFLoader.js?v=3",
+      "bytes": 110624,
+      "durationMs": 54
+    },
+    {
+      "file": "BufferGeometryUtils.js",
+      "bytes": 31797,
+      "durationMs": 55
+    },
+    {
+      "file": "scene.gltf",
+      "bytes": 149985,
+      "durationMs": 57
+    },
+    {
+      "file": "scene.bin",
+      "bytes": 3160928,
+      "durationMs": 110
+    },
+    {
+      "file": "Wheel_baseColor.png",
+      "bytes": 1439262,
+      "durationMs": 257
+    },
+    {
+      "file": "Wheel_metallicRoughness.png",
+      "bytes": 92805,
+      "durationMs": 271
+    },
+    {
+      "file": "Body_metallicRoughness.png",
+      "bytes": 16425,
+      "durationMs": 118
+    },
+    {
+      "file": "Body_baseColor.png",
+      "bytes": 1003523,
+      "durationMs": 692
+    },
+    {
+      "file": "Optics_baseColor.jpeg",
+      "bytes": 818702,
+      "durationMs": 415
+    },
+    {
+      "file": "Body_0_metallicRoughness.png",
+      "bytes": 11001,
+      "durationMs": 152
+    },
+    {
+      "file": "Body_0_baseColor.png",
+      "bytes": 1063072,
+      "durationMs": 454
+    },
+    {
+      "file": "Wheel_0_baseColor.png",
+      "bytes": 1587376,
+      "durationMs": 564
+    },
+    {
+      "file": "Wheel_0_metallicRoughness.png",
+      "bytes": 118987,
+      "durationMs": 270
+    },
+    {
+      "file": "Body_1_baseColor.png",
+      "bytes": 1115799,
+      "durationMs": 610
+    },
+    {
+      "file": "Body_1_metallicRoughness.png",
+      "bytes": 18349,
+      "durationMs": 143
+    },
+    {
+      "file": "Wheek_baseColor.png",
+      "bytes": 1580677,
+      "durationMs": 614
+    },
+    {
+      "file": "Wheek_metallicRoughness.png",
+      "bytes": 68488,
+      "durationMs": 273
+    },
+    {
+      "file": "Wheel_1_baseColor.png",
+      "bytes": 1351246,
+      "durationMs": 689
+    },
+    {
+      "file": "Wheel_1_metallicRoughness.png",
+      "bytes": 86842,
+      "durationMs": 124
+    },
+    {
+      "file": "Body_2_baseColor.png",
+      "bytes": 819061,
+      "durationMs": 678
+    },
+    {
+      "file": "Body_2_metallicRoughness.png",
+      "bytes": 13650,
+      "durationMs": 369
+    },
+    {
+      "file": "Wheel_2_baseColor.png",
+      "bytes": 1423281,
+      "durationMs": 706
+    },
+    {
+      "file": "Wheel_2_metallicRoughness.png",
+      "bytes": 55431,
+      "durationMs": 575
+    },
+    {
+      "file": "Body_3_metallicRoughness.png",
+      "bytes": 19938,
+      "durationMs": 157
+    },
+    {
+      "file": "Body_3_baseColor.png",
+      "bytes": 407956,
+      "durationMs": 647
+    },
+    {
+      "file": "Wheel_3_baseColor.png",
+      "bytes": 1486489,
+      "durationMs": 698
+    },
+    {
+      "file": "Body_4_baseColor.png",
+      "bytes": 763394,
+      "durationMs": 670
+    },
+    {
+      "file": "Wheel_3_metallicRoughness.png",
+      "bytes": 75255,
+      "durationMs": 590
+    },
+    {
+      "file": "Body_4_metallicRoughness.png",
+      "bytes": 13914,
+      "durationMs": 266
+    },
+    {
+      "file": "Body_5_baseColor.png",
+      "bytes": 1025112,
+      "durationMs": 682
+    },
+    {
+      "file": "Body_5_metallicRoughness.png",
+      "bytes": 50293,
+      "durationMs": 267
+    },
+    {
+      "file": "Wheel_4_baseColor.png",
+      "bytes": 571566,
+      "durationMs": 632
+    },
+    {
+      "file": "Wheel_4_metallicRoughness.png",
+      "bytes": 33329,
+      "durationMs": 374
+    },
+    {
+      "file": "Wheel_5_baseColor.png",
+      "bytes": 1977581,
+      "durationMs": 708
+    },
+    {
+      "file": "Wheel_5_metallicRoughness.png",
+      "bytes": 76221,
+      "durationMs": 362
+    },
+    {
+      "file": "Body_6_baseColor.png",
+      "bytes": 854243,
+      "durationMs": 664
+    },
+    {
+      "file": "Body_6_metallicRoughness.png",
+      "bytes": 16090,
+      "durationMs": 277
+    },
+    {
+      "file": "Body_7_baseColor.png",
+      "bytes": 397053,
+      "durationMs": 612
+    },
+    {
+      "file": "Body_7_metallicRoughness.png",
+      "bytes": 15031,
+      "durationMs": 310
+    },
+    {
+      "file": "Body_8_baseColor.png",
+      "bytes": 1246648,
+      "durationMs": 685
+    },
+    {
+      "file": "Body_8_metallicRoughness.png",
+      "bytes": 18808,
+      "durationMs": 322
+    },
+    {
+      "file": "Cylinder001__0_metallicRoughness.png",
+      "bytes": 1365035,
+      "durationMs": 702
+    },
+    {
+      "file": "Cylinder001__0_baseColor.jpeg",
+      "bytes": 352528,
+      "durationMs": 627
+    },
+    {
+      "file": "manifest.json",
+      "bytes": 92779,
+      "durationMs": 64
+    },
+    {
+      "file": "geometry.bin",
+      "bytes": 17682432,
+      "durationMs": 151
+    },
+    {
+      "file": "au_seat.webp",
+      "bytes": 6590,
+      "durationMs": 30
+    },
+    {
+      "file": "st051_irpl003_bsm.webp",
+      "bytes": 552,
+      "durationMs": 26
+    },
+    {
+      "file": "st051_pllr001_bsm.webp",
+      "bytes": 8842,
+      "durationMs": 77
+    },
+    {
+      "file": "st_coat_band_2018Sig_bsm.webp",
+      "bytes": 8704,
+      "durationMs": 36
+    },
+    {
+      "file": "natural_lighting.js?v=2",
+      "bytes": 7324,
+      "durationMs": 14
+    },
+    {
+      "file": "RGBELoader.js",
+      "bytes": 11377,
+      "durationMs": 60
+    },
+    {
+      "file": "stadium_lighting.js?v=1",
+      "bytes": 4240,
+      "durationMs": 17
+    },
+    {
+      "file": "kloofendal_48d_partly_cloudy_puresky_2k.hdr",
+      "bytes": 5451493,
+      "durationMs": 89
+    },
+    {
+      "file": "kloppenheim_07_puresky_2k.hdr",
+      "bytes": 5003360,
+      "durationMs": 104
+    },
+    {
+      "file": "kloofendal_48d_partly_cloudy_puresky_2k.hdr",
+      "bytes": 5451493,
+      "durationMs": 17
+    }
+  ]
+}

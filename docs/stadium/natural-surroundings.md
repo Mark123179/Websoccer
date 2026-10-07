@@ -1,5 +1,65 @@
 # Natürliches Stadionumfeld
 
+## Aktueller Nachbesserungskandidat — noch keine visuelle Abnahme
+
+Der natürliche Admin-Test verwendet jetzt `visualVersion: 2` und die vom Nutzer
+gelieferten Sketchfab-Archive und das neue OSM-Paket. Die weiter unten beschriebenen
+EZ-Tree-Assets und Leistungszahlen dokumentieren **den vorherigen Stand**, nicht
+den neuen Kandidaten.
+
+- 334 kartierte Einzelbäume bleiben an ihren gelieferten Positionen, zusätzlich
+  vier deterministische Repräsentanten in kartiertem Wald und 26 in kartiertem
+  Gebüsch. Keine Ergänzungen in beliebigen Grünflächen.
+- Sechs echte Modellableitungen aus den drei gelieferten Baumpaketen: 2048er
+  RGBA-WebP-Atlanten, jeweils 8×8 Hemi-Oktaederansichten, alpha-getestete
+  Schatten. Keine neue EZ-Tree-Generierung und kein stiller Rückfall.
+- Alle zehn Pkw-Varianten aus dem gelieferten Fahrzeugpaket. 975 grafische
+  Fahrzeuginstanzen in 1.419 zulässigen Rasterzellen: 68,71 % realisierte
+  Belegung bei 70 % Seed-Ziel. Nur 14 explizite `parking=surface`-Flächen
+  sind geeignet; sechs untypisierte/straßenseitige Flächen werden ausgeschlossen.
+  Fahrzeugschatten verwenden maßstäbliche vereinfachte Proxys statt aller
+  detaillierten Fahrzeugdreiecke.
+- Poly Haven Kloofendal-Tageshimmel und Kloppenheim-Abendhimmel, direkte
+  Schatten mit 4096er Desktop-/2048er Mobilkarte und vorhandene
+  Stadion-Flutlichtplanung. Manuelle Tages-/Abendwahl bleibt bei Kamera-
+  und Dachbedienung bestehen; keine neue Spielwetterlogik.
+- Aerial Grass Rock, Grass Ground und Aerial Asphalt liefern lokale
+  Fernansichts-Bodenmaterialien. Rote Erde nutzt grünes Grass Ground;
+  aufgeführte Gebäudehöhen und unbekannte Fassaden bleiben Annäherungen.
+- Der neue OSM-Export ist **bereits im Spielfeldrahmen**. Seine Positionen
+  werden nicht erneut mit der alten Editor-Kalibrierung gedreht.
+  Der lokale Adapter ist `scripts/import_dortmund_environment.py`;
+  das ursprüngliche beigefügte Exportskript benötigt nicht mitgelieferte
+  externe Module und wurde nicht ungeprüft ausgeführt.
+
+Quellen, konkrete Modellableitungen und Lizenz-/Änderungsangaben stehen in
+`natural_assets/CREDITS.md` und `natural_assets/library_v2.json`; Originalarchive
+werden nicht umgeschrieben. Die ausgelieferte Texturkompression ist WebP,
+**nicht KTX2/Basis**; Fahrzeugmaterialien sind noch keine zusammengeführten
+ein/zwei Atlanten.
+
+**Offene Grenzen:** Die physische Südtribünenzuordnung des Unity-Exports konnte
+nicht aus den vorhandenen semantischen Angaben eindeutig registriert werden.
+`model.mirror` wird als szenenseitiger Längsachsenparameter unterstützt, bleibt
+aber `false`, `verified:false`. Eine richtige geografische Kartenachse allein
+ist kein Nachweis der Stadionmodellorientierung; keine bestätigte Spiegelung
+oder vollständige Kalibrierungsabnahme behaupten.
+
+Der neue Kandidat lädt in einem kalten Prüfbrowser rund **66 MB**
+Stadion-/Three.js-Ressourcen einschließlich der detaillierten Fahrzeugdaten.
+Die Desktop-Szene meldet einschließlich Schattenübergaben ungefähr
+7,2 Millionen Dreiecke und 434 Draw Calls mit Dach. Der Bedarf ist deutlich
+höher als beim vorherigen Stand, nicht allgemein als leicht oder mobilflüssig
+ausgeben. Chromium/SwiftShader ohne Hardware-GPU bestätigt Sichtbarkeit und
+Bedienung, aber keinen Endgeräte-FPS-Benchmark.
+
+Aktuelle echte angemeldete Aufnahmen und Berichte liegen unter
+`docs/stadium/natural-quality-review/`. Desktop 35°/50°/75°, Dach an/aus,
+Reset, Mobilansicht und Tag-/Abendwechsel laden ohne Seiten-/Assetfehler und
+ohne horizontales Überlaufen. Die Bilder sind zur **Beurteilung** bereit,
+nicht als vom Nutzer akzeptierte Referenzqualität freigegeben. Produktiver
+Neon-Editor und Ursprungsgeometrie bleiben unverändert.
+
 ## Umfang
 
 Die natürliche Umgebung ist ausschließlich im Admin-Test unter `/live/test/`

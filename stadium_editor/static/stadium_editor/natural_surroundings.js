@@ -216,6 +216,10 @@ function boundsFromData(packageData) {
  * each source width w becomes a strip with half-width w * 1.25.
  */
 export async function buildNaturalSurroundings(THREE, packageData, {assetBase, camera} = {}) {
+  if (packageData?.visualVersion === 2) {
+    const {buildNaturalSurroundingsV2} = await import('./natural_surroundings_v2.js?v=5');
+    return buildNaturalSurroundingsV2(THREE, packageData, {assetBase, camera});
+  }
   validatePackage(packageData);
   const root = assetRoot(assetBase);
   const group = new THREE.Group();

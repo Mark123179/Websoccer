@@ -56,6 +56,47 @@ def validate_natural_package(package):
         or any(m not in ("neutral", "brick") for m in materials)
     ):
         raise ValueError("Ungültige Gebäudematerialzuordnung.")
+    if package.get("visualVersion") == 2:
+        if frame.get("sceneAxes") != "pitch-west-camera" or frame["fieldC"] != [0, 0] or frame["axisTheta"] != 0:
+            raise ValueError("Neue Ortsdaten müssen bereits in Spielfeldmetern vorliegen.")
+        detail = data.get("sourceDetail", {})
+        if not all(isinstance(detail.get(k), str) and detail[k].strip() for k in ("source", "fetched", "licence")):
+            raise ValueError("Ortsdaten benötigen Quelle, Stand und Lizenz.")
+        north = detail.get("frame", {}).get("northVector")
+        if not point(north) or not 0.95 < math.hypot(*north) < 1.05:
+            raise ValueError("Ungültige Nordkalibrierung.")
+        for key in ("parking", "forest", "scrub", "sports", "landuse", "buildingsTagged", "grassTagged"):
+            features = data.get(key)
+            if not isinstance(features, list):
+                raise ValueError(f"Kartierte Umfeldliste fehlt: {key}.")
+            ids = set()
+            for feature in features:
+                if not isinstance(feature, dict) or type(feature.get("id")) is not int or feature["id"] in ids:
+                    raise ValueError(f"Ungültige oder doppelte Ortskennung: {key}.")
+                ids.add(feature["id"])
+                polygon = feature.get("poly")
+                if not isinstance(polygon, list) or len(polygon) < 3 or not all(point(p) for p in polygon):
+                    raise ValueError(f"Ungültige kartierte Fläche: {key}.")
+                area = sum(a[0] * b[1] - b[0] * a[1] for a, b in zip(polygon, polygon[1:] + polygon[:1]))
+                if abs(area) < 1e-8:
+                    raise ValueError(f"Kartierte Fläche ohne Inhalt: {key}.")
+        rows = data.get("treeRows")
+        if not isinstance(rows, list) or any(
+            not isinstance(r, dict) or not isinstance(r.get("line"), list)
+            or len(r["line"]) < 2 or not all(point(p) for p in r["line"]) for r in rows
+        ):
+            raise ValueError("Ungültige Baumreihen.")
+        tree_meta = data.get("treeMetadata")
+        if not isinstance(tree_meta, list) or len(tree_meta) != len(data["trees"]) or any(
+            not isinstance(t, dict) or type(t.get("id")) is not int or t.get("p") != p
+            for t, p in zip(tree_meta, data["trees"])
+        ):
+            raise ValueError("Einzelbaumdaten und Positionen müssen übereinstimmen.")
+        if len({t["id"] for t in tree_meta}) != len(tree_meta):
+            raise ValueError("Doppelte Einzelbaumkennung.")
+        model = package.get("model", {})
+        if type(model.get("mirror")) is not bool or model.get("mirrorAxis") != "longitudinal":
+            raise ValueError("Ungültige Modellspiegelung.")
     return package
 
 

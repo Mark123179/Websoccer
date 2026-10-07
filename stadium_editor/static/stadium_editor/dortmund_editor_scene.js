@@ -5,6 +5,7 @@ import {addReconstructedFacade, reconstructedFacadeVisible, sourceFacadePreviewC
 import {buildDortmundSurroundings} from './dortmund_surroundings.js?v=51';
 import {tickerCameraFrame, tickerHeightElevation, TICKER_ELEVATION, TICKER_AZIMUTH, TICKER_VIEW_OFFSET} from './dortmund_ticker_camera.js?v=3';
 import {TICKER_ROOF_NAMES, setTickerRoofVisibility} from './dortmund_ticker_roof.js?v=1';
+import {naturalProfileFromUpdate} from './natural_profile.js?v=1';
 
 const ASSET_BASE = new URL('./dortmund_original/', import.meta.url);
 const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
@@ -42,6 +43,10 @@ export async function mountDortmundScene({
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
   renderer.toneMappingExposure = 1.2;
+  if (tickerPreview && naturalPackage) {
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  }
   renderer.localClippingEnabled = tickerPreview;
    renderer.domElement.setAttribute('aria-label', tickerPreview
      ? 'Feste Stadionansicht des Signal Iduna Parks mit geöffnetem Vordergrund und waagerechtem Spielfeld'
@@ -56,6 +61,12 @@ export async function mountDortmundScene({
   if (transparentBackground) renderer.setClearColor(0x000000, 0);
   const world = new THREE.Group();
   scene.add(world);
+  const modelRoot = tickerPreview && naturalPackage ? new THREE.Group() : world;
+  if (modelRoot !== world) {
+    modelRoot.name = 'TICKER_NATURAL_CALIBRATED_MODEL_ONLY';
+    if (naturalPackage.model?.mirror === true) modelRoot.scale.z = -1;
+    world.add(modelRoot);
+  }
    const hemisphere = new THREE.HemisphereLight(0xe7f1f2, 0x344045, 1.35);
    scene.add(hemisphere);
   const sun = new THREE.DirectionalLight(0xfff3d4, 1.5);
@@ -67,6 +78,8 @@ export async function mountDortmundScene({
    let elevation = tickerPreview ? TICKER_ELEVATION : .56, distance = 490;
   let frame = 0, disposed = false, concept = null, colorBands = null, facade = null, environment = null, roofOn = true;
   let naturalLighting = null;
+  let naturalProfileControls = null;
+  let naturalAttribution = null;
   let lastWeights = '', lastColors = '';
   const geometries = [], textures = [], materials = new Map(), facadeMaterials = new Map(), cutawayMaterials = [];
   const facadeSourceParts = [], roof = [], shell = [], tickerRoof = [];
@@ -168,6 +181,10 @@ export async function mountDortmundScene({
     controls.removeEventListener('pointercancel', up);
     controls.removeEventListener('pointermove', move);
     controls.removeEventListener('wheel', wheel);
+    naturalProfileControls?.remove();
+    naturalProfileControls = null;
+    naturalAttribution?.remove();
+    naturalAttribution = null;
     if (concept) concept.dispose();
     facade?.dispose();
     environment?.dispose();
@@ -186,14 +203,11 @@ export async function mountDortmundScene({
   try {
     if (includeSurroundings) {
       if (naturalPackage) {
-        const [{buildNaturalSurroundings}, {configureNaturalLighting}] = await Promise.all([
-          import('./natural_surroundings.js?v=1'), import('./natural_lighting.js?v=1'),
-        ]);
+        const {buildNaturalSurroundings} = await import('./natural_surroundings.js?v=4');
         const naturalAssets = new URL('./natural_assets/', import.meta.url);
         environment = await buildNaturalSurroundings(THREE, naturalPackage, {assetBase: naturalAssets, camera});
-        naturalLighting = await configureNaturalLighting(THREE, scene, renderer, naturalAssets);
-        hemisphere.intensity = .7;
-        sun.intensity = .9;
+        hemisphere.intensity = 0;
+        sun.intensity = 0;
       } else environment = buildDortmundSurroundings(THREE, surroundings, editorFrame);
       scene.add(environment.group);
     }
@@ -250,7 +264,11 @@ export async function mountDortmundScene({
       geometries.push(geometry);
       const mesh = new THREE.Mesh(geometry, groupMaterials);
       mesh.name = `ORIGINAL_${entry.name}`;
-      world.add(mesh);
+      if (naturalPackage) {
+        mesh.castShadow = true;
+        mesh.receiveShadow = true;
+      }
+      modelRoot.add(mesh);
       if (tickerPreview && TICKER_ROOF_NAMES.has(entry.name)) tickerRoof.push(mesh);
       sourcePartSlots.forEach(slot => facadeSourceParts.push({mesh, ...slot}));
       if (ROOF_NAMES.has(entry.name)) {
@@ -269,7 +287,78 @@ export async function mountDortmundScene({
         geometry, source: new Float32Array(geometry.attributes.position.array),
       });
     }
-    facade = addReconstructedFacade(THREE, world);
+    facade = addReconstructedFacade(THREE, modelRoot);
+    if (naturalPackage) {
+      const assetBase = new URL('./natural_assets/', import.meta.url);
+      const {configureNaturalLighting} = await import('./natural_lighting.js?v=2');
+      const lightBounds = new THREE.Box3();
+      const relevant = roof.length ? roof : tickerRoof.length ? tickerRoof : world.children;
+      relevant.forEach(object => {
+        object.updateMatrixWorld(true);
+        lightBounds.union(new THREE.Box3().setFromObject(object));
+      });
+      if (lightBounds.isEmpty()) lightBounds.setFromObject(world);
+      const padded = lightBounds.clone();
+      padded.min.x -= 510; padded.max.x += 510;
+      padded.min.z -= 510; padded.max.z += 510;
+      padded.min.y -= 16; padded.max.y += 38;
+      naturalLighting = await configureNaturalLighting(THREE, scene, renderer, assetBase, {
+        profile: 'day', bounds: padded, roofBounds: lightBounds,
+        onProfileChange: profile => {
+          naturalProfileControls?.querySelectorAll('button').forEach(button => {
+            const active = button.dataset.profile === profile;
+            button.setAttribute('aria-pressed', String(active));
+            button.style.background = active ? '#e8d39b' : '#273337';
+            button.style.color = active ? '#172124' : '#e7e9e4';
+          });
+        },
+      });
+      const selector = document.createElement('div');
+      selector.setAttribute('role', 'group');
+      selector.setAttribute('aria-label', 'Stadionbeleuchtung');
+      selector.dataset.naturalProfileControls = '';
+      Object.assign(selector.style, {
+        position:'absolute',right:'12px',top:'12px',zIndex:'4',display:'flex',gap:'5px',
+        padding:'5px',border:'1px solid rgba(222,220,203,.24)',borderRadius:'7px',
+        background:'rgba(20,31,34,.88)',backdropFilter:'blur(8px)',
+        boxShadow:'0 5px 20px rgba(12,20,22,.22)',
+      });
+      for (const [profile,label] of [['day','Tageslicht'],['night','Flutlicht-Abend']]) {
+        const button=document.createElement('button');
+        button.type='button';button.textContent=label;button.dataset.profile=profile;
+        button.setAttribute('aria-pressed',String(profile==='day'));
+        Object.assign(button.style,{border:'0',borderRadius:'4px',padding:'7px 9px',
+          font:'600 11px/1.15 system-ui,sans-serif',cursor:'pointer',transition:'background .15s ease,color .15s ease',
+          background:profile==='day'?'#e8d39b':'#273337',color:profile==='day'?'#172124':'#e7e9e4'});
+        button.addEventListener('click',async()=>{
+          button.disabled=true;
+          try{
+            await naturalLighting?.setProfile(profile);
+            selector.querySelectorAll('button').forEach(item=>{
+              const active = item === button;
+              item.setAttribute('aria-pressed',String(active));
+              item.style.background=active?'#e8d39b':'#273337';
+              item.style.color=active?'#172124':'#e7e9e4';
+            });
+          }
+          catch(error){onStatus(`Lichtprofil nicht verfügbar · ${error.message}`);}
+          finally{button.disabled=false;}
+          render();
+        });
+        selector.append(button);
+      }
+      if (getComputedStyle(element).position==='static') element.style.position='relative';
+      element.append(selector);naturalProfileControls=selector;
+      const attribution=document.createElement('a');
+      attribution.href='https://www.openstreetmap.org/copyright';
+      attribution.target='_blank';attribution.rel='noopener noreferrer';
+      attribution.textContent='© OpenStreetMap contributors';
+      attribution.setAttribute('aria-label','Geografische Daten: OpenStreetMap contributors, ODbL');
+      Object.assign(attribution.style,{position:'absolute',left:'12px',bottom:'10px',zIndex:'4',
+        padding:'5px 7px',borderRadius:'4px',background:'rgba(20,31,34,.78)',
+        color:'#e6e9e3',font:'500 10px/1.2 system-ui,sans-serif',textDecoration:'none'});
+      element.append(attribution);naturalAttribution=attribution;
+    }
     if (tickerPreview) {
       // GPU clipping cuts even source triangles spanning the entire front roof.
       // Keep source indices/UVs intact. Exempt the measured pitch meshes so
@@ -337,11 +426,11 @@ export async function mountDortmundScene({
         if (weights && JSON.stringify(weights) !== lastWeights) {
           lastWeights = JSON.stringify(weights);
           const next = Object.fromEntries(sideOrder.map(side => [side, clamp(Number(weights[side]) || 0, 0, 1)]));
-          if (concept) { world.remove(concept.group); concept.dispose(); concept = null; }
+           if (concept) { modelRoot.remove(concept.group); concept.dispose(); concept = null; }
           for (const {geometry, source} of shell) warpShell(geometry, source, next);
           if (Object.values(next).some(Boolean)) {
             concept = buildConcept(THREE, next);
-            world.add(concept.group);
+             modelRoot.add(concept.group);
           }
           roof.forEach(mesh => {
             mesh.material = concept ? mesh.userData.cutaway : mesh.userData.original;
@@ -403,13 +492,19 @@ export async function mountDortmundScene({
           azimuth = Number(orbit.azimuth) * Math.PI / 180 + .88;
           elevation = clamp(Number(orbit.elevation) * Math.PI / 180, .15, 1.35);
         }
-         // Daylight remains a subtle tint; the map environment must retain its dark neon contrast.
-          if (typeof day === 'boolean' && !transparentBackground) {
-           const environmentColor = day ? '#081719' : nightEnvironment;
-           scene.background.set(environmentColor);
-           scene.fog.color.set(environmentColor);
-         }
-        if (typeof floodlight === 'boolean') sun.intensity = floodlight ? 2 : 1.5;
+        // Daylight remains a subtle tint; the map environment must retain its dark neon contrast.
+        if (typeof day === 'boolean' && !transparentBackground && !naturalPackage) {
+          const environmentColor = day ? '#081719' : nightEnvironment;
+          scene.background.set(environmentColor);
+          scene.fog.color.set(environmentColor);
+        }
+        const explicitNaturalProfile = naturalProfileFromUpdate({day, floodlight});
+        if (naturalPackage && explicitNaturalProfile) {
+          naturalLighting?.setProfile(explicitNaturalProfile)
+            .catch(error => onStatus(`Lichtprofil nicht verfügbar · ${error.message}`));
+        } else if (!naturalPackage && typeof floodlight === 'boolean') {
+          sun.intensity = floodlight ? 2 : 1.5;
+        }
         render();
         return Promise.resolve();
       },

@@ -20,3 +20,9 @@ Bei einer nach dem ersten Bild pausierten WebGL-Szene kann die Software-Browsera
 **Why:** Die Screenshot-Aufnahme wartete erfolglos auf stabile Browserframes; derselbe angemeldete Test konnte den tatsächlich gerenderten Canvas auf Desktop und Mobilgerät exportieren.
 
 **How to apply:** Die Aufnahme vom Rendererzustand unterscheiden. Für die Prüfung den Zeichenpuffer im Browser erhalten und den Canvas exportieren; diese Speicheroption nicht allein für Screenshots dauerhaft in die Anwendung einbauen. Der Export belegt den Canvas, nicht die umgebende Oberfläche.
+
+Bei komplexen Schatten-/Instanzszenen können mehrere erfolgreiche Canvas-Exporte zusammen die Laufzeitgrenze eines Shellaufrufs überschreiten.
+
+**Why:** Eine vollständige Desktop-/Mobilreihe mit Software-WebGL überschritt die Grenze, obwohl die ersten fünf Bilder korrekt gespeichert waren. GPU-Synchronisation beim Export ist keine Hardware-FPS-Messung.
+
+**How to apply:** Aufnahmereihen nach Szenarien aufteilen oder als überwachte Hintergrundarbeit ausführen und Ergebnisse nach jedem Bild sichern; einen Timeout nicht ohne Prüfung als Szenendefekt werten.

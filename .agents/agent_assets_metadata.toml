@@ -1026,3 +1026,45 @@ mtime_ms = 1791395956883
 storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:6e4eaecc-e6c5-4f64-8de5-e8845034f33b/0de66e72-fc05-4316-801f-81ab54515f0d/f70d9e08-18f0-448a-ba83-ae65b3b14274"
 storage_version_token = "1791396163097845"
 content_type = "image/png"
+
+[[outputs]]
+id = "V3a1gnXCBueGYKmhv4BX3"
+uri = "file://docs/stadium/natural-quality-review/desktop-roof-off.png"
+type = "image"
+title = "Dortmund – aktueller Kandidat bei Tageslicht"
+description = "Tatsächlich gerenderte Admin-Testansicht ohne Dach, mit neuem Ortsdatenpaket, Bodenmaterialien und Schatten. Noch keine visuelle Abnahme."
+logical_id = "798c34e2-c932-4acd-9b92-d04d6726a093"
+content_hash = "sha256:a82fba579449c4766aae4916f0abd3f8ba3f300112c03a9b93c04799322c2a44"
+size = 938932
+mtime_ms = 1791406186529
+storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:6e4eaecc-e6c5-4f64-8de5-e8845034f33b/798c34e2-c932-4acd-9b92-d04d6726a093/c23bf296-2a6c-4cd6-90e4-2eee9dea676d"
+storage_version_token = "1791406315799226"
+content_type = "image/png"
+
+[[outputs]]
+id = "vspKFg9qmrd8eIe7plsm8"
+uri = "file://docs/stadium/natural-quality-review/desktop-night.png"
+type = "image"
+title = "Dortmund – aktueller Kandidat mit Flutlicht"
+description = "Dieselbe Testansicht im manuell gewählten Abendprofil; ursprüngliche Stadiongeometrie erhalten."
+logical_id = "80186926-1d02-4571-97d2-cc86313079f5"
+content_hash = "sha256:4bd0937a78a0586a58cee4f7b7e1cdaa75aaeba8ae10b8bfd5c70fe563a3faa1"
+size = 783012
+mtime_ms = 1791406186535
+storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:6e4eaecc-e6c5-4f64-8de5-e8845034f33b/80186926-1d02-4571-97d2-cc86313079f5/7a47489b-be47-41a7-8f82-6006ae397c03"
+storage_version_token = "1791406316718109"
+content_type = "image/png"
+
+[[outputs]]
+id = "D-D8gsHmX_QElQ-j2iK_F"
+uri = "file://docs/stadium/natural-quality-review/desktop-height-35.png"
+type = "image"
+title = "Dortmund – Kamerahöhe 35°"
+description = "Weiterer tatsächlicher Ausschnitt zur Beurteilung von Umgebung, Vegetation und räumlicher Wirkung."
+logical_id = "a6ced2cb-9d69-41f6-bab0-3acfb9ada35e"
+content_hash = "sha256:745ce884ac33ac89d32be2a9be7ba07aeb3203346cf1b111351cea2660f7ae98"
+size = 980273
+mtime_ms = 1791406186532
+storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:6e4eaecc-e6c5-4f64-8de5-e8845034f33b/a6ced2cb-9d69-41f6-bab0-3acfb9ada35e/2fdaaf22-5f1a-4759-befa-e05ad880153a"
+storage_version_token = "1791406317483911"
+content_type = "image/png"
