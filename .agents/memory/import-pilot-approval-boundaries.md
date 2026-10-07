@@ -107,3 +107,9 @@ Sicherheitsbefunde in zwei Gruppen teilen: vor der Umstellung alles beheben, was
 **Why:** Der Nutzer verlangt diese risikobasierte Reihenfolge ausdrücklich; vorhandene Versionswartung ohne neuen Angriffsweg soll die Umstellung nicht pauschal blockieren.
 
 **How to apply:** Nicht jede Versions-/CVE-Meldung automatisch als Vorab-Blocker werten, sondern betroffene Funktion und erreichbaren Angriffsweg prüfen. Ungeprüfte Einsatzbedingungen nicht als erwiesene Nichterreichbarkeit ausgeben. Die ZIP-Importannahme auf dem echten Server besonders berücksichtigen.
+
+Vor der Umstellung den ZIP-Sicherheitsfix mit einheitlich reinen Text-Fehlerantworten, Markerfällen in Datum/Zahlenfeld/Vereinsname/Lückentext und einmaliger Maskierungsprüfung aller Pakettext-Ansichten abnehmen; danach muss ein neuer Gesamtlauf grün sein. Die neun Bibliotheksmeldungen und reine Versionswartung bleiben bei unverändertem Aufbau nachgelagert und ohne Termindruck.
+
+**Why:** Der Nutzer präzisiert die Umstellungsregel ausdrücklich; datumsfeldbezogene Korrekturen und alte grüne Tests reichen nicht.
+
+**How to apply:** Paketvorschau, Arbeitsliste, Ruhmeshalle und Transferhistorie einschließlich ihrer HTML-Helfer berücksichtigen. Mark prüft bei der manuellen Umstellung ausgehende HTTPS-Proxys und abweichende Zieladressen auf Hetzner; bei Abweichungen die Erreichbarkeit neu bewerten. Den nginx-Reverse-Proxy nicht mit einem ausgehenden HTTPS-Forward-Proxy verwechseln.
