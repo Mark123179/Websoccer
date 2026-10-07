@@ -1,5 +1,5 @@
 const sceneURL = new URL('../../stadium_editor/dortmund_editor_scene.js', import.meta.url);
-sceneURL.searchParams.set('v', `ticker-${new URL(import.meta.url).searchParams.get('v') || '6'}`);
+sceneURL.searchParams.set('v', `ticker-${new URL(import.meta.url).searchParams.get('v') || '7'}`);
 
 const canvasHost = document.getElementById('ticker-stadium-preview');
 const statusHost = document.getElementById('ticker-stadium-status');

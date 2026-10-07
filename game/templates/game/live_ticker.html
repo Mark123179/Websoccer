@@ -8,7 +8,7 @@
   <title>Live-Ticker · {{ home_name }} – {{ away_name }}</title>
   <link rel="stylesheet" href="{% static 'game/css/live_story.css' %}?v=3">
   {% if is_test %}
-  <link rel="stylesheet" href="{% static 'game/css/ticker_stadium_preview.css' %}?v=6">
+  <link rel="stylesheet" href="{% static 'game/css/ticker_stadium_preview.css' %}?v=7">
   <script type="importmap">{"imports":{"three":"{% static 'stadium_editor/stage/vendor/three.module.js' %}"}}</script>
   {% endif %}
 </head>
@@ -79,7 +79,7 @@
   <script src="{% static 'game/js/live_story.js' %}?v=3" defer></script>
   {% if is_test %}
   {{ ticker_stadium_environment|json_script:"ticker-stadium-environment" }}
-  <script type="module" src="{% static 'game/js/ticker_stadium_preview.js' %}?v=6"></script>
+  <script type="module" src="{% static 'game/js/ticker_stadium_preview.js' %}?v=7"></script>
   {% endif %}
 </body>
 </html>

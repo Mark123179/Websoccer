@@ -3,6 +3,7 @@ import {buildConcept, warpShell, ROOF_NAMES, SHELL_NAMES} from './dortmund_conce
 import {previewSupportsMaterial, sourceOpaqueColor} from './dortmund_source_materials.js';
 import {addReconstructedFacade, reconstructedFacadeVisible, sourceFacadePreviewColor} from './dortmund_reconstructed_facade.js?v=2';
 import {buildDortmundSurroundings} from './dortmund_surroundings.js?v=51';
+import {tickerCameraFrame, TICKER_ELEVATION, TICKER_AZIMUTH} from './dortmund_ticker_camera.js?v=1';
 
 const ASSET_BASE = new URL('./dortmund_original/', import.meta.url);
 const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
@@ -39,7 +40,9 @@ export async function mountDortmundScene({
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
   renderer.toneMappingExposure = 1.2;
   renderer.localClippingEnabled = tickerPreview;
-  renderer.domElement.setAttribute('aria-label', interactive
+   renderer.domElement.setAttribute('aria-label', tickerPreview
+     ? 'Feste Stadionansicht des Signal Iduna Parks mit geöffnetem Vordergrund und waagerechtem Spielfeld'
+     : interactive
     ? 'Drehbarer Unity-Mesh-Auszug des Signal Iduna Parks mit vereinfachten Materialien und konzeptioneller Erweiterung'
     : 'Automatisch rotierende 3D-Ansicht des Signal Iduna Parks');
   element.replaceChildren(renderer.domElement);
@@ -58,8 +61,8 @@ export async function mountDortmundScene({
     ? new THREE.OrthographicCamera(-150, 150, 90, -90, 1, 2400)
     : new THREE.PerspectiveCamera(42, 1, 1, 2400);
   const target = new THREE.Vector3(0, 25, 0);
-  let azimuth = tickerPreview ? -Math.PI / 2 : .88;
-  let elevation = tickerPreview ? .96 : .56, distance = 490;
+   let azimuth = tickerPreview ? TICKER_AZIMUTH : .88;
+   let elevation = tickerPreview ? TICKER_ELEVATION : .56, distance = 490;
   let frame = 0, disposed = false, concept = null, colorBands = null, facade = null, environment = null, roofOn = true;
   let lastWeights = '', lastColors = '';
   const geometries = [], textures = [], materials = new Map(), facadeMaterials = new Map();
@@ -109,11 +112,12 @@ export async function mountDortmundScene({
     camera.aspect = width / height;
     if (tickerPreview) {
       // Pitch's goal-to-goal Z axis is horizontal from this fixed side view.
-      const viewHeight = 174;
-      camera.left = -viewHeight * camera.aspect / 2;
-      camera.right = viewHeight * camera.aspect / 2;
-      camera.top = viewHeight / 2;
-      camera.bottom = -viewHeight / 2;
+       const framing = tickerCameraFrame(camera.aspect);
+       camera.left = framing.left;
+       camera.right = framing.right;
+       camera.top = framing.top;
+       camera.bottom = framing.bottom;
+       target.set(0, framing.targetY, 0);
     }
     // Shift projection, not the canvas or model: shared viewers stay unchanged.
     if (verticalFraming) camera.setViewOffset(width, height, 0,

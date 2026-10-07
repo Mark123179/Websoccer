@@ -100,8 +100,8 @@
 
 @media (max-width: 700px) {
   #ticker-stadium-preview {
-    min-height: 230px;
-    aspect-ratio: 1.32;
+    min-height: 180px;
+    aspect-ratio: 16 / 8.4;
   }
 
   #ticker-stadium-preview canvas { min-height: 0; }
