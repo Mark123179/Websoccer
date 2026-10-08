@@ -11,6 +11,14 @@ description: Verbindliche Bildhierarchie, nicht abgenommene Umfeldversuche und b
 
 **How to apply:** Spielfeld und Lesbarkeit des 2D-Spiels zuerst gestalten; Stadion als räumlichen Rahmen, Ortskulisse nachgeordnet. Echte Stadionformen und einen vergleichbaren Feldmaßstab verwenden, nicht bloß eine generische Schüssel kapazitätsabhängig skalieren. Zuerst Bildaufbau visuell klären; keinen weiteren vollständigen Grafikumbau als bereits freigegeben behandeln und die bisherigen Bilder nicht zur unveränderlichen Zielkamera machen.
 
+## Einheitliches Spielfeld
+
+„Das Spielfeld muss aber in jedem Stadion gleich groß sein, sonst bekommen wir beim Ablauf im 2D Modus probleme?!“
+
+**Why:** Der Nutzer machte die Gleichheit ausdrücklich zur Bedingung für den 2D-Spielablauf.
+
+**How to apply:** Einheitliche Spielkoordinaten und bei gleicher Ansicht/Fenstergröße identische sichtbare Feldgröße, Position und Perspektive vorsehen. Vereine, Kapazitäten und Ausbauten ändern nur den Stadionrahmen; keine vereinsabhängige Kameraeinpassung. Responsive Anpassungen skalieren alle Ebenen gemeinsam. Fremde Modellmaße an den gemeinsamen Spielfeldvertrag anschließen, nicht die Spielkoordinaten an jeden Import anpassen.
+
 ## Bisheriger Bildansatz
 
 „Wir nehmen unser Stadionmodell und das Spielfeld wie gehabt und das Umfeld machen wir als zwei Bilder Tag & Nacht je Verein.“ „Ich werde die Bilder liefern.“
