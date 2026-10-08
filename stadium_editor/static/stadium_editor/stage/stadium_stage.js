@@ -147,7 +147,7 @@ function facadeTexture(floors) {
 /* ── Modul ──────────────────────────────────────────────────────────── */
 export function createStadiumStage({ canvas, scene, width, height, drawPitch = false, preset = PRESET, rules = RULES, seatMode = 'instances',
                                      view = 'match', orbit = {}, surroundings = null, facade = null, seat = null, lighting = 'day',
-                                     floodlight = false, exposure = 1, design = null }) {
+                                      floodlight = false, exposure = 1, design = null, coordinateRotation = null }) {
   let lightingMode = lighting === 'night' ? 'night' : 'day';
   const isSeat = view === 'seat';
   const isOrbit = view === 'orbit' || isSeat;
@@ -161,7 +161,9 @@ export function createStadiumStage({ canvas, scene, width, height, drawPitch = f
 
   /* Koordinaten: Szene (X, Y, Z) → gedreht (mainStand bei +Y) → three (x = −X, y = Z, z = Y).
    * Die Abbildung ist eine echte Drehung (det = +1): Kamera auf der Haupttribüne, +X links im Bild. */
-  const phi = sceneRotation(scene), cph = Math.cos(phi), sph = Math.sin(phi);
+  const phi = coordinateRotation === null ? sceneRotation(scene) : coordinateRotation;
+  if (!Number.isFinite(phi)) throw new Error('Ungültige Szenenrotation.');
+  const cph = Math.cos(phi), sph = Math.sin(phi);
   const rot = p => [p[0] * cph - p[1] * sph, p[0] * sph + p[1] * cph];
   const toWorld = (p, z) => { const r = rot(p); return new THREE.Vector3(-r[0], z, r[1]); };
 
@@ -797,6 +799,9 @@ export function createStadiumStage({ canvas, scene, width, height, drawPitch = f
 
   return {
     project, render, dispose, camera, renderer, seatAt, adaptQuality,
+    // Read-only study integration: adding source geometry does not change the
+    // existing renderer's camera, lights or default editor behavior.
+    sceneRoot: three, pitchMaterials: lightingMaterials.pitch,
     setFloodlights, setLightingMode, setExposure,
     backgroundReady() {
       const texture = skyTextures[lightingMode];

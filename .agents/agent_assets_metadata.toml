@@ -1096,3 +1096,45 @@ mtime_ms = 1791446140301
 storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:6e4eaecc-e6c5-4f64-8de5-e8845034f33b/80e5ee69-4662-4548-a59f-51b1c4a25dbe/eb00af5b-566a-4e5a-aaf6-d228ba80527a"
 storage_version_token = "1791446307863098"
 content_type = "image/png"
+
+[[outputs]]
+id = "pmyWzukG9INB3PCVw77xW"
+uri = "file://docs/stadium/field-study-review/camera-comparison.png"
+type = "image"
+title = "Dortmund und Elversberg — zwei feldzentrierte Ansichten"
+description = "Tatsächlich gerenderter Vergleich bei identischer Feldprojektion. Oben: perspektivische Spielansicht. Unten: empfohlene Schnittansicht. Figuren und Ball sind ausdrücklich eine 2D-Demonstration; Umfeldbilder sind noch nicht integriert."
+logical_id = "1803cafb-48da-47b5-ac01-a4cc69986394"
+content_hash = "sha256:401736cdbf20a74068929305b7f880a95e41a768fe7a4b4db7ee926cb3fec1b2"
+size = 559632
+mtime_ms = 1791466121963
+storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:6e4eaecc-e6c5-4f64-8de5-e8845034f33b/1803cafb-48da-47b5-ac01-a4cc69986394/4b91298a-323f-4a67-9b09-387fca57f88c"
+storage_version_token = "1791466415691200"
+content_type = "image/png"
+
+[[outputs]]
+id = "uItN4M6xbnSxJUc1Gk-i5"
+uri = "file://docs/stadium/field-study-review/camera-reference.png"
+type = "image"
+title = "Kamerareferenz für die empfohlene Schnittansicht"
+description = "1880×940 Pixel. Feste Referenz für neue vereinsbezogene Umfeldbilder; keine Generierung oder Verzerrung der gelieferten Fotos."
+logical_id = "8edb8bff-f3fd-4324-8b09-62c90ed9eb4f"
+content_hash = "sha256:8dcf1c0ff3b5251afb2971e0033c7ba3f8b41971d0fdde798a9466be2bf254cb"
+size = 1050503
+mtime_ms = 1791466106587
+storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:6e4eaecc-e6c5-4f64-8de5-e8845034f33b/8edb8bff-f3fd-4324-8b09-62c90ed9eb4f/1b7a7499-292d-4dbc-97d5-58511819b7de"
+storage_version_token = "1791466416683632"
+content_type = "image/png"
+
+[[outputs]]
+id = "HZytPYvjZ0iC1lA89Xxu_"
+uri = "file://docs/stadium/field-study-review/stadium-mask.png"
+type = "image"
+title = "Passende Stadion-Silhouettenmaske"
+description = "1880×940 Pixel, weiß auf schwarz. Gehört zur selben festen Kamera wie die Referenz und enthält keine Demofiguren oder Feldmarkierungen."
+logical_id = "aa454061-3570-4915-980d-e7ad5445ae26"
+content_hash = "sha256:fbaa2f9a07a8ab83dd094ec612e6c9e49ca848416fb7f8f4edd11ae237371df4"
+size = 47648
+mtime_ms = 1791466112863
+storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:6e4eaecc-e6c5-4f64-8de5-e8845034f33b/aa454061-3570-4915-980d-e7ad5445ae26/811be8f0-4e05-483a-add8-6de8dcf11e6b"
+storage_version_token = "1791466417606514"
+content_type = "image/png"

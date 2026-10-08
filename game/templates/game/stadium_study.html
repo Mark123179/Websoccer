@@ -1,0 +1,183 @@
+{% load static %}
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#03070c">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%2303070c'/%3E%3Cpath d='M8 7h9a5 5 0 0 1 0 10H8V7zm0 10h10a4 4 0 0 1 0 8H8v-8z' fill='none' stroke='%2322e6ff' stroke-width='2'/%3E%3C/svg%3E">
+  <title>Stadionstudie · BLUEPRINT Football Manager</title>
+  <link rel="stylesheet" href="{% static 'game/css/stadium_study.css' %}?v=3">
+  <script type="importmap">{"imports":{"three":"{% static 'stadium_editor/stage/vendor/three.module.js' %}","three/addons/":"{% static 'stadium_editor/stage/vendor/addons/' %}"}}</script>
+</head>
+<body class="stadium-study">
+  <main class="ss-shell">
+    <header class="ss-topbar">
+      <a class="ss-brand" href="/" aria-label="BLUEPRINT Football Manager">
+        <span class="ss-brand-mark" aria-hidden="true">B</span>
+        <span>BLUEPRINT<small>FOOTBALL MANAGER</small></span>
+      </a>
+      <div class="ss-top-meta"><span class="ss-live-mark" aria-hidden="true"></span><span>Isolierte Admin-Studie</span></div>
+    </header>
+
+    <section class="ss-intro" aria-labelledby="study-title">
+      <div>
+        <p class="ss-eyebrow">STADION · GEOMETRIE · KAMERAHYPOTHESEN</p>
+        <h1 id="study-title">Zwei Stadien.<br><span>Ein Feldmaß.</span></h1>
+        <div class="ss-contract">Kanonisches Spielfeld · 105 × 68 m</div>
+      </div>
+      <p class="ss-intro-copy">Ein direkter Geometrievergleich statt Matchsimulation. Das Spielfeld ist der gemeinsame Maßstab; Dach, Tribünen und Lichtdiagnostik bleiben sichtbar getrennte Hypothesen.</p>
+    </section>
+
+    <section class="ss-control-panel" aria-label="Gemeinsame Studiensteuerung">
+      <div class="ss-control-group">
+        <label class="ss-control-heading" for="study-concept">Kamerakonzept</label>
+        <div class="ss-select-wrap">
+          <select id="study-concept" aria-describedby="study-concept-explanation">
+            <option value="perspective">Perspektive · Tribünenvergleich</option>
+            <option value="cutaway">Cutaway · Dach-/Innenraumhypothese</option>
+          </select>
+        </div>
+        <p class="ss-concept-hypotheses" id="study-concept-explanation">
+          <span><strong>Perspektive:</strong> beide Stadien aus vergleichbarer Seitenhöhe lesen.</span>
+          <span><strong>Cutaway:</strong> steilerer Blick mit mehr sichtbarer Feldfläche.</span>
+        </p>
+      </div>
+
+      <div class="ss-control-group">
+        <span class="ss-control-heading">Dachgeometrie</span>
+        <label class="ss-switch" for="study-roof">
+          <input id="study-roof" type="checkbox" role="switch" checked>
+          <span class="ss-switch-track" aria-hidden="true"></span><span>Dach zeigen</span>
+        </label>
+        <p class="ss-control-hint">Inklusive Träger und Dachaufbauten.</p>
+      </div>
+
+      <div class="ss-control-group">
+        <span class="ss-control-heading">Umgebungslicht</span>
+        <label class="ss-switch" for="study-night">
+          <input id="study-night" type="checkbox" role="switch">
+          <span class="ss-switch-track" aria-hidden="true"></span><span>Nachtansicht</span>
+        </label>
+        <p class="ss-control-hint">Visuelle Vorschau, keine Matchzeit.</p>
+      </div>
+
+      <div class="ss-control-group">
+        <span class="ss-control-heading">Diagnose</span>
+        <label class="ss-switch" for="study-floodlight">
+          <input id="study-floodlight" type="checkbox" role="switch" checked>
+          <span class="ss-switch-track" aria-hidden="true"></span><span>Modell-Flutlicht</span>
+        </label>
+        <label class="ss-switch" for="study-lights">
+          <input id="study-lights" type="checkbox" role="switch">
+          <span class="ss-switch-track" aria-hidden="true"></span><span>Lampen prüfen</span>
+        </label>
+        <p class="ss-control-hint">Lampen-Overlay; Datenlage begrenzt.</p>
+      </div>
+
+      <div class="ss-control-group">
+        <span class="ss-control-heading">Bewegungsstudie</span>
+        <label class="ss-switch" for="study-demo">
+          <input id="study-demo" type="checkbox" role="switch" checked>
+          <span class="ss-switch-track" data-tone="green" aria-hidden="true"></span><span>2D-Demo</span>
+        </label>
+        <p class="ss-control-hint">Nur Overlay-Demo, keine Simulation.</p>
+      </div>
+
+      <div class="ss-pause-wrap">
+        <button class="ss-button ss-button-dark" id="study-pause" type="button" aria-label="Studienanimation pausieren oder fortsetzen">Pause</button>
+      </div>
+    </section>
+
+    <section aria-labelledby="stages-heading">
+      <div class="ss-stages-heading">
+        <h2 id="stages-heading">Geometrievergleich</h2>
+        <p>Gleiche Ansichtsfläche · 2:1</p>
+      </div>
+
+      <div class="ss-stage-grid">
+        <article class="ss-stage-panel" id="dortmund" aria-labelledby="dortmund-heading">
+          <header class="ss-stage-heading">
+            <div class="ss-stage-title">
+              <span class="ss-stage-index">01</span>
+              <h3 id="dortmund-heading">Signal Iduna Park</h3>
+            </div>
+            <span class="ss-stage-tag">Dortmund</span>
+          </header>
+          <div id="study-dortmund" class="ss-stage-surface" role="img" aria-label="Interaktive 3D-Stadienansicht: Signal Iduna Park, Dortmund"></div>
+          <div id="study-dortmund-status" class="ss-stage-status" role="status" aria-live="polite">Dortmund-Modell wird geladen …</div>
+          <div class="ss-evidence">
+            <div class="ss-evidence-item">
+              <span class="ss-evidence-label">Geometriequelle</span>
+              <p>Originale Unity-Meshes als Basis der Stadiongeometrie.</p>
+            </div>
+            <div class="ss-evidence-item">
+              <span class="ss-evidence-label">Bildreferenzen · nicht als Kulisse</span>
+              {% if study_config.images %}
+              <div class="ss-reference-strip">
+                {% for image_name, image_url in study_config.images.items %}
+                <figure class="ss-reference">
+                  <img src="{{ image_url.url }}" alt="Dortmund-Fotoreferenz {{ image_name }}" loading="lazy">
+                  <figcaption>{{ image_name }}</figcaption>
+                </figure>
+                {% endfor %}
+              </div>
+              {% endif %}
+              <p class="ss-reference-note">Die gelieferten Fotos sind auf eine verworfene Luftbildkamera kalibriert. Nur Referenz – nicht hinter diese neue Kamera gestreckt.</p>
+            </div>
+          </div>
+        </article>
+
+        <article class="ss-stage-panel" id="elversberg" aria-labelledby="elversberg-heading">
+          <header class="ss-stage-heading">
+            <div class="ss-stage-title">
+              <span class="ss-stage-index">02</span>
+              <h3 id="elversberg-heading">URSAPHARM-Arena</h3>
+            </div>
+            <span class="ss-stage-tag">Elversberg</span>
+          </header>
+          <div id="study-elversberg" class="ss-stage-surface" role="img" aria-label="Interaktive 3D-Stadienansicht: URSAPHARM-Arena, Elversberg"></div>
+          <div id="study-elversberg-status" class="ss-stage-status" role="status" aria-live="polite">Elversberg-Modell wird geladen …</div>
+          <div class="ss-evidence">
+            <div class="ss-evidence-item">
+              <span class="ss-evidence-label">Geometriequelle</span>
+              <p>Bestehender vermessener Blueprint. Keine gleichwertige Originalquelle wie die Dortmund-Unity-Meshes.</p>
+            </div>
+            <div class="ss-evidence-item">
+              <span class="ss-evidence-label">Umfeldreferenz</span>
+              <p>Kein Umgebungsfoto bereitgestellt. Die Ansicht bleibt bewusst geometrisch; es wird keine Kulisse erfunden.</p>
+            </div>
+          </div>
+        </article>
+      </div>
+
+      <div class="ss-export-row">
+        <p class="ss-export-copy">Referenz und Silhouette beziehen sich auf die aktuell ausgewählte Kamerakonfiguration. Beide Exporte werden durch die Studiensteuerung erzeugt.</p>
+        <div class="ss-export-actions">
+          <button class="ss-button" id="study-export-reference" type="button">Kamerareferenz exportieren</button>
+          <button class="ss-button ss-button-dark" id="study-export-mask" type="button">Silhouette exportieren</button>
+        </div>
+      </div>
+    </section>
+
+    <aside class="ss-notes" aria-label="Hinweise zur Evidenz und zum Demo-Modus">
+      <section class="ss-note">
+        <h2>Evidenz ist nicht gleich Evidenz</h2>
+        <p>Dortmund basiert auf originalen Unity-Meshes. Elversberg basiert auf einem vorhandenen vermessenen Blueprint – die Quellqualität ist <strong>nicht gleichwertig</strong>. Dortmund-Fotos sind auf eine verworfene Luftbildkamera kalibriert und bleiben ausschließlich Referenzbilder.</p>
+      </section>
+      <section class="ss-note">
+        <h2>Lampendaten unvollständig</h2>
+        <p>Dortmund: gesondert exportierte Unity-Spotlights mit räumlichem Bezug zu den Leuchtenbauteilen. Elversberg: keine belegten Leuchtenpositionen; deshalb bleibt die Nachtbeleuchtung dort ausdrücklich unvollständig. Es werden keine Ersatzlichter erzeugt.</p>
+      </section>
+    </aside>
+
+    <footer class="ss-footer">
+      <span>BLUEPRINT · Admin-Stadionstudie</span>
+      <span>2D-Demo-only · keine Matchsimulation</span>
+    </footer>
+  </main>
+
+  {{ study_config|json_script:"stadium-study-config" }}
+  <script type="module" src="{% static 'game/js/stadium_study.js' %}?v=3"></script>
+</body>
+</html>

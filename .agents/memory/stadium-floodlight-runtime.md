@@ -29,3 +29,17 @@ Bei dieser Begrenzung müssen repräsentative Lichtquellen an deklarierten reale
 **Why:** Die neue Nutzeranforderung verlangt nachgewiesene Modellleuchten, auch wenn die Laufzeit aus Leistungsgründen weniger Lichtquellen nutzt.
 
 **How to apply:** Reale Leuchten als Gruppenrepräsentanten auswählen und die übrigen zugeordneten Köpfe dokumentieren; keine künstlichen Ecken oder Mittelpunkte als Lichtursprung erzeugen.
+
+Quelllicht-Intensität ist Provenienz, nicht automatisch eine passende
+Three.js-Helligkeit. Eine Browserkalibrierung darf Lichtstärke und Gruppengewicht
+anpassen, aber keine erfundenen Montagepunkte, Lichtachsen oder unsichtbaren
+Rasen-/Sitzemissionen hinzufügen.
+
+**Why:** Unity- und Browserbeleuchtung sind nicht dieselbe Darstellungseinheit;
+direktes Übernehmen bei anderem Distanzabfall kann das Bild überstrahlen oder
+das Spielfeld trotz echter Quellen unlesbar machen.
+
+**How to apply:** Intensitätskalibrierung und Gruppierung offenlegen. Originale
+Positionen, Winkel und Richtungen erhalten; Tag/Nacht und Flutlicht separat
+prüfen. Selbstleuchtende Editor-Materialien nicht ungeprüft in eine
+quellgebundene Nachtstudie übernehmen.
