@@ -50,6 +50,17 @@ in den Hintergrund malen, Tag/Nacht strukturell zusammenhalten und erzeugte
 Bilder als KI-generiert kennzeichnen. Reale Ortsmerkmale anhand von Referenzen
 prüfen; generierte Kulissen nicht als fotografisch verifizierte Geografie ausgeben.
 
+„auch sieht das Umfeld nicht aus wie das des original Stadions. Kommen wir da
+noch näher ans Original ran?“ Eine nur plausible regionale Sportpark-Kulisse
+erfüllt den gewünschten Ortsbezug nicht.
+
+**Why:** Der Nutzer beanstandet ausdrücklich die fehlende Ähnlichkeit zum
+Originalumfeld, nicht nur Feldgröße oder Bildqualität.
+
+**How to apply:** Echte Ortsfotos für Architektur und Nachbarschaften heranziehen.
+Sie ersetzen nicht die verbindliche Feldkamera; abweichende Fotoblickwinkel
+und historischer Bildstand müssen kenntlich bleiben.
+
 Für die Umfeld-Erstellung wählte der Nutzer „Vorlagen für Higgsfield vorbereiten“
 statt direkter KI-Erstellung hier.
 

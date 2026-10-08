@@ -1185,14 +1185,14 @@ content_type = "text/html"
 id = "MMG2X0KeZ2BUGU2L9e11m"
 uri = "file://attached_assets/higgsfield_stadium_pack/dortmund/03_empty_site_camera.png"
 type = "image"
-title = "1. Kameravorlage — für beide Vereine"
-description = "Einzeln herunterladen und als erstes Bild in Higgsfield hochladen. 1880×940; die Vorlage ist für Dortmund und Elversberg identisch."
+title = "Bild 1 — verbindliche Kameravorlage"
+description = "Als erstes Bild in Higgsfield verwenden. Nur diese Vorlage legt Feldposition, Perspektive und 1880×940-Zuschnitt fest."
 logical_id = "0ce13c41-68c7-4434-8ce7-7ccd4ee777e2"
 content_hash = "sha256:e9d5f8f3c02e3cf6fa9047d5cfb0cf28ff097346f1eb38bf243f074c89edb35d"
 size = 58097
 mtime_ms = 1791483116058
-storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:6e4eaecc-e6c5-4f64-8de5-e8845034f33b/0ce13c41-68c7-4434-8ce7-7ccd4ee777e2/f499061a-3450-4034-afb9-d2985d565bc3"
-storage_version_token = "1791485099338568"
+storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:6e4eaecc-e6c5-4f64-8de5-e8845034f33b/0ce13c41-68c7-4434-8ce7-7ccd4ee777e2/3059a13e-cad6-41b0-ba0e-ce878fbc9780"
+storage_version_token = "1791485996200111"
 content_type = "image/png"
 
 [[outputs]]
@@ -1250,3 +1250,31 @@ mtime_ms = 1791485500338
 storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:6e4eaecc-e6c5-4f64-8de5-e8845034f33b/e5a85a53-b58a-4d47-8633-8aaa66d28ee9/3f3fc6c9-3e33-495f-b2df-a81aa05d3502"
 storage_version_token = "1791485527801634"
 content_type = "image/png"
+
+[[outputs]]
+id = "430tFZpKcCMEtZ1xmrWn0"
+uri = "file://attached_assets/image_search/dortmund_higgsfield_reference_1.jpg"
+type = "image"
+title = "Bild 2 — Originalumfeld Dortmund mit Westfalenhallen"
+description = "Echte Luftbildreferenz vom Dezember 2019; verkleinert, nicht beschnitten. Nur Umgebung/Architektur übernehmen, nicht Stadion oder Kamerawinkel. Photo: Arne Müseler / arne-mueseler.com. CC BY-SA 3.0 DE: https://creativecommons.org/licenses/by-sa/3.0/de/deed.de . Quelle: https://commons.wikimedia.org/wiki/File:Signal_iduna_park_stadium_dortmund_1.jpg"
+logical_id = "e1987c47-a4fa-480e-81f1-430e896e9f8d"
+content_hash = "sha256:9e228ecd5db5d252f920051b4f7edc971b6c27f9b72dfbea5db21e2433de341d"
+size = 753244
+mtime_ms = 1791485969746
+storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:6e4eaecc-e6c5-4f64-8de5-e8845034f33b/e1987c47-a4fa-480e-81f1-430e896e9f8d/7e672e28-b65d-4178-9e45-041f4ae1a83f"
+storage_version_token = "1791485997004831"
+content_type = "image/jpeg"
+
+[[outputs]]
+id = "PsYC67767AbjIiTu_0v0i"
+uri = "file://attached_assets/image_search/dortmund_higgsfield_reference_2.jpg"
+type = "image"
+title = "Bild 3 — Originalumfeld Dortmund mit Roter Erde"
+description = "Echte Luftbildreferenz vom Dezember 2019 aus anderer Blickrichtung; verkleinert, nicht beschnitten. Originalstadion darf im Ergebnis nicht erscheinen. Photo: Arne Müseler / arne-mueseler.com. CC BY-SA 3.0 DE: https://creativecommons.org/licenses/by-sa/3.0/de/deed.de . Quelle: https://commons.wikimedia.org/wiki/File:Signal_iduna_park_stadium_dortmund_5.jpg"
+logical_id = "6011c4fc-722c-4196-a06f-6847b3e4e340"
+content_hash = "sha256:03e310956afdfcbb8c0e26f9bf8e585f1464d4ab744b51bb3db422e3d44c4f14"
+size = 891497
+mtime_ms = 1791485970058
+storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:6e4eaecc-e6c5-4f64-8de5-e8845034f33b/6011c4fc-722c-4196-a06f-6847b3e4e340/8735d225-1c9b-4718-9763-fc2e627040be"
+storage_version_token = "1791485997594862"
+content_type = "image/jpeg"
