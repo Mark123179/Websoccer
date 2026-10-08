@@ -9,6 +9,14 @@ Flutlichter müssen aus dem jeweiligen Modell erkannt und ausdrücklich deklarie
 
 **How to apply:** Kandidaten aus Modellkomponenten und Geometrie prüfen und Montagepunkt, Modellbezug sowie Ausrichtung deklarieren. Generische Dach-/Mastpläne und frei berechnete Leuchtenpositionen nicht als Quellnachweis behandeln. Fehlende Modellleuchten benennen statt Ersatzlicht erfinden; die Zuordnung in einer Kontrollansicht sichtbar prüfen.
 
+Die fehlenden Elversberger Leuchtennachweise liefert der Nutzer später nach.
+
+**Why:** Auf die Erklärung der fehlenden konkreten Montagepositionen und
+Ausrichtungen antwortete er: „ahso okay, liefere ich später nach.“
+
+**How to apply:** Die angekündigte Nachlieferung als Quelle für die spätere
+Deklaration prüfen; bis dahin keine erfundenen Positionen als Nachweis verwenden.
+
 Flutlicht ist ein eigener Laufzeitzustand und darf nicht aus Tag/Nacht abgeleitet
 werden. Ein reiner Flutlichtwechsel verändert bestehende Lichtintensitäten und
 Leuchtenemissionen, ohne Geometrie, Kamera oder Design neu aufzubauen.
