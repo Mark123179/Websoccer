@@ -1236,3 +1236,17 @@ mtime_ms = 1791483334406
 storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:6e4eaecc-e6c5-4f64-8de5-e8845034f33b/6e094f89-7da8-4ea3-bb1c-76362a43ce7f/c66efe15-4d40-44f1-9f2b-d9b8295f5e09"
 storage_version_token = "1791485101465548"
 content_type = "image/png"
+
+[[outputs]]
+id = "Jh6pw5Hl_O1_m0PObVhIL"
+uri = "file://attached_assets/higgsfield_dortmund_field_comparison.png"
+type = "image"
+title = "Dortmund — Vergleich mit der Feldvorlage"
+description = "Cyan zeigt die erwartete Feldkontur in relativen Bildkoordinaten. Das KI-Bild wurde nicht verzerrt oder beschnitten. Dies ist ein normierter Vergleich, keine kalibrierte 3D-Einbauvorschau."
+logical_id = "e5a85a53-b58a-4d47-8633-8aaa66d28ee9"
+content_hash = "sha256:b5c586e984066a6d9c5ed2f35a87e12cdf60cb724223680f1a4dc057371fd3fd"
+size = 1558030
+mtime_ms = 1791485500338
+storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:6e4eaecc-e6c5-4f64-8de5-e8845034f33b/e5a85a53-b58a-4d47-8633-8aaa66d28ee9/3f3fc6c9-3e33-495f-b2df-a81aa05d3502"
+storage_version_token = "1791485527801634"
+content_type = "image/png"
