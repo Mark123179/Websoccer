@@ -20,3 +20,9 @@ Die bisherigen beiden 3D-Umfeld-Darstellungen sind nicht visuell abgenommen.
 **Why:** Der Nutzer hat beide Ansätze abgelehnt; bestandene technische Prüfungen waren keine Bestätigung der Optik.
 
 **How to apply:** Neue tatsächlich gerenderte Bild-/Modellansichten zur visuellen Beurteilung vorlegen, ohne eine Nutzerabnahme aus Funktionstests abzuleiten.
+
+Für die bildbasierte Ansicht hat der Nutzer die feste Kamera und das Entfallen des Höhenreglers im Admin-Test ausdrücklich bestätigt.
+
+**Why:** Zwei feste Hintergrundbilder reichen nicht für wechselnde Blickwinkel mit korrekt ausgerichtetem 3D-Stadion.
+
+**How to apply:** Die Kamera an den gelieferten Bildern kalibrieren und bei Größenänderungen sowie Stadionausbau registriert halten. Den Dachschalter erhalten; die Orbitkamera des produktiven Editors ist von dieser Freigabe nicht betroffen.
