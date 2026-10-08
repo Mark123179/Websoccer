@@ -1180,3 +1180,59 @@ mtime_ms = 1791483335234
 storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:6e4eaecc-e6c5-4f64-8de5-e8845034f33b/e6216296-abfe-40c8-9270-7a412f02b0da/060096a6-4402-4e12-b133-e8538d8f475e"
 storage_version_token = "1791483419963769"
 content_type = "text/html"
+
+[[outputs]]
+id = "MMG2X0KeZ2BUGU2L9e11m"
+uri = "file://attached_assets/higgsfield_stadium_pack/dortmund/03_empty_site_camera.png"
+type = "image"
+title = "1. Kameravorlage — für beide Vereine"
+description = "Einzeln herunterladen und als erstes Bild in Higgsfield hochladen. 1880×940; die Vorlage ist für Dortmund und Elversberg identisch."
+logical_id = "0ce13c41-68c7-4434-8ce7-7ccd4ee777e2"
+content_hash = "sha256:e9d5f8f3c02e3cf6fa9047d5cfb0cf28ff097346f1eb38bf243f074c89edb35d"
+size = 58097
+mtime_ms = 1791483116058
+storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:6e4eaecc-e6c5-4f64-8de5-e8845034f33b/0ce13c41-68c7-4434-8ce7-7ccd4ee777e2/f499061a-3450-4034-afb9-d2985d565bc3"
+storage_version_token = "1791485099338568"
+content_type = "image/png"
+
+[[outputs]]
+id = "xZU459Uqkf8NAqYlEdWuy"
+uri = "file://attached_assets/higgsfield_stadium_pack/dortmund/05_environment_edit_mask.png"
+type = "image"
+title = "2. Bearbeitungsmaske — für beide Vereine"
+description = "Weiß = Umfeld bearbeiten; Schwarz = Spielfeld schützen. Nur im Maskenwerkzeug verwenden, falls unterstützt; sonst den Bereich mit dem Pinsel auswählen."
+logical_id = "bc8d53db-efb1-4d65-8efc-4ef3aec3087d"
+content_hash = "sha256:6f53f7e8353e60e96940e55744b934004b06d1023a87a6e61c8c6998db1c9922"
+size = 5296
+mtime_ms = 1791483333690
+storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:6e4eaecc-e6c5-4f64-8de5-e8845034f33b/bc8d53db-efb1-4d65-8efc-4ef3aec3087d/ed084628-d666-4fdd-9249-a2cf19cf6aae"
+storage_version_token = "1791485099951430"
+content_type = "image/png"
+
+[[outputs]]
+id = "i_9BEWHWq9JdtMYBEr2oN"
+uri = "file://attached_assets/higgsfield_stadium_pack/dortmund/07_local_osm_reference.png"
+type = "image"
+title = "3. Ortsreferenz Dortmund"
+description = "Optionales zusätzliches Referenzbild nur für Dortmund. Nord oben; Gebäudelagen, keine registrierte Kameraperspektive."
+logical_id = "b0bce37a-78d5-43fc-8b56-bd6e6ee97a91"
+content_hash = "sha256:f1cb5460e0eda718ab6e168b8c41677876540ceb852d4fc639ee09ca9a1f4686"
+size = 43786
+mtime_ms = 1791483334146
+storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:6e4eaecc-e6c5-4f64-8de5-e8845034f33b/b0bce37a-78d5-43fc-8b56-bd6e6ee97a91/486e6d5a-e364-4e08-8072-abfda230b071"
+storage_version_token = "1791485100830535"
+content_type = "image/png"
+
+[[outputs]]
+id = "ytwXh5jbi0Q7pn0aLRqDV"
+uri = "file://attached_assets/higgsfield_stadium_pack/elversberg/07_local_osm_reference.png"
+type = "image"
+title = "4. Ortsreferenz Elversberg"
+description = "Optionales zusätzliches Referenzbild nur für Elversberg. Nord oben; fehlende Wald-/Wegeflächen im Auszug bedeuten keine nachgewiesenen Freiflächen."
+logical_id = "6e094f89-7da8-4ea3-bb1c-76362a43ce7f"
+content_hash = "sha256:04686940d09e4d3575dabc71adda544a303204185dd15a5ad5e25860e971985d"
+size = 69985
+mtime_ms = 1791483334406
+storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:6e4eaecc-e6c5-4f64-8de5-e8845034f33b/6e094f89-7da8-4ea3-bb1c-76362a43ce7f/c66efe15-4d40-44f1-9f2b-d9b8295f5e09"
+storage_version_token = "1791485101465548"
+content_type = "image/png"

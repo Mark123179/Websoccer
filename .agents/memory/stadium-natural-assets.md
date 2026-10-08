@@ -53,12 +53,17 @@ prüfen; generierte Kulissen nicht als fotografisch verifizierte Geografie ausge
 Für die Umfeld-Erstellung wählte der Nutzer „Vorlagen für Higgsfield vorbereiten“
 statt direkter KI-Erstellung hier.
 
+Der Nutzer nennt für seinen Higgsfield-Ablauf maximal 15.000 Zeichen pro
+Prompt und kann dort keine ZIP-Datei hochladen.
+
 **Why:** Das ist seine ausdrückliche Anbieter-/Arbeitsablaufwahl für diese
 Vereinsumfelder.
 
 **How to apply:** Kamerareferenzen, Masken und Prompts für den manuellen
 Higgsfield-Ablauf liefern. Nacht aus dem gewählten Tagbild ableiten und
 gelieferte Ergebnisse vor Integration anhand der Feldregistrierung prüfen.
+Bildvorlagen einzeln bereitstellen und Prompts direkt kopierbar mit geprüfter
+Zeichenlänge unter dem genannten Limit liefern, nicht nur als ZIP-Paket.
 
 „Das Umfeld-Bild darf kein Stadion enthalten.“ „Das Bild hängt nur noch am Gelände, nicht am Stadion. Baut der Spieler im Editor aus, muss nichts neu erzeugt werden.“
 
