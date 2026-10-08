@@ -1,0 +1,71 @@
+{
+  "format": [
+    1880,
+    940
+  ],
+  "concept": "cutaway",
+  "generated_backgrounds": false,
+  "north_calibration_verified": false,
+  "clubs": {
+    "dortmund": {
+      "pitch_pixel_corners": {
+        "A": [
+          394.6,
+          310.2
+        ],
+        "B": [
+          1485.4,
+          310.2
+        ],
+        "C": [
+          1702.74,
+          874.2
+        ],
+        "D": [
+          177.26,
+          874.2
+        ]
+      },
+      "sources": [
+        [
+          "BVB · Anreise und offizielle Umfeldkarte",
+          "https://www.bvb.de/de/de/signal-iduna-park/stadionbesuch/anreise.html"
+        ],
+        [
+          "OSM · Stadionstandort",
+          "https://www.openstreetmap.org/way/17235929"
+        ]
+      ]
+    },
+    "elversberg": {
+      "pitch_pixel_corners": {
+        "A": [
+          394.6,
+          310.2
+        ],
+        "B": [
+          1485.4,
+          310.2
+        ],
+        "C": [
+          1702.74,
+          874.2
+        ],
+        "D": [
+          177.26,
+          874.2
+        ]
+      },
+      "sources": [
+        [
+          "SV Elversberg · offizieller Standort",
+          "https://sv07elversberg.de/ursapharm-arena/stadionordnung/"
+        ],
+        [
+          "OSM · Stadionstandort",
+          "https://www.openstreetmap.org/way/1154632806"
+        ]
+      ]
+    }
+  }
+}

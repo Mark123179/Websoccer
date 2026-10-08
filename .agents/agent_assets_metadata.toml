@@ -1152,3 +1152,31 @@ mtime_ms = 1791481657950
 storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:6e4eaecc-e6c5-4f64-8de5-e8845034f33b/90ca1212-7657-42fb-ad85-79acbb6b626b/5214c8ac-9be3-423b-bbe6-87139a41e0e0"
 storage_version_token = "1791481664284237"
 content_type = "image/png"
+
+[[outputs]]
+id = "G9J5BXF53Q_lD3uvX1vI9"
+uri = "file://attached_assets/higgsfield_stadium_pack.zip"
+type = "unspecified"
+title = "Higgsfield-Paket — Dortmund und Elversberg"
+description = "Komplettes ZIP mit Kamerareferenzen in 1880×940, stadionfreien Eingangsansichten, Feld-/Umfeldmasken, Ortskarten, vier Tag-/Nacht-Prompts und deutscher Anleitung. Noch keine generierten Umfeldbilder."
+logical_id = "bf6f763b-4583-41f6-949a-0b7ef9794c45"
+content_hash = "sha256:4c1de77472c699b4356536ca7309e48196595bbcbe8fb7ab5a50dca739be4182"
+size = 1388678
+mtime_ms = 1791483335326
+storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:6e4eaecc-e6c5-4f64-8de5-e8845034f33b/bf6f763b-4583-41f6-949a-0b7ef9794c45/83c8bf41-aae9-4156-b4da-e9b5b39a061b"
+storage_version_token = "1791483419337440"
+content_type = "application/octet-stream"
+
+[[outputs]]
+id = "DttlWdKRalFfp-7DpxO6E"
+uri = "file://attached_assets/higgsfield_stadium_pack/START_HERE.html"
+type = "html"
+title = "Higgsfield-Anleitung mit Vorlagen und Prompts"
+description = "Selbstständige HTML-Anleitung zum Öffnen im Browser: Vorschaubilder, kopierfertige Prompts und Reihenfolge für Tagbild und daraus abgeleitetes Nachtbild."
+logical_id = "e6216296-abfe-40c8-9270-7a412f02b0da"
+content_hash = "sha256:42ab42750799850e05db9e40688b606b52d560f3decb8518955b5bd07fca06f8"
+size = 182970
+mtime_ms = 1791483335234
+storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:6e4eaecc-e6c5-4f64-8de5-e8845034f33b/e6216296-abfe-40c8-9270-7a412f02b0da/060096a6-4402-4e12-b133-e8538d8f475e"
+storage_version_token = "1791483419963769"
+content_type = "text/html"

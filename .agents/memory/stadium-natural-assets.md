@@ -50,6 +50,16 @@ in den Hintergrund malen, Tag/Nacht strukturell zusammenhalten und erzeugte
 Bilder als KI-generiert kennzeichnen. Reale Ortsmerkmale anhand von Referenzen
 prüfen; generierte Kulissen nicht als fotografisch verifizierte Geografie ausgeben.
 
+Für die Umfeld-Erstellung wählte der Nutzer „Vorlagen für Higgsfield vorbereiten“
+statt direkter KI-Erstellung hier.
+
+**Why:** Das ist seine ausdrückliche Anbieter-/Arbeitsablaufwahl für diese
+Vereinsumfelder.
+
+**How to apply:** Kamerareferenzen, Masken und Prompts für den manuellen
+Higgsfield-Ablauf liefern. Nacht aus dem gewählten Tagbild ableiten und
+gelieferte Ergebnisse vor Integration anhand der Feldregistrierung prüfen.
+
 „Das Umfeld-Bild darf kein Stadion enthalten.“ „Das Bild hängt nur noch am Gelände, nicht am Stadion. Baut der Spieler im Editor aus, muss nichts neu erzeugt werden.“
 
 **Why:** Ein KI-generiertes Stadion weicht vom echten Modell ab und erzeugt sichtbare Überlagerungsränder. Der Hintergrund muss unabhängig vom Ausbauzustand bleiben.
