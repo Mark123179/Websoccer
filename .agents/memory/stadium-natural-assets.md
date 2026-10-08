@@ -13,6 +13,17 @@ description: Verbindliche Bildhierarchie, nicht abgenommene Umfeldversuche und b
 
 ## Einheitliches Spielfeld
 
+Die spielfeldzentrierte Vergleichsstudie erhielt die positive Rückmeldung
+„sehr stark“. Danach verlangte der Nutzer beide Stadien bei Nacht.
+
+**Why:** Das ist eine bestätigte positive Gestaltungsrichtung nach den zuvor
+abgelehnten Umfeldversuchen, aber keine ausdrückliche Auswahl einer der beiden
+Kameras oder Freigabe des produktiven Rollouts.
+
+**How to apply:** Den feldzentrierten Bildaufbau beibehalten. Weitere Zustände
+anhand tatsächlich gerenderter Ansichten zeigen; offene Kameraauswahl und
+fehlende Umfeld-/Leuchtenquellen nicht als bereits abgenommen ausgeben.
+
 „Das Spielfeld muss aber in jedem Stadion gleich groß sein, sonst bekommen wir beim Ablauf im 2D Modus probleme?!“
 
 **Why:** Der Nutzer machte die Gleichheit ausdrücklich zur Bedingung für den 2D-Spielablauf.

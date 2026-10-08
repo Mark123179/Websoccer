@@ -1138,3 +1138,17 @@ mtime_ms = 1791466112863
 storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:6e4eaecc-e6c5-4f64-8de5-e8845034f33b/aa454061-3570-4915-980d-e7ad5445ae26/811be8f0-4e05-483a-add8-6de8dcf11e6b"
 storage_version_token = "1791466417606514"
 content_type = "image/png"
+
+[[outputs]]
+id = "UED9el0js0qv2efpLP8gR"
+uri = "file://docs/stadium/field-study-review/night-comparison.png"
+type = "image"
+title = "Dortmund und Elversberg bei Nacht"
+description = "Reale Nachtaufnahmen der empfohlenen Schnittansicht, mit identischer Feldgröße und Projektion. Dortmund: geprüftes Modell-Flutlicht. Elversberg: bewusst ohne Ersatzbeleuchtung, da nachgewiesene Leuchtenpositionen fehlen."
+logical_id = "90ca1212-7657-42fb-ad85-79acbb6b626b"
+content_hash = "sha256:deb48b1603a68313463dcafc3a5acc0e4ceefa367cf0755632d895cfcacb61a5"
+size = 226528
+mtime_ms = 1791481657950
+storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:6e4eaecc-e6c5-4f64-8de5-e8845034f33b/90ca1212-7657-42fb-ad85-79acbb6b626b/5214c8ac-9be3-423b-bbe6-87139a41e0e0"
+storage_version_token = "1791481664284237"
+content_type = "image/png"
