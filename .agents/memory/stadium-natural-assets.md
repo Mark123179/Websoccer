@@ -1,7 +1,17 @@
 ---
-name: Bildbasiertes Stadionumfeld
-description: Neue Nutzerentscheidung ersetzt die verworfene modellierte Umgebung durch gelieferte Tag-/Nachtbilder je Verein.
+name: Spielfeldzentrierte Spielansicht und Ortskulisse
+description: Verbindliche Bildhierarchie, nicht abgenommene Umfeldversuche und bisherige Entscheidungen zu gelieferten Vereinsbildern.
 ---
+
+## Aktuelles Ziel
+
+„Hauptteil des Bildes soll weiterhin das Spielfeld sein, dort soll der 2D Modus auch ablaufen.“ Darum das 3D-Stadion: sichtlicher Unterschied zwischen Elversberg vor etwa 14.000 und einem Stadion vor etwa 80.000, Dach an/aus sowie Tag/Nacht auswählbar. Die möglichst fotorealistische echte Umgebung soll Dortmund, Elversberg und später London oder Braga erkennbar machen.
+
+**Why:** Der Nutzer lehnte auch die letzte Foto-/3D-Gesamtansicht ab: „das ist es nicht.“ Seine zweite neue Referenz zeigt ungefähr die gewünschte Nähe. Er betonte, dass der genaue Weg zum Ziel noch offen ist.
+
+**How to apply:** Spielfeld und Lesbarkeit des 2D-Spiels zuerst gestalten; Stadion als räumlichen Rahmen, Ortskulisse nachgeordnet. Echte Stadionformen und einen vergleichbaren Feldmaßstab verwenden, nicht bloß eine generische Schüssel kapazitätsabhängig skalieren. Zuerst Bildaufbau visuell klären; keinen weiteren vollständigen Grafikumbau als bereits freigegeben behandeln und die bisherigen Bilder nicht zur unveränderlichen Zielkamera machen.
+
+## Bisheriger Bildansatz
 
 „Wir nehmen unser Stadionmodell und das Spielfeld wie gehabt und das Umfeld machen wir als zwei Bilder Tag & Nacht je Verein.“ „Ich werde die Bilder liefern.“
 
@@ -15,13 +25,13 @@ description: Neue Nutzerentscheidung ersetzt die verworfene modellierte Umgebung
 
 **How to apply:** Das dargestellte Vereinsstadion nicht im Hintergrund vorzeichnen. Für zukünftige Bildvorbereitung feste Referenzkamera und exakte Stadion-Silhouettenmaske verwenden; Nutzer liefert die fertigen Bilder. Stadionausbau darf weder Bilderneuerstellung noch eine neue Ausrichtung anhand veränderter Stadiongrenzen auslösen.
 
-Die bisherigen beiden 3D-Umfeld-Darstellungen sind nicht visuell abgenommen.
+Die bisherigen beiden 3D-Umfeld-Darstellungen und die anschließende Foto-/3D-Gesamtansicht sind nicht visuell abgenommen.
 
-**Why:** Der Nutzer hat beide Ansätze abgelehnt; bestandene technische Prüfungen waren keine Bestätigung der Optik.
+**Why:** Der Nutzer hat die Ansätze abgelehnt; bestandene technische Prüfungen waren keine Bestätigung der Optik.
 
 **How to apply:** Neue tatsächlich gerenderte Bild-/Modellansichten zur visuellen Beurteilung vorlegen, ohne eine Nutzerabnahme aus Funktionstests abzuleiten.
 
-Für die bildbasierte Ansicht hat der Nutzer die feste Kamera und das Entfallen des Höhenreglers im Admin-Test ausdrücklich bestätigt.
+Für die bisherige bildbasierte Studie hat der Nutzer die feste Kamera und das Entfallen des Höhenreglers im Admin-Test ausdrücklich bestätigt.
 
 **Why:** Zwei feste Hintergrundbilder reichen nicht für wechselnde Blickwinkel mit korrekt ausgerichtetem 3D-Stadion.
 
