@@ -1,13 +1,25 @@
 ---
 name: Natürliche Stadionumgebung – Assetauswahl
-description: Vom Nutzer bestätigte Grafikquellen für das übertragbare natürliche Live-Ticker-Umfeld.
+description: Verbindliche Quellenkorrektur, szenenbasierter Vertrag und visuelle Abnahme des natürlichen Live-Ticker-Umfelds.
 ---
 
-Als Grundlage verwenden: EZ-Tree Oak Medium, Oak Large, Ash Medium und Aspen Small; Poly Haven Shrub 03; ambientCG Asphalt 006, Paving Stones 136 und Grass 001; Poly Haven Brick Wall 02 und Overcast Soil (Pure Sky).
+Aktuelle Grundlage ist die vom Nutzer angegebene vorbereitete `asset_bibliothek_web.zip`, nicht die eigene Neuaufbereitung der ursprünglichen Modellarchive. Grafikquellen sind die drei Sketchfab-Baumpakete (Realistic Trees Collection, Various Forest Assets Pack, oak trees), Generic passenger car pack sowie die angegebenen Poly-Haven-Himmel, Fernansichts-Bodenmaterialien und Shrub 03. Credits aus der gelieferten README übernehmen.
 
-**Why:** Nach der konkreten Quellenauswahl bestätigte der Nutzer „Auswahl verwenden (empfohlen)“ als Grundlage für den Umsetzungsplan. Die Auswahl wurde noch nicht in der Stadionansicht auf Bildqualität oder Leistung abgenommen.
+**Why:** Nach Ablehnung der bisherigen Optik verlangte der Nutzer am 2026-10-08 ausdrücklich die vorbereitete Web-Bibliothek mit korrigierten Materialien, Fahrzeughierarchie und Maßstäben. Diese ersetzt die frühere Auswahl der Standard-Baumvorlagen und Nahaufnahme-Bodentexturen.
 
 **How to apply:** Gemeinsame, einmal vorbereitete Assets von der geografischen Anordnung pro Stadion trennen. Diese Auswahl ist die Grafikgrundlage, kein Nachweis realer Baumarten oder Fassadenmaterialien; Lizenzen, Baumtexturherkunft und Exportmöglichkeiten bei Übernahme erneut prüfen. Ein reiner Himmel darf keine fremde Landschaft an die Stelle der realen Umgebung setzen. Die getrennten Regeln für Admin-Test und produktiven Neon-Editor bleiben bestehen.
+
+EZ-Tree ist nicht verboten. Die Realistic Trees Collection ist selbst ein EZ-Tree-Export. Verboten sind „Laufzeit-Generierung mit Standard-Presets“, „Nahaufnahme-Texturen auf Ferndistanz“ und „Licht ohne Schatten“.
+
+**Why:** Der Nutzer korrigierte die vorherige pauschale Formulierung ausdrücklich: „Das Werkzeug war nie das Problem.“
+
+**How to apply:** Vorbereitete und lizenzierte Modellableitungen nach ihrer tatsächlichen Qualität behandeln, nicht nach dem Namen des Erzeugungswerkzeugs.
+
+Der Renderer muss `surroundings.*`, `geo` und `standsBounds` einer Szene verwenden; das Unity-Modell ist optional. Der Vier-Stadien-Export ersetzt das einzelne Dortmund-Paket. Die Abnahme muss Dortmund **und Elversberg** mit demselben Code zeigen.
+
+**Why:** Der Nutzer machte den zweiten realen Stadionnachweis verbindlich: „sonst ist es nicht multiplizierbar“.
+
+**How to apply:** Quellenunabhängige Szenendarstellung statt Pflicht-Dortmund-Bundle. Nordrichtung aus der jeweiligen Szene lesen, nicht den Dortmunder Nordvektor auf andere Orte übertragen. Südtribüne/Westtribüne gegen das Modell prüfen; Spiegelung nur als kalibrierter Szenenparameter, nie Originalgeometrie ändern. Impostors mindestens 2048, 8×8 Hemi-Oktaeder und alpha-getestete Schatten; Flutlichtpositionen aus dem vorhandenen Steckbrief übertragen. Angemeldete Tag-/Abend-, Dach- und 35°/50°/75°-Nachweise für beide Stadien, Lade-/Schattenkosten und Mobilprofil liefern.
 
 Die umgesetzte natürliche Testansicht ist visuell nicht abgenommen und darf nicht als bestätigte Qualitätsreferenz für weitere Stadien verwendet werden.
 
