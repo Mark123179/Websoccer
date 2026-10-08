@@ -61,6 +61,18 @@ Originalumfeld, nicht nur Feldgröße oder Bildqualität.
 Sie ersetzen nicht die verbindliche Feldkamera; abweichende Fotoblickwinkel
 und historischer Bildstand müssen kenntlich bleiben.
 
+Im erprobten Higgsfield-Ablauf sichern weder detaillierte Kameraprompts noch
+mehrere Originalfotos die Feldregistrierung zuverlässig.
+
+**Why:** Originalfotos aus unterschiedlichen Blickwinkeln führten trotz
+verbindlicher Kameravorlage erneut zu anderen Feldgrößen, Perspektiven und
+teilweise einem sichtbaren Horizont.
+
+**How to apply:** Nach solchen Abweichungen keine weiteren gleichartigen
+Promptschleifen empfehlen. Eine deterministisch registrierte Bildgrundlage
+und tatsächlichen Pixelschutz prüfen; KI-Ausgaben nicht allein wegen
+realistischeren Ortsmerkmalen als einbaufertig behandeln.
+
 Für die Umfeld-Erstellung wählte der Nutzer „Vorlagen für Higgsfield vorbereiten“
 statt direkter KI-Erstellung hier.
 
