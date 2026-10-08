@@ -8,7 +8,7 @@
   <title>Live-Ticker · {{ home_name }} – {{ away_name }}</title>
   <link rel="stylesheet" href="{% static 'game/css/live_story.css' %}?v=3">
   {% if is_test %}
-  <link rel="stylesheet" href="{% static 'game/css/ticker_stadium_preview.css' %}?v=15">
+  <link rel="stylesheet" href="{% static 'game/css/ticker_stadium_preview.css' %}?v=17">
   <script type="importmap">{"imports":{"three":"{% static 'stadium_editor/stage/vendor/three.module.js' %}"}}</script>
   {% endif %}
 </head>
@@ -31,7 +31,7 @@
     <section class="ticker-stadium-panel" aria-labelledby="ticker-stadium-heading">
       <div class="ticker-stadium-heading">
         <div>
-          <span class="ls-overline">PERSPEKTIVISCHE ANSICHT · NATÜRLICHES UMFELD</span>
+          <span class="ls-overline">3D-STADION · BILDBASIERTES UMFELD</span>
           <h2 id="ticker-stadium-heading">Signal Iduna Park</h2>
         </div>
         <span class="ticker-stadium-tag">Drei Tribünenseiten</span>
@@ -39,18 +39,7 @@
       <div id="ticker-stadium-preview" aria-label="Dortmund-Stadion mit freier Vorderseite und waagerechtem Spielfeld"></div>
       <p id="ticker-stadium-status" role="status" aria-live="polite">Dortmund-Modell wird geladen …</p>
       <div class="ticker-camera-controls">
-        <div class="ticker-camera-label">
-          <label for="ticker-camera-height">Kamerahöhe</label>
-          <output id="ticker-camera-height-value" for="ticker-camera-height">Neigung: 50°</output>
-        </div>
-        <div class="ticker-camera-inputs">
-          <span aria-hidden="true">Tiefer</span>
-          <input id="ticker-camera-height" type="range" min="35" max="75" step="1" value="50"
-                 aria-describedby="ticker-camera-hint" aria-valuetext="50 Grad, perspektivischer Blick" disabled>
-          <span aria-hidden="true">Höher</span>
-          <button id="ticker-camera-reset" type="button" class="ticker-stadium-retry" disabled>Zurücksetzen</button>
-        </div>
-        <p id="ticker-camera-hint">Höher zeigt mehr vom hinteren Spielfeld. Der Regler verändert den Blickwinkel direkt, ohne den Test neu zu starten.</p>
+        <p id="ticker-camera-hint">Feste Kamera: Stadion und Spielfeld sind auf die Feldlinien des Hintergrundbildes ausgerichtet. Ein Ausbau benötigt kein neues Umfeldbild.</p>
         <div class="ticker-roof-controls">
           <label class="ticker-roof-toggle" for="ticker-roof-visible">
             <input id="ticker-roof-visible" type="checkbox" role="switch" checked disabled
@@ -61,7 +50,7 @@
         </div>
         <p id="ticker-roof-hint">Ohne Dach werden auch Dachträger und Dachaufbauten ausgeblendet. Kamera und Modell bleiben unverändert.</p>
       </div>
-      <p class="ticker-stadium-note">Statische Kamerastudie mit dem Dortmund-Modell – unabhängig vom Testspiel-Paar, noch ohne Spieleranimation. Umfeld: © OpenStreetMap-Mitwirkende, ODbL · lokaler Auszug, Baumrepräsentanten je ca. 16-m-Zelle. Baumarten, Größen und Umfeldfassaden sind grafische Annäherungen; Stadionfassade teilweise rekonstruiert. Materialien: ambientCG / Poly Haven (CC0), Baumvorlagen: EZ-Tree (MIT). Das vollständige 3D-Modell bleibt erhalten.</p>
+      <p class="ticker-stadium-note">Statische Kamerastudie mit dem Dortmund-Modell – unabhängig vom Testspiel-Paar, noch ohne Spieleranimation. Tag-/Nacht-Umfeldbilder vom Nutzer geliefert; Stadion und Spielfeld bleiben echte 3D-Geometrie. Stadionfassade teilweise rekonstruiert. Das vollständige 3D-Modell bleibt erhalten.</p>
     </section>
     {% endif %}
 
@@ -102,7 +91,7 @@
   <script src="{% static 'game/js/live_story.js' %}?v=3" defer></script>
   {% if is_test %}
   {{ ticker_stadium_environment|json_script:"ticker-stadium-environment" }}
-  <script type="module" src="{% static 'game/js/ticker_stadium_preview.js' %}?v=15"></script>
+  <script type="module" src="{% static 'game/js/ticker_stadium_preview.js' %}?v=17"></script>
   {% endif %}
 </body>
 </html>

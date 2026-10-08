@@ -1,5 +1,5 @@
 const sceneURL = new URL('../../stadium_editor/dortmund_editor_scene.js', import.meta.url);
-sceneURL.searchParams.set('v', `ticker-${new URL(import.meta.url).searchParams.get('v') || '15'}`);
+sceneURL.searchParams.set('v', `ticker-${new URL(import.meta.url).searchParams.get('v') || '17'}`);
 
 const canvasHost = document.getElementById('ticker-stadium-preview');
 const statusHost = document.getElementById('ticker-stadium-status');
@@ -91,13 +91,14 @@ if (canvasHost && statusHost) {
         element: canvasHost,
         surroundings,
         frame,
-        includeSurroundings: true,
+        includeSurroundings: !config.imageBackground,
         interactive: false,
         autoRotate: false,
         compact: false,
-        transparentBackground: false,
+        transparentBackground: Boolean(config.imageBackground),
         tickerPreview: true,
         naturalPackage: config.naturalPackage,
+        imageBackground: config.imageBackground,
         onStatus: message => {
           if (!stopped && thisAttempt === attempt) setState('ready', `SIGNAL IDUNA PARK · ${message}`);
         },
@@ -112,7 +113,7 @@ if (canvasHost && statusHost) {
       controlsEnabled(true);
       if (Number(heightControl?.value || defaultHeight) !== defaultHeight) updateCamera();
       if (roofControl && !roofControl.checked) updateRoof();
-       setState('ready', 'SIGNAL IDUNA PARK · Unity-Modell · Natürliches OSM-Umfeld');
+        setState('ready', 'SIGNAL IDUNA PARK · 3D-Stadion · Bildbasiertes Umfeld · Feste Kamera');
     } catch (error) {
       if (stopped || thisAttempt !== attempt) return;
       canvasHost.replaceChildren();

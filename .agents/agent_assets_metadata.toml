@@ -1068,3 +1068,31 @@ mtime_ms = 1791406186532
 storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:6e4eaecc-e6c5-4f64-8de5-e8845034f33b/a6ced2cb-9d69-41f6-bab0-3acfb9ada35e/2fdaaf22-5f1a-4759-befa-e05ad880153a"
 storage_version_token = "1791406317483911"
 content_type = "image/png"
+
+[[outputs]]
+id = "qIOKgHIpZf2MTM5JipV0I"
+uri = "file://docs/stadium/image-background-review/desktop-day-roof-on.png"
+type = "image"
+title = "Dortmund – Tag, 3D-Stadion über deinem Bild"
+description = "Echte Aufnahme des geschützten Admin-Tests mit kalibrierter fester Kamera und unveränderter Stadiongeometrie."
+logical_id = "f5fb417e-0c44-4c00-9224-86e918a1b022"
+content_hash = "sha256:8291c9a88ad22c897eb44e334f96f707307e63f5b1b728d7e6c668936d125e11"
+size = 940642
+mtime_ms = 1791446128517
+storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:6e4eaecc-e6c5-4f64-8de5-e8845034f33b/f5fb417e-0c44-4c00-9224-86e918a1b022/b5255b92-4b67-41f3-b030-4201dc68342f"
+storage_version_token = "1791446307222969"
+content_type = "image/png"
+
+[[outputs]]
+id = "Qp4xRXlF02phGyv_9dA_i"
+uri = "file://docs/stadium/image-background-review/desktop-night-roof-on.png"
+type = "image"
+title = "Dortmund – Nacht, 3D-Stadion über deinem Bild"
+description = "Dasselbe Stadion und dieselbe Kameraregistrierung mit deinem Nachtbild und separater Stadionbeleuchtung."
+logical_id = "80e5ee69-4662-4548-a59f-51b1c4a25dbe"
+content_hash = "sha256:67afcf3a11e1f2696cbf26bab8a226d85126473af1e67d1e42865a3f295845ae"
+size = 625665
+mtime_ms = 1791446140301
+storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:6e4eaecc-e6c5-4f64-8de5-e8845034f33b/80e5ee69-4662-4548-a59f-51b1c4a25dbe/eb00af5b-566a-4e5a-aaf6-d228ba80527a"
+storage_version_token = "1791446307863098"
+content_type = "image/png"

@@ -1,0 +1,187 @@
+{
+  "captures": [
+    {
+      "name": "desktop-day-roof-on",
+      "profile": "day",
+      "metrics": {
+        "renderSubmitMs": 22.6,
+        "triangles": 454510,
+        "drawCalls": 331,
+        "geometries": 331,
+        "textures": 5,
+        "registrationResidualPx": 0.25,
+        "environmentTriangles": 0,
+        "imageProfile": "day"
+      },
+      "overflow": false,
+      "photo": {
+        "width": 2688,
+        "height": 1344
+      }
+    },
+    {
+      "name": "desktop-night-roof-on",
+      "profile": "night",
+      "metrics": {
+        "renderSubmitMs": 5049.4,
+        "triangles": 454510,
+        "drawCalls": 331,
+        "geometries": 331,
+        "textures": 5,
+        "registrationResidualPx": 0.25,
+        "environmentTriangles": 0,
+        "imageProfile": "night"
+      },
+      "overflow": false,
+      "photo": {
+        "width": 1568,
+        "height": 784
+      }
+    },
+    {
+      "name": "desktop-night-roof-off",
+      "profile": "night",
+      "metrics": {
+        "renderSubmitMs": 7,
+        "triangles": 380103,
+        "drawCalls": 298,
+        "geometries": 331,
+        "textures": 5,
+        "registrationResidualPx": 0.25,
+        "environmentTriangles": 0,
+        "imageProfile": "night"
+      },
+      "overflow": false,
+      "photo": {
+        "width": 1568,
+        "height": 784
+      }
+    },
+    {
+      "name": "desktop-day-roof-off",
+      "profile": "day",
+      "metrics": {
+        "renderSubmitMs": 20.1,
+        "triangles": 380103,
+        "drawCalls": 298,
+        "geometries": 331,
+        "textures": 5,
+        "registrationResidualPx": 0.25,
+        "environmentTriangles": 0,
+        "imageProfile": "day"
+      },
+      "overflow": false,
+      "photo": {
+        "width": 2688,
+        "height": 1344
+      }
+    },
+    {
+      "name": "desktop-expanded-same-day-image",
+      "profile": "day",
+      "metrics": {
+        "renderSubmitMs": 14538.7,
+        "triangles": 760889,
+        "drawCalls": 463,
+        "geometries": 463,
+        "textures": 5,
+        "registrationResidualPx": 0.25,
+        "environmentTriangles": 0,
+        "imageProfile": "day"
+      },
+      "overflow": false,
+      "photo": {
+        "width": 2688,
+        "height": 1344
+      }
+    },
+    {
+      "name": "mobile-day",
+      "profile": "day",
+      "metrics": {
+        "renderSubmitMs": 38.6,
+        "triangles": 454510,
+        "drawCalls": 331,
+        "geometries": 331,
+        "textures": 5,
+        "registrationResidualPx": 0.25,
+        "environmentTriangles": 0,
+        "imageProfile": "day"
+      },
+      "overflow": false,
+      "photo": {
+        "width": 2688,
+        "height": 1344
+      }
+    },
+    {
+      "name": "mobile-night",
+      "profile": "night",
+      "metrics": {
+        "renderSubmitMs": 18.8,
+        "triangles": 454510,
+        "drawCalls": 331,
+        "geometries": 331,
+        "textures": 5,
+        "registrationResidualPx": 0.25,
+        "environmentTriangles": 0,
+        "imageProfile": "night"
+      },
+      "overflow": false,
+      "photo": {
+        "width": 1568,
+        "height": 784
+      }
+    }
+  ],
+  "errors": [],
+  "failures": [],
+  "forbiddenRequests": [],
+  "failedNightRetainedDay": true,
+  "retryRecovered": true,
+  "expansionKeptCameraAndImage": true,
+  "requests": [
+    "https://6e4eaecc-e6c5-4f64-8de5-e8845034f33b-00-sf51mfqyyw4m.janeway.replit.dev/live/test/",
+    "https://6e4eaecc-e6c5-4f64-8de5-e8845034f33b-00-sf51mfqyyw4m.janeway.replit.dev/static/game/css/live_story.css",
+    "https://6e4eaecc-e6c5-4f64-8de5-e8845034f33b-00-sf51mfqyyw4m.janeway.replit.dev/static/game/css/ticker_stadium_preview.css",
+    "https://6e4eaecc-e6c5-4f64-8de5-e8845034f33b-00-sf51mfqyyw4m.janeway.replit.dev/static/game/js/ticker_stadium_preview.js",
+    "https://6e4eaecc-e6c5-4f64-8de5-e8845034f33b-00-sf51mfqyyw4m.janeway.replit.dev/static/game/js/live_story.js",
+    "https://6e4eaecc-e6c5-4f64-8de5-e8845034f33b-00-sf51mfqyyw4m.janeway.replit.dev/api/live/test/matches/1/",
+    "https://6e4eaecc-e6c5-4f64-8de5-e8845034f33b-00-sf51mfqyyw4m.janeway.replit.dev/static/stadium_editor/dortmund_editor_scene.js",
+    "https://6e4eaecc-e6c5-4f64-8de5-e8845034f33b-00-sf51mfqyyw4m.janeway.replit.dev/static/stadium_editor/stage/vendor/three.module.js",
+    "https://6e4eaecc-e6c5-4f64-8de5-e8845034f33b-00-sf51mfqyyw4m.janeway.replit.dev/static/stadium_editor/dortmund_concept.js",
+    "https://6e4eaecc-e6c5-4f64-8de5-e8845034f33b-00-sf51mfqyyw4m.janeway.replit.dev/static/stadium_editor/dortmund_source_materials.js",
+    "https://6e4eaecc-e6c5-4f64-8de5-e8845034f33b-00-sf51mfqyyw4m.janeway.replit.dev/static/stadium_editor/dortmund_reconstructed_facade.js",
+    "https://6e4eaecc-e6c5-4f64-8de5-e8845034f33b-00-sf51mfqyyw4m.janeway.replit.dev/static/stadium_editor/dortmund_surroundings.js",
+    "https://6e4eaecc-e6c5-4f64-8de5-e8845034f33b-00-sf51mfqyyw4m.janeway.replit.dev/static/stadium_editor/dortmund_ticker_camera.js",
+    "https://6e4eaecc-e6c5-4f64-8de5-e8845034f33b-00-sf51mfqyyw4m.janeway.replit.dev/static/stadium_editor/dortmund_ticker_roof.js",
+    "https://6e4eaecc-e6c5-4f64-8de5-e8845034f33b-00-sf51mfqyyw4m.janeway.replit.dev/static/stadium_editor/natural_profile.js",
+    "https://6e4eaecc-e6c5-4f64-8de5-e8845034f33b-00-sf51mfqyyw4m.janeway.replit.dev/static/stadium_editor/image_background_camera.js",
+    "https://6e4eaecc-e6c5-4f64-8de5-e8845034f33b-00-sf51mfqyyw4m.janeway.replit.dev/static/stadium_editor/image_background_scene.js",
+    "https://6e4eaecc-e6c5-4f64-8de5-e8845034f33b-00-sf51mfqyyw4m.janeway.replit.dev/static/stadium_editor/image_backgrounds/907/day.webp",
+    "https://6e4eaecc-e6c5-4f64-8de5-e8845034f33b-00-sf51mfqyyw4m.janeway.replit.dev/static/stadium_editor/dortmund_original/manifest.json",
+    "https://6e4eaecc-e6c5-4f64-8de5-e8845034f33b-00-sf51mfqyyw4m.janeway.replit.dev/static/stadium_editor/dortmund_original/geometry.bin",
+    "https://6e4eaecc-e6c5-4f64-8de5-e8845034f33b-00-sf51mfqyyw4m.janeway.replit.dev/api/live/test/matches/1/",
+    "https://6e4eaecc-e6c5-4f64-8de5-e8845034f33b-00-sf51mfqyyw4m.janeway.replit.dev/static/stadium_editor/dortmund_original/au_seat.webp",
+    "https://6e4eaecc-e6c5-4f64-8de5-e8845034f33b-00-sf51mfqyyw4m.janeway.replit.dev/static/stadium_editor/dortmund_original/st051_irpl003_bsm.webp",
+    "https://6e4eaecc-e6c5-4f64-8de5-e8845034f33b-00-sf51mfqyyw4m.janeway.replit.dev/static/stadium_editor/dortmund_original/st051_pllr001_bsm.webp",
+    "https://6e4eaecc-e6c5-4f64-8de5-e8845034f33b-00-sf51mfqyyw4m.janeway.replit.dev/static/stadium_editor/dortmund_original/st_coat_band_2018Sig_bsm.webp",
+    "https://6e4eaecc-e6c5-4f64-8de5-e8845034f33b-00-sf51mfqyyw4m.janeway.replit.dev/api/live/test/matches/1/",
+    "https://6e4eaecc-e6c5-4f64-8de5-e8845034f33b-00-sf51mfqyyw4m.janeway.replit.dev/api/live/test/matches/1/",
+    "https://6e4eaecc-e6c5-4f64-8de5-e8845034f33b-00-sf51mfqyyw4m.janeway.replit.dev/api/live/test/matches/1/",
+    "https://6e4eaecc-e6c5-4f64-8de5-e8845034f33b-00-sf51mfqyyw4m.janeway.replit.dev/static/stadium_editor/image_backgrounds/907/night.webp",
+    "https://6e4eaecc-e6c5-4f64-8de5-e8845034f33b-00-sf51mfqyyw4m.janeway.replit.dev/static/stadium_editor/image_backgrounds/907/night.webp",
+    "https://6e4eaecc-e6c5-4f64-8de5-e8845034f33b-00-sf51mfqyyw4m.janeway.replit.dev/api/live/test/matches/1/",
+    "https://6e4eaecc-e6c5-4f64-8de5-e8845034f33b-00-sf51mfqyyw4m.janeway.replit.dev/api/live/test/matches/1/",
+    "https://6e4eaecc-e6c5-4f64-8de5-e8845034f33b-00-sf51mfqyyw4m.janeway.replit.dev/api/live/test/matches/1/",
+    "https://6e4eaecc-e6c5-4f64-8de5-e8845034f33b-00-sf51mfqyyw4m.janeway.replit.dev/api/live/test/matches/1/",
+    "https://6e4eaecc-e6c5-4f64-8de5-e8845034f33b-00-sf51mfqyyw4m.janeway.replit.dev/api/live/test/matches/1/",
+    "https://6e4eaecc-e6c5-4f64-8de5-e8845034f33b-00-sf51mfqyyw4m.janeway.replit.dev/api/live/test/matches/1/",
+    "https://6e4eaecc-e6c5-4f64-8de5-e8845034f33b-00-sf51mfqyyw4m.janeway.replit.dev/api/live/test/matches/1/",
+    "https://6e4eaecc-e6c5-4f64-8de5-e8845034f33b-00-sf51mfqyyw4m.janeway.replit.dev/api/live/test/matches/1/",
+    "https://6e4eaecc-e6c5-4f64-8de5-e8845034f33b-00-sf51mfqyyw4m.janeway.replit.dev/api/live/test/matches/1/",
+    "https://6e4eaecc-e6c5-4f64-8de5-e8845034f33b-00-sf51mfqyyw4m.janeway.replit.dev/api/live/test/matches/1/",
+    "https://6e4eaecc-e6c5-4f64-8de5-e8845034f33b-00-sf51mfqyyw4m.janeway.replit.dev/api/live/test/matches/1/"
+  ],
+  "measurement": "Software WebGL, capture-only preserved buffer; not hardware FPS."
+}

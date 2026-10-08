@@ -17,14 +17,9 @@ logger = logging.getLogger(__name__)
 
 
 def _stadium_preview_environment():
-    """Read the prepared local package; no ORM mutation or runtime acquisition."""
-    from stadium_editor.natural_packages import load_natural_package
-    package = load_natural_package('dortmund')
-    return {
-        'naturalPackage': package,
-        'surroundings': package['data'],
-        'frame': package['frame'],
-    }
+    """Independent Dortmund study, not an image fallback for test-game clubs."""
+    from stadium_editor.image_backgrounds import load_image_background
+    return {'imageBackground': load_image_background(907)}
 
 
 def admin_only(view):

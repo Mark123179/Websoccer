@@ -26,3 +26,9 @@ Bei komplexen Schatten-/Instanzszenen können mehrere erfolgreiche Canvas-Export
 **Why:** Eine vollständige Desktop-/Mobilreihe mit Software-WebGL überschritt die Grenze, obwohl die ersten fünf Bilder korrekt gespeichert waren. GPU-Synchronisation beim Export ist keine Hardware-FPS-Messung.
 
 **How to apply:** Aufnahmereihen nach Szenarien aufteilen oder als überwachte Hintergrundarbeit ausführen und Ergebnisse nach jedem Bild sichern; einen Timeout nicht ohne Prüfung als Szenendefekt werten.
+
+Ein erstmaliger Lichtprofilwechsel kann in Software-WebGL mehrere Sekunden im Renderaufruf verbringen, während spätere Aufrufe derselben Szene deutlich schneller sind.
+
+**Why:** Bei der Bild-/Stadionansicht benötigte der erste Nachtwechsel ungefähr fünf Sekunden, spätere Nacht-Aufrufe nur Millisekunden. Neue Licht-/Schatten-Shader-Varianten verfälschen eine einzelne vermeintliche Framezeit.
+
+**How to apply:** Kalte Shader-Kompilierung, warme Renderaufrufe und GPU-Synchronisation getrennt berichten. Einen einmaligen langen Profilwechsel nicht als dauerhafte Szenen-FPS interpretieren und keine Hardware-Leistung aus SwiftShader versprechen.
