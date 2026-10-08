@@ -118,7 +118,7 @@
 - [Stadionausbau-Vorschauvertrag](stadium-expansion-preview-contract.md) — Baugröße ist absolut statt bestandsproportional; Sitzkamera-Events gehören an das ersetzbare WebGL-Canvas.
 - [Stadionsitz-Basis](stadium-seat-basis.md) — Sitzachsen für Quaternionen müssen rechtshändig bleiben; Hochachse nie allein spiegeln, Lehnenrichtung geometrisch ableiten.
 - [Sitzansicht-Himmel für 16:9-Fotos](stadium-seat-sky.md) — normale Himmelsfotos als überdeckende kamerafeste Fernfläche zeigen, nicht als 360°-Panorama.
-- [Stadion-Flutlicht-Laufzeitvertrag](stadium-floodlight-runtime.md) — Flutlicht ist unabhängig von Tag/Nacht; viele Rim-Köpfe nutzen höchstens 12 echte SpotLights.
+- [Stadion-Flutlicht-Laufzeitvertrag](stadium-floodlight-runtime.md) — Leuchten aus Modellen prüfen und deklarieren, keine erfundenen Lichtorte; Zustand unabhängig von Tag/Nacht, höchstens 12 Quellen.
 - [Stadion-Umgebungslichtvertrag](stadium-ambient-lighting.md) — Tag/Nacht wechselt Lichtsets in-place; Exposure bleibt Multiplikator, ACES-Schatten brauchen mehrere Lichtlagen.
 - [Dortmund Unity seat/mesh frame](dortmund-unity-frame.md) — Sitz-JSON ist ungedreht, Mesh-Export hat 90° Parent-Rotation gebacken; Standzuordnung immer gegen Crowd-Bounds prüfen.
 - [Dortmund roof layers](dortmund-roof-layers.md) — Dachhaut, Decke und Träger überlagern sich in mehreren Unity-Meshes; einzelne Dachmeshes ausblenden reicht für Innenansichten nicht.
