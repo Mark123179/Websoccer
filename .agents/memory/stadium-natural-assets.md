@@ -36,7 +36,19 @@ fehlende Umfeld-/Leuchtenquellen nicht als bereits abgenommen ausgeben.
 
 **Why:** Der Nutzer verwarf die modellierte 3D-Umgebung als ungenau, unansehnlich und zu teuer. Die bisherigen Vorgaben für Web-Modellbibliothek, Vegetations-Impostors, Autos und geografische Modellpakete sind für diesen Ersatzansatz überholt; diese Archive nicht erneut anfordern.
 
-**How to apply:** Gelieferte Hintergrundbilder vereinsbezogen verwenden; darüber das echte Stadion und Spielfeld rendern. Keine eigenen Ersatzbilder generieren. Der produktive Neon-Editor bleibt ohne separate Freigabe unverändert; der bisher freigegebene Erprobungsumfang ist der geschützte Admin-Test.
+**How to apply:** Hintergrundbilder vereinsbezogen verwenden; darüber das echte Stadion und Spielfeld rendern. Keine ungefragt generierten Ersatzbilder einsetzen. Der produktive Neon-Editor bleibt ohne separate Freigabe unverändert; der bisher freigegebene Erprobungsumfang ist der geschützte Admin-Test.
+
+Für den anschließenden Umfeld-Auftrag hat der Nutzer keine passenden Bilder
+und bittet ausdrücklich um ihre Erstellung: „ich hab keine. Kannst du die
+erstellen?“
+
+**Why:** Damit ist die KI-Erstellung für diesen Umfeld-Auftrag ausdrücklich
+erlaubt, anders als beim bisherigen Auftrag zur Verwendung gelieferter Fotos.
+
+**How to apply:** Kamera- und Feldregistrierung beibehalten, das Stadion nicht
+in den Hintergrund malen, Tag/Nacht strukturell zusammenhalten und erzeugte
+Bilder als KI-generiert kennzeichnen. Reale Ortsmerkmale anhand von Referenzen
+prüfen; generierte Kulissen nicht als fotografisch verifizierte Geografie ausgeben.
 
 „Das Umfeld-Bild darf kein Stadion enthalten.“ „Das Bild hängt nur noch am Gelände, nicht am Stadion. Baut der Spieler im Editor aus, muss nichts neu erzeugt werden.“
 
