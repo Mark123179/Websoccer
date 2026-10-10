@@ -2048,3 +2048,17 @@ mtime_ms = 1791659121751
 storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:6e4eaecc-e6c5-4f64-8de5-e8845034f33b/3d185d2b-46bb-47b2-b206-f2af7727bdcd/192faedd-8263-48d8-bfc8-35e5fd7902c0"
 storage_version_token = "1791659269288543"
 content_type = "image/png"
+
+[[outputs]]
+id = "rve8HZhSOkRRi8M88mU_v"
+uri = "file://generated-artifacts/stadium-workflow-guide.html"
+type = "html"
+title = "Anleitung: Weitere Stadien"
+description = "Datenquellen, Verarbeitung, Schutzregeln, Abnahme und kopierbarer Arbeitsauftrag für Claude oder einen anderen Agenten."
+logical_id = "8121172b-c2a0-4337-ac41-d6542d53bfe2"
+content_hash = "sha256:1298ab91215fe458482adfcd5e893e942070f36f92ee2b8d68712cb5d8d3b732"
+size = 17315
+mtime_ms = 1791659824554
+storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:6e4eaecc-e6c5-4f64-8de5-e8845034f33b/8121172b-c2a0-4337-ac41-d6542d53bfe2/126990a4-8165-45ad-b092-b73ac6553a78"
+storage_version_token = "1791659825860654"
+content_type = "text/html"

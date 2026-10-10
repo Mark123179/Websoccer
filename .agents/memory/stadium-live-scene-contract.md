@@ -82,6 +82,15 @@ Aufnahme des Altstands ausgelegt; der Nutzer hat das ausdrücklich korrigiert.
 gemeinsame räumliche Darstellung ausgeben. Die eigenen BVB-Modell- und
 Umfelddaten verwenden, keine Elversberger Ortsobjekte übernehmen.
 
+Der Nutzer hat die vollständige räumliche BVB-Fünfer-Serie nach dem Wechsel
+zur gemeinsamen Kamera ausdrücklich bestätigt: „Sehr gut.“
+
+**Why:** Die Zustimmung gilt dem fertigen räumlichen Stand mit eigenem
+BVB-Modell und Umfeld, nicht der früheren Fotomodus-Serie.
+
+**How to apply:** Diesen Stand als BVB-Referenz erhalten. Die Zustimmung
+ersetzt keine Einzelprüfung und Freigabe weiterer Vereine.
+
 ## Verbindliche Stadionabnahme je Verein
 
 „Möchte nur fertige angezegit bekommen.“ Keine Zwischenbilder oder
