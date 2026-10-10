@@ -47,6 +47,18 @@ test('source origins follow model transforms; field stays fixed and roof hiding 
   const baseline=projectStudy(camera,1880,940,32,12);
   const handle={model,stage:{sceneRoot:root,renderer:{}}};
   const lighting=createStudyLighting(handle,evidence);
+  lighting.setState(true,true,true);
+  const before=lighting.sources.map(light=>({
+    position:light.position.clone(),target:light.target.position.clone(),
+  }));
+  model.rotation.y+=Math.PI;
+  lighting.setState(true,true,true);
+  lighting.sources.forEach((light,i)=>{
+    const turn=v=>new THREE.Vector3(-v.x,v.y,-v.z);
+    assert.ok(light.position.distanceTo(turn(before[i].position))<1e-8);
+    assert.ok(light.target.position.distanceTo(turn(before[i].target))<1e-8);
+    assert.ok(light.position.distanceTo(before[i].position)>1);
+  });
   model.scale.multiplyScalar(1.2);
   model.position.set(4,0,7);
   model.visible=false;
@@ -62,4 +74,32 @@ test('source origins follow model transforms; field stays fixed and roof hiding 
   lighting.setState(false,false,true);
   assert.ok(lighting.sources.every(source=>source.intensity>0));
   lighting.dispose();
+});
+test('alignment audit checks loaded lamp material/vertices and rejects stale origins or targets', () => {
+  const fixture={...evidence.verifiedFixtures[0],position:[10,20,30],direction:[-1,-1,0],
+    meshDistance:.2};
+  const model=dortmundAdapter(),root=new THREE.Scene();
+  root.add(model);
+  const geometry=new THREE.BufferGeometry();
+  geometry.setAttribute('position',new THREE.Float32BufferAttribute([10,20.2,30],3));
+  geometry.setIndex([0]);geometry.addGroup(0,1,0);
+  const material=new THREE.MeshStandardMaterial();
+  material.userData.sourceMaterial=fixture.nearestLampMesh.material;
+  const mesh=new THREE.Mesh(geometry,material);
+  mesh.userData.sourcePathId=fixture.nearestLampMesh.meshPathId;
+  model.add(mesh);
+  const lighting=createStudyLighting({model,allMeshes:[mesh],
+    stage:{sceneRoot:root,renderer:{}}},{verifiedFixtures:[fixture]});
+  lighting.setState(true,true);
+  assert.equal(lighting.inspectAlignment().length,1);
+  model.rotation.y+=Math.PI;
+  assert.throws(()=>lighting.inspectAlignment(),/ausrichtung/);
+  lighting.setState(true,false);
+  assert.equal(lighting.inspectAlignment()[0].originError,0);
+  lighting.sources[0].target.position.x+=2;
+  assert.throws(()=>lighting.inspectAlignment(),/ausrichtung/);
+  lighting.setState(true,false);
+  material.userData.sourceMaterial='unverified';
+  assert.throws(()=>lighting.inspectAlignment(),/ausrichtung/);
+  lighting.dispose();geometry.dispose();material.dispose();
 });

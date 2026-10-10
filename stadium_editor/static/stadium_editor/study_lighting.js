@@ -86,8 +86,49 @@ export function createStudyLighting(handle, fixtureData) {
     handle.stage.renderer.toneMappingExposure = night ? 1.1 : 1;
     diagnostic.children.forEach(object => { if (object.isSpotLightHelper) object.update(); });
   }
+  // Audit the actual loaded lamp vertices, not just a repeated light formula.
+  // Coordinates in the declaration are in the exported mesh's local frame.
+  function inspectAlignment() {
+    root.updateMatrixWorld(true);
+    handle.model.updateMatrixWorld(true);
+    return sources.map(source => {
+      const fixture = source.userData.fixture;
+      const mesh = handle.allMeshes?.find(mesh =>
+        String(mesh.userData.sourcePathId) === String(fixture.nearestLampMesh.meshPathId));
+      if (!mesh) throw new Error(`Lampenmesh fehlt für Quelle ${fixture.id}.`);
+      const geometry = mesh.geometry, vertices = geometry.attributes.position;
+      let localDistance = Infinity, worldDistance = Infinity, matched = false;
+      const localPoint = new THREE.Vector3(...fixture.position);
+      const worldPoint = source.getWorldPosition(new THREE.Vector3());
+      const target = source.target.getWorldPosition(new THREE.Vector3());
+      const expected = handle.model.localToWorld(localPoint.clone());
+      const expectedTarget = handle.model.localToWorld(localPoint.clone()
+        .addScaledVector(new THREE.Vector3(...fixture.direction), 50));
+      for (const group of geometry.groups) {
+        const material = (Array.isArray(mesh.material) ? mesh.material : [mesh.material])[group.materialIndex];
+        if (material?.userData.sourceMaterial !== fixture.nearestLampMesh.material) continue;
+        matched = true;
+        for (let i = group.start; i < group.start + group.count; i++) {
+          const vertex = new THREE.Vector3().fromBufferAttribute(vertices,
+            geometry.index ? geometry.index.getX(i) : i);
+          localDistance = Math.min(localDistance, vertex.distanceTo(localPoint));
+          worldDistance = Math.min(worldDistance, vertex.applyMatrix4(mesh.matrixWorld).distanceTo(worldPoint));
+        }
+      }
+      if (!matched || localDistance > 1 || worldDistance > 1 ||
+          Math.abs(localDistance - fixture.meshDistance) > 1e-4 ||
+          worldPoint.distanceTo(expected) > 1e-8 || target.distanceTo(expectedTarget) > 1e-8)
+        throw new Error(`Leuchten-/Modellausrichtung stimmt nicht für ${fixture.id}.`);
+      return {id: fixture.id, meshPathId: fixture.nearestLampMesh.meshPathId,
+        material: fixture.nearestLampMesh.material, position: worldPoint.toArray(),
+        target: target.toArray(), direction: target.clone().sub(worldPoint).normalize().toArray(),
+        localMeshDistance: localDistance, worldMeshDistance: worldDistance,
+        representedIds: fixture.representedIds,
+        originError: worldPoint.distanceTo(expected), targetError: target.distanceTo(expectedTarget)};
+    });
+  }
   return {
-    sources, selected, verifiedCount: fixtures.length,
+    sources, selected, verifiedCount: fixtures.length, inspectAlignment,
     setState(nextNight, showDiagnostics, floodlight = true) {
       night = nextNight; enabled = floodlight; diagnostic.visible = showDiagnostics; sync();
     },

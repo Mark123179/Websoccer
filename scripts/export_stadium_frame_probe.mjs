@@ -11,20 +11,26 @@ const approved=mainStandBack?JSON.parse(fs.readFileSync(
   'generated-artifacts/stadium-middle-probe/verification.json','utf8')).states[0]:null;
 fs.mkdirSync(output,{recursive:true});
 const source=JSON.parse(fs.readFileSync('stadium_editor/blueprints/v2/elversberg_v2.json','utf8'));
+const fixtureData=mainStandBack?JSON.parse(fs.readFileSync(
+  'stadium_editor/static/stadium_editor/study_assets/dortmund_lights.json','utf8')):null;
 const base=`https://${process.env.REPLIT_DEV_DOMAIN}`;
 const browser=await chromium.launch({executablePath:'/repl/tools/bin/chromium',
   args:['--no-sandbox','--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader']});
 try {
   const page=await browser.newPage({viewport:{width:1880,height:940}});
+  // The isolated document has no site icon; do not mistake that optional
+  // browser request for a failed model, texture or shader.
+  await page.route('**/favicon.ico',route=>route.fulfill({status:204}));
   const errors=[];
   page.on('pageerror',error=>errors.push(error.message));
+  page.on('console',message=>{if(message.type()==='error')errors.push(message.text());});
   await page.goto(`${base}/static/game/css/stadium_study.css?v=3`);
   await page.setContent(`<script type="importmap">{"imports":{"three":"${base}/static/stadium_editor/stage/vendor/three.module.js","three/addons/":"${base}/static/stadium_editor/stage/vendor/addons/"}}</script><div id="host" style="width:1880px;height:940px;position:relative"></div>`);
-  const result=await page.evaluate(async ({base,source,mode,mainStandBack,approved})=>{
+  const result=await page.evaluate(async ({base,source,mode,mainStandBack,approved,fixtureData})=>{
     const THREE=await import('three');
-    const {mountStudyModel}=await import(`${base}/static/stadium_editor/study_models.js?v=frame-probe`);
+    const {mountStudyModel}=await import(`${base}/static/stadium_editor/study_models.js?v=night-frame-probe`);
     const {applyStudyCamera,projectStudy,studyPreset}=await import(`${base}/static/stadium_editor/study_camera.js?v=1`);
-    const {createStudyLighting}=await import(`${base}/static/stadium_editor/study_lighting.js?v=3`);
+    const {createStudyLighting}=await import(`${base}/static/stadium_editor/study_lighting.js?v=night-frame-probe`);
     const width=1880,height=940,margin=32;
     const original=studyPreset('cutaway');
     const corners=[[-52.5,-34],[52.5,-34],[52.5,34],[-52.5,34]];
@@ -116,7 +122,26 @@ try {
         viewSource.farStand='SUED';
       }
       const handle=await mountStudyModel({host:document.getElementById('host'),club,source:viewSource,concept:'cutaway'});
-      if(mainStandBack && club==='dortmund')handle.model.rotation.y+=Math.PI;
+      const lighting=createStudyLighting(handle,club==='dortmund'?fixtureData:null);
+      if(mainStandBack&&club==='dortmund'&&(!lighting.verifiedCount||
+        !lighting.sources.length||lighting.sources.length>12))
+        throw new Error('Dortmund requires declared runtime sources (1–12); no fallback allowed.');
+      lighting.setState(false,false,false);
+      const beforeTurn=mainStandBack&&club==='dortmund'?lighting.inspectAlignment():[];
+      if(mainStandBack && club==='dortmund'){
+        handle.model.rotation.y+=Math.PI;
+        // Lighting existed before the turn. Resync must move both origin and
+        // target, including diagnostic markers, rather than retain world positions.
+        lighting.setState(false,false,false);
+      }
+      const afterTurn=mainStandBack&&club==='dortmund'?lighting.inspectAlignment():[];
+      afterTurn.forEach((light,i)=>{
+        for(const key of ['position','target','direction']){
+          const old=beforeTurn[i][key],now=light[key];
+          if(Math.max(Math.abs(now[0]+old[0]),Math.abs(now[1]-old[1]),Math.abs(now[2]+old[2]))>1e-8)
+            throw new Error(`Source ${light.id} ${key} did not follow the 180-degree model turn.`);
+        }
+      });
       const orientation=mainStandBack?{
         rearStand:club==='dortmund'?'WEST':'SUED',
         hiddenFrontStand:club==='dortmund'?'OST':'NORD',
@@ -124,8 +149,6 @@ try {
         rightStand:club==='dortmund'?'NORD':'WEST',
         modelTurnDegrees:180,roofSegmentsAdded:0,
       }:null;
-      const lighting=createStudyLighting(handle,null);
-      lighting.setState(false,false,false);
       const stage=handle.stage;
       applyStudyCamera(stage.camera,'cutaway',width,height);
       const baselineCorners=corners.map(([x,y])=>projectStudy(stage.camera,width,height,x,y));
@@ -173,24 +196,46 @@ try {
       stage.camera.projectionMatrixInverse.copy(stage.camera.projectionMatrix).invert();
       for(const roof of [true,false]){
         handle.setRoof(roof);
-        stage.render();
-        const bounds=measure(stage);
-        const screen={left:fitted.cx+fitted.focal*bounds.minX,right:fitted.cx+fitted.focal*bounds.maxX,
-          top:fitted.cy-fitted.focal*bounds.maxY,bottom:fitted.cy-fitted.focal*bounds.minY};
-        if(mode==='full' && (screen.left<margin-.01 || screen.right>width-margin+.01 ||
-           screen.top<margin-.01 || screen.bottom>height-margin+.01))
-          throw new Error(`${club} roof=${roof} exceeds the shared safety margin: ${JSON.stringify(screen)}`);
-        const fieldCorners=corners.map(([x,y])=>projectStudy(stage.camera,width,height,x,y));
-        if(approved && (JSON.stringify(fieldCorners)!==JSON.stringify(approved.corners) ||
-          JSON.stringify(stage.camera.projectionMatrix.toArray())!==JSON.stringify(approved.projection) ||
-          JSON.stringify(stage.camera.matrixWorldInverse.toArray())!==JSON.stringify(approved.pose)))
-          throw new Error('Main-stand rotation changed the approved field projection or camera pose.');
-        if(fieldCorners.some(p=>!p.visible || p.x<margin || p.x>width-margin ||
-          p.y<margin || p.y>height-margin))throw new Error('Playable field is cropped.');
-        states.push({club,roof,screen,corners:fieldCorners,orientation,
-          projection:stage.camera.projectionMatrix.toArray(),pose:stage.camera.matrixWorldInverse.toArray(),
-          visibleRoofMeshes:handle.roofMeshes.filter(mesh=>mesh.visible).length,
-          png:handle.canvas.toDataURL('image/png')});
+        const variants=mainStandBack?[
+          {name:'day',night:false,floodlight:false,diagnostics:false},
+          {name:'night',night:true,floodlight:true,diagnostics:false},
+          {name:'night_off',night:true,floodlight:false,diagnostics:false},
+          ...(club==='dortmund'?[{name:'night_sources',night:true,floodlight:true,diagnostics:true}]:[]),
+        ]:[{name:'day',night:false,floodlight:false,diagnostics:false}];
+        for(const variant of variants){
+          lighting.setState(variant.night,variant.diagnostics,variant.floodlight);
+          stage.render();
+          const alignment=mainStandBack&&club==='dortmund'?lighting.inspectAlignment():[];
+          if(JSON.stringify(alignment)!==JSON.stringify(afterTurn))
+            throw new Error('Roof/night/floodlight switch moved a declared source.');
+          const activeSources=lighting.sources.filter(light=>light.intensity>0).length;
+          if(activeSources!==(variant.floodlight?lighting.sources.length:0))
+            throw new Error('Floodlight state not applied independently of night/roof.');
+          const bounds=measure(stage);
+          const screen={left:fitted.cx+fitted.focal*bounds.minX,right:fitted.cx+fitted.focal*bounds.maxX,
+            top:fitted.cy-fitted.focal*bounds.maxY,bottom:fitted.cy-fitted.focal*bounds.minY};
+          if(mode==='full' && (screen.left<margin-.01 || screen.right>width-margin+.01 ||
+             screen.top<margin-.01 || screen.bottom>height-margin+.01))
+            throw new Error(`${club} roof=${roof} exceeds the shared safety margin: ${JSON.stringify(screen)}`);
+          const fieldCorners=corners.map(([x,y])=>projectStudy(stage.camera,width,height,x,y));
+          if(approved && (JSON.stringify(fieldCorners)!==JSON.stringify(approved.corners) ||
+            JSON.stringify(stage.camera.projectionMatrix.toArray())!==JSON.stringify(approved.projection) ||
+            JSON.stringify(stage.camera.matrixWorldInverse.toArray())!==JSON.stringify(approved.pose)))
+            throw new Error('Main-stand rotation changed the approved field projection or camera pose.');
+          if(fieldCorners.some(p=>!p.visible || p.x<margin || p.x>width-margin ||
+            p.y<margin || p.y>height-margin))throw new Error('Playable field is cropped.');
+          states.push({club,roof,variant:variant.name,night:variant.night,
+            floodlightRequested:variant.floodlight,diagnostics:variant.diagnostics,
+            verifiedFixtures:lighting.verifiedCount,runtimeSources:lighting.sources.length,
+            activeSources,
+            missingSource:club==='elversberg'&&mainStandBack?
+              'Keine bestätigten Leuchtenpositionen/-richtungen für Elversberg; kein Ersatzflutlicht.':null,
+            sourceAlignment:alignment,sourceAlignmentBeforeTurn:beforeTurn,
+            screen,corners:fieldCorners,orientation,
+            projection:stage.camera.projectionMatrix.toArray(),pose:stage.camera.matrixWorldInverse.toArray(),
+            visibleRoofMeshes:handle.roofMeshes.filter(mesh=>mesh.visible).length,
+            png:handle.canvas.toDataURL('image/png')});
+        }
       }
       lighting.dispose();handle.dispose();
     }
@@ -200,11 +245,15 @@ try {
       throw new Error('Club/roof field projection parity failed.');
     if(states.some(state=>!state.roof&&state.visibleRoofMeshes!==0))
       throw new Error('Roof-off assembly still visible.');
-    return {fitted,states};
-   },{base,source,mode,mainStandBack,approved});
+    return {fitted,states,renderBackend:'Chromium ANGLE/SwiftShader (software WebGL)',
+      sourceEvidence:fixtureData?{source:fixtureData.source,sourceSha256:fixtureData.sourceSha256,
+        geometrySha256:fixtureData.geometrySha256}:null,
+      limitations:['Keine Nutzerabnahme','Kein FPS-/Hardware-Nachweis',
+        'Keine Schattenberechnung; Dach-an ist kein photometrischer Abschattungstest']};
+   },{base,source,mode,mainStandBack,approved,fixtureData});
   if(errors.length)throw new Error(errors.join('\n'));
   for(const state of result.states){
-    fs.writeFileSync(`${output}/${state.club}_${state.roof?'roof':'no_roof'}.png`,
+    fs.writeFileSync(`${output}/${state.club}_${state.roof?'roof':'no_roof'}${state.variant==='day'?'':`_${state.variant}`}.png`,
       Buffer.from(state.png.split(',')[1],'base64'));
     delete state.png;
   }

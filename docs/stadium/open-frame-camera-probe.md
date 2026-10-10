@@ -101,3 +101,64 @@ Die Dortmunder Umfeldregistrierung aus der bisherigen Westansicht ist für
 die neue Ostansicht nicht unverändert verwendbar. Der Kartenadapter muss
 die Modellhalbwendung mit berücksichtigen, bevor neue Umfeldvorlagen
 als passend ausgegeben werden.
+
+## Nachtprobe nach der Halbwendung
+
+Derselbe Befehl `node scripts/export_stadium_frame_probe.mjs --middle --main-stand-back`
+exportiert jetzt 14 echte 1880×940-WebGL-Render in dasselbe isolierte
+Ausgabeverzeichnis. Pro Verein/Dachzustand entstehen Tag (`*_roof.png`,
+`*_no_roof.png`), Nacht mit angefordertem Flutlicht (`*_night.png`) und
+Nacht mit ausgeschaltetem Flutlicht (`*_night_off.png`). Dortmund erhält
+zusätzlich zwei Kontrollansichten (`*_night_sources.png`).
+Die bestätigte Mittelweg-Probe wird nicht überschrieben.
+
+### Quellen und Transformationsprüfung
+
+- Dortmund: `study_assets/dortmund_lights.json` enthält 64 geprüfte Unity-
+  Spot-Leuchten mit Komponentenposition, Richtung, Lampenmesh-ID und Material.
+  Die unveränderte Auswahl verwendet sechs reale Quellen (je drei auf den
+  zwei belegten Modellseiten), keine Gruppenmittelpunkte. Die vorhandene
+  Browserkalibrierung bleibt unverändert: Quellintensität × 8 ×
+  `min(4, sqrt(repräsentierte Leuchten))`. Sie ist keine Messung realer Lux-Werte.
+- Die Beleuchtung wird **vor** der Halbwendung erstellt. Anschließend erfolgt
+  die Drehung des Modells und die erneute Zustandsanwendung. Für jede aktive
+  Quellposition, jedes Ziel und jede Richtung muss `(x,y,z) → (-x,y,-z)` gelten.
+  Damit wird ausdrücklich geprüft, dass keine alte Weltposition stehen bleibt.
+- Zusätzlich prüft `inspectAlignment()` die tatsächlich geladenen indexierten
+  Lampenvertices des deklarierten Meshes und Materials. Lokaler Abstand muss
+  mit dem Quellexport übereinstimmen, Weltabstand nach Transformation unter
+  einem Meter bleiben. Gemessen: maximal 0,236865 m lokal und 0,235514 m in
+  der skalierten Welt. Ursprungs-/Zielfehler sind null. Fehlendes Mesh,
+  fehlendes Material oder falsche Ausrichtung brechen den Export ab.
+- Alle Nacht-, Dach- und Flutlichtwechsel behalten diese Ausrichtung.
+  Die Kontrollansicht zeigt alle 64 deklarierten Montagepunkte in Cyan,
+  die sechs ausgewählten Punkte in Gelb sowie deren Lichtkegel. Diese
+  Kontrollmarkierungen gehören nicht zu den normalen Nachtbildern.
+- Elversberg: Es gibt weiterhin **keine bestätigten Leuchtenpositionen und
+  Richtungen**. Beide Nacht-Dachvarianten werden wirklich gerendert, bleiben
+  mit dem schwachen vorhandenen Nachtambiente aber fast schwarz. Angefordertes
+  Flutlicht erzeugt dort null Quellen, genauso wie Flutlicht-aus. Das Protokoll
+  meldet die fehlenden Quellen ausdrücklich; kein generischer Mast, Dachlicht,
+  unsichtbares Fülllicht oder Materialleuchten ersetzt den fehlenden Nachweis.
+
+### Ergebnis und Aussagegrenzen
+
+Alle 14 Zustände vergleichen Projektionsmatrix, Kamerapose und vier Feldecken
+exakt mit `stadium-middle-probe/verification.json`. Bei Dach-an sind 33
+registrierte Dortmunder bzw. 11 Elversberger Dachmeshes sichtbar, bei Dach-aus
+jeweils null. Keine Dachflächen wurden ergänzt. Vereinsdaten, Originalmodelle
+und produktive Kamera-Presets bleiben unverändert.
+
+`verification.json` enthält Quellenbezüge, Geometrie-/Quellhashes, Vorher-/
+Nachher-Positionen und Ziele, Material-/Mesh-Abstände, Schaltzustände sowie
+Kameravergleiche. Der Export prüft auch Browserfehler. Die ergänzten Tests in
+`study.test.mjs` erkennen stehen gebliebene Positionen/Ziele und falsche
+Lampengeometrie-Zuordnungen.
+
+Die Bilder wurden mit Chromium ANGLE/SwiftShader (Software-WebGL) gerendert.
+Dies sind echte Render zur visuellen Beurteilung, **keine Nutzerabnahme und
+kein FPS- oder Hardwareleistungsnachweis**. Die bisherige Studie verwendet
+keine Schattenberechnung (`castShadow=false`); Dach-an belegt daher nicht
+die photometrische Abschattung durch das Dach. Die Lichtausrichtung und
+Dach-aus-Parität sind davon getrennte geometrische Prüfungen. Himmel und
+Umfeld bleiben neutrale Studienkulissen, nicht fertige Ortsansichten.

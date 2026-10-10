@@ -83,6 +83,7 @@ export async function mountStudyModel({host, club, source, concept}) {
             color, map: maps[part.texture] || null, roughness: .87, metalness: .06,
             side: THREE.DoubleSide, clippingPlanes: [new THREE.Plane(new THREE.Vector3(0,0,-1), 35)],
           }));
+          materials.at(-1).userData.sourceMaterial = part.material;
         }
         if (!indices.length) { geometry.dispose(); continue; }
         geometry.setIndex(indices); geometry.computeVertexNormals();
