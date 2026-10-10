@@ -2,7 +2,8 @@
 import fs from 'node:fs';
 import {chromium} from 'playwright-core';
 
-const output='generated-artifacts/stadium-frame-probe';
+const mode=process.argv.includes('--middle')?'middle':'full';
+const output=mode==='middle'?'generated-artifacts/stadium-middle-probe':'generated-artifacts/stadium-frame-probe';
 fs.mkdirSync(output,{recursive:true});
 const source=JSON.parse(fs.readFileSync('stadium_editor/blueprints/v2/elversberg_v2.json','utf8'));
 const base=`https://${process.env.REPLIT_DEV_DOMAIN}`;
@@ -14,7 +15,7 @@ try {
   page.on('pageerror',error=>errors.push(error.message));
   await page.goto(`${base}/static/game/css/stadium_study.css?v=3`);
   await page.setContent(`<script type="importmap">{"imports":{"three":"${base}/static/stadium_editor/stage/vendor/three.module.js","three/addons/":"${base}/static/stadium_editor/stage/vendor/addons/"}}</script><div id="host" style="width:1880px;height:940px;position:relative"></div>`);
-  const result=await page.evaluate(async ({base,source})=>{
+  const result=await page.evaluate(async ({base,source,mode})=>{
     const THREE=await import('three');
     const {mountStudyModel}=await import(`${base}/static/stadium_editor/study_models.js?v=frame-probe`);
     const {applyStudyCamera,projectStudy,studyPreset}=await import(`${base}/static/stadium_editor/study_camera.js?v=1`);
@@ -104,6 +105,14 @@ try {
       const stage=handle.stage;
       applyStudyCamera(stage.camera,'cutaway',width,height);
       const baselineCorners=corners.map(([x,y])=>projectStudy(stage.camera,width,height,x,y));
+      if(!fitted && mode==='middle'){
+        const focal=original.zoom*.75;
+        const nearY=(original.principal[1]-baselineCorners[2].y)/original.zoom;
+        fitted={mode,focal,cx:width/2,cy:baselineCorners[2].y+focal*nearY,
+          margin,fieldScale:.75,position:stage.camera.position.toArray(),
+          tilt:original.tilt,field:[105,68],format:[width,height],baselineCorners,
+          allowOuterFrameCrop:true};
+      }
       if(!fitted){
         handle.setRoof(true);
         const points=[];
@@ -144,10 +153,13 @@ try {
         const bounds=measure(stage);
         const screen={left:fitted.cx+fitted.focal*bounds.minX,right:fitted.cx+fitted.focal*bounds.maxX,
           top:fitted.cy-fitted.focal*bounds.maxY,bottom:fitted.cy-fitted.focal*bounds.minY};
-        if(screen.left<margin-.01 || screen.right>width-margin+.01 ||
-           screen.top<margin-.01 || screen.bottom>height-margin+.01)
+        if(mode==='full' && (screen.left<margin-.01 || screen.right>width-margin+.01 ||
+           screen.top<margin-.01 || screen.bottom>height-margin+.01))
           throw new Error(`${club} roof=${roof} exceeds the shared safety margin: ${JSON.stringify(screen)}`);
-        states.push({club,roof,screen,corners:corners.map(([x,y])=>projectStudy(stage.camera,width,height,x,y)),
+        const fieldCorners=corners.map(([x,y])=>projectStudy(stage.camera,width,height,x,y));
+        if(fieldCorners.some(p=>!p.visible || p.x<margin || p.x>width-margin ||
+          p.y<margin || p.y>height-margin))throw new Error('Playable field is cropped.');
+        states.push({club,roof,screen,corners:fieldCorners,
           projection:stage.camera.projectionMatrix.toArray(),pose:stage.camera.matrixWorldInverse.toArray(),
           visibleRoofMeshes:handle.roofMeshes.filter(mesh=>mesh.visible).length,
           png:handle.canvas.toDataURL('image/png')});
@@ -161,7 +173,7 @@ try {
     if(states.some(state=>!state.roof&&state.visibleRoofMeshes!==0))
       throw new Error('Roof-off assembly still visible.');
     return {fitted,states};
-  },{base,source});
+  },{base,source,mode});
   if(errors.length)throw new Error(errors.join('\n'));
   for(const state of result.states){
     fs.writeFileSync(`${output}/${state.club}_${state.roof?'roof':'no_roof'}.png`,

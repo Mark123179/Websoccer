@@ -55,6 +55,18 @@ vollständiger vorderer Tribünen-/Dachaufbau das 2D-Spielfeld verdecken kann.
 einblenden. Zoom oder Kameraabstand nicht pro Dachzustand ändern; beide
 Dachzustände und Vereine müssen dieselbe Feldprojektion verwenden.
 
+Nach der vollständig eingepassten Rahmenprobe wählte der Nutzer
+„Größeres Feld hat Vorrang“ und fragte nach einem „Mittelweg?“.
+
+**Why:** Die vollständige Einpassung verkleinerte das Spielfeld stärker als
+die gewünschte geringe Änderung der Nahansicht.
+
+**How to apply:** Einen näheren Kompromiss zeigen; äußere Stadion- und
+Dachränder dürfen zugunsten des größeren Feldes angeschnitten bleiben.
+Die vollständige Darstellung aller Dachspitzen nicht mehr über die
+Feldlesbarkeit stellen. Der offene Rahmen und die gemeinsame Projektion
+für alle Vereine und Dachzustände bleiben verbindlich.
+
 ## Bisheriger Bildansatz
 
 „Wir nehmen unser Stadionmodell und das Spielfeld wie gehabt und das Umfeld machen wir als zwei Bilder Tag & Nacht je Verein.“ „Ich werde die Bilder liefern.“

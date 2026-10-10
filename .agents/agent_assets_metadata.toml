@@ -1376,3 +1376,73 @@ mtime_ms = 1791625379931
 storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:6e4eaecc-e6c5-4f64-8de5-e8845034f33b/cea8ea37-65bf-4b58-baae-856ff702a0b3/272d5649-81cf-44af-bca4-2e76b3aae9a5"
 storage_version_token = "1791625644501332"
 content_type = "image/png"
+
+[[outputs]]
+id = "3eaa2HrHt9LLdtPqLow0x"
+uri = "file://generated-artifacts/stadium-middle-probe/four_states.jpg"
+type = "image"
+title = "Mittelweg — Dortmund und Elversberg mit und ohne Dach"
+description = "Feldbreite und Feldhöhe jeweils 75 % der ursprünglichen Nahansicht. Alle vier Ansichten nutzen exakt dieselbe Kamera und Feldprojektion. Äußere Dortmunder Stadion- und Dachränder bleiben bewusst angeschnitten. Die Übersicht zeigt jede Ansicht gleichmäßig auf halbe Auflösung verkleinert."
+logical_id = "396d7ace-702a-4c4e-8836-b38c5876c06e"
+content_hash = "sha256:2483761fcfe2a8734070b0a2ebf1b9a78a5808e392aea346609c9bff95370ded"
+size = 420298
+mtime_ms = 1791626913619
+storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:6e4eaecc-e6c5-4f64-8de5-e8845034f33b/396d7ace-702a-4c4e-8836-b38c5876c06e/5ad160bd-f1ed-4275-8307-8587a31be6d2"
+storage_version_token = "1791627175038264"
+content_type = "image/jpeg"
+
+[[outputs]]
+id = "Ep28svzmwW_DYL_g4xMze"
+uri = "file://generated-artifacts/stadium-middle-probe/dortmund_roof.png"
+type = "image"
+title = "Mittelweg · Dortmund mit Dach"
+description = "Volle Auflösung: 1880 × 940 Pixel. Vollständig sichtbares Spielfeld; offene Vorderseite; gemeinsame 75%-Feldprojektion. Nur eine Kamera-/Modellprobe, noch nicht in die Spielansicht eingebaut."
+logical_id = "4b4ade0d-575f-4f92-833a-1935f2b4c393"
+content_hash = "sha256:4784c0baa13c5a59780c9b3f847ecd3c80dc9550f63f47868e2a0e5d4bb6dbd5"
+size = 666027
+mtime_ms = 1791626908303
+storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:6e4eaecc-e6c5-4f64-8de5-e8845034f33b/4b4ade0d-575f-4f92-833a-1935f2b4c393/5f0d3536-7bfb-4853-983b-e5a0576ea214"
+storage_version_token = "1791627176142941"
+content_type = "image/png"
+
+[[outputs]]
+id = "J09T1tEOfeBOoLKCxVvq9"
+uri = "file://generated-artifacts/stadium-middle-probe/dortmund_no_roof.png"
+type = "image"
+title = "Mittelweg · Dortmund ohne Dach"
+description = "Volle Auflösung: 1880 × 940 Pixel. Vollständig sichtbares Spielfeld; offene Vorderseite; gemeinsame 75%-Feldprojektion. Nur eine Kamera-/Modellprobe, noch nicht in die Spielansicht eingebaut."
+logical_id = "37cd4230-711f-4394-a27f-05869dbeb266"
+content_hash = "sha256:5639475dcd7b2081ba0adea2454ff0c3cbc17a31cf6191352d94c426dd95550a"
+size = 1014546
+mtime_ms = 1791626908307
+storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:6e4eaecc-e6c5-4f64-8de5-e8845034f33b/37cd4230-711f-4394-a27f-05869dbeb266/bf08d214-36e0-4b3f-a2e5-0aa7265a365e"
+storage_version_token = "1791627176887592"
+content_type = "image/png"
+
+[[outputs]]
+id = "Z1lrj78QpfL9k0-khPrLV"
+uri = "file://generated-artifacts/stadium-middle-probe/elversberg_roof.png"
+type = "image"
+title = "Mittelweg · Elversberg mit Dach"
+description = "Volle Auflösung: 1880 × 940 Pixel. Vollständig sichtbares Spielfeld; offene Vorderseite; gemeinsame 75%-Feldprojektion. Nur eine Kamera-/Modellprobe, noch nicht in die Spielansicht eingebaut."
+logical_id = "7aa5e2d9-4043-49d5-8331-ee0c53d19f57"
+content_hash = "sha256:b5f02ecd1e1c7bd55b718d5fc8bdadf50dcabd74712e3cae10631f610c82fe22"
+size = 346962
+mtime_ms = 1791626908311
+storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:6e4eaecc-e6c5-4f64-8de5-e8845034f33b/7aa5e2d9-4043-49d5-8331-ee0c53d19f57/f1043829-b2d9-4a38-b22e-5a5b0d15b7de"
+storage_version_token = "1791627177630247"
+content_type = "image/png"
+
+[[outputs]]
+id = "S8MUO8Ipgu2RTLYE5mIQz"
+uri = "file://generated-artifacts/stadium-middle-probe/elversberg_no_roof.png"
+type = "image"
+title = "Mittelweg · Elversberg ohne Dach"
+description = "Volle Auflösung: 1880 × 940 Pixel. Vollständig sichtbares Spielfeld; offene Vorderseite; gemeinsame 75%-Feldprojektion. Nur eine Kamera-/Modellprobe, noch nicht in die Spielansicht eingebaut."
+logical_id = "632c3d5a-ee49-4f1d-8815-dedb46c273c7"
+content_hash = "sha256:627fbdc27e0ae1899bd259ea8eca538e605a87ef0d9e45ad4a90dc0a4d2d7b64"
+size = 424501
+mtime_ms = 1791626908311
+storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:6e4eaecc-e6c5-4f64-8de5-e8845034f33b/632c3d5a-ee49-4f1d-8815-dedb46c273c7/275773ea-4aee-4d63-9af7-4c5b6442265d"
+storage_version_token = "1791627178467826"
+content_type = "image/png"
