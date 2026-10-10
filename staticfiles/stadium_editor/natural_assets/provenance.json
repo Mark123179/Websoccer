@@ -1,0 +1,217 @@
+{
+  "schema": "websoccer.asset-provenance",
+  "version": 1,
+  "generator": {
+    "source": "https://github.com/dgreenheck/ez-tree",
+    "revision": "9eac30e99696b53a85e425d22e51aa0a7501705a",
+    "license": "MIT",
+    "runtimeDependency": false
+  },
+  "assets": [
+    {
+      "id": "Asphalt006",
+      "source": "https://ambientcg.com/view?id=Asphalt006",
+      "download": "https://ambientcg.com/get?file=Asphalt006_1K-JPG.zip",
+      "license": "CC0-1.0"
+    },
+    {
+      "id": "PavingStones136",
+      "source": "https://ambientcg.com/view?id=PavingStones136",
+      "download": "https://ambientcg.com/get?file=PavingStones136_1K-JPG.zip",
+      "license": "CC0-1.0"
+    },
+    {
+      "id": "Grass001",
+      "source": "https://ambientcg.com/view?id=Grass001",
+      "download": "https://ambientcg.com/get?file=Grass001_1K-JPG.zip",
+      "license": "CC0-1.0"
+    },
+    {
+      "id": "Bark001",
+      "source": "https://ambientcg.com/view?id=Bark001",
+      "download": "https://ambientcg.com/get?file=Bark001_1K-JPG.zip",
+      "license": "CC0-1.0"
+    },
+    {
+      "id": "leaf_oak",
+      "source": "https://media.githubusercontent.com/media/dgreenheck/ez-tree/9eac30e99696b53a85e425d22e51aa0a7501705a/src/app/public/textures/leaves/oak.png",
+      "license": "MIT",
+      "sha256": "24451223cf396d22910a4932b8bb996a7274e63d81e24128c96a430ab67822b1"
+    },
+    {
+      "id": "leaf_ash",
+      "source": "https://media.githubusercontent.com/media/dgreenheck/ez-tree/9eac30e99696b53a85e425d22e51aa0a7501705a/src/app/public/textures/leaves/ash.png",
+      "license": "MIT",
+      "sha256": "5ec987db3829a839856c32c79b18a33a78f209e911cad55c65abfb77f30e2d29"
+    },
+    {
+      "id": "leaf_aspen",
+      "source": "https://media.githubusercontent.com/media/dgreenheck/ez-tree/9eac30e99696b53a85e425d22e51aa0a7501705a/src/app/public/textures/leaves/aspen.png",
+      "license": "MIT",
+      "sha256": "6c8cbfa3eda0f070df6ebb3c8ec6899400f3c966d1658fcfd9ae518347c2dcb9"
+    },
+    {
+      "id": "brick_wall_02",
+      "source": "https://polyhaven.com/a/brick_wall_02",
+      "license": "CC0-1.0"
+    },
+    {
+      "id": "overcast_soil_puresky",
+      "source": "https://polyhaven.com/a/overcast_soil_puresky",
+      "license": "CC0-1.0"
+    },
+    {
+      "id": "shrub_03",
+      "source": "https://polyhaven.com/a/shrub_03",
+      "license": "CC0-1.0"
+    }
+  ],
+  "files": [
+    {
+      "path": "EZ-Tree-LICENSE.txt",
+      "bytes": 1073,
+      "sha256": "20e4afadfb10c67952b3d73cd2982d21d165ab4ae82b0dd9e4d6f2166ee349b6"
+    },
+    {
+      "path": "EZ-Tree-texture-attribution.md",
+      "bytes": 1378,
+      "sha256": "c4c67cf955536e61d9ac3fdf13830114edcd4c19c9aa0356ed0862cedf64140a"
+    },
+    {
+      "path": "asphalt_color.webp",
+      "bytes": 68776,
+      "sha256": "1cc39615191ebf4d28d314bb160ccbadc54bd249c32ee4d1d3bd447577fd6be1"
+    },
+    {
+      "path": "asphalt_normal.webp",
+      "bytes": 156964,
+      "sha256": "8fad4cc1347737371aff91150413098c5e73aa099cd13ad23def4bdc790490f2"
+    },
+    {
+      "path": "asphalt_roughness.webp",
+      "bytes": 54404,
+      "sha256": "7e1c4a7e61c98c13a8088796949ed24e9627a56a76810fe4dec8ad4355682720"
+    },
+    {
+      "path": "bark_color.webp",
+      "bytes": 54236,
+      "sha256": "4f4cf91bdbe9eda8c361ad3fc07ef3cfe6ca01f7165f62c1759f255ab2a326cf"
+    },
+    {
+      "path": "bark_normal.webp",
+      "bytes": 55250,
+      "sha256": "70b5fd5c1bdd596259e3d5af1835a61fee31c363534b3c9bae09d23d89d03985"
+    },
+    {
+      "path": "bark_roughness.webp",
+      "bytes": 46324,
+      "sha256": "5e7e54f9321f6ef63abbf2f8c397d755ae7224e5aa293526651cdb1fae4d8c5c"
+    },
+    {
+      "path": "brick_color.webp",
+      "bytes": 81742,
+      "sha256": "8ba2ad56ad60063cec2a9c49cbfe8fb8a12d70900264452fe03270ab97e0c52b"
+    },
+    {
+      "path": "brick_normal.webp",
+      "bytes": 72466,
+      "sha256": "7884adff60132c5312984396817f86228549d2c708a33ab3751203b229bb67de"
+    },
+    {
+      "path": "brick_roughness.webp",
+      "bytes": 8038,
+      "sha256": "93d0c179c3618acb6ecec3d0b7edb461b174ddb151994e3890b8017ec918356b"
+    },
+    {
+      "path": "grass_color.webp",
+      "bytes": 74196,
+      "sha256": "a49cf3c26c23e1dc1f221dba695b849fbfd6d60dd80ce6ea4157fbc7e85a6398"
+    },
+    {
+      "path": "grass_normal.webp",
+      "bytes": 104304,
+      "sha256": "ebfc1956a93821093cd1afe66e18417b59e47239aa915a0f5e9ae3cf36ae48d0"
+    },
+    {
+      "path": "grass_roughness.webp",
+      "bytes": 84158,
+      "sha256": "59e94d179457da57fe97067560a23c043485dd08227938faea48167d5dd9748e"
+    },
+    {
+      "path": "leaf_ash.webp",
+      "bytes": 32442,
+      "sha256": "82753505cae87e049001c7255435af7227567d0afe978f54f9db3ee5ea2466cb"
+    },
+    {
+      "path": "leaf_aspen.webp",
+      "bytes": 45820,
+      "sha256": "134db7057bacb68b6cbab88c9679d6363626a81028d55175e54008fecbf684ff"
+    },
+    {
+      "path": "leaf_oak.webp",
+      "bytes": 57778,
+      "sha256": "0883cc35f427aa2022b464b7949f0ab5c5ccf686a4103ce4642184e2876c18d3"
+    },
+    {
+      "path": "library.json",
+      "bytes": 9598,
+      "sha256": "e8aedf1a9d237b1752ad150aecabb8e3f2e3514affc3905ecdedcf4eacd22f9f"
+    },
+    {
+      "path": "overcast_soil_puresky_1k.hdr",
+      "bytes": 1195816,
+      "sha256": "2dbbbbb1323a8e8989db2e8306bd13099b215539e5adba41b85738a250a7904e"
+    },
+    {
+      "path": "paving_color.webp",
+      "bytes": 27124,
+      "sha256": "2a1d2697e69640ce71082995c7bdbafd48b1fba7fde324044c33435b5fddb29d"
+    },
+    {
+      "path": "paving_normal.webp",
+      "bytes": 9032,
+      "sha256": "b08f7b1220e7c765eb27aa4d2e37a88cd4bf7ba6d7adb3d0d086a1a063c95fb3"
+    },
+    {
+      "path": "paving_roughness.webp",
+      "bytes": 29216,
+      "sha256": "636b4779fe77ef7778f48329df9c5df9d5fcd3ef7666be12bf2de2a275f706c3"
+    },
+    {
+      "path": "shrub_03/shrub_03.bin",
+      "bytes": 238684,
+      "sha256": "bf4df21e6d2a2bc5f00b4c9142f776171fe7da00cf960001825748067af542b6"
+    },
+    {
+      "path": "shrub_03/shrub_03.gltf",
+      "bytes": 7296,
+      "sha256": "b76d7c14bc027e834e82d3f984c32b5d060e62908aa90ff9420a637ca253a8ea"
+    },
+    {
+      "path": "shrub_03/textures/shrub_03_arm_1k.jpg",
+      "bytes": 396238,
+      "sha256": "3e2b16812a623037138eedace958210c5f3443a827bbe69663045bba5612f815"
+    },
+    {
+      "path": "shrub_03/textures/shrub_03_diff_1k.jpg",
+      "bytes": 481841,
+      "sha256": "3cadc7aba46d3aabbd7d6d2b1d04aa32e2a7da0bc87c2d38ef3cb1ee42cb03ec"
+    },
+    {
+      "path": "shrub_03/textures/shrub_03_nor_gl_1k.jpg",
+      "bytes": 504734,
+      "sha256": "ff856bacfce859b8a7555dd9a3b92fbd36b2e775d486be71df485afb4235d6c9"
+    },
+    {
+      "path": "trees.bin.gz",
+      "bytes": 3219699,
+      "sha256": "f1ee40a5de3a5fe80f8ad7f2346b56ee27edb074476476ffd3ffb92ef007186b"
+    }
+  ],
+  "notes": [
+    "CC0 assets allow commercial use and redistribution.",
+    "Leaf textures and generated-tree attribution retain the MIT notice.",
+    "OSM-derived packages have separate ODbL obligations.",
+    "Shrub 03 is prepared but not placed without mapped/reference evidence."
+  ]
+}

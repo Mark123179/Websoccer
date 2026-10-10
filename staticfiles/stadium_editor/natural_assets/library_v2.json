@@ -1,0 +1,63 @@
+{
+  "schema": "websoccer.natural-assets",
+  "version": 2,
+  "coordinateFrame": "pitch-west-camera",
+  "visualRule": {
+    "treeMeshMaxDistanceMeters": 100,
+    "impostorAtlas": "hemi-octahedral",
+    "impostorViews": "8x8",
+    "impostorPixels": 2048,
+    "alphaTest": 0.26,
+    "foliageDisplay": "source-baked albedo with an alpha-tested depth pass and a 0.56–1.0 shadow mask; no second diffuse-light multiplication",
+    "mappedTreeNodesPreservedExactly": true,
+    "representativeRule": "forest/scrub-only, source polygon contained, grass/sports/parking/buildings excluded; additional instances limited to camera-west half",
+    "forestGridSpacingMeters": 20,
+    "scrubGridSpacingMeters": 10,
+    "minimumVegetationClearanceMeters": 2.5,
+    "sourceRadiusAllowanceMeters": 20
+  },
+  "parkingRule": {
+    "sourceTag":"amenity=parking plus explicit parking=surface",
+    "rasterCellMeters":[2.5,5],
+    "graphicFillFraction":0.7,
+    "aisleSpacingMeters":10,
+    "occupancyIsLiveData":false,
+    "overlapTest":"entire car footprint inside source polygon, excludes buildings, and clears every mapped/generated tree or shrub by 2.5m",
+    "carShadowProxy":"normalized source bounds, 12 triangles per vehicle; detailed source glTF remains visible and receives shadows but does not cast a second full-geometry shadow"
+  },
+  "trees": [
+    {"id":"realistic-oak-large","atlas":"atlases/realistic_oak_large_2048.webp","widthMeters":14,"heightMeters":20,"source":"realistic_trees_collection/Tree EZTree0.Large"},
+    {"id":"realistic-maple-medium","atlas":"atlases/realistic_maple_medium_2048.webp","widthMeters":12,"heightMeters":17,"source":"realistic_trees_collection/Tree EZTree0.Medium010"},
+    {"id":"oak-trees-large","atlas":"atlases/oak_tree_large_2048.webp","widthMeters":13,"heightMeters":19,"source":"oak_trees/treelarge"},
+    {"id":"forest-birch","atlas":"atlases/forest_birch_2048.webp","widthMeters":12,"heightMeters":19,"source":"various_forest_assets_pack/Birch2_21"},
+    {"id":"forest-maple","atlas":"atlases/forest_maple_2048.webp","widthMeters":14,"heightMeters":19,"source":"various_forest_assets_pack/Maple_24"}
+  ],
+  "shrubs": [
+    {"id":"forest-deciduous-shrub","atlas":"atlases/forest_deciduous_shrub_2048.webp","widthMeters":5.2,"heightMeters":4.2,"source":"various_forest_assets_pack/DeciduousShrub_27"}
+  ],
+  "carModel": {
+    "gltf":"models/generic_passenger_car_pack/scene.gltf",
+    "models":["Compact Body","Coupe Body","Hatchback Body","minivan body","Offroad Body","Pickup Body","Sedan Body","Sport body","SUV Body","Wagon Body"],
+    "credit":"Generic passenger car pack by Comrade1280, CC BY 4.0"
+  },
+  "surfaces": {
+    "aerialGrass":{"color":"surfaces/aerial_grass_rock_color_2k.jpg","meters":15},
+    "grassDetail":{"color":"surfaces/grass_ground_color_2k.jpg","meters":15},
+    "asphalt":{"color":"surfaces/aerial_asphalt_01_color_2k.jpg","meters":30}
+  },
+  "hdri": {
+    "day":"hdri/kloofendal_48d_partly_cloudy_puresky_2k.hdr",
+    "night":"hdri/kloppenheim_07_puresky_2k.hdr"
+  },
+  "sources": [
+    {"title":"Realistic Trees Collection","author":"Jungle Jim","url":"https://sketchfab.com/3d-models/realistic-trees-collection-fe67c886eebf4bcb988d7c45e69995ad","license":"https://creativecommons.org/licenses/by/4.0/","changes":"Selected source glTF trees rendered to multi-view 2048px alpha WebP impostor atlases; source archive retained in attached_assets."},
+    {"title":"oak trees","author":"DJMaesen","url":"https://sketchfab.com/3d-models/oak-trees-d841c3bcc5324daebee50f45619e05fc","license":"https://creativecommons.org/licenses/by/4.0/","changes":"Selected source glTF large oak rendered to multi-view 2048px alpha WebP impostor atlas; source archive retained in the supplied workspace."},
+    {"title":"Various Forest Assets Pack","author":"Dari","url":"https://sketchfab.com/3d-models/various-forest-assets-pack-cf138b8eb2d340cda643ed59f824989c","license":"https://creativecommons.org/licenses/by/4.0/","changes":"Selected source glTF birch, maple, and deciduous scrub rendered to multi-view 2048px alpha WebP impostor atlases; source archive retained in attached_assets."},
+    {"title":"Generic passenger car pack","author":"Comrade1280","url":"https://sketchfab.com/3d-models/generic-passenger-car-pack-20f9af9b8a404d5cb022ac6fe87f21f5","license":"https://creativecommons.org/licenses/by/4.0/","changes":"Original glTF model and textures instanced from mapped parking polygons; no new vehicle geometry."},
+    {"title":"Kloofendal 48d Partly Cloudy (Pure Sky)","author":"Poly Haven","url":"https://polyhaven.com/a/kloofendal_48d_partly_cloudy_puresky","license":"CC0","changes":"Downloaded 2K HDR panorama."},
+    {"title":"Kloppenheim 07 (Pure Sky)","author":"Poly Haven","url":"https://polyhaven.com/a/kloppenheim_07_puresky","license":"CC0","changes":"Downloaded 2K HDR panorama for manually selected floodlight profile."},
+    {"title":"Aerial Grass Rock","author":"Poly Haven","url":"https://polyhaven.com/a/aerial_grass_rock","license":"CC0","changes":"Downloaded 2K diffuse texture tiled at its 15m source coverage on mapped OSM green/forest/scrub."},
+    {"title":"Grass Ground","author":"Poly Haven","url":"https://polyhaven.com/a/grass_ground","license":"CC0","changes":"Downloaded 2K diffuse texture for mapped green polygons."},
+    {"title":"Aerial Asphalt 01","author":"Poly Haven","url":"https://polyhaven.com/a/aerial_asphalt_01","license":"CC0","changes":"Downloaded 2K diffuse texture for mapped parking polygons."}
+  ]
+}

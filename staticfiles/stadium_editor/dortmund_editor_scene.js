@@ -3,6 +3,10 @@ import {buildConcept, warpShell, ROOF_NAMES, SHELL_NAMES} from './dortmund_conce
 import {previewSupportsMaterial, sourceOpaqueColor} from './dortmund_source_materials.js';
 import {addReconstructedFacade, reconstructedFacadeVisible, sourceFacadePreviewColor} from './dortmund_reconstructed_facade.js?v=2';
 import {buildDortmundSurroundings} from './dortmund_surroundings.js?v=51';
+import {tickerCameraFrame, tickerHeightElevation, TICKER_ELEVATION, TICKER_AZIMUTH, TICKER_VIEW_OFFSET} from './dortmund_ticker_camera.js?v=3';
+import {TICKER_ROOF_NAMES, setTickerRoofVisibility} from './dortmund_ticker_roof.js?v=1';
+import {naturalProfileFromUpdate} from './natural_profile.js?v=1';
+import {applyImageCameraFrame} from './image_background_camera.js?v=1';
 
 const ASSET_BASE = new URL('./dortmund_original/', import.meta.url);
 const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
@@ -23,8 +27,13 @@ const sideOrder = ['NORD', 'SUED', 'OST', 'WEST'];
 export async function mountDortmundScene({
   element, onStatus = () => {}, surroundings, frame: editorFrame,
   includeSurroundings = true, interactive = true, autoRotate = false, compact = false,
-  transparentBackground = false, compactZoom = 1, verticalFraming = 0,
+  transparentBackground = false, compactZoom = 1, verticalFraming = 0, tickerPreview = false,
+  naturalPackage = null, imageBackground = null,
 }) {
+  if (imageBackground && (!tickerPreview || imageBackground.model !== 'dortmund' || naturalPackage))
+    throw new Error('Bildbasiertes Umfeld benötigt die passende Admin-Stadionansicht.');
+  if (imageBackground) { transparentBackground = true; includeSurroundings = false; }
+  if (naturalPackage && !tickerPreview) throw new Error('Natürliches Umfeld ist nur im Admin-Ticker-Test freigegeben.');
   if (!window.WebGLRenderingContext) throw new Error('WebGL ist auf diesem Gerät nicht verfügbar.');
   let renderer;
   try {
@@ -38,7 +47,14 @@ export async function mountDortmundScene({
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
   renderer.toneMappingExposure = 1.2;
-  renderer.domElement.setAttribute('aria-label', interactive
+  if (tickerPreview && (naturalPackage || imageBackground)) {
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  }
+  renderer.localClippingEnabled = tickerPreview;
+   renderer.domElement.setAttribute('aria-label', tickerPreview
+     ? 'Feste Stadionansicht des Signal Iduna Parks mit geöffnetem Vordergrund und waagerechtem Spielfeld'
+     : interactive
     ? 'Drehbarer Unity-Mesh-Auszug des Signal Iduna Parks mit vereinfachten Materialien und konzeptioneller Erweiterung'
     : 'Automatisch rotierende 3D-Ansicht des Signal Iduna Parks');
   element.replaceChildren(renderer.domElement);
@@ -49,17 +65,30 @@ export async function mountDortmundScene({
   if (transparentBackground) renderer.setClearColor(0x000000, 0);
   const world = new THREE.Group();
   scene.add(world);
-  scene.add(new THREE.HemisphereLight(0xe7f1f2, 0x344045, 1.35));
+  const modelRoot = tickerPreview && naturalPackage ? new THREE.Group() : world;
+  if (modelRoot !== world) {
+    modelRoot.name = 'TICKER_NATURAL_CALIBRATED_MODEL_ONLY';
+    if (naturalPackage.model?.mirror === true) modelRoot.scale.z = -1;
+    world.add(modelRoot);
+  }
+   const hemisphere = new THREE.HemisphereLight(0xe7f1f2, 0x344045, 1.35);
+   scene.add(hemisphere);
   const sun = new THREE.DirectionalLight(0xfff3d4, 1.5);
   sun.position.set(-135, 210, 100);
   scene.add(sun);
-  const camera = new THREE.PerspectiveCamera(42, 1, 1, 2400);
+  const camera = new THREE.PerspectiveCamera(tickerPreview ? 27 : 42, 1, 1, 2400);
   const target = new THREE.Vector3(0, 25, 0);
-  let azimuth = .88, elevation = .56, distance = 490;
+   let azimuth = tickerPreview ? TICKER_AZIMUTH : .88;
+   let elevation = tickerPreview ? TICKER_ELEVATION : .56, distance = 490;
   let frame = 0, disposed = false, concept = null, colorBands = null, facade = null, environment = null, roofOn = true;
+  let naturalLighting = null;
+  let imageLayer = null, imageLighting = null, imageProfileControls = null;
+  let imageProfileGeneration = 0;
+  let naturalProfileControls = null;
+  let naturalAttribution = null;
   let lastWeights = '', lastColors = '';
-  const geometries = [], textures = [], materials = new Map(), facadeMaterials = new Map();
-  const facadeSourceParts = [], roof = [], shell = [];
+  const geometries = [], textures = [], materials = new Map(), facadeMaterials = new Map(), cutawayMaterials = [];
+  const facadeSourceParts = [], roof = [], shell = [], tickerRoof = [];
   let resizeObserver;
   let animationActive = true, lastAnimationTime = null;
   const fitCompactCamera = () => {
@@ -99,19 +128,62 @@ export async function mountDortmundScene({
     camera.lookAt(target);
   };
   const resize = () => {
-    const width = element.clientWidth, height = element.clientHeight;
+    const viewport = imageLayer?.container || element;
+    const width = viewport.clientWidth, height = viewport.clientHeight;
     if (!width || !height) return;
     renderer.setSize(width, height, false);
     camera.aspect = width / height;
+    if (imageLayer) {
+      const framing = imageLayer.frame;
+      distance = framing.distance; elevation = framing.elevation; azimuth = framing.azimuth;
+      target.set(framing.target.x, framing.target.y, framing.target.z);
+      applyImageCameraFrame(camera, framing, width, height);
+    } else if (tickerPreview) {
+      // Pitch's goal-to-goal Z axis is horizontal from this fixed side view.
+       const framing = tickerCameraFrame(camera.aspect, elevation);
+       camera.fov = framing.fov;
+       distance = framing.distance;
+       target.set(framing.target.x, framing.target.y, framing.target.z);
+    }
     // Shift projection, not the canvas or model: shared viewers stay unchanged.
-    if (verticalFraming) camera.setViewOffset(width, height, 0,
-      height * clamp(verticalFraming, -0.25, 0.25), width, height);
-    else camera.clearViewOffset();
+      const viewOffset = tickerPreview ? TICKER_VIEW_OFFSET : verticalFraming;
+      const scopedViewOffset = naturalPackage ? -.24 : viewOffset;
+       if (!imageLayer && scopedViewOffset) camera.setViewOffset(width, height, 0,
+        height * clamp(scopedViewOffset, -0.25, 0.25), width, height);
+    else if (!imageLayer) camera.clearViewOffset();
     camera.updateProjectionMatrix();
     if (compact) fitCompactCamera();
     if (!animationActive) render();
   };
-  const render = () => { positionCamera(); renderer.render(scene, camera); };
+  const render = () => {
+    positionCamera();
+    environment?.updateLOD?.(camera);
+    const started = performance.now();
+    renderer.render(scene, camera);
+    if (naturalPackage || imageBackground) element.dataset.metrics = JSON.stringify({
+      ...environment?.metrics, renderSubmitMs: Math.round((performance.now() - started) * 100) / 100,
+      triangles: renderer.info.render.triangles, drawCalls: renderer.info.render.calls,
+      geometries: renderer.info.memory.geometries, textures: renderer.info.memory.textures,
+       ...(imageLayer ? {registrationResidualPx: imageLayer.frame.residualPx,
+         environmentTriangles: 0, imageProfile: element.dataset.imageProfile} : {}),
+    });
+  };
+  const setImageProfile = async profile => {
+    if (disposed || !imageLayer) return;
+    const token = ++imageProfileGeneration;
+    imageProfileControls?.querySelectorAll('button').forEach(button => { button.disabled = true; });
+    try {
+      const committed = await imageLayer.setProfile(profile, value => imageLighting.setProfile(value));
+      if (!committed || disposed || token !== imageProfileGeneration) return;
+      imageProfileControls?.querySelectorAll('button').forEach(button =>
+        button.setAttribute('aria-pressed', String(button.dataset.profile === profile)));
+      render();
+      onStatus(`3D-Stadion · Bildumfeld · ${profile === 'day' ? 'Tag' : 'Nacht'} · Feste Kamera`);
+    } finally {
+      if (!disposed && token === imageProfileGeneration)
+        imageProfileControls?.querySelectorAll('button').forEach(button => { button.disabled = false; });
+    }
+  };
   const controls = renderer.domElement;
   let dragging = false, lastX = 0, lastY = 0;
   const down = e => { dragging = true; lastX = e.clientX; lastY = e.clientY; controls.setPointerCapture(e.pointerId); };
@@ -139,22 +211,47 @@ export async function mountDortmundScene({
     controls.removeEventListener('pointercancel', up);
     controls.removeEventListener('pointermove', move);
     controls.removeEventListener('wheel', wheel);
+    naturalProfileControls?.remove();
+    naturalProfileControls = null;
+    naturalAttribution?.remove();
+    naturalAttribution = null;
     if (concept) concept.dispose();
     facade?.dispose();
     environment?.dispose();
+    naturalLighting?.dispose();
+    imageProfileGeneration++;
+    imageProfileControls?.remove();
+    imageLighting?.dispose();
+    imageLayer?.dispose();
+    delete element.dataset.imageBackground;
+    delete element.dataset.imageProfile;
     if (colorBands) {
       colorBands.traverse(object => { object.geometry?.dispose(); object.material?.dispose(); });
     }
     geometries.forEach(item => item.dispose());
     materials.forEach(item => item.dispose());
     facadeMaterials.forEach(item => item.dispose());
+    cutawayMaterials.forEach(item => item.dispose());
     textures.forEach(item => item.dispose());
     renderer.dispose();
     if (controls.parentNode === element) element.removeChild(controls);
   };
   try {
+    if (imageBackground) {
+      const {createImageBackground} = await import('./image_background_scene.js?v=2');
+      imageLayer = createImageBackground(element, imageBackground);
+      imageLayer.container.append(renderer.domElement);
+      element.dataset.imageBackground = '';
+      await imageLayer.setProfile('day', () => {});
+    }
     if (includeSurroundings) {
-      environment = buildDortmundSurroundings(THREE, surroundings, editorFrame);
+      if (naturalPackage) {
+        const {buildNaturalSurroundings} = await import('./natural_surroundings.js?v=4');
+        const naturalAssets = new URL('./natural_assets/', import.meta.url);
+        environment = await buildNaturalSurroundings(THREE, naturalPackage, {assetBase: naturalAssets, camera});
+        hemisphere.intensity = 0;
+        sun.intensity = 0;
+      } else environment = buildDortmundSurroundings(THREE, surroundings, editorFrame);
       scene.add(environment.group);
     }
     const [manifestResponse, binaryResponse] = await Promise.all([
@@ -210,7 +307,12 @@ export async function mountDortmundScene({
       geometries.push(geometry);
       const mesh = new THREE.Mesh(geometry, groupMaterials);
       mesh.name = `ORIGINAL_${entry.name}`;
-      world.add(mesh);
+      if (naturalPackage || imageBackground) {
+        mesh.castShadow = true;
+        mesh.receiveShadow = true;
+      }
+      modelRoot.add(mesh);
+      if (tickerPreview && TICKER_ROOF_NAMES.has(entry.name)) tickerRoof.push(mesh);
       sourcePartSlots.forEach(slot => facadeSourceParts.push({mesh, ...slot}));
       if (ROOF_NAMES.has(entry.name)) {
         roof.push(mesh);
@@ -218,6 +320,7 @@ export async function mountDortmundScene({
         const cutaway = groupMaterials.map(original => {
           const copy = original.clone();
           copy.transparent = true; copy.opacity = .026; copy.depthWrite = false;
+           cutawayMaterials.push(copy);
           return copy;
         });
         mesh.userData.cutaway = cutaway;
@@ -227,7 +330,129 @@ export async function mountDortmundScene({
         geometry, source: new Float32Array(geometry.attributes.position.array),
       });
     }
-    facade = addReconstructedFacade(THREE, world);
+    facade = addReconstructedFacade(THREE, modelRoot);
+    if (imageBackground) {
+      const {configureImageLighting} = await import('./image_background_scene.js?v=2');
+      const bounds = new THREE.Box3();
+      // Roof-skin bounds, not the assembly's ground-to-pylon bounds: those
+      // would put the supposed under-canopy lamps almost on the grass.
+      (roof.length ? roof : world.children).forEach(object => {
+        object.updateMatrixWorld(true);
+        bounds.union(new THREE.Box3().setFromObject(object));
+      });
+      imageLighting = configureImageLighting(THREE, scene, renderer, bounds, imageBackground.pitchHalfSize);
+      hemisphere.intensity = 0; sun.intensity = 0;
+      imageLighting.setProfile('day');
+      const selector = document.createElement('div');
+      selector.className = 'ticker-image-profiles';
+      selector.setAttribute('role', 'group');
+      selector.setAttribute('aria-label', 'Stadionbeleuchtung');
+      for (const [profile, label] of [['day', 'Tag'], ['night', 'Nacht']]) {
+        const button = document.createElement('button');
+        button.type = 'button'; button.textContent = label; button.dataset.profile = profile;
+        button.setAttribute('aria-pressed', String(profile === 'day'));
+        button.addEventListener('click', () => setImageProfile(profile)
+          .catch(error => onStatus(`Bildprofil nicht verfügbar · ${error.message}`)));
+        selector.append(button);
+      }
+      element.append(selector); imageProfileControls = selector;
+    }
+    if (naturalPackage) {
+      const assetBase = new URL('./natural_assets/', import.meta.url);
+      const {configureNaturalLighting} = await import('./natural_lighting.js?v=2');
+      const lightBounds = new THREE.Box3();
+      const relevant = roof.length ? roof : tickerRoof.length ? tickerRoof : world.children;
+      relevant.forEach(object => {
+        object.updateMatrixWorld(true);
+        lightBounds.union(new THREE.Box3().setFromObject(object));
+      });
+      if (lightBounds.isEmpty()) lightBounds.setFromObject(world);
+      const padded = lightBounds.clone();
+      padded.min.x -= 510; padded.max.x += 510;
+      padded.min.z -= 510; padded.max.z += 510;
+      padded.min.y -= 16; padded.max.y += 38;
+      naturalLighting = await configureNaturalLighting(THREE, scene, renderer, assetBase, {
+        profile: 'day', bounds: padded, roofBounds: lightBounds,
+        onProfileChange: profile => {
+          naturalProfileControls?.querySelectorAll('button').forEach(button => {
+            const active = button.dataset.profile === profile;
+            button.setAttribute('aria-pressed', String(active));
+            button.style.background = active ? '#e8d39b' : '#273337';
+            button.style.color = active ? '#172124' : '#e7e9e4';
+          });
+        },
+      });
+      const selector = document.createElement('div');
+      selector.setAttribute('role', 'group');
+      selector.setAttribute('aria-label', 'Stadionbeleuchtung');
+      selector.dataset.naturalProfileControls = '';
+      Object.assign(selector.style, {
+        position:'absolute',right:'12px',top:'12px',zIndex:'4',display:'flex',gap:'5px',
+        padding:'5px',border:'1px solid rgba(222,220,203,.24)',borderRadius:'7px',
+        background:'rgba(20,31,34,.88)',backdropFilter:'blur(8px)',
+        boxShadow:'0 5px 20px rgba(12,20,22,.22)',
+      });
+      for (const [profile,label] of [['day','Tageslicht'],['night','Flutlicht-Abend']]) {
+        const button=document.createElement('button');
+        button.type='button';button.textContent=label;button.dataset.profile=profile;
+        button.setAttribute('aria-pressed',String(profile==='day'));
+        Object.assign(button.style,{border:'0',borderRadius:'4px',padding:'7px 9px',
+          font:'600 11px/1.15 system-ui,sans-serif',cursor:'pointer',transition:'background .15s ease,color .15s ease',
+          background:profile==='day'?'#e8d39b':'#273337',color:profile==='day'?'#172124':'#e7e9e4'});
+        button.addEventListener('click',async()=>{
+          button.disabled=true;
+          try{
+            await naturalLighting?.setProfile(profile);
+            selector.querySelectorAll('button').forEach(item=>{
+              const active = item === button;
+              item.setAttribute('aria-pressed',String(active));
+              item.style.background=active?'#e8d39b':'#273337';
+              item.style.color=active?'#172124':'#e7e9e4';
+            });
+          }
+          catch(error){onStatus(`Lichtprofil nicht verfügbar · ${error.message}`);}
+          finally{button.disabled=false;}
+          render();
+        });
+        selector.append(button);
+      }
+      if (getComputedStyle(element).position==='static') element.style.position='relative';
+      element.append(selector);naturalProfileControls=selector;
+      const attribution=document.createElement('a');
+      attribution.href='https://www.openstreetmap.org/copyright';
+      attribution.target='_blank';attribution.rel='noopener noreferrer';
+      attribution.textContent='© OpenStreetMap contributors';
+      attribution.setAttribute('aria-label','Geografische Daten: OpenStreetMap contributors, ODbL');
+      Object.assign(attribution.style,{position:'absolute',left:'12px',bottom:'10px',zIndex:'4',
+        padding:'5px 7px',borderRadius:'4px',background:'rgba(20,31,34,.78)',
+        color:'#e6e9e3',font:'500 10px/1.2 system-ui,sans-serif',textDecoration:'none'});
+      element.append(attribution);naturalAttribution=attribution;
+    }
+    if (tickerPreview) {
+      // GPU clipping cuts even source triangles spanning the entire front roof.
+      // Keep source indices/UVs intact. Exempt the measured pitch meshes so
+      // their full playing surface survives the deeper roof/truss cut.
+      const frontCut = new THREE.Plane(new THREE.Vector3(1, 0, 0), 32);
+      world.traverse(object => {
+        if (!object.isMesh) return;
+        const list = Array.isArray(object.material) ? object.material : [object.material];
+        list.forEach(material => {
+          if (object.name.startsWith('ORIGINAL_st081_pitch_')) {
+            material.clippingPlanes = [];
+            material.color.set(object.name === 'ORIGINAL_st081_pitch_0' ? '#438c32' : '#f3f5e8');
+            if (object.name === 'ORIGINAL_st081_pitch_1') {
+              material.emissive.set('#b9c3a9');
+              material.emissiveIntensity = .35;
+            }
+            material.needsUpdate = true;
+            return;
+          }
+          material.clippingPlanes = [frontCut];
+          if (imageBackground) material.clipShadows = true;
+          material.needsUpdate = true;
+        });
+      });
+    }
     if (disposed) return null;
     resizeObserver = new ResizeObserver(resize);
     resizeObserver.observe(element); resize();
@@ -243,6 +468,17 @@ export async function mountDortmundScene({
     animate(performance.now());
     return {
       kind: 'three', stage: {renderer, render}, dispose,
+      setTickerCameraHeight(degrees) {
+        if (disposed || !tickerPreview || imageBackground) return;
+        elevation = tickerHeightElevation(degrees);
+        resize();
+      },
+      setTickerRoofVisible(visible) {
+        if (disposed || !tickerPreview) return;
+        setTickerRoofVisibility(tickerRoof, visible);
+        roofOn = visible;
+        if (!animationActive) render();
+      },
       setActive(active) {
         if (disposed || Boolean(active) === animationActive) return;
         animationActive = Boolean(active);
@@ -260,11 +496,11 @@ export async function mountDortmundScene({
         if (weights && JSON.stringify(weights) !== lastWeights) {
           lastWeights = JSON.stringify(weights);
           const next = Object.fromEntries(sideOrder.map(side => [side, clamp(Number(weights[side]) || 0, 0, 1)]));
-          if (concept) { world.remove(concept.group); concept.dispose(); concept = null; }
+           if (concept) { modelRoot.remove(concept.group); concept.dispose(); concept = null; }
           for (const {geometry, source} of shell) warpShell(geometry, source, next);
           if (Object.values(next).some(Boolean)) {
             concept = buildConcept(THREE, next);
-            world.add(concept.group);
+             modelRoot.add(concept.group);
           }
           roof.forEach(mesh => {
             mesh.material = concept ? mesh.userData.cutaway : mesh.userData.original;
@@ -311,28 +547,36 @@ export async function mountDortmundScene({
           if (object.name?.includes('_ROOF_JUNCTION') || object.name?.includes('_EAVE'))
             object.visible = roofOn;
         });
-        if (cameraPreset === 'seat' || cameraPreset === 'interior') {
+        if (!imageBackground && (cameraPreset === 'seat' || cameraPreset === 'interior')) {
           azimuth = -1.2; elevation = .63; distance = 210;
-        } else if (cameraPreset === 'exterior') {
+        } else if (!imageBackground && cameraPreset === 'exterior') {
           azimuth = .88; elevation = .56; distance = 490;
-        } else if (cameraPreset === 'roof-corner') {
+        } else if (!imageBackground && cameraPreset === 'roof-corner') {
           azimuth = .34; elevation = 1.03; distance = 430;
-        } else if (cameraPreset === 'opposite') {
+        } else if (!imageBackground && cameraPreset === 'opposite') {
           azimuth = -2.28; elevation = .53; distance = 490;
-        } else if (cameraPreset === 'distance') {
+        } else if (!imageBackground && cameraPreset === 'distance') {
           azimuth = .6; elevation = .57; distance = 810;
         }
-        if (orbit) {
+        if (orbit && !imageBackground) {
           azimuth = Number(orbit.azimuth) * Math.PI / 180 + .88;
           elevation = clamp(Number(orbit.elevation) * Math.PI / 180, .15, 1.35);
         }
-         // Daylight remains a subtle tint; the map environment must retain its dark neon contrast.
-          if (typeof day === 'boolean' && !transparentBackground) {
-           const environmentColor = day ? '#081719' : nightEnvironment;
-           scene.background.set(environmentColor);
-           scene.fog.color.set(environmentColor);
-         }
-        if (typeof floodlight === 'boolean') sun.intensity = floodlight ? 2 : 1.5;
+        // Daylight remains a subtle tint; the map environment must retain its dark neon contrast.
+        if (typeof day === 'boolean' && !transparentBackground && !naturalPackage) {
+          const environmentColor = day ? '#081719' : nightEnvironment;
+          scene.background.set(environmentColor);
+          scene.fog.color.set(environmentColor);
+        }
+        const explicitNaturalProfile = naturalProfileFromUpdate({day, floodlight});
+        if (imageBackground && explicitNaturalProfile) {
+          return setImageProfile(explicitNaturalProfile);
+        } else if (naturalPackage && explicitNaturalProfile) {
+          naturalLighting?.setProfile(explicitNaturalProfile)
+            .catch(error => onStatus(`Lichtprofil nicht verfügbar · ${error.message}`));
+        } else if (!naturalPackage && typeof floodlight === 'boolean') {
+          sun.intensity = floodlight ? 2 : 1.5;
+        }
         render();
         return Promise.resolve();
       },
