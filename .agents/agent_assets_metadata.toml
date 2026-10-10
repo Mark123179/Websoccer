@@ -1838,3 +1838,45 @@ mtime_ms = 1791638902075
 storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:6e4eaecc-e6c5-4f64-8de5-e8845034f33b/8dbef920-a574-44b0-b09b-a918a8c450fe/c6c02c37-1533-4081-b161-06f846a4dabb"
 storage_version_token = "1791639210149666"
 content_type = "image/png"
+
+[[outputs]]
+id = "OLlKgW3ZgqJg6A-muBi8A"
+uri = "file://generated-artifacts/elversberg-shared-runtime/comparison.html"
+type = "html"
+title = "Elversberg – integrierte Tagesansichten"
+description = "2D-Editor, 3D-Editor und Liveticker mit Quellen, Vereinfachungen und offenen Abnahmefällen."
+logical_id = "5271e4ab-af62-46c0-afb8-d92c157ce717"
+content_hash = "sha256:f8c5a837d477305f94e2a12c99dd0b811c9c7aed785240ab7bca2bbc17f5f98a"
+size = 443736
+mtime_ms = 1791649480043
+storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:6e4eaecc-e6c5-4f64-8de5-e8845034f33b/5271e4ab-af62-46c0-afb8-d92c157ce717/1c17c83e-1323-49b9-894c-3577e49cfa72"
+storage_version_token = "1791649481003184"
+content_type = "text/html"
+
+[[outputs]]
+id = "PE2GC6QgFpo4YHAru2rLS"
+uri = "file://generated-artifacts/elversberg-shared-runtime/editor-3d-day.png"
+type = "image"
+title = "Elversberg – native 3D-Editoransicht"
+description = "Tageslicht, Dach eingeschaltet, gemeinsames räumliches Blueprint-Umfeld."
+logical_id = "cdbe0eaf-5859-4783-b9c0-5c21583f3e00"
+content_hash = "sha256:265a0851978fb05b1c590df634ff137d2f907d2fae30cf26e08f17d14a2d128a"
+size = 486312
+mtime_ms = 1791648961491
+storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:6e4eaecc-e6c5-4f64-8de5-e8845034f33b/cdbe0eaf-5859-4783-b9c0-5c21583f3e00/56c4cd0a-3852-4b7a-af1b-dc17854ec8af"
+storage_version_token = "1791649481794007"
+content_type = "image/png"
+
+[[outputs]]
+id = "gyqNr2768xwYtwaXTFaky"
+uri = "file://generated-artifacts/elversberg-shared-runtime/ticker-elversberg-day.png"
+type = "image"
+title = "Elversberg – native Tickeransicht"
+description = "Echte kanonische WebGL-Szene mit Tageslicht, sichtbaren Dächern und fester Feldkamera."
+logical_id = "4124e914-ec2e-4d6f-b8be-b2e2a342fc47"
+content_hash = "sha256:f850c210b7c4eb23b8ee0c779f8a38786f8c649604b182db0274444556b79014"
+size = 829998
+mtime_ms = 1791649321911
+storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:6e4eaecc-e6c5-4f64-8de5-e8845034f33b/4124e914-ec2e-4d6f-b8be-b2e2a342fc47/8d973950-97f8-41e6-b181-fe39e71fbbe3"
+storage_version_token = "1791649482410313"
+content_type = "image/png"

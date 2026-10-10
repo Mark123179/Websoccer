@@ -1,7 +1,7 @@
 import * as THREE from 'three';
-import {mountStudyModel, disposeStudySourceCache} from '../../stadium_editor/study_models.js?v=3';
+import {mountStudyModel, disposeStudySourceCache} from '../../stadium_editor/study_models.js?v=6';
 import {createStudyLighting} from '../../stadium_editor/study_lighting.js?v=3';
-import {applyStudyCamera, projectStudy, STUDY_FRAME} from '../../stadium_editor/study_camera.js?v=1';
+import {applyStudyCamera, projectStudy, STUDY_FRAME} from '../../stadium_editor/study_camera.js?v=3';
 
 const config = JSON.parse(document.getElementById('stadium-study-config').textContent);
 const control = id => document.getElementById(`study-${id}`);
@@ -27,7 +27,9 @@ function updateProjection(entry) {
   entry.handle.stage.renderer.setSize(width, height, false);
   entry.overlay.width = width; entry.overlay.height = height;
   applyStudyCamera(entry.handle.stage.camera, concept.value, width, height);
-  entry.project = (x,y,z=0) => projectStudy(entry.handle.stage.camera,width,height,x,y,z);
+  entry.project = (x,y,z=0) => projectStudy(
+    entry.handle.stage.camera,width,height,x,y,z,entry.coordinateRotation,
+  );
   entry.host.dataset.fieldCorners = JSON.stringify(pitchPoints.map(([x,y]) => entry.project(x,y)));
   entry.handle.stage.render();
   drawActors(entry);
@@ -108,6 +110,7 @@ async function init() {
       Object.assign(overlay.style,{position:'absolute',inset:'0',width:'100%',height:'100%',pointerEvents:'none'});
       host.append(overlay);
       const entry = {host,status:label,handle,overlay,
+         coordinateRotation:0,
         lighting:createStudyLighting(handle,club==='dortmund'?fixtureData:null)};
       if(club==='dortmund'&&fixtureData.verifiedFixtures.length) {
         const details=document.createElement('details'),summary=document.createElement('summary');

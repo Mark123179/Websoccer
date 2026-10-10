@@ -16,8 +16,19 @@ from .views_story import _no_cache
 logger = logging.getLogger(__name__)
 
 
-def _stadium_preview_environment():
+def _stadium_preview_environment(club_id=None):
     """Independent Dortmund study, not an image fallback for test-game clubs."""
+    if club_id is not None:
+        from .models import Club
+        from .stadium_scene_context import ticker_scene_context
+        try:
+            club = Club.objects.select_related("stadium").get(pk=int(club_id))
+        except (ValueError, TypeError, Club.DoesNotExist):
+            raise ValueError("Ungültiger Stadionverein.")
+        context = ticker_scene_context(club)
+        if context is None:
+            raise ValueError("Für diesen Verein gibt es keine Elversberger Laufzeitszene.")
+        return context
     from stadium_editor.image_backgrounds import load_image_background
     return {'imageBackground': load_image_background(907)}
 
@@ -91,10 +102,12 @@ def ticker_page(request, slot=1):
         'is_admin': False,
     })
     try:
-        context['ticker_stadium_environment'] = _stadium_preview_environment()
+        context['ticker_stadium_environment'] = _stadium_preview_environment(
+            request.GET.get("stadium_club"),
+        )
     except (OSError, ValueError, KeyError):
         # A missing preview must not stop the original sandbox match playback.
-        logger.exception('Dortmund ticker preview reference unavailable')
+        logger.exception('Ticker stadium preview reference unavailable')
         context['ticker_stadium_environment'] = {'unavailable': True}
     response = render(request, 'game/live_ticker.html', context)
     response['Cache-Control'] = 'private, no-store'

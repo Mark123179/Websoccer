@@ -5,6 +5,7 @@ import re
 
 from .capacity import distribute_capacities
 from .contracts import geometry_blocks, rle_length
+from .elversberg_environment import club_surroundings
 
 
 SCHEMA = 'websoccer.stadium-live-scene'
@@ -420,4 +421,7 @@ def build_live_scene(stadium, geometry, design):
             if key == 'steckbrief' and isinstance(value, dict) and '_global' in value:
                 value = value['_global']
             result[key] = value
+    surroundings = club_surroundings(club)
+    if surroundings is not None:
+        result["surroundings"] = surroundings
     return result

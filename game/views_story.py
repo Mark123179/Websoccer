@@ -9,6 +9,7 @@ from django.views.decorators.http import require_POST
 from django.views.decorators.clickjacking import xframe_options_sameorigin
 from .models import MatchStory, MatchStoryRound, MatchEvent, SimulatedMatch, StoryAudit, StorySettings
 from .story_release import round_is_released, release_enabled, refresh_barrier
+from .stadium_scene_context import ticker_scene_context
 
 
 def _score(events):
@@ -85,6 +86,7 @@ def ticker_page(request, sm_id):
         'report_url': reverse('match_report_by_id', args=[sm.pk]),
         'is_admin': request.user.is_superuser,
         'admin_url': reverse('story_admin_action'),
+        'ticker_stadium_environment': ticker_scene_context(sm.home_club),
     })
     response['Cache-Control'] = 'private, no-store'
     return response

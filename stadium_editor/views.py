@@ -18,6 +18,8 @@ from .image_validation import InvalidImageData, normalize_design_payload
 from .models import StadiumDesign, StadiumGeometry
 from .contracts import geometry_blocks, visible_blocks
 from .surroundings import with_dortmund_mapped_trees
+from .elversberg_environment import with_editor_surroundings
+from .scene_service import current_live_scene
 from .live_scene import (
     LiveSceneError,
     build_live_scene,
@@ -40,7 +42,9 @@ def _geometry_payload(stadium, geometry):
     trusted = {block['id']: block for block in geometry_blocks(payload)}
     for position, block in enumerate(payload['blocks']):
         block.update(trusted[block.get('id', position)])
-    return with_dortmund_mapped_trees(payload, club_id=stadium.club_id)
+    return with_editor_surroundings(
+        with_dortmund_mapped_trees(payload, club_id=stadium.club_id), stadium.club,
+    )
 
 
 @login_required(login_url='/auth/login/')
@@ -151,26 +155,17 @@ def stadium_live_scene(request, club_id):
     except (Club.DoesNotExist, Stadium.DoesNotExist):
         return JsonResponse({'error': 'Stadion nicht gefunden.'}, status=404)
     try:
-        geometry_row = StadiumGeometry.objects.get(stadium=stadium)
-        geometry = deepcopy(geometry_row.geometry)
-        if geometry_row.steckbrief:
-            geometry['steckbrief'] = deepcopy(geometry_row.steckbrief)
-        design = StadiumDesign.objects.filter(stadium=stadium).first()
+        payload = current_live_scene(stadium)
     except StadiumGeometry.DoesNotExist:
         return JsonResponse({'error': 'Keine Stadion-Geometrie hinterlegt.'}, status=404)
-    try:
-        design_payload = (
-            design.design if design is not None
-            else standard_design_for_geometry(
-                stadium, _geometry_payload(stadium, geometry))
-        )
-        payload = build_live_scene(stadium, geometry, design_payload)
     except (LiveSceneError, ValueError) as exc:
         return JsonResponse(
             {'error': str(exc) or 'Ungültige Stadion-Scene.'},
             status=409,
         )
-    return JsonResponse(payload)
+    response = JsonResponse(payload)
+    response["Cache-Control"] = "no-store"
+    return response
 
 
 @require_GET

@@ -324,7 +324,7 @@ class StadiumEditorTests(TestCase):
         self.assertContains(response, 'Blaupause: OpenStreetMap-Daten (ODbL)')
         self.assertContains(
             response,
-            'stadium_editor/editor.js?v=54',
+            'stadium_editor/editor.js?v=58',
         )
         editor_js = (
             Path(__file__).resolve().parent / 'static' / 'stadium_editor' / 'editor.js'
@@ -369,7 +369,7 @@ class StadiumEditorTests(TestCase):
             Path(__file__).resolve().parent
             / 'static' / 'stadium_editor' / 'stadium_stage_adapter.js'
         ).read_text(encoding='utf-8')
-        self.assertIn("surroundings: mode === 'editor' ? true : null", adapter_js)
+        self.assertIn("mode === 'editor' || isElversbergBlueprint(state.scene?.surroundings)", adapter_js)
         self.assertIn('geometry?.surroundings', adapter_js)
         self.assertIn('next.blocks = Array.from(sourceById.values())', adapter_js)
         self.assertIn('block.previewId ?? block.sourceId ?? block.id', adapter_js)

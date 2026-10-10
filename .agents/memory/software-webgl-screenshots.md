@@ -32,3 +32,16 @@ Ein erstmaliger Lichtprofilwechsel kann in Software-WebGL mehrere Sekunden im Re
 **Why:** Bei der Bild-/Stadionansicht benötigte der erste Nachtwechsel ungefähr fünf Sekunden, spätere Nacht-Aufrufe nur Millisekunden. Neue Licht-/Schatten-Shader-Varianten verfälschen eine einzelne vermeintliche Framezeit.
 
 **How to apply:** Kalte Shader-Kompilierung, warme Renderaufrufe und GPU-Synchronisation getrennt berichten. Einen einmaligen langen Profilwechsel nicht als dauerhafte Szenen-FPS interpretieren und keine Hardware-Leistung aus SwiftShader versprechen.
+
+Der Standard-Prüfbrowser kann ohne nutzbaren WebGL-Kontext starten, obwohl
+derselbe Editor mit dem lokalen Chromium korrekt als WebGL-Szene lädt.
+
+**Why:** Ein Editorwechsel zeigte im Standard-Prüfbrowser nur die Karte und
+einen uninitialisierten Canvas. Der explizite lokale Chromium-Start mit
+SwiftShader stellte dieselbe Integration korrekt dar.
+
+**How to apply:** Zuerst WebGL2-Verfügbarkeit und den tatsächlich gestarteten
+Renderer prüfen. Falls nötig `/repl/tools/bin/chromium` mit
+`--use-gl=angle --use-angle=swiftshader --enable-unsafe-swiftshader` verwenden.
+Eine solche Karte nicht als erfolgreiche 3D-Aufnahme oder ohne weitere
+Diagnose als Produktdefekt behandeln.

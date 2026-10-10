@@ -7,9 +7,9 @@
   <meta name="theme-color" content="#03070c">
   <title>Live-Ticker · {{ home_name }} – {{ away_name }}</title>
   <link rel="stylesheet" href="{% static 'game/css/live_story.css' %}?v=3">
-  {% if is_test %}
-  <link rel="stylesheet" href="{% static 'game/css/ticker_stadium_preview.css' %}?v=17">
-  <script type="importmap">{"imports":{"three":"{% static 'stadium_editor/stage/vendor/three.module.js' %}"}}</script>
+  {% if ticker_stadium_environment %}
+  <link rel="stylesheet" href="{% static 'game/css/ticker_stadium_preview.css' %}?v=20">
+  <script type="importmap">{"imports":{"three":"{% static 'stadium_editor/stage/vendor/three.module.js' %}","three/addons/":"{% static 'stadium_editor/stage/vendor/addons/' %}"}}</script>
   {% endif %}
 </head>
 <body class="ls-page">
@@ -27,19 +27,19 @@
       <div class="ls-progress" aria-hidden="true"><span id="match-progress"></span></div>
     </section>
 
-    {% if is_test %}
+    {% if ticker_stadium_environment %}
     <section class="ticker-stadium-panel" aria-labelledby="ticker-stadium-heading">
       <div class="ticker-stadium-heading">
         <div>
-          <span class="ls-overline">3D-STADION · BILDBASIERTES UMFELD</span>
-          <h2 id="ticker-stadium-heading">Signal Iduna Park</h2>
+          <span class="ls-overline">{% if ticker_stadium_environment.renderer == 'canonical' %}3D-STADION · GEMEINSAMER ORTSPLAN{% else %}3D-STADION · BILDBASIERTES UMFELD{% endif %}</span>
+          <h2 id="ticker-stadium-heading">{% if ticker_stadium_environment.renderer == 'canonical' %}{{ ticker_stadium_environment.stadium|default:"URSAPHARM-Arena" }}{% else %}{{ ticker_stadium_environment.stadium|default:"Signal Iduna Park" }}{% endif %}</h2>
         </div>
-        <span class="ticker-stadium-tag">Drei Tribünenseiten</span>
+        <span class="ticker-stadium-tag">{% if ticker_stadium_environment.renderer == 'canonical' %}Elversberg · Live Scene{% else %}Drei Tribünenseiten{% endif %}</span>
       </div>
-      <div id="ticker-stadium-preview" aria-label="Dortmund-Stadion mit freier Vorderseite und waagerechtem Spielfeld"></div>
-      <p id="ticker-stadium-status" role="status" aria-live="polite">Dortmund-Modell wird geladen …</p>
+      <div id="ticker-stadium-preview" aria-label="{% if ticker_stadium_environment.renderer == 'canonical' %}Elversberger Stadion mit gemeinsamem räumlichem Blueprint-Umfeld{% else %}Dortmund-Stadion mit freier Vorderseite und waagerechtem Spielfeld{% endif %}"></div>
+      <p id="ticker-stadium-status" role="status" aria-live="polite">{% if ticker_stadium_environment.renderer == 'canonical' %}Stadionansicht wird geladen …{% else %}Dortmund-Modell wird geladen …{% endif %}</p>
       <div class="ticker-camera-controls">
-        <p id="ticker-camera-hint">Feste Kamera: Stadion und Spielfeld sind auf die Feldlinien des Hintergrundbildes ausgerichtet. Ein Ausbau benötigt kein neues Umfeldbild.</p>
+        <p id="ticker-camera-hint">{% if ticker_stadium_environment.renderer == 'canonical' %}Feste, freigegebene 75%-Feldkamera: Haupttribüne im Hintergrund, gegenüberliegende Vorderseite als Cutaway. Stadion, Ausbau und Umgebung stammen aus derselben aktuellen Live Scene.{% else %}Feste Kamera: Stadion und Spielfeld sind auf die Feldlinien des Hintergrundbildes ausgerichtet. Ein Ausbau benötigt kein neues Umfeldbild.{% endif %}</p>
         <div class="ticker-roof-controls">
           <label class="ticker-roof-toggle" for="ticker-roof-visible">
             <input id="ticker-roof-visible" type="checkbox" role="switch" checked disabled
@@ -48,9 +48,20 @@
           </label>
           <output id="ticker-roof-state" for="ticker-roof-visible">Mit Dach</output>
         </div>
-        <p id="ticker-roof-hint">Ohne Dach werden auch Dachträger und Dachaufbauten ausgeblendet. Kamera und Modell bleiben unverändert.</p>
+        {% if ticker_stadium_environment.renderer == 'canonical' %}
+        <div class="ticker-roof-controls ticker-day-controls">
+          <label class="ticker-roof-toggle" for="ticker-day-visible">
+            <input id="ticker-day-visible" type="checkbox" role="switch" checked disabled
+                   aria-describedby="ticker-day-hint">
+            <span>Tageslicht</span>
+          </label>
+          <output id="ticker-day-state" for="ticker-day-visible">Tageslicht</output>
+        </div>
+        <p id="ticker-day-hint">Tag und Nacht ändern nur die Beleuchtung, nicht den Ortsbestand oder die Kamera.</p>
+        {% endif %}
+        <p id="ticker-roof-hint">{% if ticker_stadium_environment.renderer == 'canonical' %}Das Dach wird direkt an der gemeinsamen Stadiongeometrie umgeschaltet.{% else %}Ohne Dach werden auch Dachträger und Dachaufbauten ausgeblendet. Kamera und Modell bleiben unverändert.{% endif %}</p>
       </div>
-      <p class="ticker-stadium-note">Statische Kamerastudie mit dem Dortmund-Modell – unabhängig vom Testspiel-Paar, noch ohne Spieleranimation. Tag-/Nacht-Umfeldbilder vom Nutzer geliefert; Stadion und Spielfeld bleiben echte 3D-Geometrie. Stadionfassade teilweise rekonstruiert. Das vollständige 3D-Modell bleibt erhalten.</p>
+      <p class="ticker-stadium-note">{% if ticker_stadium_environment.renderer == 'canonical' %}Der räumliche Elversberg-Blueprint wird gemeinsam von Stadioneditor, Spielansicht und Liveticker verwendet. Schematische Gebäude- und Vegetationshöhen bleiben als solche gekennzeichnet; die Darstellung ersetzt keine vermessene Dach- oder Geländehöhe.{% else %}Statische Kamerastudie mit dem Dortmund-Modell – unabhängig vom Testspiel-Paar, noch ohne Spieleranimation. Tag-/Nacht-Umfeldbilder vom Nutzer geliefert; Stadion und Spielfeld bleiben echte 3D-Geometrie. Stadionfassade teilweise rekonstruiert. Das vollständige 3D-Modell bleibt erhalten.{% endif %}</p>
     </section>
     {% endif %}
 
@@ -89,9 +100,9 @@
     <footer class="ls-footer"><span>Websoccer · {% if is_test %}Isolierter Admin-Test{% else %}Spieltag in Echtzeit{% endif %}</span>{% if not is_test %}<a href="{{ report_url }}" id="report-fallback" hidden>Spielbericht öffnen</a>{% endif %}</footer>
   </main>
   <script src="{% static 'game/js/live_story.js' %}?v=3" defer></script>
-  {% if is_test %}
+  {% if ticker_stadium_environment %}
   {{ ticker_stadium_environment|json_script:"ticker-stadium-environment" }}
-  <script type="module" src="{% static 'game/js/ticker_stadium_preview.js' %}?v=17"></script>
+  <script type="module" src="{% static 'game/js/ticker_stadium_preview.js' %}?v=20"></script>
   {% endif %}
 </body>
 </html>

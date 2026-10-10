@@ -105,3 +105,18 @@ bei Lücken kollidieren und 2D-Auswahl, 3D-Scene oder Designexport vertauschen.
 **How to apply:** Persistierte Blöcke behalten eine separate kanonische ID.
 Nur temporäre Vorschau-Blöcke erhalten eine eigene Renderer-ID und werden nie
 als Geometrie oder Kapazität gespeichert.
+
+## Elversberger Haupttribüne und unveränderte Feldkamera
+
+Die freigegebene Spielkamera bleibt einschließlich ihrer Kameraseite und
+Feldeckenprojektion unverändert. Die Orientierung des Elversberger Modells
+wird im gemeinsamen Szenenrahmen angepasst, nicht durch einen Wechsel der
+Kameraseite. Der vordere Stadionteil wird nur für die Spielansicht ausgeblendet.
+
+**Why:** Eine gegenüberliegende Kameraseite kann die Haupttribüne scheinbar
+richtig zeigen, dreht aber die Feldprojektion und damit den gemeinsamen
+2D-Spielablauf um. Das verletzt die ausdrücklich freigegebene feste Feldkamera.
+
+**How to apply:** Kameravergleiche mit identischem Rahmen, Dach-/Lichtzustand
+und aktuellen gespeicherten Daten durchführen. Gebäude und Vegetation folgen
+derselben Modelltransformation; sie dürfen nicht unabhängig umgeordnet werden.

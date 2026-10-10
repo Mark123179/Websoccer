@@ -1,3 +1,7 @@
+import {drawBlueprintEnvironment2D} from './elversberg_blueprint_environment.js?v=2';
+import {studyPreset} from './study_camera.js?v=3';
+import {PITCH} from './stage/pitch_geometry.js';
+
 const SCHEMA = 'websoccer.stadium-live-scene';
 const EPSILON = 1e-7;
 const LIVE_MODE_ASSET_URL = new URL(import.meta.url);
@@ -97,7 +101,9 @@ export function validateScene(scene) {
 }
 
 export async function loadLiveScene(sceneUrl, fetchImpl = fetch) {
-  const response = await fetchImpl(sceneUrl, {headers: {Accept: 'application/json'}});
+  const response = await fetchImpl(sceneUrl, {
+    headers: {Accept: 'application/json'}, credentials: 'same-origin',
+  });
   let payload;
   try {
     payload = await response.json();
@@ -249,20 +255,40 @@ function createProjector(width, height, camera) {
     -Math.cos(camera.orbit) * camera.distance,
     camera.height,
   ];
-  const target = [0, 8, 7];
+  const target = camera.target || [0, 8, 7];
   const forward = normalize(vectorSubtract(target, position));
   const right = normalize(cross(forward, [0, 0, 1]));
   const up = normalize(cross(right, forward));
-  const focal = Math.min(width, height) * camera.zoom;
+  const focal = (camera.widthZoom ? width : Math.min(width, height)) * camera.zoom;
+  const principalY = camera.principalY ?? .54;
   return point => {
     const relative = vectorSubtract(point, position);
     const depth = dot(relative, forward);
     if (depth <= 1) return null;
     return [
       width / 2 + dot(relative, right) * focal / depth,
-      height * 0.54 - dot(relative, up) * focal / depth,
+      height * principalY - dot(relative, up) * focal / depth,
       depth,
     ];
+  };
+}
+
+function approvedBlueprintFallbackCamera() {
+  const preset = studyPreset('approved-elversberg');
+  const distance = PITCH.width / 2 + preset.distance;
+  const tilt = preset.tilt * Math.PI / 180;
+  return {
+    orbit: Math.PI,
+    distance,
+    height: preset.height,
+    zoom: preset.zoom / preset.frame[0],
+    widthZoom: true,
+    principalY: preset.principal[1] / preset.frame[1],
+    target: [
+      0,
+      distance - Math.cos(tilt),
+      preset.height - Math.sin(tilt),
+    ],
   };
 }
 
@@ -352,7 +378,38 @@ export class StadiumLiveRenderer {
     this.canvas = canvas;
     this.context = canvas.getContext('2d', {alpha: false});
     this.scene = validateScene(scene);
-    this.camera = {orbit: 0, distance: 155, height: 45, zoom: 1.3};
+    this.fixedBlueprintCamera = this.scene.surroundings?.style === 'elversberg-blueprint';
+    this.roofVisible = true;
+    this.day = false;
+    this.observer = null;
+    this.drag = null;
+    this._onPointerDown = event => {
+      if (this.fixedBlueprintCamera) return;
+      this.drag = {x: event.clientX, orbit: this.camera.orbit};
+      this.canvas.setPointerCapture(event.pointerId);
+    };
+    this._onPointerMove = event => {
+      if (!this.drag) return;
+      this.camera.orbit = this.drag.orbit + (event.clientX - this.drag.x) * 0.006;
+      this.render();
+    };
+    this._onPointerUp = () => { this.drag = null; };
+    this._onWheel = event => {
+      event.preventDefault();
+      if (this.fixedBlueprintCamera) return;
+      this.camera.zoom = Math.max(0.72, Math.min(2.25,
+        this.camera.zoom * Math.exp(-event.deltaY * 0.001)));
+      this.render();
+    };
+    this._onDoubleClick = () => {
+      this.camera = this.scene.surroundings?.style === 'elversberg-blueprint'
+        ? approvedBlueprintFallbackCamera()
+        : {orbit: 0, distance: 155, height: 45, zoom: 1.3};
+      this.render();
+    };
+    this.camera = this.scene.surroundings?.style === 'elversberg-blueprint'
+      ? approvedBlueprintFallbackCamera()
+      : {orbit: 0, distance: 155, height: 45, zoom: 1.3};
     this.items = [
       pitchItem(scene),
       ...buildProceduralRoof(scene).map(roof => ({
@@ -371,27 +428,34 @@ export class StadiumLiveRenderer {
   }
 
   _bindCamera() {
-    let drag = null;
-    this.canvas.addEventListener('pointerdown', event => {
-      drag = {x: event.clientX, orbit: this.camera.orbit};
-      this.canvas.setPointerCapture(event.pointerId);
-    });
-    this.canvas.addEventListener('pointermove', event => {
-      if (!drag) return;
-      this.camera.orbit = drag.orbit + (event.clientX - drag.x) * 0.006;
-      this.render();
-    });
-    this.canvas.addEventListener('pointerup', () => { drag = null; });
-    this.canvas.addEventListener('wheel', event => {
-      event.preventDefault();
-      this.camera.zoom = Math.max(0.72, Math.min(2.25, this.camera.zoom * Math.exp(-event.deltaY * 0.001)));
-      this.render();
-    }, {passive: false});
-    this.canvas.addEventListener('dblclick', () => {
-      this.camera = {orbit: 0, distance: 155, height: 45, zoom: 1.3};
-      this.render();
-    });
-    new ResizeObserver(() => this.render()).observe(this.canvas);
+    this.canvas.addEventListener('pointerdown', this._onPointerDown);
+    this.canvas.addEventListener('pointermove', this._onPointerMove);
+    this.canvas.addEventListener('pointerup', this._onPointerUp);
+    this.canvas.addEventListener('pointercancel', this._onPointerUp);
+    this.canvas.addEventListener('wheel', this._onWheel, {passive: false});
+    this.canvas.addEventListener('dblclick', this._onDoubleClick);
+    this.observer = new ResizeObserver(() => this.render());
+    this.observer.observe(this.canvas);
+  }
+
+  setRoofVisible(visible) {
+    this.roofVisible = Boolean(visible);
+    this.render();
+  }
+
+  setDay(day) {
+    this.day = Boolean(day);
+    this.render();
+  }
+
+  dispose() {
+    this.observer?.disconnect();
+    this.canvas.removeEventListener('pointerdown', this._onPointerDown);
+    this.canvas.removeEventListener('pointermove', this._onPointerMove);
+    this.canvas.removeEventListener('pointerup', this._onPointerUp);
+    this.canvas.removeEventListener('pointercancel', this._onPointerUp);
+    this.canvas.removeEventListener('wheel', this._onWheel);
+    this.canvas.removeEventListener('dblclick', this._onDoubleClick);
   }
 
   render() {
@@ -406,9 +470,13 @@ export class StadiumLiveRenderer {
     }
     const context = this.context;
     context.setTransform(ratio, 0, 0, ratio, 0, 0);
-    context.fillStyle = '#03070c';
+    context.fillStyle = this.day ? '#c3d2cf' : '#03070c';
     context.fillRect(0, 0, width, height);
     const project = createProjector(width, height, this.camera);
+    drawBlueprintEnvironment2D(context, this.scene.surroundings, (x, y, z = 0) => {
+      const point = project([x, y, z]);
+      return point ? {x: point[0], y: point[1]} : null;
+    }, {heightScale: Math.min(width, height) / 700});
     const cameraDirection = [
       Math.sin(this.camera.orbit),
       -Math.cos(this.camera.orbit),
@@ -430,8 +498,10 @@ export class StadiumLiveRenderer {
     visible.sort((a, b) => b.depth - a.depth);
     context.lineWidth = 0.45;
     for (const item of visible) {
+      if (item.kind === 'roof' && !this.roofVisible) continue;
       if (item.kind === 'pitch') {
-        drawPolygon(context, item.screenPoints, '#0d4326', 'rgba(235,255,245,.65)');
+        drawPolygon(context, item.screenPoints, this.day ? '#26704a' : '#0d4326',
+          this.day ? 'rgba(15,57,42,.78)' : 'rgba(235,255,245,.65)');
       } else if (item.kind === 'roof') {
         drawPolygon(context, item.screenPoints, 'rgba(26,58,68,.88)', 'rgba(34,230,255,.25)');
       } else {
@@ -481,9 +551,10 @@ async function mount(stage) {
   try {
     const {mountStadiumStage} = await stageAdapterPromise;
     const scene = await loadLiveScene(stage.dataset.sceneUrl);
+    const elversbergBlueprint = scene.surroundings?.style === 'elversberg-blueprint';
     const canvas = stage.querySelector('canvas');
     const controls = {
-      camera: stage.dataset.camera || 'orbit',
+      camera: elversbergBlueprint ? 'match' : (stage.dataset.camera || 'orbit'),
       day: stage.dataset.day === 'true',
       floodlight: stage.dataset.floodlight === 'true',
       exposure: Number(stage.dataset.exposure || 1),
@@ -498,6 +569,10 @@ async function mount(stage) {
     const day = stage.querySelector('[data-stage-day]');
     const floodlight = stage.querySelector('[data-stage-floodlight]');
     const exposure = stage.querySelector('[data-stage-exposure]');
+    if (elversbergBlueprint && camera) {
+      camera.value = 'match';
+      camera.disabled = true;
+    }
     const updateCamera = () => {
       stage.dataset.camera = camera?.value || 'orbit';
       if (stage._stadiumStage?.kind === 'three') {

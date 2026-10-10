@@ -6,7 +6,21 @@ const adapterPath = new URL(
   '../static/stadium_editor/stadium_stage_adapter.js',
   import.meta.url,
 );
-const adapterSource = await readFile(adapterPath, 'utf8');
+const adapterSource = (await readFile(adapterPath, 'utf8'))
+  .replace(
+    "'./elversberg_blueprint_environment.js?v=2'",
+    JSON.stringify(new URL(
+      '../static/stadium_editor/elversberg_blueprint_environment.js?v=2',
+      import.meta.url,
+    ).href),
+  )
+  .replace(
+    "'./study_camera.js?v=3'",
+    JSON.stringify(new URL(
+      '../static/stadium_editor/study_camera.js?v=3',
+      import.meta.url,
+    ).href),
+  );
 const adapterUrl = `data:text/javascript;base64,${Buffer.from(adapterSource).toString('base64')}`;
 const {applyEditorDesign, selectSeatBlock} = await import(adapterUrl);
 const editorPath = new URL('../static/stadium_editor/editor.js', import.meta.url);

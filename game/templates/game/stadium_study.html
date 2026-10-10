@@ -7,7 +7,7 @@
   <meta name="theme-color" content="#03070c">
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%2303070c'/%3E%3Cpath d='M8 7h9a5 5 0 0 1 0 10H8V7zm0 10h10a4 4 0 0 1 0 8H8v-8z' fill='none' stroke='%2322e6ff' stroke-width='2'/%3E%3C/svg%3E">
   <title>Stadionstudie · BLUEPRINT Football Manager</title>
-  <link rel="stylesheet" href="{% static 'game/css/stadium_study.css' %}?v=3">
+  <link rel="stylesheet" href="{% static 'game/css/stadium_study.css' %}?v=6">
   <script type="importmap">{"imports":{"three":"{% static 'stadium_editor/stage/vendor/three.module.js' %}","three/addons/":"{% static 'stadium_editor/stage/vendor/addons/' %}"}}</script>
 </head>
 <body class="stadium-study">
@@ -26,7 +26,10 @@
         <h1 id="study-title">Zwei Stadien.<br><span>Ein Feldmaß.</span></h1>
         <div class="ss-contract">Kanonisches Spielfeld · 105 × 68 m</div>
       </div>
-      <p class="ss-intro-copy">Ein direkter Geometrievergleich statt Matchsimulation. Das Spielfeld ist der gemeinsame Maßstab; Dach, Tribünen und Lichtdiagnostik bleiben sichtbar getrennte Hypothesen.</p>
+      <div class="ss-intro-copy">
+        <p>Ein direkter Geometrievergleich statt Matchsimulation. Das Spielfeld ist der gemeinsame Maßstab; Dach, Tribünen und Lichtdiagnostik bleiben sichtbar getrennte Hypothesen.</p>
+        <a class="ss-button" href="{% url 'story_test_start' %}?stadium_club={{ study_config.elversberg.club.id }}">Elversberg im Admin-Liveticker öffnen</a>
+      </div>
     </section>
 
     <section class="ss-control-panel" aria-label="Gemeinsame Studiensteuerung">
@@ -141,11 +144,11 @@
           <div class="ss-evidence">
             <div class="ss-evidence-item">
               <span class="ss-evidence-label">Geometriequelle</span>
-              <p>Bestehender vermessener Blueprint. Keine gleichwertige Originalquelle wie die Dortmund-Unity-Meshes.</p>
+              <p>Die aktuelle kanonische Live Scene mit realen, lagegetreuen OSM-Grundrissen. Stadion, gespeichertes Design und Ausbau bleiben dieselbe Quelle wie im Editor und Liveticker.</p>
             </div>
             <div class="ss-evidence-item">
               <span class="ss-evidence-label">Umfeldreferenz</span>
-              <p>Kein Umgebungsfoto bereitgestellt. Die Ansicht bleibt bewusst geometrisch; es wird keine Kulisse erfunden.</p>
+              <p>Geteiltes Elversberg-Blueprint-Umfeld aus Gebäuden, Straßen, Grünflächen und räumlichen Vegetationsgruppen. Gebäude-Fallbacks und Vegetationshöhen sind ausdrücklich schematisch, nicht vermessen.</p>
             </div>
           </div>
         </article>
@@ -163,11 +166,11 @@
     <aside class="ss-notes" aria-label="Hinweise zur Evidenz und zum Demo-Modus">
       <section class="ss-note">
         <h2>Evidenz ist nicht gleich Evidenz</h2>
-        <p>Dortmund basiert auf originalen Unity-Meshes. Elversberg basiert auf einem vorhandenen vermessenen Blueprint – die Quellqualität ist <strong>nicht gleichwertig</strong>. Dortmund-Fotos sind auf eine verworfene Luftbildkamera kalibriert und bleiben ausschließlich Referenzbilder.</p>
+        <p>Dortmund basiert auf originalen Unity-Meshes. Elversbergs Umgebung nutzt reale Gebäudefußabdrücke und den gemeinsamen pitch-zentrierten Ortsdatensatz; bedingte und schematische Höhen bleiben gekennzeichnet. Dortmund-Fotos sind auf eine verworfene Luftbildkamera kalibriert und bleiben ausschließlich Referenzbilder.</p>
       </section>
       <section class="ss-note">
         <h2>Lampendaten unvollständig</h2>
-        <p>Dortmund: gesondert exportierte Unity-Spotlights mit räumlichem Bezug zu den Leuchtenbauteilen. Elversberg: keine belegten Leuchtenpositionen; deshalb bleibt die Nachtbeleuchtung dort ausdrücklich unvollständig. Es werden keine Ersatzlichter erzeugt.</p>
+        <p>Dortmund: gesondert exportierte Unity-Spotlights mit räumlichem Bezug zu den Leuchtenbauteilen. Elversberg: keine belegten Leuchtenpositionen; deshalb bleibt die Nachtbeleuchtung ausdrücklich unvollständig. Es werden keine Ersatzlichter erzeugt.</p>
       </section>
     </aside>
 
@@ -178,6 +181,6 @@
   </main>
 
   {{ study_config|json_script:"stadium-study-config" }}
-  <script type="module" src="{% static 'game/js/stadium_study.js' %}?v=3"></script>
+  <script type="module" src="{% static 'game/js/stadium_study.js' %}?v=6"></script>
 </body>
 </html>
