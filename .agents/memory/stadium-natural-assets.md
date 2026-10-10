@@ -30,6 +30,20 @@ fehlende Umfeld-/Leuchtenquellen nicht als bereits abgenommen ausgeben.
 
 **How to apply:** Einheitliche Spielkoordinaten und bei gleicher Ansicht/Fenstergröße identische sichtbare Feldgröße, Position und Perspektive vorsehen. Vereine, Kapazitäten und Ausbauten ändern nur den Stadionrahmen; keine vereinsabhängige Kameraeinpassung. Responsive Anpassungen skalieren alle Ebenen gemeinsam. Fremde Modellmaße an den gemeinsamen Spielfeldvertrag anschließen, nicht die Spielkoordinaten an jeden Import anpassen.
 
+## Kleine gemeinsame Kamera-Erweiterung
+
+Der Nutzer möchte die aktuelle Feldnähe grundsätzlich behalten, aber „eine
+Tick müssen wir noch zurück zoomen“, damit Dortmund als große Referenz ins
+Bild passt. Dabei ausdrücklich „an Dach und ohne Dach denken“.
+
+**Why:** Der Nutzer beanstandet abgeschnittene Stadionteile, nicht einen
+generellen Wunsch nach einer weit entfernten Umfeldkamera.
+
+**How to apply:** Eine möglichst kleine gemeinsame Kamera-Erweiterung prüfen,
+nicht pro Verein automatisch einpassen. Dortmund mit und ohne Dach beurteilen
+und die identische Feldprojektion beim Vergleich mit anderen Vereinen erhalten.
+Keine vollständige Stadtpanorama-Kamera als dafür freigegeben behandeln.
+
 ## Bisheriger Bildansatz
 
 „Wir nehmen unser Stadionmodell und das Spielfeld wie gehabt und das Umfeld machen wir als zwei Bilder Tag & Nacht je Verein.“ „Ich werde die Bilder liefern.“
