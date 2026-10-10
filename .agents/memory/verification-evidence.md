@@ -26,3 +26,9 @@ Diagnosen nach betroffenen Spielen und Zahlentypen aufschlüsseln; mehrere Prüf
 **Why:** Der Nutzer wies darauf hin, dass Meldungszahlen kein Maß für betroffene Spiele sind und eine pauschale Einordnung als harmlose Altdaten ohne Gegenprüfung nicht belegt ist.
 
 **How to apply:** Erwartet/erzählt mit konkreten Fällen zeigen, fehlende Felder von vorhandenen Nullwerten unterscheiden und konsistente Eingaben direkt gegen die unveränderte Erzähler-Baseline prüfen. Eine Ausnahme für inkonsistente Eingaben entschuldigt keine Fehler bei konsistenten Eingaben.
+
+Alte Stadion-Silhouetten niemals nachträglich mit einem Inhaltsnachweis versehen; fehlende Exportnachweise erfordern einen neuen Renderlauf.
+
+**Why:** Ein nachträglicher Hash würde nur die vorhandene Datei bestätigen, nicht ihre tatsächliche Zugehörigkeit zur protokollierten Kamera, Orientierung oder zum Dachzustand.
+
+**How to apply:** Nachweise während des Exports erzeugen und vor der Kartenauswertung prüfen. Sie belegen die Zuordnung der exportierten Bytes, sind aber weder eine Signatur gegen absichtlich gefälschte Protokolle noch eine visuelle Nutzerabnahme.

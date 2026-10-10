@@ -5,6 +5,7 @@ from pathlib import Path
 
 import numpy as np
 from PIL import Image, ImageDraw, ImageFont
+from probe_image_evidence import verify_probe_image
 
 from geo_probe_geometry import (
     frame_from_osm, ground_rays, lonlat_to_scene, mercator, polygon_mask,
@@ -64,7 +65,7 @@ def check_camera(camera, states, approved):
         assert state["roof"] or state["visibleRoofMeshes"] == 0
 
 
-def audit_club(club, camera, states, ground):
+def audit_club(club, camera, states, ground, verified_images):
     width, height = camera["format"]
     osm_path = ROOT / f"stadium_editor/blueprints/v2/{club}.json"
     osm = json.loads(osm_path.read_text())
@@ -124,7 +125,7 @@ def audit_club(club, camera, states, ground):
     categories = {}
     for roof in (True, False):
         stem = f"{club}_{'roof' if roof else 'no_roof'}"
-        silhouette = np.asarray(Image.open(OUT / f"{stem}_silhouette.png").convert("L")) > 128
+        silhouette = np.asarray(verified_images[(club, roof)]["silhouette"]) > 128
         assert silhouette.shape == site.shape
         masks = {"outside": ~site & ~keep & ~silhouette,
                  "cut_stand": cut_stand & ~silhouette,
@@ -137,7 +138,7 @@ def audit_club(club, camera, states, ground):
             diagnostic[mask] = COLORS[key]
             Image.fromarray((mask*255).astype("uint8")).save(OUT / f"{stem}_{key}_mask.png")
         Image.fromarray(diagnostic).save(OUT / f"{stem}_visibility.png")
-        render = np.asarray(Image.open(OUT / f"{stem}.png").convert("RGB"))
+        render = np.asarray(verified_images[(club, roof)]["render"])
         approved_render = np.asarray(Image.open(
             ROOT / f"generated-artifacts/stadium-middle-probe/{stem}.png").convert("RGB"))
         assert np.array_equal(render[keep], approved_render[keep]), "Approved field pixels changed"
@@ -224,21 +225,31 @@ def audit_club(club, camera, states, ground):
 
 def main():
     camera = json.loads((OUT / "camera_exact.json").read_text())
-    states = [s for s in json.loads((OUT / "verification.json").read_text())["states"]
+    export = json.loads((OUT / "verification.json").read_text())
+    states = [s for s in export["states"]
               if s.get("variant", "day") == "day"]
     approved = json.loads((ROOT / "generated-artifacts/stadium-middle-probe/verification.json").read_text())["states"][0]
     check_camera(camera, states, approved)
+    if camera["format"] != export["fitted"]["format"] or camera["position"] != export["fitted"]["position"]:
+        raise ValueError("Camera/export context mismatch")
+    # Fail before any audit output; old exports must be rendered anew, never attested retrospectively.
+    verified_images = {
+        (s["club"], s["roof"]): {
+            role: verify_probe_image(OUT, s, export["fitted"], role)
+            for role in ("render", "silhouette")} for s in states}
     ground = ground_rays(camera)
     report = {"format": camera["format"], "field_corners_exact": True,
               "approved_field_pixels_exact": True,
               "camera_matrices_exact": True, "denominator": "entire 1880x940 image (1,767,200 pixels)",
+              "image_content_verified": True,
+              "image_evidence": [s["imageEvidence"] for s in states],
               "mask_threshold": "white geometric coverage >128; antialiased edges rounded",
               "limits": ["Ground-plane visibility only, not facade/tree height visibility.",
                          "No geodetic Unity survey; physical-side calibration retained.",
                          "No aerial capture date claimed; Elversberg is OSM, not orthophoto.",
                          "Hidden stand ground is unknown; no landmarks shifted or generated."]}
     for club in ("dortmund", "elversberg"):
-        report[club] = audit_club(club, camera, states, ground)
+        report[club] = audit_club(club, camera, states, ground, verified_images)
     (OUT / "geo_verification.json").write_text(json.dumps(report, indent=2, ensure_ascii=False))
     font = ImageFont.load_default(size=22)
     board = Image.new("RGB", (1880, 1140), "#101b25")

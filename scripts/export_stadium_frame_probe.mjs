@@ -1,6 +1,7 @@
 // Isolated framing study. Never changes app camera presets or club data.
 import fs from 'node:fs';
 import {chromium} from 'playwright-core';
+import {writeProbeImage} from './probe_image_evidence.mjs';
 
 const mode=process.argv.includes('--middle')?'middle':'full';
 const mainStandBack=process.argv.includes('--main-stand-back');
@@ -310,10 +311,10 @@ try {
    },{base,source,mode,mainStandBack,approved,fixtureData,shadowProbe});
   if(errors.length)throw new Error(errors.join('\n'));
   for(const state of result.states){
-    fs.writeFileSync(`${output}/${state.club}_${state.roof?'roof':'no_roof'}${state.variant==='day'?'':`_${state.variant}`}.png`,
-      Buffer.from(state.png.split(',')[1],'base64'));
-    if(state.silhouette)fs.writeFileSync(
-      `${output}/${state.club}_${state.roof?'roof':'no_roof'}_silhouette.png`,
+    state.imageEvidence={render:writeProbeImage(output,state,result.fitted,'render',
+      Buffer.from(state.png.split(',')[1],'base64'))};
+    if(state.silhouette)state.imageEvidence.silhouette=writeProbeImage(
+      output,state,result.fitted,'silhouette',
       Buffer.from(state.silhouette.split(',')[1],'base64'));
     delete state.png;
     delete state.silhouette;
