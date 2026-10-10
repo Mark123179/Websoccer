@@ -1544,3 +1544,31 @@ mtime_ms = 1791629866241
 storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:6e4eaecc-e6c5-4f64-8de5-e8845034f33b/b5c397f5-7717-4c19-9132-c1d655ccc6d1/45cdc6b1-d443-47f0-b0d2-299227d01571"
 storage_version_token = "1791629890318242"
 content_type = "image/jpeg"
+
+[[outputs]]
+id = "-pbzpDZaSKkmg6a9U96ce"
+uri = "file://generated-artifacts/stadium-main-stand-back-probe/visibility_comparison.jpg"
+type = "image"
+title = "Sichtbare Umfeldflächen – beide Dachzustände"
+description = "Grün: sichtbarer Außenboden. Orange: ausgeblendete Tribüne. Violett: übriger Innenboden. Originaldatenmessung bei identischer 75%-Feldkamera."
+logical_id = "0d88eea6-6391-44a4-a599-29622f4a3972"
+content_hash = "sha256:136d4d76f204f4383404c8b1eba9527c8a432f72473a2f01d82383a01642d6df"
+size = 184110
+mtime_ms = 1791629997640
+storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:6e4eaecc-e6c5-4f64-8de5-e8845034f33b/0d88eea6-6391-44a4-a599-29622f4a3972/56a963de-8624-4f56-bd01-02c2abbf9494"
+storage_version_token = "1791630144786061"
+content_type = "image/jpeg"
+
+[[outputs]]
+id = "YwRqZvN_JfIq4oP09C6MC"
+uri = "file://generated-artifacts/stadium-main-stand-back-probe/registered_map_comparison.jpg"
+type = "image"
+title = "Originalkarten und Stadionmodelle im Vergleich"
+description = "Dortmund: NRW-Orthofoto. Elversberg: schematische Original-OSM-Bodenkarte, kein Luftbild. Beide Dachzustände, keine KI-Erstellung und keine produktive Integration."
+logical_id = "73cf678c-80bc-44f3-bbb7-cc8fe324942f"
+content_hash = "sha256:36f1e3bed6398e2c004fed685200643d21eb5b0f4f3b1d88e78458f34e594cea"
+size = 457621
+mtime_ms = 1791629997764
+storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:6e4eaecc-e6c5-4f64-8de5-e8845034f33b/73cf678c-80bc-44f3-bbb7-cc8fe324942f/2d2aa067-0965-4744-bfa6-faf6bf734863"
+storage_version_token = "1791630145246610"
+content_type = "image/jpeg"

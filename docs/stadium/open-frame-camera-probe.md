@@ -102,6 +102,45 @@ die neue Ostansicht nicht unverändert verwendbar. Der Kartenadapter muss
 die Modellhalbwendung mit berücksichtigen, bevor neue Umfeldvorlagen
 als passend ausgegeben werden.
 
+
+## Originaldaten-Sichtbarkeitsprüfung der neuen Blickrichtung
+
+Die aktuelle vierteilige Probe wurde mit
+`--middle --main-stand-back` neu gerendert. Ihre frischen geometrischen
+Verdeckungsmasken berücksichtigen Dachzustand, echte Materialschnitte und
+Mesh-Instanzen. `export_dortmund_geo_probe.mjs` übernimmt jetzt ausschließlich
+die exakt geprüften Matrizen dieser Probe; es setzt nicht mehr die alte
+Nahkamera ein.
+
+Der Kartenadapter berücksichtigt die Halbwendung um den Feldmittelpunkt:
+`scene X=-u, scene Z=v`. Originalkartenpositionen bleiben unverändert.
+Dortmunds geografischer Kamerapunkt liegt östlich (82,003° ab Nord),
+Elversbergs nordöstlich (41,129°).
+
+Sichtbarer Boden **außerhalb** der OSM-Stadiongrenze, jeweils Prozent
+des gesamten Bildes:
+
+| Verein | Dach an | Dach aus |
+|---|---:|---:|
+| Dortmund | 0,0042 % (nur 74 Randpixel) | 0,8497 % |
+| Elversberg | 40,2234 % | 42,9131 % |
+
+Freier Boden innerhalb der Grenze wird gesondert in ausgeblendete
+Tribünenfläche und übrigen Innenboden getrennt. Insbesondere Dortmunds
+offener Vordergrund ist damit kein frei verfügbarer Stadtvorplatz.
+Elversbergs Geländegrenze und parametrische Modell-Nordtribüne sind keine
+vermessen belegten Gebäudegrundrisse.
+
+Projektionsmatrix, Pose, vier Feldpunkte **und alle geschützten Feldpixel**
+stimmen in allen vier Zuständen exakt mit der bestätigten 75%-Probe überein.
+Die Kamera bleibt unverändert; kein neues Umfeldbild und keine Integration
+wurden erstellt. Geprüft ist Bodenprojektion, nicht die Sichtbarkeit
+aufrechter Fassaden oder Baumkronen.
+
+Quellen, Messmethode, differenzierte Zahlen und Reproduktionsbefehle:
+[`dortmund-orthophoto-feasibility.md`](dortmund-orthophoto-feasibility.md).
+Alle Bilder und Prüfprotokolle bleiben unter
+`generated-artifacts/stadium-main-stand-back-probe/`.
 ## Nachtprobe nach der Halbwendung
 
 Derselbe Befehl `node scripts/export_stadium_frame_probe.mjs --middle --main-stand-back`

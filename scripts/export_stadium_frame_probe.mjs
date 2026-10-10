@@ -95,6 +95,36 @@ try {
       if(!count)throw new Error('No visible model geometry measured.');
       return {minX,maxX,minY,maxY,count};
     }
+    function silhouetteImage(stage,canvas){
+      // Preserve real visibility, instancing, sides and world clipping planes.
+      const saved=[],maskMaterials=[];
+      stage.sceneRoot.traverse(object=>{
+        if(!object.isMesh)return;
+        saved.push([object,object.material]);
+        const replace=material=>{
+          const mask=new THREE.MeshBasicMaterial({color:0xffffff,
+            side:material.side,visible:material.visible,
+            clippingPlanes:material.clippingPlanes,
+            clipIntersection:material.clipIntersection});
+          maskMaterials.push(mask);return mask;
+        };
+        object.material=Array.isArray(object.material)?
+          object.material.map(replace):replace(object.material);
+      });
+      const clear=stage.renderer.getClearColor(new THREE.Color());
+      const alpha=stage.renderer.getClearAlpha();
+      const background=stage.sceneRoot.background;
+      stage.sceneRoot.background=null;
+      stage.renderer.setClearColor(0x000000,1);
+      stage.renderer.render(stage.sceneRoot,stage.camera);
+      const image=canvas.toDataURL('image/png');
+      for(const [object,material] of saved)object.material=material;
+      maskMaterials.forEach(material=>material.dispose());
+      stage.sceneRoot.background=background;
+      stage.renderer.setClearColor(clear,alpha);
+      stage.render();
+      return image;
+    }
     function measureCached(points,camera){
       const view=camera.matrixWorldInverse.elements;
       let minX=Infinity,maxX=-Infinity,minY=Infinity,maxY=-Infinity;
@@ -224,6 +254,9 @@ try {
             throw new Error('Main-stand rotation changed the approved field projection or camera pose.');
           if(fieldCorners.some(p=>!p.visible || p.x<margin || p.x>width-margin ||
             p.y<margin || p.y>height-margin))throw new Error('Playable field is cropped.');
+          // Geographic occlusion is measured only in the four daylight states.
+          // Night diagnostics may include light cones; retain them independently.
+          const silhouette=variant.name==='day'?silhouetteImage(stage,handle.canvas):null;
           states.push({club,roof,variant:variant.name,night:variant.night,
             floodlightRequested:variant.floodlight,diagnostics:variant.diagnostics,
             verifiedFixtures:lighting.verifiedCount,runtimeSources:lighting.sources.length,
@@ -234,6 +267,7 @@ try {
             screen,corners:fieldCorners,orientation,
             projection:stage.camera.projectionMatrix.toArray(),pose:stage.camera.matrixWorldInverse.toArray(),
             visibleRoofMeshes:handle.roofMeshes.filter(mesh=>mesh.visible).length,
+            silhouette,
             png:handle.canvas.toDataURL('image/png')});
         }
       }
@@ -255,7 +289,11 @@ try {
   for(const state of result.states){
     fs.writeFileSync(`${output}/${state.club}_${state.roof?'roof':'no_roof'}${state.variant==='day'?'':`_${state.variant}`}.png`,
       Buffer.from(state.png.split(',')[1],'base64'));
+    if(state.silhouette)fs.writeFileSync(
+      `${output}/${state.club}_${state.roof?'roof':'no_roof'}_silhouette.png`,
+      Buffer.from(state.silhouette.split(',')[1],'base64'));
     delete state.png;
+    delete state.silhouette;
   }
   fs.writeFileSync(`${output}/verification.json`,JSON.stringify(result,null,2));
   console.log(JSON.stringify(result,null,2));

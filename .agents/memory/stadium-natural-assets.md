@@ -164,14 +164,25 @@ realistischeren Ortsmerkmalen als einbaufertig behandeln.
 Eine nahe Feldkamera kann das echte Umfeld bereits geometrisch aus dem
 Bildausschnitt ausschließen; bessere Hintergrundquellen lösen das nicht.
 
-**Why:** Die registrierte Dortmund-Orthofotoprobe liegt fast ganz innerhalb
-der Stadiongrundfläche. Freie Schnittflächen gehören überwiegend zur
-ausgeblendeten Tribüne, nicht zu einem echten Stadtvorplatz.
+**Why:** In Dortmund kann auch ein größerer kartierter Bodenausschnitt
+vom tatsächlichen Stadionmodell fast vollständig verdeckt werden. Freie
+Schnittflächen sind dann Innenboden, kein Stadtvorplatz. Kleinere Stadien
+lassen dagegen wesentlich mehr echtes Umfeld frei.
 
 **How to apply:** Vor weiteren Umfeldbildern die Sichtbarkeit gegen den
 realen Stadiongrundriss und die Modellverdeckung prüfen. Keine Landmarken
 für mehr Ortsbezug künstlich versetzen. Eine weiter gefasste Kamera nur nach
 Nutzerentscheidung und weiterhin gemeinsam für alle Vereinsfelder prüfen.
+
+Sichtbare kartierte Grundflächen nicht als nachgewiesene Sicht auf Fassaden
+oder Baumkronen ausgeben; jedes Stadion separat mit Modellverdeckung prüfen.
+
+**Why:** Bodenprojektion enthält weder aufrechte Gebäudehöhen noch
+gegenseitige Umfeldverdeckung. Ein sichtbarer Hausgrundriss allein bestätigt
+keine passende Fotokulisse.
+
+**How to apply:** Vor neuen Umfeldvorlagen zwischen Bodenbeleg und
+Höhensicht unterscheiden; Dortmund-Ergebnisse nicht auf Elversberg übertragen.
 
 Für die Umfeld-Erstellung wählte der Nutzer „Vorlagen für Higgsfield vorbereiten“
 statt direkter KI-Erstellung hier.
