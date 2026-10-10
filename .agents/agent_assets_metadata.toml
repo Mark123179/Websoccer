@@ -1978,3 +1978,73 @@ mtime_ms = 1791655203295
 storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:6e4eaecc-e6c5-4f64-8de5-e8845034f33b/bdea07d8-6bc7-42fe-adf3-69f3ddf05dd0/7987cdb8-2f41-4dde-842a-777d77a96748"
 storage_version_token = "1791655253682660"
 content_type = "image/png"
+
+[[outputs]]
+id = "7exB34RMFqmWMdyEnHoLr"
+uri = "file://generated-artifacts/bvb-spatial-review/01-2d-editor.png"
+type = "image"
+title = "BVB · 2D-Editor"
+description = "Aktueller Ortsplan mit dem eigenen Dortmunder Umfeld."
+logical_id = "423f6eb6-b05d-4b9b-a848-37724f45a5d3"
+content_hash = "sha256:a2df300475668ba202cc09ef11670de75f056a1b5ed36fbb059e1f05aadf4b88"
+size = 496329
+mtime_ms = 1791656650467
+storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:6e4eaecc-e6c5-4f64-8de5-e8845034f33b/423f6eb6-b05d-4b9b-a848-37724f45a5d3/42c04662-7e5e-496c-b529-0a48559780a1"
+storage_version_token = "1791659266160288"
+content_type = "image/png"
+
+[[outputs]]
+id = "aohVNNYU20N2dXreqnh6P"
+uri = "file://generated-artifacts/bvb-spatial-review/02-3d-editor.png"
+type = "image"
+title = "BVB · 3D-Editor"
+description = "Originales Stadionmodell mit den räumlichen Dortmunder Umgebungsdaten."
+logical_id = "029db7e0-1ced-4059-92b3-3a413447d722"
+content_hash = "sha256:30480307afef496e194b59b5579165406f5d00763c853f47132119c2318e2a4c"
+size = 447715
+mtime_ms = 1791656140825
+storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:6e4eaecc-e6c5-4f64-8de5-e8845034f33b/029db7e0-1ced-4059-92b3-3a413447d722/a031557f-4e99-4305-92a8-120fa7dd4277"
+storage_version_token = "1791659266949067"
+content_type = "image/png"
+
+[[outputs]]
+id = "ME7cGre_aZlIMYJjhq1uQ"
+uri = "file://generated-artifacts/bvb-spatial-review/03-liveticker-roof.png"
+type = "image"
+title = "BVB · Ticker mit Dach"
+description = "Tagesansicht mit der freigegebenen gemeinsamen Elversberg-Kamera."
+logical_id = "3a8531b1-bfed-4752-bea5-2f3b804c40f5"
+content_hash = "sha256:6a88f62ea07a5f73266c92b748e12adf996ab1659bfbe3b5599df2bcf75a2260"
+size = 271038
+mtime_ms = 1791659095152
+storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:6e4eaecc-e6c5-4f64-8de5-e8845034f33b/3a8531b1-bfed-4752-bea5-2f3b804c40f5/8dc4cb00-f81b-4969-8759-31b7c9a7d2c8"
+storage_version_token = "1791659267638347"
+content_type = "image/png"
+
+[[outputs]]
+id = "CWSsfYCEi8CnJEt2rha5Q"
+uri = "file://generated-artifacts/bvb-spatial-review/04-liveticker-no-roof.png"
+type = "image"
+title = "BVB · Ticker ohne Dach"
+description = "Dieselbe Kamera bei ausgeblendetem Dach."
+logical_id = "31e54e05-0aa3-4f11-8bbf-3a6dfa4ae6b5"
+content_hash = "sha256:79cd23506ba7b775be9c31f8945bcff5d8b9bfeed769a394a7d7717a69080186"
+size = 351299
+mtime_ms = 1791659106279
+storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:6e4eaecc-e6c5-4f64-8de5-e8845034f33b/31e54e05-0aa3-4f11-8bbf-3a6dfa4ae6b5/e964da5b-9e0a-4d93-b03a-ae5a2cc827d1"
+storage_version_token = "1791659268394804"
+content_type = "image/png"
+
+[[outputs]]
+id = "XlvJTFStg2nW9kVuVbIVU"
+uri = "file://generated-artifacts/bvb-spatial-review/05-liveticker-night.png"
+type = "image"
+title = "BVB · Nacht mit Dach und Flutlicht"
+description = "Nachtansicht mit den anhand des Originalmodells überprüften Flutlichtquellen."
+logical_id = "3d185d2b-46bb-47b2-b206-f2af7727bdcd"
+content_hash = "sha256:a67dd32a6e8816e5ee0ddfccb36d88d6ebb3909bbb654152468821d12fa2ca06"
+size = 499528
+mtime_ms = 1791659121751
+storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:6e4eaecc-e6c5-4f64-8de5-e8845034f33b/3d185d2b-46bb-47b2-b206-f2af7727bdcd/192faedd-8263-48d8-bfc8-35e5fd7902c0"
+storage_version_token = "1791659269288543"
+content_type = "image/png"

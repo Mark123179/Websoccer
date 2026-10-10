@@ -72,3 +72,16 @@ allein hätten eine fertige Ansicht fälschlich bestätigt.
 **How to apply:** Keine erfolgreich gemeldeten Renderaufrufe mit fertigen
 Bildnachweisen gleichsetzen. Frühere Bilder oder Kamerabelege verlieren
 ihre Gültigkeit, sobald die geprüfte Projektion geändert wurde.
+
+Für eine gemeinsame Kamera sowohl die gerenderten Bilder als auch die
+Projektionsmatrix und die ins native Modellkoordinatensystem gedrehte
+Kameraposition prüfen.
+
+**Why:** Eine ähnlich wirkende Feldbreite ist kein Nachweis derselben
+freigegebenen Kamera. Die vollständige BVB-Reihe konnte mit der tatsächlichen
+gemeinsamen Projektion aufgenommen und zusätzlich numerisch verglichen werden;
+die Ursache der vorherigen Aufnahmehänger wurde nicht isoliert.
+
+**How to apply:** Keine neue Prozent-Fit-Kamera als Ersatz verwenden.
+Bildprüfung und mathematischer Kameravergleich ergänzen sich; keiner ersetzt
+den anderen.
