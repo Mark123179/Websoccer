@@ -107,6 +107,17 @@ zuordnen, dann die Kartenlage und Modellorientierung abgleichen. Eine
 Dachkorrektur nicht allein aus dem Namen „Nordtribüne“ oder einem Foto aus
 anderer Blickrichtung ableiten.
 
+Der Nutzer hat das Darstellungsprinzip „Haupttribüne hinten sichtbar“
+ausgewählt.
+
+**Why:** Das ist seine ausdrückliche Auswahl gegenüber der bisherigen
+ausgeblendeten Haupttribüne auf der Kameraseite.
+
+**How to apply:** Von der gegenüberliegenden Längsseite schauen und diese
+vordere Gegentribüne ausblenden. Die bestätigte 75%-Feldprojektion unverändert
+lassen; der geografische Blick hängt weiterhin vom Verein ab. Ältere
+Umfeldregistrierungen aus der Gegenrichtung nicht unverändert übernehmen.
+
 ## Bisheriger Bildansatz
 
 „Wir nehmen unser Stadionmodell und das Spielfeld wie gehabt und das Umfeld machen wir als zwei Bilder Tag & Nacht je Verein.“ „Ich werde die Bilder liefern.“

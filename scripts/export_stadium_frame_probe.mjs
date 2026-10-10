@@ -3,7 +3,12 @@ import fs from 'node:fs';
 import {chromium} from 'playwright-core';
 
 const mode=process.argv.includes('--middle')?'middle':'full';
-const output=mode==='middle'?'generated-artifacts/stadium-middle-probe':'generated-artifacts/stadium-frame-probe';
+const mainStandBack=process.argv.includes('--main-stand-back');
+if(mainStandBack && mode!=='middle')throw new Error('Main-stand-back requires the approved --middle camera.');
+const output=mainStandBack?'generated-artifacts/stadium-main-stand-back-probe':
+  mode==='middle'?'generated-artifacts/stadium-middle-probe':'generated-artifacts/stadium-frame-probe';
+const approved=mainStandBack?JSON.parse(fs.readFileSync(
+  'generated-artifacts/stadium-middle-probe/verification.json','utf8')).states[0]:null;
 fs.mkdirSync(output,{recursive:true});
 const source=JSON.parse(fs.readFileSync('stadium_editor/blueprints/v2/elversberg_v2.json','utf8'));
 const base=`https://${process.env.REPLIT_DEV_DOMAIN}`;
@@ -15,7 +20,7 @@ try {
   page.on('pageerror',error=>errors.push(error.message));
   await page.goto(`${base}/static/game/css/stadium_study.css?v=3`);
   await page.setContent(`<script type="importmap">{"imports":{"three":"${base}/static/stadium_editor/stage/vendor/three.module.js","three/addons/":"${base}/static/stadium_editor/stage/vendor/addons/"}}</script><div id="host" style="width:1880px;height:940px;position:relative"></div>`);
-  const result=await page.evaluate(async ({base,source,mode})=>{
+  const result=await page.evaluate(async ({base,source,mode,mainStandBack,approved})=>{
     const THREE=await import('three');
     const {mountStudyModel}=await import(`${base}/static/stadium_editor/study_models.js?v=frame-probe`);
     const {applyStudyCamera,projectStudy,studyPreset}=await import(`${base}/static/stadium_editor/study_camera.js?v=1`);
@@ -99,7 +104,26 @@ try {
       return {minX,maxX,minY,maxY,count:points.length/3};
     }
     for(const club of ['dortmund','elversberg']){
-      const handle=await mountStudyModel({host:document.getElementById('host'),club,source,concept:'cutaway'});
+      const viewSource=structuredClone(source);
+      if(mainStandBack && club==='elversberg'){
+        // Counter-rotate the input to the unchanged study adapter. Its normal
+        // 180° rotation then cancels this one. Only the isolated copy changes.
+        const rotate=p=>[-p[0],-p[1],...p.slice(2)];
+        viewSource.blocks.forEach(block=>{block.quad=block.quad.map(rotate);});
+        viewSource.outline=viewSource.outline.map(rotate);
+        viewSource.roof.segments.forEach(segment=>{segment.quad=segment.quad.map(rotate);});
+        viewSource.mainStand='NORD';
+        viewSource.farStand='SUED';
+      }
+      const handle=await mountStudyModel({host:document.getElementById('host'),club,source:viewSource,concept:'cutaway'});
+      if(mainStandBack && club==='dortmund')handle.model.rotation.y+=Math.PI;
+      const orientation=mainStandBack?{
+        rearStand:club==='dortmund'?'WEST':'SUED',
+        hiddenFrontStand:club==='dortmund'?'OST':'NORD',
+        leftStand:club==='dortmund'?'SUED':'OST',
+        rightStand:club==='dortmund'?'NORD':'WEST',
+        modelTurnDegrees:180,roofSegmentsAdded:0,
+      }:null;
       const lighting=createStudyLighting(handle,null);
       lighting.setState(false,false,false);
       const stage=handle.stage;
@@ -157,9 +181,13 @@ try {
            screen.top<margin-.01 || screen.bottom>height-margin+.01))
           throw new Error(`${club} roof=${roof} exceeds the shared safety margin: ${JSON.stringify(screen)}`);
         const fieldCorners=corners.map(([x,y])=>projectStudy(stage.camera,width,height,x,y));
+        if(approved && (JSON.stringify(fieldCorners)!==JSON.stringify(approved.corners) ||
+          JSON.stringify(stage.camera.projectionMatrix.toArray())!==JSON.stringify(approved.projection) ||
+          JSON.stringify(stage.camera.matrixWorldInverse.toArray())!==JSON.stringify(approved.pose)))
+          throw new Error('Main-stand rotation changed the approved field projection or camera pose.');
         if(fieldCorners.some(p=>!p.visible || p.x<margin || p.x>width-margin ||
           p.y<margin || p.y>height-margin))throw new Error('Playable field is cropped.');
-        states.push({club,roof,screen,corners:fieldCorners,
+        states.push({club,roof,screen,corners:fieldCorners,orientation,
           projection:stage.camera.projectionMatrix.toArray(),pose:stage.camera.matrixWorldInverse.toArray(),
           visibleRoofMeshes:handle.roofMeshes.filter(mesh=>mesh.visible).length,
           png:handle.canvas.toDataURL('image/png')});
@@ -173,7 +201,7 @@ try {
     if(states.some(state=>!state.roof&&state.visibleRoofMeshes!==0))
       throw new Error('Roof-off assembly still visible.');
     return {fitted,states};
-  },{base,source,mode});
+   },{base,source,mode,mainStandBack,approved});
   if(errors.length)throw new Error(errors.join('\n'));
   for(const state of result.states){
     fs.writeFileSync(`${output}/${state.club}_${state.roof?'roof':'no_roof'}.png`,

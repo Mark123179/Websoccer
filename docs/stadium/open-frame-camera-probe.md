@@ -70,3 +70,34 @@ Alle vier Feldeckpunkte müssen weiterhin vollständig im Bild liegen.
 Die identische Projektion und Pose aller Vereine/Dachzustände sowie der
 vollständige Dach-aus-Schalter werden unverändert geprüft. Spielkoordinaten,
 Anwendungsansicht, Kamera-Presets und Vereinsdaten bleiben unverändert.
+
+## Haupttribüne hinten (ausgewähltes Darstellungsprinzip)
+
+Der Nutzer hat „Haupttribüne hinten sichtbar“ gewählt. Die neue isolierte
+Probe entsteht mit:
+
+`node scripts/export_stadium_frame_probe.mjs --middle --main-stand-back`
+
+Ausgabe: `generated-artifacts/stadium-main-stand-back-probe/`.
+Die bisherigen Kameraproben werden nicht überschrieben.
+
+Nur die Stadionmodelle werden um 180° gedreht. Dortmund zeigt damit West
+hinten, Süd links und Nord rechts; die vordere Ostseite bleibt ausgeschnitten.
+Elversberg zeigt die Modellseite Süd hinten, Ost links und West rechts;
+die vordere Modellseite Nord wird ausgeblendet. Geografisch liegt die
+Elversberger Kameraseite ungefähr nordöstlich, die Haupttribüne südwestlich.
+
+Elversbergs Anpassung erfolgt an einer isolierten Kopie der Eingabedaten,
+einschließlich des Filters für die kameraseitige Tribüne. Es werden keine
+Dachsegmente hinzugefügt. Die zuvor diskutierte Dachhälfte gehört jetzt
+zur ausgeblendeten Vorderseite; ihr Datenstand bleibt unverändert.
+
+Projektionsmatrix, Kamerapose und vier Feldeckpunkte werden in allen vier
+Zuständen exakt gegen das Prüfprotokoll der bestätigten 75%-Probe verglichen.
+Beide Dach-aus-Zustände müssen ohne sichtbare registrierte Dachmeshes sein.
+Dies ist keine produktive Integration oder Vermessung der Stadionmodelle.
+
+Die Dortmunder Umfeldregistrierung aus der bisherigen Westansicht ist für
+die neue Ostansicht nicht unverändert verwendbar. Der Kartenadapter muss
+die Modellhalbwendung mit berücksichtigen, bevor neue Umfeldvorlagen
+als passend ausgegeben werden.

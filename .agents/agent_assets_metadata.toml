@@ -1446,3 +1446,73 @@ mtime_ms = 1791626908311
 storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:6e4eaecc-e6c5-4f64-8de5-e8845034f33b/632c3d5a-ee49-4f1d-8815-dedb46c273c7/275773ea-4aee-4d63-9af7-4c5b6442265d"
 storage_version_token = "1791627178467826"
 content_type = "image/png"
+
+[[outputs]]
+id = "SOj-UnkTuiSQ3p0lqwCYc"
+uri = "file://generated-artifacts/stadium-main-stand-back-probe/four_states.jpg"
+type = "image"
+title = "Haupttribüne hinten — Dortmund und Elversberg"
+description = "Vier neue Render: beide Vereine mit und ohne Dach. Stadionmodelle um 180° gedreht; bestätigte 75%-Feldprojektion und Kamerapose exakt unverändert. Keine Dachflächen ergänzt. Neutraler Studienhintergrund, keine fertige Ortskulisse."
+logical_id = "960cac5b-eac5-43fb-bba4-863433d89362"
+content_hash = "sha256:cd9623fef5b4a2cd32bb242e36b2eaf78bcc2ec56c10a394ee7f8c8692a33f93"
+size = 447900
+mtime_ms = 1791629124363
+storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:6e4eaecc-e6c5-4f64-8de5-e8845034f33b/960cac5b-eac5-43fb-bba4-863433d89362/346f254d-028d-4f31-8438-f2c9cfdd572b"
+storage_version_token = "1791629306930105"
+content_type = "image/jpeg"
+
+[[outputs]]
+id = "1sH5DRpSYTCPLRnUPx8N0"
+uri = "file://generated-artifacts/stadium-main-stand-back-probe/dortmund_roof.png"
+type = "image"
+title = "Dortmund · Haupttribüne hinten · mit Dach"
+description = "1880 × 940 Pixel. Haupttribüne hinten, vordere Gegentribüne ausgeblendet. Nur isolierte Bildprobe; Spielansicht und Vereinsdaten unverändert."
+logical_id = "6eb70b94-2c56-45e3-a3b5-4711b892d76a"
+content_hash = "sha256:edd7cccb5d55110c215748ebda036b665e8d544c56082ee29531d39bcf0da5e9"
+size = 683877
+mtime_ms = 1791629118907
+storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:6e4eaecc-e6c5-4f64-8de5-e8845034f33b/6eb70b94-2c56-45e3-a3b5-4711b892d76a/197c7de0-609f-4ff3-805d-9dce8adcb439"
+storage_version_token = "1791629307527365"
+content_type = "image/png"
+
+[[outputs]]
+id = "AU2sUHAEV_uNr3j679mny"
+uri = "file://generated-artifacts/stadium-main-stand-back-probe/dortmund_no_roof.png"
+type = "image"
+title = "Dortmund · Haupttribüne hinten · ohne Dach"
+description = "1880 × 940 Pixel. Haupttribüne hinten, vordere Gegentribüne ausgeblendet. Nur isolierte Bildprobe; Spielansicht und Vereinsdaten unverändert."
+logical_id = "2c87e1e7-6ea6-4ec2-b853-1da3ffbac86c"
+content_hash = "sha256:f029dedf55cf7d8021f6eabb0ea4e8430ed07573601c503df312cc2d96e4ae76"
+size = 1028948
+mtime_ms = 1791629118911
+storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:6e4eaecc-e6c5-4f64-8de5-e8845034f33b/2c87e1e7-6ea6-4ec2-b853-1da3ffbac86c/ebc24d35-21a8-4c91-854d-afb8e5aaaeba"
+storage_version_token = "1791629308079749"
+content_type = "image/png"
+
+[[outputs]]
+id = "6MOtbRf--bmvOIpzS9jC-"
+uri = "file://generated-artifacts/stadium-main-stand-back-probe/elversberg_roof.png"
+type = "image"
+title = "Elversberg · Haupttribüne hinten · mit Dach"
+description = "1880 × 940 Pixel. Haupttribüne hinten, vordere Gegentribüne ausgeblendet. Nur isolierte Bildprobe; Spielansicht und Vereinsdaten unverändert."
+logical_id = "f2ceb4a0-9695-45af-a763-6a3e17485023"
+content_hash = "sha256:9481e10b8569518ece1866ed5f739445a1704330cb4a07b3f33806952709ef5c"
+size = 379445
+mtime_ms = 1791629118911
+storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:6e4eaecc-e6c5-4f64-8de5-e8845034f33b/f2ceb4a0-9695-45af-a763-6a3e17485023/e97891ee-e62b-496a-9293-99fd86bd954f"
+storage_version_token = "1791629308753081"
+content_type = "image/png"
+
+[[outputs]]
+id = "7AwFEB_9mqjPV4pV8u3J-"
+uri = "file://generated-artifacts/stadium-main-stand-back-probe/elversberg_no_roof.png"
+type = "image"
+title = "Elversberg · Haupttribüne hinten · ohne Dach"
+description = "1880 × 940 Pixel. Haupttribüne hinten, vordere Gegentribüne ausgeblendet. Nur isolierte Bildprobe; Spielansicht und Vereinsdaten unverändert."
+logical_id = "53e99a88-9398-4d6e-88ee-7405767bcd95"
+content_hash = "sha256:56e927cf477395e1ca1b5775f56600228f427282d7f6567d41b772606493d70d"
+size = 488488
+mtime_ms = 1791629118911
+storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:6e4eaecc-e6c5-4f64-8de5-e8845034f33b/53e99a88-9398-4d6e-88ee-7405767bcd95/a5eb0c86-03e4-4921-afd3-735b55030edd"
+storage_version_token = "1791629309527987"
+content_type = "image/png"
