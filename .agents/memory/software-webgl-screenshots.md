@@ -45,3 +45,18 @@ Renderer prüfen. Falls nötig `/repl/tools/bin/chromium` mit
 `--use-gl=angle --use-angle=swiftshader --enable-unsafe-swiftshader` verwenden.
 Eine solche Karte nicht als erfolgreiche 3D-Aufnahme oder ohne weitere
 Diagnose als Produktdefekt behandeln.
+
+Für reine Bildabnahmen darf der Originalrenderer in einer flüchtigen,
+fest dimensionierten Aufnahmefläche laufen. Animations- und
+Größenbeobachtungszyklen dürfen dort eingefroren werden, ohne das Verhalten
+der Anwendung dauerhaft zu ändern.
+
+**Why:** Die normale BVB-Bildaufnahme hing; derselbe Originalrenderer lieferte
+mit eingefrorener Aufnahmefläche und lokal bereitgestellten Originalassets
+die vollständigen Ansichten. Welcher Teil den Hänger verursacht hatte, wurde
+nicht isoliert. Das ist kein Nachweis eines defekten Stadionmodells.
+
+**How to apply:** Aktuelle Daten, Originalmodule und die tatsächlichen
+Kamera-/Dach-/Lichtzustände verwenden. Aufnahmehilfen nur im temporären
+Browserkontext einsetzen. DOM-Hintergrundbilder gehören zum Tickerbild und
+müssen beim Canvas-Export positionsgetreu mit aufgenommen werden.

@@ -1913,12 +1913,68 @@ content_type = "image/png"
 id = "P_4ECcipVVZ7Em8Pv4iaZ"
 uri = "file://generated-artifacts/bvb-five-review/01-2d-editor.png"
 type = "image"
-title = "BVB · 1 von 5 · 2D-Editor"
-description = "Aktuelle, direkt aus dem 2D-Editor exportierte Stadionansicht. Die vier 3D-Aufnahmen sind noch durch den Aufnahme-/Exportfehler blockiert; die vollständige Abnahme steht aus."
+title = "BVB · 1/5 · 2D-Editor"
+description = "Aktueller Stadiongrundriss mit Kartenumfeld; direkt aus dem 2D-Editor exportiert."
 logical_id = "22b2e476-3143-42ea-9d48-e947aa067251"
 content_hash = "sha256:194f6f424c03e33a6f3cc51cd0f2f2060573cb890be2a9be761a046f81785370"
 size = 496398
 mtime_ms = 1791653135031
-storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:6e4eaecc-e6c5-4f64-8de5-e8845034f33b/22b2e476-3143-42ea-9d48-e947aa067251/d26fcdb2-7024-412e-a212-d512ec692951"
-storage_version_token = "1791653949585758"
+storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:6e4eaecc-e6c5-4f64-8de5-e8845034f33b/22b2e476-3143-42ea-9d48-e947aa067251/f95d36b7-4aa0-48a6-855a-d995e2092795"
+storage_version_token = "1791655250229865"
+content_type = "image/png"
+
+[[outputs]]
+id = "vgyguiDprJsYHmgtjQEsl"
+uri = "file://generated-artifacts/bvb-five-review/02-3d-editor.png"
+type = "image"
+title = "BVB · 2/5 · 3D-Editor"
+description = "Aktuelles BVB-Modell in der Außenansicht mit Kartenumfeld. Bestandsfassade teilweise als gekennzeichnete Rekonstruktion."
+logical_id = "96a9c969-e6a8-4455-b1a8-320716d7539e"
+content_hash = "sha256:040ecc81ffde1975013bcea5fdc7c0769308a30655388f1aea74811c14764cad"
+size = 387777
+mtime_ms = 1791655050615
+storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:6e4eaecc-e6c5-4f64-8de5-e8845034f33b/96a9c969-e6a8-4455-b1a8-320716d7539e/a5f3f6ad-2ddd-4785-a43f-6e6d29ace487"
+storage_version_token = "1791655251461665"
+content_type = "image/png"
+
+[[outputs]]
+id = "ssbEo8Ph1mgyhZNWw73JL"
+uri = "file://generated-artifacts/bvb-five-review/03-liveticker-roof.png"
+type = "image"
+title = "BVB · 3/5 · LiveTicker mit Dach"
+description = "Aktuelle BVB-Stadionstudie des LiveTickers: 3D-Modell vor dem gelieferten Tagesbild, feste Kamera."
+logical_id = "928307de-e8d7-49b0-b290-08084473caeb"
+content_hash = "sha256:1216d15baec4eab1a5ff5ca0d2f1fad8413937591da63ca985b99f5af22ddde1"
+size = 2442414
+mtime_ms = 1791655203279
+storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:6e4eaecc-e6c5-4f64-8de5-e8845034f33b/928307de-e8d7-49b0-b290-08084473caeb/528f1705-41fa-4c76-a154-56f4dfa61fcf"
+storage_version_token = "1791655252199671"
+content_type = "image/png"
+
+[[outputs]]
+id = "NekDrMcgesqY-31JM6oR5"
+uri = "file://generated-artifacts/bvb-five-review/04-liveticker-no-roof.png"
+type = "image"
+title = "BVB · 4/5 · LiveTicker ohne Dach"
+description = "Identische Tagesansicht und Kamera wie Bild 3; Dach und zugehörige Dachaufbauten ausgeblendet."
+logical_id = "724686ee-3252-44bb-b187-07b64714c3ac"
+content_hash = "sha256:07e1f54a050e4c77dbb6b3ebdbc2da4c0bcd34597b5ff894178e11bbe737bad9"
+size = 2507184
+mtime_ms = 1791655203291
+storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:6e4eaecc-e6c5-4f64-8de5-e8845034f33b/724686ee-3252-44bb-b187-07b64714c3ac/1927f91f-2537-4446-9036-a34863511be6"
+storage_version_token = "1791655252971832"
+content_type = "image/png"
+
+[[outputs]]
+id = "Fl0kI-JtBpbTd8GKx1EcB"
+uri = "file://generated-artifacts/bvb-five-review/05-liveticker-night.png"
+type = "image"
+title = "BVB · 5/5 · LiveTicker bei Nacht"
+description = "Dieselbe Kamera mit Dach, geliefertem Nachtbild und vorhandenem schematischem Lichtprofil. Keine vermessenen Leuchtenpositionen."
+logical_id = "bdea07d8-6bc7-42fe-adf3-69f3ddf05dd0"
+content_hash = "sha256:ed27986506a517e397e445c4b13610e5a0ace7f42f9a5dc9baba9e97f1b80f90"
+size = 1513550
+mtime_ms = 1791655203295
+storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:6e4eaecc-e6c5-4f64-8de5-e8845034f33b/bdea07d8-6bc7-42fe-adf3-69f3ddf05dd0/7987cdb8-2f41-4dde-842a-777d77a96748"
+storage_version_token = "1791655253682660"
 content_type = "image/png"
