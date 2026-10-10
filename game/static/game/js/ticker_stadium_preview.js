@@ -23,9 +23,10 @@ if (canvasHost && statusHost) {
   let cameraFrame = 0;
   let canonicalMode = false;
   let spatialDortmund = false;
+  let spatialUnity = false;
   const controlsEnabled = enabled => {
-    if (heightControl) heightControl.disabled = !enabled || canonicalMode || spatialDortmund;
-    if (heightReset) heightReset.disabled = !enabled || canonicalMode || spatialDortmund;
+    if (heightControl) heightControl.disabled = !enabled || canonicalMode || spatialDortmund || spatialUnity;
+    if (heightReset) heightReset.disabled = !enabled || canonicalMode || spatialDortmund || spatialUnity;
     if (roofControl) roofControl.disabled = !enabled;
     if (dayControl) dayControl.disabled = !enabled;
   };
@@ -39,7 +40,7 @@ if (canvasHost && statusHost) {
   const updateDay = () => {
     const day = dayControl?.checked ?? true;
     if (canonicalMode) sceneHandle?.update?.({day});
-    else if (spatialDortmund) sceneHandle?.update?.({day, floodlight: !day});
+    else if (spatialDortmund || spatialUnity) sceneHandle?.update?.({day, floodlight: !day});
     if (dayValue) dayValue.textContent = day ? 'Tageslicht' : 'Nacht';
   };
   dayControl?.addEventListener('change', updateDay);
@@ -101,6 +102,22 @@ if (canvasHost && statusHost) {
     try {
       const config = readJSON(document.getElementById('ticker-stadium-environment')?.textContent, {});
       spatialDortmund = config.renderer === 'dortmund-spatial';
+      spatialUnity = config.renderer === 'unity-spatial';
+      if(spatialUnity){
+        if(!config.sceneUrl) throw new Error('Original-Stadion-Scene-Adresse fehlt.');
+        const response=await fetch(config.sceneUrl,{credentials:'same-origin'});
+        if(!response.ok) throw new Error('Original-Stadion-Scene konnte nicht geladen werden.');
+        const runtime=(await response.json()).presentation;
+        if(runtime?.clubId!==config.clubId||runtime?.renderer!=='unity-spatial')
+          throw new Error('Stadion-Scene gehört nicht zum gewählten Verein.');
+        const {mountUnityStadium}=await import(new URL('../../stadium_editor/unity_stadium_scene.js',import.meta.url));
+        const mounted=await mountUnityStadium({element:canvasHost,presentation:runtime,tickerPreview:true});
+        if(stopped||thisAttempt!==attempt){mounted.dispose();return;}
+        sceneHandle=mounted;controlsEnabled(true);
+        updateRoof();updateDay();
+        setState('ready',`${config.stadium} · Originalmodell und eigener Ortsplan · Gemeinsame Feldkamera`);
+        return;
+      }
       if (spatialDortmund && !config.sceneUrl)
         throw new Error('Die gemeinsame BVB-Scene-Adresse fehlt.');
       if (config.renderer === 'canonical' && !config.sceneUrl) {

@@ -1,4 +1,5 @@
 from django.urls import path
+from .model_assets import model_asset
 
 from .views import (
     stadium_editor,
@@ -15,6 +16,9 @@ from .views import (
 
 
 urlpatterns = [
+    path('stadion/model-assets/<int:fmi_id>/<str:version>/<str:name>',
+         model_asset,
+         name='stadium_model_asset'),
     path('management/stadion/editor/', stadium_editor, name='stadium_editor'),
     path('management/stadion/editor/geometry/', stadium_editor_geometry, name='stadium_editor_geometry'),
     path('management/stadion/editor/design/', stadium_editor_design, name='stadium_editor_design'),

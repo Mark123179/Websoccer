@@ -85,3 +85,19 @@ die Ursache der vorherigen Aufnahmehänger wurde nicht isoliert.
 **How to apply:** Keine neue Prozent-Fit-Kamera als Ersatz verwenden.
 Bildprüfung und mathematischer Kameravergleich ergänzen sich; keiner ersetzt
 den anderen.
+
+Bei den Editor-Aufnahmen können sowohl Element-Stabilitätsprüfungen als auch
+die Browser-Compositor-Aufnahme hängen. Die tatsächlichen Canvas-Lagen lassen
+sich in der isolierten Aufnahmefläche direkt zusammensetzen und exportieren.
+Für diese Kombination hat sich zusätzlich `--disable-accelerated-2d-canvas`
+bewährt; der Anteil der einzelnen Maßnahmen am Erfolg wurde nicht isoliert.
+
+**Why:** Die Borussia-Park-Aufnahme lieferte erst mit direktem Canvas-Export
+und deaktivierter 2D-Beschleunigung die vollständige, visuell geprüfte Reihe.
+Vorherige erfolgreiche DOM-/API-Prüfungen hatten noch keine fertigen Bilder
+belegt.
+
+**How to apply:** Originalmodule und aktuelle Daten verwenden; erforderliche
+Editor-Hilfsskripte mitnehmen. Aufnahmeflächen dürfen von skalierten
+Shell-Vorfahren gelöst werden. Diese Hilfen bleiben im Aufnahmebrowser,
+nicht im Produkt; Kamera-/Lichtbelege müssen aus demselben Lauf stammen.

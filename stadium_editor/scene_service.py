@@ -25,4 +25,7 @@ def current_live_scene(stadium):
     if stadium.club.fm_inside_id == 907:
         from .dortmund_runtime import runtime_presentation
         scene["presentation"] = runtime_presentation(stadium, geometry, payload)
+    elif stadium.club.fm_inside_id == 908:
+        from .gladbach_runtime import gladbach_presentation
+        scene["presentation"] = gladbach_presentation(stadium, geometry, payload)
     return scene

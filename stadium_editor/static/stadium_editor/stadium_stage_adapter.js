@@ -357,6 +357,17 @@ export async function mountStadiumStage({
   preset = null, roofVisible = true, surroundings = null,
   coordinateRotation = null, onReady,
 } = {}) {
+  if(scene?.presentation?.renderer==='unity-spatial') {
+    const url=new URL('./unity_stadium_scene.js',import.meta.url);
+    url.search=new URL(import.meta.url).search;
+    const {mountUnityStadium}=await import(url.href);
+    const mounted=await mountUnityStadium({
+      element,presentation:scene.presentation,tickerPreview:camera==='match',
+    });
+    await mounted.update({camera,day,floodlight,roofVisible,exposure});
+    onReady?.(mounted);
+    return mounted;
+  }
   let fallbackRenderer = null;
   let stage = null;
   let resizeTimer = 0;

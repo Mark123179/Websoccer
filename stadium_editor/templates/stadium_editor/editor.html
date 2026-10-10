@@ -6,7 +6,7 @@
 {% block body_class %}stadium-editor-page{% endblock %}
 
 {% block extra_css %}
-{% if is_dortmund_editor %}<link rel="stylesheet" href="{% static 'stadium_editor/dortmund_editor.css' %}?v=12">{% endif %}
+{% if is_dortmund_editor %}<link rel="stylesheet" href="{% static 'stadium_editor/dortmund_editor.css' %}?v=14">{% endif %}
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;700&family=IBM+Plex+Sans:wght@400;500;600;700&family=Oswald:wght@400;500;600&family=Cinzel:wght@600&family=Anton&family=Bebas+Neue&family=Archivo+Black&family=Germania+One&family=Permanent+Marker&display=swap" rel="stylesheet">
 <style>
@@ -407,11 +407,12 @@ window.STADIUM_EDITOR = {
   csrfToken: "{{ csrf_token }}",
   maxPreviewCapacity: {{ preview_capacity_limit }},
   isAdmin: {{ is_editor_admin|yesno:'true,false' }},
-  dortmundScene: {{ is_dortmund_editor|yesno:'true,false' }}
+  dortmundScene: {{ is_dortmund_editor|yesno:'true,false' }},
+  unityScene: {{ is_unity_editor|yesno:'true,false' }}
 };
 </script>
 <script src="{% static 'stadium_editor/expansion_geometry.js' %}?v=35"></script>
 <script src="{% static 'stadium_editor/elversberg_canopies.js' %}?v=1"></script>
 <script src="{% static 'stadium_editor/editor_viewport.js' %}?v=1"></script>
-<script src="{% static 'stadium_editor/editor.js' %}?v=60"></script>
+<script src="{% static 'stadium_editor/editor.js' %}?v=62"></script>
 {% endblock %}

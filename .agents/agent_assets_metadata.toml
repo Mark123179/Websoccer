@@ -2062,3 +2062,73 @@ mtime_ms = 1791659824554
 storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:6e4eaecc-e6c5-4f64-8de5-e8845034f33b/8121172b-c2a0-4337-ac41-d6542d53bfe2/126990a4-8165-45ad-b092-b73ac6553a78"
 storage_version_token = "1791659825860654"
 content_type = "text/html"
+
+[[outputs]]
+id = "Jc6SCTLUJarYZFEqYV2pK"
+uri = "file://generated-artifacts/gladbach-review/01-2d-editor.png"
+type = "image"
+title = "Borussia-Park · 2D-Editor"
+description = "Borussia-Park-Blaupause mit eigenem Ortsplan."
+logical_id = "bf871ba4-ff30-4bf6-a14f-0a8ea06ef447"
+content_hash = "sha256:3184c8e57dbd70f5d5966c2af69bf7d17a7a3ef06b5abf5bd88addb67665fc50"
+size = 385878
+mtime_ms = 1791669118584
+storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:6e4eaecc-e6c5-4f64-8de5-e8845034f33b/bf871ba4-ff30-4bf6-a14f-0a8ea06ef447/8daebbb7-e91b-4ddc-adac-59606655cb0b"
+storage_version_token = "1791669755863853"
+content_type = "image/png"
+
+[[outputs]]
+id = "TTjNMkmTUHKtlVnbM1hGd"
+uri = "file://generated-artifacts/gladbach-review/02-3d-editor.png"
+type = "image"
+title = "Borussia-Park · 3D-Editor"
+description = "Eigenes Originalmodell mit zugeordnetem Gladbacher Ortsplan."
+logical_id = "22d6f944-446d-4e2e-9572-8b9762e0e713"
+content_hash = "sha256:e012dd0039402c7bdf095a8c718e29bee185d72aba75579adf833593deaf4df1"
+size = 488363
+mtime_ms = 1791669142460
+storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:6e4eaecc-e6c5-4f64-8de5-e8845034f33b/22d6f944-446d-4e2e-9572-8b9762e0e713/d16ef73c-78c0-4af7-8d90-96c7b5c2fe31"
+storage_version_token = "1791669757152836"
+content_type = "image/png"
+
+[[outputs]]
+id = "31ezfZNijySJ8pUS9eEow"
+uri = "file://generated-artifacts/gladbach-review/03-liveticker-roof.png"
+type = "image"
+title = "Borussia-Park · Ticker mit Dach"
+description = "Tagesansicht mit der exakt übernommenen, freigegebenen Feldkamera."
+logical_id = "6442095f-46e7-4549-8ef0-279d451ae2b3"
+content_hash = "sha256:f2b763ea3b4d6eb636d4e782760fc695922b7dd84a643e7b2a641805adedd7ef"
+size = 772444
+mtime_ms = 1791669156008
+storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:6e4eaecc-e6c5-4f64-8de5-e8845034f33b/6442095f-46e7-4549-8ef0-279d451ae2b3/dfcd0a4c-4fe3-4907-9e15-dc17f9ce77f1"
+storage_version_token = "1791669758515261"
+content_type = "image/png"
+
+[[outputs]]
+id = "i3F-_cUUYtTiszN-cp9Bd"
+uri = "file://generated-artifacts/gladbach-review/04-liveticker-no-roof.png"
+type = "image"
+title = "Borussia-Park · Ticker ohne Dach"
+description = "Identische Feldkamera bei ausgeschalteter Dachgeometrie."
+logical_id = "18ad2148-b151-421c-b3c6-c32caf5ab381"
+content_hash = "sha256:1fda9f07314dca40080f367aed09644bc6c437f7fac2beef744bffdb7bba1b43"
+size = 787546
+mtime_ms = 1791669159220
+storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:6e4eaecc-e6c5-4f64-8de5-e8845034f33b/18ad2148-b151-421c-b3c6-c32caf5ab381/02e88079-1232-4af1-b50f-fe77ba3e6c2b"
+storage_version_token = "1791669759514165"
+content_type = "image/png"
+
+[[outputs]]
+id = "Z9slSCJtVbJq_7Oa7cUef"
+uri = "file://generated-artifacts/gladbach-review/05-liveticker-night.png"
+type = "image"
+title = "Borussia-Park · Nacht mit Dach und Flutlicht"
+description = "Nachtansicht mit zwölf Lichtgruppen aus den nachgewiesenen Modell-Leuchten."
+logical_id = "fed07c7a-9162-44af-83c9-e761ca7aa795"
+content_hash = "sha256:4714d45c4bd88997aa278976a854c929d79534dcc69222c5fe434532287ad30d"
+size = 813037
+mtime_ms = 1791669162144
+storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:6e4eaecc-e6c5-4f64-8de5-e8845034f33b/fed07c7a-9162-44af-83c9-e761ca7aa795/069e2d13-dbff-4dc2-938f-ec06af9a7715"
+storage_version_token = "1791669760616446"
+content_type = "image/png"

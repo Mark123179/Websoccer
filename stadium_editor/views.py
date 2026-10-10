@@ -70,6 +70,7 @@ def stadium_editor(request):
         'design': design.design if design else {},
         'is_editor_admin': bool(request.user.is_staff),
         'is_dortmund_editor': stadium.club.fm_inside_id == 907,
+        'is_unity_editor': stadium.club.fm_inside_id == 908,
         'preview_capacity_limit': max_kapazitaet() if stadium.club.fm_inside_id == 907 else 150000,
         'pending_expansions': pending_expansions,
         'completed_expansion_count': StadiumExpansion.objects.filter(

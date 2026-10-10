@@ -1278,6 +1278,7 @@ function scheduleStageDesignUpdate(){
       if(!roofOn) scene.roof = {mode:'explicit', segments:[]};
       stageThree.update({
         scene,
+        roofVisible: roofOn,
         camera: document.getElementById('stageCamera')?.value || 'orbit',
         day: Boolean(document.getElementById('stageDay')?.checked),
         floodlight: Boolean(document.getElementById('stageFloodlight')?.checked),
@@ -1316,6 +1317,25 @@ async function ensureThreeStage(){
   if(!host) return;
   stageAdapter = {kind:'loading'};
   try{
+    if(EDITOR.unityScene){
+      const {mountUnityStadium} = await import(editorModuleUrl('./unity_stadium_scene.js'));
+      const response = await fetch(EDITOR.liveSceneUrl,{credentials:'same-origin'});
+      if(!response.ok) throw new Error('Gemeinsame Original-Stadion-Scene konnte nicht geladen werden.');
+      stageScene=await response.json();
+      const runtime=stageScene.presentation;
+      const mounted=await mountUnityStadium({element:host,presentation:runtime,
+        onOrbitChange:orbit=>{
+          yaw3d=orbit.azimuth;tilt3d=90-orbit.elevation;
+          document.getElementById('yawSlider').value=yaw3d;
+          document.getElementById('tiltSlider').value=tilt3d;
+        }});
+      stageAdapter=mounted;stageThree=mounted;
+      activateThreeStage();
+      mounted.update({day:Boolean(document.getElementById('stageDay')?.checked),
+        floodlight:Boolean(document.getElementById('stageFloodlight')?.checked),
+        roofVisible:roofOn});
+      return;
+    }
     if(isDortmundScene){
       const {mountDortmundScene} = await import(editorModuleUrl('./dortmund_editor_scene.js'));
       const response = await fetch(EDITOR.liveSceneUrl, {credentials:'same-origin'});
