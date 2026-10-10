@@ -1572,3 +1572,45 @@ mtime_ms = 1791629997764
 storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:6e4eaecc-e6c5-4f64-8de5-e8845034f33b/73cf678c-80bc-44f3-bbb7-cc8fe324942f/2d2aa067-0965-4744-bfa6-faf6bf734863"
 storage_version_token = "1791630145246610"
 content_type = "image/jpeg"
+
+[[outputs]]
+id = "tUfiuPT8mDQZRsDZznuqi"
+uri = "file://generated-artifacts/stadium-roof-shadow-probe/roof-shadow-controlled-comparison.png"
+type = "image"
+title = "Dachabschattung – kontrollierter Vergleich"
+description = "Unveränderte Renderausschnitte: oben Dachschatten an, unten nur Dachschatten aus. Dach bleibt in beiden Bildern sichtbar."
+logical_id = "9d26f120-eb5a-42fd-ac99-550c7c7785b3"
+content_hash = "sha256:7cf3e5f8a55985fd02dfc85167d450950307f67cdaf61917b4943c00111ed80b"
+size = 515355
+mtime_ms = 1791630277582
+storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:6e4eaecc-e6c5-4f64-8de5-e8845034f33b/9d26f120-eb5a-42fd-ac99-550c7c7785b3/ac9574c5-729d-44b8-90bd-39a8ec0118a8"
+storage_version_token = "1791630383340648"
+content_type = "image/png"
+
+[[outputs]]
+id = "X00YJz2AlVCZzLyH8VHyN"
+uri = "file://generated-artifacts/stadium-roof-shadow-probe/dortmund_roof_night_shadowed.png"
+type = "image"
+title = "Dortmund nachts – Originaldach mit Schatten"
+description = "Vollständiger 1880×940-Render mit sechs deklarierten realen Lichtquellen und unveränderter 75%-Kamera."
+logical_id = "a67afbd6-b88a-4a93-b5c9-4f8acfc8c141"
+content_hash = "sha256:e8915fd2edb3bf16e524b3686b96b74418925d59bba9c6ac4048eb248f7b5b65"
+size = 1518140
+mtime_ms = 1791630156822
+storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:6e4eaecc-e6c5-4f64-8de5-e8845034f33b/a67afbd6-b88a-4a93-b5c9-4f8acfc8c141/ee494ed1-af2d-4ddf-b673-7c09f7428e90"
+storage_version_token = "1791630383823547"
+content_type = "image/png"
+
+[[outputs]]
+id = "neYLFLJaf8VgrZQJ6tLwu"
+uri = "file://generated-artifacts/stadium-roof-shadow-probe/dortmund_no_roof_night_shadowed.png"
+type = "image"
+title = "Dortmund nachts – Dach ausgeblendet"
+description = "Identische Kamera und Lichtquellen; alle 33 registrierten Dachmeshes ausgeblendet, übrige Schatten aktiv."
+logical_id = "e2195c97-0401-400e-bd63-bac3437cb938"
+content_hash = "sha256:e9c51b417a6f5ed7a1818c0635802605f643b6a2f28cdf986bc1cd6f9b241764"
+size = 1878606
+mtime_ms = 1791630156830
+storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:6e4eaecc-e6c5-4f64-8de5-e8845034f33b/e2195c97-0401-400e-bd63-bac3437cb938/80a056d4-36a6-4825-9dbe-9c30164c826b"
+storage_version_token = "1791630384311994"
+content_type = "image/png"

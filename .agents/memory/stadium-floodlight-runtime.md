@@ -51,3 +51,15 @@ das Spielfeld trotz echter Quellen unlesbar machen.
 Positionen, Winkel und Richtungen erhalten; Tag/Nacht und Flutlicht separat
 prüfen. Selbstleuchtende Editor-Materialien nicht ungeprüft in eine
 quellgebundene Nachtstudie übernehmen.
+
+Dachabschattung benötigt einen Vergleich mit weiterhin sichtbarem Dach,
+bei dem ausschließlich dessen Schattenwurf abgeschaltet wird.
+
+**Why:** Dach-an/Dach-aus verändert zugleich die Verdeckung gegenüber der
+Kamera. Heller sichtbare Tribünenflächen nach dem Entfernen des Dachs allein
+beweisen deshalb keine Änderung der Beleuchtung.
+
+**How to apply:** Bei isolierten Schattenproben den zusätzlichen
+Nicht-Schattenwerfer-Zustand mit identischer Kamera, Leuchtenauswahl,
+Intensität und übrigen Schatten verwenden. Geometrische Bildverdeckung,
+Raster-Schatten und photometrische Aussagen getrennt behandeln.

@@ -1,6 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="DFB-Pokal">
-  <rect width="64" height="64" rx="12" fill="#f7fbff"/>
-  <path d="M15 12h34l-5 30c-1 7-6 12-12 12s-11-5-12-12z" fill="#0f8f52"/>
-  <path d="M21 18h22l-3 23c-1 5-4 8-8 8s-7-3-8-8z" fill="#ffd35a"/>
-  <path d="M24 26h16M25 34h14" stroke="#082015" stroke-width="3" stroke-linecap="round"/>
-</svg>

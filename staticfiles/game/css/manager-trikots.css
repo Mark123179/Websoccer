@@ -1,7 +1,0 @@
-/* ===== BLOCK 1 — CSS → game/static/game/css/manager-trikots.css ===== */
-.kit-rack { position: relative; width: 1352px; height: 574px; border: 1px solid rgba(44,231,255,.18); border-radius: 8px; overflow: hidden; }
-#kit-stage { position: relative; width: 1352px; height: 574px; background: #07090b url('/static/game/images/kits/rack-room.png') 0 0/1352px 574px no-repeat; cursor: grab; touch-action: pan-y; user-select: none; }
-#kit-stage.drag { cursor: grabbing; }
-#kit-stage canvas { position: absolute; inset: 0; display: block; }
-#kit-bar { position: absolute; left: 0; top: 144px; width: 1352px; height: 16px; pointer-events: none; z-index: 2; }
-#kit-load { position: absolute; left: 50%; top: 290px; transform: translateX(-50%); font: 800 11px Inter, system-ui, sans-serif; letter-spacing: .8px; color: rgba(244,251,255,.5); }

@@ -201,3 +201,94 @@ keine Schattenberechnung (`castShadow=false`); Dach-an belegt daher nicht
 die photometrische Abschattung durch das Dach. Die Lichtausrichtung und
 Dach-aus-Parität sind davon getrennte geometrische Prüfungen. Himmel und
 Umfeld bleiben neutrale Studienkulissen, nicht fertige Ortsansichten.
+
+
+## Gesonderte Originaldach-Schattenprobe
+
+Die oben beschriebene Standard-Nachtprobe bleibt schattenfrei. Nur der
+explizite Aufruf
+
+```sh
+node scripts/export_stadium_frame_probe.mjs --middle --main-stand-back --roof-shadows
+python scripts/analyze_stadium_roof_shadows.py
+```
+
+aktiviert die separate Instrumentierung aus `study_shadows.js`. Ausgabe:
+`generated-artifacts/stadium-roof-shadow-probe/`; frühere Proben werden nicht
+überschrieben. Produktive Szenen, Kameras, Vereinsdaten, Originalgeometrie,
+Leuchtenauswahl und Intensitätskalibrierung werden nicht geändert.
+
+
+### Grenzen
+
+Elversberg besitzt weiterhin keine bestätigten realen Leuchten: Im Protokoll
+steht ausdrücklich, dass dafür kein Abschattungstest möglich ist. Die
+separate Nachlieferungsaufgabe bleibt nötig; Dunkelheit ohne Quellen ist
+kein Nachweis eines Dachschattens.
+
+Dies ist eine visuelle Raster-Schattenprobe des vorhandenen Originalmodells,
+keine photometrische Messung, Nutzerabnahme oder Freigabe zur Integration.
+Indirektes Licht, Mehrfachreflexionen und reale Lux-Verteilungen werden
+nicht berechnet. Schattenränder können durch Kartenauflösung, Filter und
+Bias beeinflusst sein. Chromium ANGLE/SwiftShader ist Software-WebGL:
+Die gewählte Schattenqualität, erfolgreiche Exporte und Renderdauer
+sind **kein FPS-/Hardwareleistungsnachweis**.
+
+### Sichtbares Ergebnis
+
+Der Vergleich mit unverändert sichtbarem Dach zeigt zusätzliche Abschattung
+auf der hinteren Tribüne, insbesondere an Sitzflächen und den gelben
+vertikalen Sitzstreifen. Das Spielfeld bleibt in dieser Leuchtenausrichtung
+weitgehend direkt beleuchtet; ein großflächiger Dachschatten auf dem Rasen
+ist in dieser Probe **nicht** erkennbar. Dach-aus legt vorher verdeckte
+Tribünenflächen frei; diesen Bildunterschied allein nicht als Lichtgewinn
+interpretieren.
+
+Im Vollbild beträgt die mittlere absolute Differenz zwischen Dachschatten
+an/aus rund 2,43/2,57/2,22 je RGB-Kanal. Innerhalb des projizierten
+Spielfeldpolygons liegt sie nur bei 0,032/0,079/0,044; die maximale
+Kanaldifferenz dort beträgt 3 von 255. Diese Werte beziehen sich auf
+8-bit-sRGB nach ACES, nicht auf Lux oder die reale Beleuchtungsleistung.
+Das Bildpolygon ist außerdem keine separate Oberfläche-ID-Messung.
+Die exakten Werte stehen in `pixel-comparison.json`.
+`roof-shadow-controlled-comparison.png` zeigt zwei unveränderte Ausschnitte
+der hinteren Tribüne, jeweils mit außerhalb des Renderbilds gesetzter
+Beschriftung. Die fünf vollständigen Originalrender bleiben separat erhalten.
+
+
+### Kontrollaufbau
+
+Fünf echte 1880×940-Render, immer Dortmund mit denselben sechs realen
+deklarierten Quellen nach der Halbwendung:
+
+| Bildsuffix | Originaldach | Schatten |
+| --- | --- | --- |
+| `roof_night_unshadowed` | sichtbar | aus, bisherige Nachtbasis |
+| `roof_night_shadowed` | sichtbar | an, inklusive Originaldach |
+| `roof_night_roof_noncasting` | sichtbar | an, nur Dach wirft keinen Schatten |
+| `no_roof_night_unshadowed` | alle 33 registrierten Meshes ausgeblendet | aus |
+| `no_roof_night_shadowed` | alle 33 registrierten Meshes ausgeblendet | an |
+
+Der sichtbare, nicht schattenwerfende Dachzustand ist der entscheidende
+Kontrollvergleich: Das Entfernen des Dachs verändert auch die Verdeckung
+gegenüber der Kamera. Dagegen verändert der Kontrollzustand ausschließlich
+die Schattenwerfer-Eigenschaft der registrierten Originaldachbaugruppe
+(Dachhaut, Tragwerk und registrierte Anbauten), nicht deren Sichtbarkeit.
+Die übrigen Schatten bleiben aktiv. Es entstehen keine Ersatzdachflächen
+oder zusätzlichen Lichtorte. Lichtquellen bleiben auch bei Dach-aus an
+ihren nachgewiesenen Montagepunkten, unabhängig von der Mesh-Sichtbarkeit.
+
+Einstellungen: PCFSoftShadowMap, sechs Karten mit jeweils 2048×2048,
+Near 0,25 m, Far entsprechend der deklarierten Leuchtenreichweite,
+Bias −0,00005, Normal-Bias 0,02 m. Meshes empfangen und werfen Schatten,
+ursprünglich doppelseitige Materialien werfen sie doppelseitig.
+`clipShadows=true` berücksichtigt die vorhandenen Schnittebenen im
+Schattenpass: Die ausgeblendete vordere Tribüne wird nicht zum unsichtbaren
+Schattenwerfer. Die normalen Studienmaterialien und der Schattenzustand
+werden bei Freigabe der Probe wiederhergestellt.
+
+Das Renderprotokoll prüft berechnete Schattenkarten, Licht-/Dachzustände,
+Quellenausrichtung und exakte Parität von Kamera, Projektion und vier
+Feldecken zur bestätigten 75%-Basis. Der Pixelvergleich bestätigt zusätzlich
+den SHA-256 des tatsächlichen Originalgeometrie-Binaries gegen den
+Leuchtennachweis.

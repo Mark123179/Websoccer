@@ -4,8 +4,12 @@ import {chromium} from 'playwright-core';
 
 const mode=process.argv.includes('--middle')?'middle':'full';
 const mainStandBack=process.argv.includes('--main-stand-back');
+const shadowProbe=process.argv.includes('--roof-shadows');
+if(shadowProbe && (!mainStandBack || mode!=='middle'))
+  throw new Error('Roof shadows require --middle --main-stand-back.');
 if(mainStandBack && mode!=='middle')throw new Error('Main-stand-back requires the approved --middle camera.');
-const output=mainStandBack?'generated-artifacts/stadium-main-stand-back-probe':
+const output=shadowProbe?'generated-artifacts/stadium-roof-shadow-probe':
+  mainStandBack?'generated-artifacts/stadium-main-stand-back-probe':
   mode==='middle'?'generated-artifacts/stadium-middle-probe':'generated-artifacts/stadium-frame-probe';
 const approved=mainStandBack?JSON.parse(fs.readFileSync(
   'generated-artifacts/stadium-middle-probe/verification.json','utf8')).states[0]:null;
@@ -26,11 +30,13 @@ try {
   page.on('console',message=>{if(message.type()==='error')errors.push(message.text());});
   await page.goto(`${base}/static/game/css/stadium_study.css?v=3`);
   await page.setContent(`<script type="importmap">{"imports":{"three":"${base}/static/stadium_editor/stage/vendor/three.module.js","three/addons/":"${base}/static/stadium_editor/stage/vendor/addons/"}}</script><div id="host" style="width:1880px;height:940px;position:relative"></div>`);
-  const result=await page.evaluate(async ({base,source,mode,mainStandBack,approved,fixtureData})=>{
+  const result=await page.evaluate(async ({base,source,mode,mainStandBack,approved,fixtureData,shadowProbe})=>{
     const THREE=await import('three');
     const {mountStudyModel}=await import(`${base}/static/stadium_editor/study_models.js?v=night-frame-probe`);
     const {applyStudyCamera,projectStudy,studyPreset}=await import(`${base}/static/stadium_editor/study_camera.js?v=1`);
     const {createStudyLighting}=await import(`${base}/static/stadium_editor/study_lighting.js?v=night-frame-probe`);
+    const {createStudyShadowProbe}=shadowProbe?
+      await import(`${base}/static/stadium_editor/study_shadows.js?v=1`):{};
     const width=1880,height=940,margin=32;
     const original=studyPreset('cutaway');
     const corners=[[-52.5,-34],[52.5,-34],[52.5,34],[-52.5,34]];
@@ -139,7 +145,8 @@ try {
       }
       return {minX,maxX,minY,maxY,count:points.length/3};
     }
-    for(const club of ['dortmund','elversberg']){
+    // Elversberg has no declared lights: do not invent an occlusion result.
+    for(const club of shadowProbe?['dortmund']:['dortmund','elversberg']){
       const viewSource=structuredClone(source);
       if(mainStandBack && club==='elversberg'){
         // Counter-rotate the input to the unchanged study adapter. Its normal
@@ -165,6 +172,7 @@ try {
         lighting.setState(false,false,false);
       }
       const afterTurn=mainStandBack&&club==='dortmund'?lighting.inspectAlignment():[];
+      const shadows=shadowProbe?createStudyShadowProbe(handle,lighting):null;
       afterTurn.forEach((light,i)=>{
         for(const key of ['position','target','direction']){
           const old=beforeTurn[i][key],now=light[key];
@@ -226,7 +234,12 @@ try {
       stage.camera.projectionMatrixInverse.copy(stage.camera.projectionMatrix).invert();
       for(const roof of [true,false]){
         handle.setRoof(roof);
-        const variants=mainStandBack?[
+        const variants=shadowProbe?[
+          {name:'night_unshadowed',night:true,floodlight:true,diagnostics:false,shadows:false},
+          {name:'night_shadowed',night:true,floodlight:true,diagnostics:false,shadows:true},
+          ...(roof?[{name:'night_roof_noncasting',night:true,floodlight:true,
+            diagnostics:false,shadows:true,roofCasts:false}]:[]),
+        ]:mainStandBack?[
           {name:'day',night:false,floodlight:false,diagnostics:false},
           {name:'night',night:true,floodlight:true,diagnostics:false},
           {name:'night_off',night:true,floodlight:false,diagnostics:false},
@@ -234,7 +247,13 @@ try {
         ]:[{name:'day',night:false,floodlight:false,diagnostics:false}];
         for(const variant of variants){
           lighting.setState(variant.night,variant.diagnostics,variant.floodlight);
+          shadows?.setState(variant.shadows,variant.roofCasts!==false);
           stage.render();
+          const shadowState=shadows?.inspect()||null;
+          if(shadowState && (shadowState.sources.some(light=>
+            light.casts!==variant.shadows || (variant.shadows&&!light.mapRendered)) ||
+            shadowState.visibleRoofCasters!==(roof&&variant.roofCasts!==false?handle.roofMeshes.length:0)))
+            throw new Error('Shadow/roof caster state or rendered maps mismatch.');
           const alignment=mainStandBack&&club==='dortmund'?lighting.inspectAlignment():[];
           if(JSON.stringify(alignment)!==JSON.stringify(afterTurn))
             throw new Error('Roof/night/floodlight switch moved a declared source.');
@@ -268,10 +287,11 @@ try {
             projection:stage.camera.projectionMatrix.toArray(),pose:stage.camera.matrixWorldInverse.toArray(),
             visibleRoofMeshes:handle.roofMeshes.filter(mesh=>mesh.visible).length,
             silhouette,
+            shadowState,
             png:handle.canvas.toDataURL('image/png')});
         }
       }
-      lighting.dispose();handle.dispose();
+      shadows?.dispose();lighting.dispose();handle.dispose();
     }
     if(states.some(state=>JSON.stringify(state.corners)!==JSON.stringify(states[0].corners) ||
       JSON.stringify(state.projection)!==JSON.stringify(states[0].projection) ||
@@ -282,9 +302,12 @@ try {
     return {fitted,states,renderBackend:'Chromium ANGLE/SwiftShader (software WebGL)',
       sourceEvidence:fixtureData?{source:fixtureData.source,sourceSha256:fixtureData.sourceSha256,
         geometrySha256:fixtureData.geometrySha256}:null,
+      missingEvidence:shadowProbe?{elversberg:
+        'Keine bestätigten realen Leuchten; kein Elversberger Abschattungstest möglich.'}:null,
       limitations:['Keine Nutzerabnahme','Kein FPS-/Hardware-Nachweis',
-        'Keine Schattenberechnung; Dach-an ist kein photometrischer Abschattungstest']};
-   },{base,source,mode,mainStandBack,approved,fixtureData});
+        shadowProbe?'Visuelle Raster-Schattenprobe, keine Lux-/photometrische Messung':
+          'Keine Schattenberechnung; Dach-an ist kein photometrischer Abschattungstest']};
+   },{base,source,mode,mainStandBack,approved,fixtureData,shadowProbe});
   if(errors.length)throw new Error(errors.join('\n'));
   for(const state of result.states){
     fs.writeFileSync(`${output}/${state.club}_${state.roof?'roof':'no_roof'}${state.variant==='day'?'':`_${state.variant}`}.png`,

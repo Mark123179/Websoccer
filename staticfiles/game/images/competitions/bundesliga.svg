@@ -1,6 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Bundesliga">
-  <rect width="64" height="64" rx="12" fill="#f7fbff"/>
-  <path d="M12 9h40v46H12z" rx="6" fill="#e30613"/>
-  <path d="M26 16c4 1 9 5 12 10l7-2 3 6-8 3c-1 6-4 11-10 15l-6-4c4-3 7-6 8-10l-8-2-8 5-4-6 9-6c-1-4 0-7 5-9z" fill="#fff"/>
-  <circle cx="44" cy="43" r="5" fill="#fff"/>
-</svg>
