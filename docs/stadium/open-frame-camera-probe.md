@@ -48,7 +48,7 @@ Kamera-/Modellproben, keine fertigen geografischen Hintergrundbilder.
 Ausgabe und Prüfprotokoll liegen unter dem ignorierten Verzeichnis
 `generated-artifacts/stadium-frame-probe/`.
 
-## Näherer Mittelweg (noch nicht visuell abgenommen)
+## Näherer Mittelweg (als gemeinsame Kamerabasis bestätigt)
 
 Nach der Gesamtansicht hat der Nutzer das größere Feld priorisiert und einen
 Mittelweg angefragt. `node scripts/export_stadium_frame_probe.mjs --middle`
@@ -61,6 +61,10 @@ bisherigen Bildhöhe. Damit haben Feldbreite und Feldhöhe exakt 75 % der
 ursprünglichen Nahansicht. Äußere Dortmunder Stadionränder und obere Teile
 der Dachaufbauten sind bewusst angeschnitten; eine vollständige
 Stadion-Einpassung wird hier nicht behauptet.
+
+Der Nutzer hat diese Ansicht mit „Diesen Mittelweg beibehalten“ und
+„Beibehalten“ als gemeinsame Kamerabasis ausgewählt. Fertige Umfelder und
+eine Integration in die Anwendung sind damit nicht abgenommen.
 
 Alle vier Feldeckpunkte müssen weiterhin vollständig im Bild liegen.
 Die identische Projektion und Pose aller Vereine/Dachzustände sowie der

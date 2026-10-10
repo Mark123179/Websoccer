@@ -67,6 +67,15 @@ Die vollständige Darstellung aller Dachspitzen nicht mehr über die
 Feldlesbarkeit stellen. Der offene Rahmen und die gemeinsame Projektion
 für alle Vereine und Dachzustände bleiben verbindlich.
 
+Der Nutzer hat den gezeigten 75%-Mittelweg als gemeinsame Kamerabasis
+bestätigt: „Diesen Mittelweg beibehalten“ / „Beibehalten“.
+
+**Why:** Das ist die ausdrückliche visuelle Auswahl nach der Gesamtansichtsprobe.
+
+**How to apply:** Umfeldvorlagen auf dieser ausgewählten Feldprojektion
+aufbauen und die Kamera nicht erneut ungefragt verändern. Die Auswahl
+der Kamera ist keine Abnahme fertiger Umfelder oder Freigabe des produktiven Einbaus.
+
 ## Bisheriger Bildansatz
 
 „Wir nehmen unser Stadionmodell und das Spielfeld wie gehabt und das Umfeld machen wir als zwei Bilder Tag & Nacht je Verein.“ „Ich werde die Bilder liefern.“
