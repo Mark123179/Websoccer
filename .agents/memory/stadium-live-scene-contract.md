@@ -85,6 +85,16 @@ Ansichtseinstellung behandeln, nicht durch Änderungen an Ortsbestand oder
 Stadiongeometrie lösen. Generierte Masten nicht als nachgewiesene
 Modellleuchten ausgeben.
 
+Der Nutzer hat den Elversberger Stand einschließlich 2D-Zoom und der
+Nachtansicht mit schematischem Flutlicht vorerst abgenommen:
+„okay, alles erstmal abgesegnet.“
+
+**Why:** Ausdrückliche Abnahme nach Lieferung der Zoom-Bedienung und
+Nachtaufnahme; die Masten bleiben bewusst schematisch.
+
+**How to apply:** Den abgenommenen Stand erhalten. Die Abnahme ist keine
+Freigabe realer Leuchtenpositionen oder eines automatischen Vereins-Rollouts.
+
 ## Kamera- und Sichtwechsel
 
 Orbit-Kameraänderungen dürfen die Stadiongeometrie nicht neu erzeugen. Eine
