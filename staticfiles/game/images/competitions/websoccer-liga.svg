@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Websoccer Liga">
+  <rect width="64" height="64" rx="12" fill="#04141f"/>
+  <path d="M32 8l21 10v17c0 12-8 19-21 23-13-4-21-11-21-23V18z" fill="#0bbbc6"/>
+  <path d="M32 14l15 7v13c0 8-5 13-15 17-10-4-15-9-15-17V21z" fill="#062333"/>
+  <circle cx="32" cy="35" r="9" fill="#f7fbff"/>
+  <path d="M32 25l4 6-4 4-4-4zM25 35l6 2 1 6-6-2zM39 35l-6 2-1 6 6-2z" fill="#0bbbc6"/>
+</svg>

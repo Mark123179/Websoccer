@@ -1,0 +1,137 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1536 620" role="img" aria-label="Trophy spotlight stage">
+  <defs>
+    <linearGradient id="wall" x1="0" x2="0" y1="0" y2="1">
+      <stop offset="0" stop-color="#03070a"/>
+      <stop offset="0.45" stop-color="#071016"/>
+      <stop offset="1" stop-color="#020405"/>
+    </linearGradient>
+    <radialGradient id="centerCrest" cx="0.5" cy="0.36" r="0.28">
+      <stop offset="0" stop-color="#8fa2ad" stop-opacity="0.13"/>
+      <stop offset="0.58" stop-color="#5b6f7d" stop-opacity="0.05"/>
+      <stop offset="1" stop-color="#000000" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="floorGlow" cx="0.5" cy="0.9" r="0.7">
+      <stop offset="0" stop-color="#f4c46a" stop-opacity="0.18"/>
+      <stop offset="0.36" stop-color="#4fe8ff" stop-opacity="0.08"/>
+      <stop offset="1" stop-color="#000000" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="spotLeft" x1="0.18" x2="0.25" y1="0" y2="0.78">
+      <stop offset="0" stop-color="#ffffff" stop-opacity="0.86"/>
+      <stop offset="0.08" stop-color="#dcecff" stop-opacity="0.42"/>
+      <stop offset="0.62" stop-color="#b5c6d5" stop-opacity="0.12"/>
+      <stop offset="1" stop-color="#ffffff" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="spotRight" x1="0.82" x2="0.75" y1="0" y2="0.78">
+      <stop offset="0" stop-color="#ffffff" stop-opacity="0.86"/>
+      <stop offset="0.08" stop-color="#dcecff" stop-opacity="0.42"/>
+      <stop offset="0.62" stop-color="#b5c6d5" stop-opacity="0.12"/>
+      <stop offset="1" stop-color="#ffffff" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="goldLine" x1="0" x2="1">
+      <stop offset="0" stop-color="#54310f" stop-opacity="0"/>
+      <stop offset="0.22" stop-color="#d39a42" stop-opacity="0.8"/>
+      <stop offset="0.52" stop-color="#ffe7a8" stop-opacity="0.95"/>
+      <stop offset="0.78" stop-color="#d39a42" stop-opacity="0.8"/>
+      <stop offset="1" stop-color="#54310f" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="podium" x1="0" x2="0" y1="0" y2="1">
+      <stop offset="0" stop-color="#263039"/>
+      <stop offset="0.16" stop-color="#0c1116"/>
+      <stop offset="0.76" stop-color="#040506"/>
+      <stop offset="1" stop-color="#17100a"/>
+    </linearGradient>
+    <pattern id="marble" width="126" height="126" patternUnits="userSpaceOnUse">
+      <rect width="126" height="126" fill="transparent"/>
+      <path d="M-20 86 C35 24 76 118 146 34" fill="none" stroke="#c7d0d4" stroke-opacity="0.035" stroke-width="2"/>
+      <path d="M-14 42 C52 72 70 10 144 78" fill="none" stroke="#ffffff" stroke-opacity="0.025" stroke-width="1.4"/>
+      <path d="M18 126 C44 80 104 88 126 16" fill="none" stroke="#7e8b94" stroke-opacity="0.03" stroke-width="2.2"/>
+    </pattern>
+    <filter id="softBlur">
+      <feGaussianBlur stdDeviation="16"/>
+    </filter>
+    <filter id="podiumShadow">
+      <feDropShadow dx="0" dy="18" stdDeviation="20" flood-color="#000000" flood-opacity="0.64"/>
+    </filter>
+  </defs>
+
+  <rect width="1536" height="620" fill="url(#wall)"/>
+  <rect width="1536" height="620" fill="url(#marble)" opacity="0.86"/>
+  <rect width="1536" height="620" fill="url(#centerCrest)"/>
+  <rect width="1536" height="620" fill="url(#floorGlow)"/>
+
+  <g opacity="0.88" filter="url(#softBlur)">
+    <path d="M250 10 L410 478 L255 478 L190 10 Z" fill="url(#spotLeft)"/>
+    <path d="M1286 10 L1126 478 L1281 478 L1346 10 Z" fill="url(#spotRight)"/>
+  </g>
+
+  <g opacity="0.22">
+    <path d="M768 94 L904 166 L904 318 C904 396 834 444 768 478 C702 444 632 396 632 318 L632 166 Z" fill="none" stroke="#99a9b2" stroke-width="2"/>
+    <path d="M716 221 C716 201 820 201 820 221 L808 340 L728 340 Z" fill="none" stroke="#99a9b2" stroke-width="2"/>
+    <path d="M733 340 L803 340 L790 376 L746 376 Z" fill="none" stroke="#99a9b2" stroke-width="2"/>
+    <path d="M768 132 L786 170 L826 176 L797 205 L804 246 L768 225 L732 246 L739 205 L710 176 L750 170 Z" fill="#99a9b2" opacity="0.18"/>
+  </g>
+
+  <g opacity="0.5">
+    <path d="M26 470 C310 435 1226 435 1510 470" fill="none" stroke="url(#goldLine)" stroke-width="2"/>
+    <path d="M0 565 C350 610 1186 610 1536 565" fill="none" stroke="url(#goldLine)" stroke-width="1.6"/>
+  </g>
+
+  <g filter="url(#podiumShadow)">
+    <g transform="translate(168 457)">
+      <ellipse cx="0" cy="0" rx="136" ry="30" fill="#2a3035"/>
+      <ellipse cx="0" cy="-3" rx="128" ry="24" fill="#10161b"/>
+      <ellipse cx="0" cy="-8" rx="126" ry="20" fill="url(#marble)" opacity="0.56"/>
+      <path d="M-136 0 C-118 42 118 42 136 0 L122 74 C92 103 -92 103 -122 74 Z" fill="url(#podium)"/>
+      <ellipse cx="0" cy="74" rx="122" ry="27" fill="#050608"/>
+      <path d="M-126 22 C-82 42 82 42 126 22" fill="none" stroke="url(#goldLine)" stroke-width="3"/>
+      <path d="M-116 71 C-74 89 74 89 116 71" fill="none" stroke="url(#goldLine)" stroke-width="2.4"/>
+    </g>
+    <g transform="translate(568 457)">
+      <ellipse cx="0" cy="0" rx="136" ry="30" fill="#2a3035"/>
+      <ellipse cx="0" cy="-3" rx="128" ry="24" fill="#10161b"/>
+      <ellipse cx="0" cy="-8" rx="126" ry="20" fill="url(#marble)" opacity="0.56"/>
+      <path d="M-136 0 C-118 42 118 42 136 0 L122 74 C92 103 -92 103 -122 74 Z" fill="url(#podium)"/>
+      <ellipse cx="0" cy="74" rx="122" ry="27" fill="#050608"/>
+      <path d="M-126 22 C-82 42 82 42 126 22" fill="none" stroke="url(#goldLine)" stroke-width="3"/>
+      <path d="M-116 71 C-74 89 74 89 116 71" fill="none" stroke="url(#goldLine)" stroke-width="2.4"/>
+    </g>
+    <g transform="translate(968 457)">
+      <ellipse cx="0" cy="0" rx="136" ry="30" fill="#2a3035"/>
+      <ellipse cx="0" cy="-3" rx="128" ry="24" fill="#10161b"/>
+      <ellipse cx="0" cy="-8" rx="126" ry="20" fill="url(#marble)" opacity="0.56"/>
+      <path d="M-136 0 C-118 42 118 42 136 0 L122 74 C92 103 -92 103 -122 74 Z" fill="url(#podium)"/>
+      <ellipse cx="0" cy="74" rx="122" ry="27" fill="#050608"/>
+      <path d="M-126 22 C-82 42 82 42 126 22" fill="none" stroke="url(#goldLine)" stroke-width="3"/>
+      <path d="M-116 71 C-74 89 74 89 116 71" fill="none" stroke="url(#goldLine)" stroke-width="2.4"/>
+    </g>
+    <g transform="translate(1368 457)">
+      <ellipse cx="0" cy="0" rx="136" ry="30" fill="#2a3035"/>
+      <ellipse cx="0" cy="-3" rx="128" ry="24" fill="#10161b"/>
+      <ellipse cx="0" cy="-8" rx="126" ry="20" fill="url(#marble)" opacity="0.56"/>
+      <path d="M-136 0 C-118 42 118 42 136 0 L122 74 C92 103 -92 103 -122 74 Z" fill="url(#podium)"/>
+      <ellipse cx="0" cy="74" rx="122" ry="27" fill="#050608"/>
+      <path d="M-126 22 C-82 42 82 42 126 22" fill="none" stroke="url(#goldLine)" stroke-width="3"/>
+      <path d="M-116 71 C-74 89 74 89 116 71" fill="none" stroke="url(#goldLine)" stroke-width="2.4"/>
+    </g>
+  </g>
+
+  <g opacity="0.74">
+    <path d="M38 34 L0 456" stroke="#cf8b39" stroke-width="1.6"/>
+    <path d="M90 28 L34 456" stroke="#cf8b39" stroke-width="1" opacity="0.46"/>
+    <path d="M1498 34 L1536 456" stroke="#cf8b39" stroke-width="1.6"/>
+    <path d="M1446 28 L1502 456" stroke="#cf8b39" stroke-width="1" opacity="0.46"/>
+  </g>
+
+  <g fill="#ffc765" opacity="0.54">
+    <circle cx="46" cy="206" r="1.4"/>
+    <circle cx="56" cy="236" r="1.2"/>
+    <circle cx="64" cy="278" r="1.1"/>
+    <circle cx="72" cy="326" r="1.3"/>
+    <circle cx="1480" cy="206" r="1.4"/>
+    <circle cx="1470" cy="236" r="1.2"/>
+    <circle cx="1462" cy="278" r="1.1"/>
+    <circle cx="1454" cy="326" r="1.3"/>
+  </g>
+
+  <rect width="1536" height="620" fill="none" stroke="#9d6a28" stroke-opacity="0.18"/>
+</svg>

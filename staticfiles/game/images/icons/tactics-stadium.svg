@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96">
+  <defs>
+    <linearGradient id="metal" x1="17" y1="18" x2="79" y2="84" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#ffffff"/>
+      <stop offset=".45" stop-color="#dce7f1"/>
+      <stop offset="1" stop-color="#7f8c9b"/>
+    </linearGradient>
+    <filter id="shadow" x="-30%" y="-30%" width="160%" height="160%">
+      <feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#000814" flood-opacity=".65"/>
+    </filter>
+  </defs>
+  <g filter="url(#shadow)" fill="none" stroke="url(#metal)" stroke-width="5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M16 55c2.9-22 15.8-35 32-35s29.1 13 32 35"/>
+    <path d="M22 53c5.3 6.2 14.1 9.2 26 9.2S68.7 59.2 74 53"/>
+    <path d="M28 52c2.5-12.5 10-20.2 20-20.2S65.5 39.5 68 52"/>
+    <path d="M36 51c1.8-6.9 6-10.7 12-10.7S58.2 44.1 60 51"/>
+    <path d="M16 55l3.8 17.2c6 7.3 50.4 7.3 56.4 0L80 55"/>
+    <path d="M21 67c12.7 4.4 41.3 4.4 54 0"/>
+    <path d="M29 21V9h12.5c-2 6-5.8 9.3-12.5 9.3"/>
+    <path d="M48 20V6h13c-2.1 7-6.4 10.7-13 10.7"/>
+    <path d="M67 21V9h12.5c-2 6-5.8 9.3-12.5 9.3"/>
+    <path d="M48 62v18"/>
+    <path d="M40 80V69c0-5.2 3-8 8-8s8 2.8 8 8v11"/>
+  </g>
+</svg>

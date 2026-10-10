@@ -1,0 +1,110 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1536 1024" role="img" aria-label="Cinematic stadium background">
+  <defs>
+    <linearGradient id="sky" x1="0" x2="0" y1="0" y2="1">
+      <stop offset="0" stop-color="#020711"/>
+      <stop offset="0.34" stop-color="#071b31"/>
+      <stop offset="0.66" stop-color="#071824"/>
+      <stop offset="1" stop-color="#020706"/>
+    </linearGradient>
+    <radialGradient id="moonCloud" cx="0.5" cy="0.16" r="0.52">
+      <stop offset="0" stop-color="#87c7ff" stop-opacity="0.18"/>
+      <stop offset="0.32" stop-color="#2f76ac" stop-opacity="0.13"/>
+      <stop offset="1" stop-color="#020711" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="pitchGlow" cx="0.5" cy="0.72" r="0.46">
+      <stop offset="0" stop-color="#81ff8b" stop-opacity="0.38"/>
+      <stop offset="0.28" stop-color="#32a957" stop-opacity="0.22"/>
+      <stop offset="0.72" stop-color="#06180e" stop-opacity="0.12"/>
+      <stop offset="1" stop-color="#000000" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="leftLight" cx="0.08" cy="0.23" r="0.28">
+      <stop offset="0" stop-color="#e9fbff" stop-opacity="0.9"/>
+      <stop offset="0.1" stop-color="#9ddcff" stop-opacity="0.36"/>
+      <stop offset="0.58" stop-color="#2aa8ff" stop-opacity="0.08"/>
+      <stop offset="1" stop-color="#000" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="rightLight" cx="0.92" cy="0.23" r="0.28">
+      <stop offset="0" stop-color="#e9fbff" stop-opacity="0.9"/>
+      <stop offset="0.1" stop-color="#9ddcff" stop-opacity="0.36"/>
+      <stop offset="0.58" stop-color="#2aa8ff" stop-opacity="0.08"/>
+      <stop offset="1" stop-color="#000" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="grass" x1="0" x2="0" y1="0" y2="1">
+      <stop offset="0" stop-color="#1c7430"/>
+      <stop offset="0.56" stop-color="#0c421c"/>
+      <stop offset="1" stop-color="#031005"/>
+    </linearGradient>
+    <linearGradient id="vignette" x1="0" x2="1">
+      <stop offset="0" stop-color="#000711"/>
+      <stop offset="0.18" stop-color="#000711" stop-opacity="0"/>
+      <stop offset="0.82" stop-color="#000711" stop-opacity="0"/>
+      <stop offset="1" stop-color="#000711"/>
+    </linearGradient>
+    <pattern id="grassStripes" width="136" height="500" patternUnits="userSpaceOnUse">
+      <rect width="68" height="500" fill="#5bff72" opacity="0.06"/>
+      <rect x="68" width="68" height="500" fill="#071408" opacity="0.1"/>
+    </pattern>
+    <filter id="lightGlow">
+      <feGaussianBlur stdDeviation="8" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <rect width="1536" height="1024" fill="url(#sky)"/>
+  <rect width="1536" height="1024" fill="url(#moonCloud)"/>
+
+  <g opacity="0.42">
+    <path d="M0 198 C160 126 360 80 525 88 C640 94 700 128 768 125 C836 128 896 94 1011 88 C1176 80 1376 126 1536 198 L1536 458 C1124 326 412 326 0 458 Z" fill="#0b1722"/>
+    <path d="M0 268 C430 152 1106 152 1536 268" fill="none" stroke="#88cdfd" stroke-opacity="0.28" stroke-width="2"/>
+    <path d="M0 324 C420 220 1116 220 1536 324" fill="none" stroke="#4aa4e8" stroke-opacity="0.22" stroke-width="3"/>
+    <path d="M0 382 C420 294 1116 294 1536 382" fill="none" stroke="#2a73b4" stroke-opacity="0.24" stroke-width="4"/>
+  </g>
+
+  <g opacity="0.72" filter="url(#lightGlow)">
+    <rect x="76" y="188" width="20" height="12" rx="3" fill="#f1fdff"/>
+    <rect x="102" y="196" width="20" height="12" rx="3" fill="#f1fdff"/>
+    <rect x="128" y="204" width="20" height="12" rx="3" fill="#f1fdff"/>
+    <rect x="154" y="212" width="20" height="12" rx="3" fill="#f1fdff"/>
+    <rect x="1360" y="212" width="20" height="12" rx="3" fill="#f1fdff"/>
+    <rect x="1386" y="204" width="20" height="12" rx="3" fill="#f1fdff"/>
+    <rect x="1412" y="196" width="20" height="12" rx="3" fill="#f1fdff"/>
+    <rect x="1438" y="188" width="20" height="12" rx="3" fill="#f1fdff"/>
+  </g>
+  <rect width="1536" height="1024" fill="url(#leftLight)"/>
+  <rect width="1536" height="1024" fill="url(#rightLight)"/>
+
+  <g opacity="0.44">
+    <path d="M0 456 C356 368 1180 368 1536 456 L1536 560 C1124 498 412 498 0 560 Z" fill="#071118"/>
+    <path d="M0 492 C440 430 1096 430 1536 492" stroke="#1d85d6" stroke-opacity="0.48" stroke-width="5"/>
+    <path d="M0 536 C440 486 1096 486 1536 536" stroke="#1c6da9" stroke-opacity="0.34" stroke-width="4"/>
+  </g>
+
+  <g opacity="0.46">
+    <circle cx="82" cy="450" r="1.2" fill="#ffc36b"/>
+    <circle cx="168" cy="420" r="1.1" fill="#ffc36b"/>
+    <circle cx="263" cy="460" r="1" fill="#7ecaff"/>
+    <circle cx="1310" cy="452" r="1.2" fill="#ffc36b"/>
+    <circle cx="1408" cy="430" r="1.1" fill="#ffc36b"/>
+    <circle cx="1218" cy="468" r="1" fill="#7ecaff"/>
+  </g>
+
+  <g>
+    <path d="M0 1024 L0 692 C260 612 496 590 768 590 C1040 590 1276 612 1536 692 L1536 1024 Z" fill="url(#grass)"/>
+    <path d="M0 1024 L0 692 C260 612 496 590 768 590 C1040 590 1276 612 1536 692 L1536 1024 Z" fill="url(#grassStripes)" opacity="0.82"/>
+    <rect width="1536" height="1024" fill="url(#pitchGlow)"/>
+    <ellipse cx="768" cy="698" rx="210" ry="32" fill="none" stroke="#d9fff1" stroke-width="3" opacity="0.66"/>
+    <path d="M0 696 C300 604 1236 604 1536 696" fill="none" stroke="#d9fff1" stroke-opacity="0.34" stroke-width="2"/>
+  </g>
+
+  <g opacity="0.34">
+    <path d="M196 210 L24 450" stroke="#8ed8ff" stroke-width="1.4"/>
+    <path d="M1340 210 L1512 450" stroke="#8ed8ff" stroke-width="1.4"/>
+    <path d="M222 292 C470 172 1066 172 1314 292" fill="none" stroke="#94d9ff" stroke-opacity="0.2" stroke-width="1.2"/>
+  </g>
+
+  <rect width="1536" height="1024" fill="url(#vignette)" opacity="0.82"/>
+  <rect width="1536" height="1024" fill="#000000" opacity="0.18"/>
+</svg>

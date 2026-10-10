@@ -1,0 +1,73 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1536 864" preserveAspectRatio="none">
+  <defs>
+    <linearGradient id="panel" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#001225"/>
+      <stop offset=".5" stop-color="#020812"/>
+      <stop offset="1" stop-color="#171006"/>
+    </linearGradient>
+    <radialGradient id="cyanGlow" cx="16%" cy="78%" r="46%">
+      <stop offset="0" stop-color="#0076c9" stop-opacity=".62"/>
+      <stop offset=".55" stop-color="#003f72" stop-opacity=".18"/>
+      <stop offset="1" stop-color="#00111b" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="goldGlow" cx="84%" cy="78%" r="46%">
+      <stop offset="0" stop-color="#b87600" stop-opacity=".58"/>
+      <stop offset=".55" stop-color="#6a3c00" stop-opacity=".18"/>
+      <stop offset="1" stop-color="#120b00" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="softGlow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="5" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <pattern id="hex" width="38" height="33" patternUnits="userSpaceOnUse">
+      <path d="M9.5 1h19l9.5 15.5L28.5 32h-19L0 16.5z" fill="none" stroke="#0a95d6" stroke-opacity=".18"/>
+    </pattern>
+  </defs>
+
+  <rect width="1536" height="864" rx="28" fill="url(#panel)"/>
+  <rect width="1536" height="864" rx="28" fill="url(#cyanGlow)"/>
+  <rect width="1536" height="864" rx="28" fill="url(#goldGlow)"/>
+  <path d="M20 20h1496v824H20z" rx="22" fill="none" stroke="#0bd7ff" stroke-opacity=".55"/>
+  <path d="M768 20h748v824H768" fill="none" stroke="#ffc21f" stroke-opacity=".48"/>
+
+  <path d="M110 126h404l74 74v486l-74 74H110" fill="none" stroke="#0bd7ff" stroke-opacity=".22"/>
+  <path d="M1426 126h-404l-74 74v486l74 74h404" fill="none" stroke="#ffc21f" stroke-opacity=".2"/>
+  <path d="M620 58h296l34 34v110l18 22v548l-34 34H602l-34-34V224l18-22V92z" fill="#030b13" fill-opacity=".72" stroke="#8fb4c8" stroke-opacity=".36"/>
+
+  <g stroke-width="1">
+    <path d="M128 210h460" stroke="#00d9ff" stroke-opacity=".28"/>
+    <path d="M948 210h460" stroke="#ffc928" stroke-opacity=".28"/>
+    <path d="M128 295h460M128 380h460M128 465h460M128 550h460M128 635h460M128 720h460" stroke="#2abce9" stroke-opacity=".16"/>
+    <path d="M948 295h460M948 380h460M948 465h460M948 550h460M948 635h460M948 720h460" stroke="#ffc928" stroke-opacity=".15"/>
+    <path d="M622 278h292M622 350h292M622 422h292M622 494h292M622 566h292M622 638h292M622 710h292" stroke="#cbe8ff" stroke-opacity=".22"/>
+  </g>
+
+  <g filter="url(#softGlow)">
+    <circle cx="318" cy="126" r="3.5" fill="#0bd7ff"/>
+    <circle cx="1218" cy="126" r="3.5" fill="#ffc928"/>
+    <circle cx="620" cy="278" r="3" fill="#0bd7ff"/>
+    <circle cx="916" cy="278" r="3" fill="#ffc928"/>
+    <circle cx="620" cy="350" r="3" fill="#0bd7ff"/>
+    <circle cx="916" cy="350" r="3" fill="#ffc928"/>
+    <circle cx="620" cy="422" r="3" fill="#0bd7ff"/>
+    <circle cx="916" cy="422" r="3" fill="#ffc928"/>
+    <circle cx="620" cy="494" r="3" fill="#0bd7ff"/>
+    <circle cx="916" cy="494" r="3" fill="#ffc928"/>
+    <circle cx="620" cy="566" r="3" fill="#0bd7ff"/>
+    <circle cx="916" cy="566" r="3" fill="#ffc928"/>
+    <circle cx="620" cy="638" r="3" fill="#0bd7ff"/>
+    <circle cx="916" cy="638" r="3" fill="#ffc928"/>
+    <circle cx="620" cy="710" r="3" fill="#0bd7ff"/>
+    <circle cx="916" cy="710" r="3" fill="#ffc928"/>
+  </g>
+
+  <rect x="24" y="610" width="320" height="220" fill="url(#hex)" opacity=".48"/>
+  <rect x="1192" y="610" width="320" height="220" fill="url(#hex)" opacity=".32"/>
+  <path d="M100 788h404c54 0 72 22 116 22h296c44 0 62-22 116-22h404" fill="none" stroke="#0bd7ff" stroke-opacity=".36"/>
+  <path d="M916 810c44 0 62-22 116-22h404" fill="none" stroke="#ffc928" stroke-opacity=".44"/>
+  <path d="M100 812h404c54 0 72 20 116 20" fill="none" stroke="#0bd7ff" stroke-opacity=".52"/>
+  <path d="M916 832c44 0 62-20 116-20h404" fill="none" stroke="#ffc928" stroke-opacity=".48"/>
+</svg>

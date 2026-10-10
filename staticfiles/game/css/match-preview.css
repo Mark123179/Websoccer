@@ -1,0 +1,963 @@
+/*
+ * Matchday dossier — a broadcast-control-room reading of the approved
+ * locker-room scene. The source photo and SAM mask share the exact
+ * full-container frame, cover size and center point; no cutout pixels.
+ */
+.match-preview-page {
+    --mp-surface: rgba(5, 22, 36, 0.63);
+    --mp-surface-raised: rgba(8, 29, 44, 0.8);
+    --mp-rule: rgba(159, 211, 224, 0.15);
+    --mp-cyan: var(--cyan, #22e6ff);
+    --mp-text: var(--text, #f4fbff);
+    --mp-muted: var(--muted, rgba(244, 251, 255, 0.64));
+    --mp-faint: rgba(244, 251, 255, 0.72);
+    --mp-green: var(--green, #30f29c);
+    --mp-yellow: var(--yellow, #ffd166);
+    --mp-red: var(--red, #ff5570);
+}
+
+.match-preview-page .container {
+    display: flex;
+    flex-direction: column;
+    isolation: isolate;
+    min-height: 1177.5px;
+    position: relative;
+    background-color: #07111a;
+    background-image: url("../images/match-preview/locker-room.png");
+    background-position: center center;
+    background-repeat: no-repeat;
+    background-size: cover;
+}
+
+.match-preview-page .ws-game-header {
+    flex: 0 0 auto;
+    position: relative;
+    z-index: 3;
+}
+
+.match-preview-scene {
+    flex: 1 0 0;
+    margin: 0 24px 24px;
+    min-height: 680px;
+    pointer-events: none;
+    position: static;
+}
+
+/* Both image and mask use the actual main container, not the scaled stage. */
+.match-preview-content {
+    inset: 0;
+    -webkit-mask-image: url("../images/match-preview/panel-mask-sam.png?v=1");
+    mask-image: url("../images/match-preview/panel-mask-sam.png?v=1");
+    -webkit-mask-position: center center;
+    mask-position: center center;
+    -webkit-mask-repeat: no-repeat;
+    mask-repeat: no-repeat;
+    -webkit-mask-size: cover;
+    mask-size: cover;
+    pointer-events: none;
+    position: absolute;
+    z-index: 2;
+}
+
+.match-preview-panels {
+    bottom: 28px;
+    display: grid;
+    gap: 1.1%;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 2fr) minmax(0, 1fr);
+    left: 24px;
+    position: absolute;
+    right: 24px;
+    top: max(120px, calc(var(--mp-header-bottom, 108px) + 12px));
+}
+
+.match-preview-panel {
+    background: var(--mp-surface);
+    border: 1px solid rgba(48, 150, 169, 0.19);
+    border-radius: 3px;
+    box-shadow: inset 0 1px 0 rgba(213, 242, 247, 0.045);
+    color: var(--mp-text);
+    min-height: 0;
+    min-width: 0;
+    overflow: hidden;
+    pointer-events: auto;
+    position: relative;
+}
+
+.match-preview-panel--scout,
+.match-preview-panel--club {
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-color: rgba(34, 230, 255, 0.35) rgba(255, 255, 255, 0.04);
+    scrollbar-width: thin;
+    padding: 18px 18px 92px;
+}
+
+.match-preview-panel--center {
+    padding: 0;
+}
+
+.mp-panel-heading,
+.mp-subsection-heading {
+    align-items: center;
+    display: flex;
+    gap: 10px;
+    justify-content: space-between;
+}
+
+.mp-panel-heading {
+    border-bottom: 1px solid var(--mp-rule);
+    margin-bottom: 13px;
+    padding-bottom: 12px;
+}
+
+.mp-eyebrow {
+    color: var(--mp-cyan);
+    display: block;
+    font-family: "Bahnschrift", "Franklin Gothic Medium", sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    line-height: 1.25;
+    text-transform: uppercase;
+}
+
+.mp-panel-heading h2,
+.mp-subsection-heading h2 {
+    color: var(--mp-text);
+    font-family: "Bahnschrift", "Franklin Gothic Medium", sans-serif;
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: 0.015em;
+    line-height: 1.12;
+    margin: 3px 0 0;
+}
+
+.mp-formation,
+.mp-count {
+    align-items: center;
+    border: 1px solid var(--mp-rule);
+    color: var(--mp-muted);
+    display: inline-flex;
+    font-family: ui-monospace, "SFMono-Regular", Consolas, monospace;
+    font-size: 10px;
+    justify-content: center;
+    min-height: 25px;
+    padding: 0 8px;
+}
+
+.mp-pitch {
+    background: url("../images/backgrounds/spielfeld.png") center / cover no-repeat;
+    border: 0;
+    height: 460px;
+    margin-inline: -18px;
+    overflow: hidden;
+    position: relative;
+    width: calc(100% + 36px);
+}
+
+.mp-player-marker {
+    align-items: center;
+    color: var(--mp-text);
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    max-width: 62px;
+    position: absolute;
+    text-align: center;
+    text-decoration: none;
+    transform: translate(-50%, -50%);
+    z-index: 1;
+}
+
+.mp-player-portrait {
+    align-items: center;
+    background: rgba(8, 28, 37, 0.94);
+    border: 1px solid rgba(230, 249, 250, 0.86);
+    border-radius: 50%;
+    box-shadow: 0 2px 7px rgba(0, 0, 0, 0.45);
+    display: flex;
+    height: 38px;
+    justify-content: center;
+    overflow: hidden;
+    position: relative;
+    width: 38px;
+}
+
+.mp-player-portrait img,
+.mp-avatar img,
+.mp-crest-frame img,
+.mp-result-team img,
+.mp-kit img,
+.mp-news-thumb img,
+.mp-stadium-photo {
+    height: 100%;
+    object-fit: cover;
+    width: 100%;
+}
+
+.mp-player-number {
+    background: rgba(3, 17, 25, 0.9);
+    border-radius: 2px;
+    color: var(--mp-green);
+    font-family: ui-monospace, "SFMono-Regular", Consolas, monospace;
+    font-size: 10px;
+    line-height: 1.3;
+    min-width: 14px;
+    padding: 0 2px;
+    position: absolute;
+    right: 2px;
+    top: 26px;
+}
+
+.mp-player-name {
+    background: rgba(3, 15, 23, 0.8);
+    font-size: 12px;
+    line-height: 1.15;
+    max-width: 62px;
+    overflow: hidden;
+    padding: 1px 3px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.mp-player-grade { background: rgba(3, 15, 23, 0.78); color: var(--mp-text); font-family: ui-monospace, "SFMono-Regular", Consolas, monospace; font-size: 8px; line-height: 1.2; padding: 1px 3px; }
+
+.mp-image-fallback {
+    align-items: center;
+    background: linear-gradient(145deg, rgba(32, 93, 106, 0.95), rgba(8, 29, 42, 0.96));
+    color: rgba(244, 251, 255, 0.88);
+    display: flex;
+    font-family: ui-monospace, "SFMono-Regular", Consolas, monospace;
+    font-size: 10px;
+    font-weight: 700;
+    inset: 0;
+    justify-content: center;
+    position: absolute;
+}
+
+.mp-image-fallback[hidden] { display: none; }
+.mp-competition-logo[data-image-failed] { display: none; }
+.mp-player-portrait img + .mp-image-fallback:not([hidden]) { display: none; }
+.mp-player-portrait img:not([src=""]) + .mp-image-fallback { display: none; }
+.mp-player-portrait img[data-image-failed] + .mp-image-fallback { display: flex; }
+img[data-fallback-image] + .mp-image-fallback { display: none; }
+img[data-image-failed] + .mp-image-fallback { display: flex; }
+img[data-image-failed] { visibility: hidden; }
+.mp-caption,
+.mp-inline-empty {
+    color: var(--mp-faint);
+    font-size: 12px;
+    line-height: 1.4;
+    margin: 7px 0 0;
+}
+
+.mp-trainer {
+    align-items: center;
+    border-bottom: 1px solid var(--mp-rule);
+    border-top: 1px solid var(--mp-rule);
+    color: var(--mp-text);
+    display: flex;
+    gap: 10px;
+    margin-top: 11px;
+    padding: 8px 1px;
+    text-decoration: none;
+}
+
+.mp-avatar {
+    background: rgba(7, 29, 41, 0.95);
+    border: 1px solid rgba(180, 221, 229, 0.28);
+    border-radius: 50%;
+    display: block;
+    flex: 0 0 auto;
+    overflow: hidden;
+    position: relative;
+}
+
+.mp-avatar--trainer {
+    height: 48px;
+    width: 48px;
+}
+
+.mp-trainer-copy,
+.mp-spotlight-copy,
+.mp-news-copy {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.mp-trainer-copy small,
+.mp-spotlight-copy small,
+.mp-news-copy small {
+    color: var(--mp-faint);
+    font-size: 12px;
+    line-height: 1.35;
+}
+
+.mp-trainer-copy strong {
+    font-size: 16px;
+    line-height: 1.3;
+    overflow-wrap: anywhere;
+}
+
+.mp-inline-arrow,
+.mp-heading-link {
+    color: var(--mp-cyan);
+    flex: 0 0 auto;
+    font-size: 12px;
+    text-decoration: none;
+}
+
+.mp-subsection {
+    border-bottom: 1px solid var(--mp-rule);
+    padding: 11px 0;
+}
+
+.mp-subsection-heading h3 {
+    color: var(--mp-muted);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    margin: 0;
+    text-transform: uppercase;
+}
+
+.mp-form {
+    display: flex;
+    gap: 6px;
+    margin-top: 8px;
+}
+
+.mp-form-result {
+    align-items: center;
+    background: rgba(244, 251, 255, 0.08);
+    border: 1px solid rgba(244, 251, 255, 0.14);
+    color: var(--mp-muted);
+    display: inline-flex;
+    font-family: ui-monospace, "SFMono-Regular", Consolas, monospace;
+    font-size: 10px;
+    height: 24px;
+    justify-content: center;
+    width: 24px;
+}
+
+.mp-form-result--win { background: rgba(48, 242, 156, 0.14); border-color: rgba(48, 242, 156, 0.32); color: var(--mp-green); }
+.mp-form-result--draw { background: rgba(255, 209, 102, 0.12); border-color: rgba(255, 209, 102, 0.28); color: var(--mp-yellow); }
+.mp-form-result--loss { background: rgba(255, 85, 112, 0.12); border-color: rgba(255, 85, 112, 0.28); color: var(--mp-red); }
+.mp-team-form { align-items: center; display: flex; gap: 7px; justify-content: center; margin-top: 5px; min-height: 21px; }
+.mp-team-form .mp-form { gap: 3px; margin: 0; }
+.mp-team-form .mp-form-result { height: 18px; width: 18px; }
+.mp-team-form-label { color: var(--mp-faint); font-size: 9px; letter-spacing: 0.08em; text-transform: uppercase; }
+.mp-form-unavailable { color: var(--mp-faint); font-size: 9px; }
+
+.mp-last-result {
+    align-items: center;
+    color: var(--mp-text);
+    display: grid;
+    gap: 4px 7px;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+    margin-top: 8px;
+    text-decoration: none;
+}
+
+.mp-result-team {
+    align-items: center;
+    display: flex;
+    gap: 5px;
+    min-width: 0;
+}
+
+.mp-result-team img {
+    flex: 0 0 auto;
+    height: 18px;
+    object-fit: contain;
+    width: 18px;
+}
+
+.mp-result-team strong {
+    font-size: 12px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.mp-result-team--away { flex-direction: row-reverse; text-align: right; }
+.mp-result-score { font-family: ui-monospace, "SFMono-Regular", Consolas, monospace; font-size: 18px; white-space: nowrap; }
+.mp-result-score i { color: var(--mp-faint); font-style: normal; padding: 0 2px; }
+.mp-last-result > small { color: var(--mp-faint); font-size: 9px; grid-column: 1 / -1; text-align: center; }
+
+.mp-absence-list {
+    list-style: none;
+    margin: 7px 0 0;
+    padding: 0;
+}
+
+.mp-absence-list li {
+    align-items: flex-start;
+    display: flex;
+    gap: 8px;
+    padding: 5px 0;
+}
+
+.mp-absence-state {
+    background: var(--mp-yellow);
+    border-radius: 1px;
+    flex: 0 0 auto;
+    height: 8px;
+    margin-top: 4px;
+    transform: rotate(45deg);
+    width: 8px;
+}
+
+.mp-absence-state--injury { background: var(--mp-red); }
+.mp-absence-state--suspension { background: var(--mp-yellow); }
+.mp-absence-copy { display: flex; flex-direction: column; min-width: 0; }
+.mp-absence-copy a,
+.mp-absence-copy > span { color: var(--mp-text); font-size: 14px; line-height: 1.3; text-decoration: none; }
+.mp-absence-copy small { color: var(--mp-faint); font-size: 12px; line-height: 1.3; }
+
+.mp-match-content {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    height: 100%;
+    overflow-y: auto;
+    padding: 15px 22px 28px;
+    scrollbar-color: rgba(34, 230, 255, 0.35) rgba(255, 255, 255, 0.04);
+    scrollbar-width: thin;
+}
+
+.mp-competition {
+    align-items: center;
+    border-bottom: 1px solid var(--mp-rule);
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    padding-bottom: 12px;
+    text-align: center;
+}
+
+.mp-competition-logo {
+    flex: 0 0 auto;
+    height: 38px;
+    object-fit: contain;
+    width: 38px;
+}
+
+.mp-competition h1 {
+    color: var(--mp-text);
+    font-family: "Bahnschrift", "Franklin Gothic Medium", sans-serif;
+    font-size: clamp(18px, 1.65vw, 27px);
+    font-weight: 700;
+    letter-spacing: 0.045em;
+    line-height: 1.1;
+    margin: 3px 0 0;
+    text-shadow: 0 2px 12px rgba(0, 0, 0, 0.48);
+    text-transform: uppercase;
+}
+
+.mp-versus {
+    align-items: start;
+    display: grid;
+    gap: 8px;
+    grid-template-columns: minmax(0, 1fr) minmax(108px, 0.42fr) minmax(0, 1fr);
+    padding: 2px 2% 1px;
+}
+
+.mp-club {
+    align-items: center;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    text-align: center;
+}
+
+.mp-crest-link { display: block; text-decoration: none; }
+.mp-crest-frame {
+    align-items: center;
+    display: flex;
+    height: 104px;
+    justify-content: center;
+    overflow: visible;
+    position: relative;
+    width: 104px;
+    z-index: 2;
+}
+
+.mp-crest-frame img { object-fit: contain; padding: 0; }
+.mp-crest-frame .mp-image-fallback { background: transparent; }
+.mp-club h2 {
+    color: var(--mp-text);
+    font-family: "Bahnschrift", "Franklin Gothic Medium", sans-serif;
+    font-size: clamp(14px, 1.15vw, 19px);
+    line-height: 1.15;
+    margin: 0 0 7px;
+    max-width: 100%;
+    overflow-wrap: anywhere;
+}
+
+.mp-versus-mark {
+    align-items: center;
+    color: var(--mp-cyan);
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    justify-content: center;
+    padding-top: 88px;
+    text-align: center;
+}
+
+.mp-versus-mark::before,
+.mp-versus-mark::after { content: none; }
+
+.mp-versus-mark span {
+    background: rgba(3, 17, 27, 0.9);
+    border: 1px solid rgba(34, 230, 255, 0.28);
+    border-radius: 50%;
+    font-family: ui-monospace, "SFMono-Regular", Consolas, monospace;
+    font-size: 9px;
+    padding: 10px 7px;
+    position: relative;
+}
+
+.mp-kickoff {
+    border-top: 1px solid var(--mp-rule);
+    color: var(--mp-muted);
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding-top: 7px;
+    width: 100%;
+}
+
+.mp-kickoff small,
+.mp-home-venue small {
+    color: var(--mp-cyan);
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+}
+
+.mp-kickoff strong { color: var(--mp-text); font-size: 12px; line-height: 1.3; }
+
+.mp-kit {
+    align-items: center;
+    color: var(--mp-faint);
+    display: flex;
+    flex-direction: column;
+    font-size: 12px;
+    gap: 3px;
+    justify-content: center;
+    margin-top: 4px;
+    min-height: 22px;
+    min-width: 0;
+    position: relative;
+    z-index: 0;
+}
+
+.mp-kit img {
+    flex: 0 0 auto;
+    height: 140px;
+    object-fit: contain;
+    width: 120px;
+}
+
+.mp-kit--label { color: var(--mp-muted); }
+
+.mp-home-venue {
+    border-top: 1px solid var(--mp-rule);
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    margin-top: 7px;
+    padding-top: 6px;
+    text-align: center;
+    width: 100%;
+}
+.mp-home-venue strong { color: var(--mp-text); font-size: 12px; line-height: 1.3; }
+.mp-home-venue > span { color: var(--mp-muted); font-size: 11px; line-height: 1.3; }
+.mp-form-stats-photo { aspect-ratio: 16 / 9; background: transparent; border: 0; margin-bottom: 8px; overflow: hidden; position: relative; width: 100%; }
+.mp-stadium-photo { display: block; object-fit: cover; }
+.mp-photo-caption { background: rgba(3, 13, 21, 0.76); bottom: 0; color: var(--mp-text); font-size: 9px; left: 0; padding: 4px 7px; position: absolute; right: 0; }
+.mp-stadium-fallback {
+    align-items: center;
+    color: var(--mp-faint);
+    display: flex;
+    font-size: 10px;
+    inset: 0;
+    justify-content: center;
+    position: absolute;
+}
+
+.mp-report-layout { align-items: stretch; display: grid; gap: 10px; grid-template-columns: repeat(2, minmax(0, 1fr)); margin: 10px -22px 0; width: calc(100% + 44px); }
+.mp-form-stats,
+.mp-model-card { background: transparent; border: 0; min-width: 0; padding: 0; }
+.mp-stadium-absence,
+.mp-absence-group { overflow: visible; }
+.mp-absence-group { border-top: 1px solid var(--mp-rule); padding: 12px 14px 6px; }
+.mp-absence-group + .mp-absence-group { margin-top: 12px; }
+.mp-absence-heading { align-items: center; display: flex; justify-content: space-between; }
+.mp-absence-heading h2 { color: var(--mp-cyan); font-family: "Bahnschrift", "Franklin Gothic Medium", sans-serif; font-size: 13px; letter-spacing: 0.1em; margin: 0; text-transform: uppercase; }
+.mp-absence-group .mp-absence-list { margin-top: 3px; }
+.mp-absence-group .mp-absence-list li { gap: 9px; padding: 5px 0; }
+.mp-absence-group .mp-absence-copy a,
+.mp-absence-group .mp-absence-copy > span { font-size: 16px; }
+.mp-absence-group .mp-absence-copy small { font-size: 12px; }
+.mp-absence-group .mp-inline-empty { font-size: 12px; margin-top: 4px; }
+.mp-report-heading { align-items: flex-start; border-bottom: 1px solid var(--mp-rule); display: flex; gap: 8px; justify-content: space-between; margin-bottom: 4px; padding-bottom: 5px; }
+.mp-report-heading h2 { color: var(--mp-text); font-family: "Bahnschrift", "Franklin Gothic Medium", sans-serif; font-size: 15px; line-height: 1.15; margin: 2px 0 0; }
+.mp-model-card .mp-report-heading { align-items: center; }
+.mp-stadium-model-name { color: var(--mp-faint); font-size: 9px; line-height: 1.3; margin: -2px 0 6px; }
+.mp-model-viewport { aspect-ratio: 16 / 9; background: transparent; border: 0; height: auto; overflow: hidden; position: relative; width: 100%; }
+.mp-stadium-model-stage { height: 100%; max-height: 100%; min-height: 0; overflow: hidden; position: relative; width: 100%; }
+.mp-stadium-model-stage canvas { display: block; height: 100% !important; max-height: 100%; max-width: 100%; width: 100% !important; }
+.mp-stadium-model-status {
+    align-items: center;
+    background: rgba(3, 14, 22, 0.42);
+    color: var(--mp-muted);
+    display: flex;
+    font-size: 10px;
+    inset: 0;
+    justify-content: center;
+    pointer-events: none;
+    position: absolute;
+}
+.mp-stadium-model-status[hidden] { display: none; }
+.mp-model-overlay { align-items: flex-start; background: transparent; border: 0; gap: 8px; left: 8px; margin: 0; padding: 7px 8px 6px; pointer-events: none; position: absolute; right: 8px; top: 8px; z-index: 4; }
+.mp-model-card .mp-model-overlay { align-items: flex-start; }
+.mp-model-overlay h2 { color: var(--mp-text); font-family: "Bahnschrift", "Franklin Gothic Medium", sans-serif; font-size: 13px; line-height: 1.2; margin: 2px 0 0; text-shadow: 0 1px 4px rgba(0, 0, 0, 0.95); }
+.mp-model-overlay .mp-eyebrow { text-shadow: 0 1px 4px rgba(0, 0, 0, 0.95); }
+.mp-model-overlay .mp-stadium-model-name { color: var(--mp-muted); font-size: 10px; line-height: 1.25; margin: 2px 0 0; }
+.match-preview-scene.mp-layout-editing .mp-model-overlay { pointer-events: auto; }
+.mp-weather-profile,
+.mp-referee-profile { align-items: center; display: flex; gap: 10px; min-width: 0; }
+.mp-weather-profile { border-top: 1px solid var(--mp-rule); margin: 8px 12px 0; min-height: 84px; padding-top: 7px; }
+.mp-weather-animation { align-items: center; background: transparent; border: 0; border-radius: 0; display: flex; flex: 0 0 152px; height: 84px; justify-content: center; overflow: hidden; width: 152px; }
+.mp-weather-animation .wx-scene { border-radius: 0; height: 84px; overflow: hidden; width: 152px; }
+.mp-weather-animation .wxs-tag { display: none; }
+.mp-weather-animation .wxs-grass { height: 13px; }
+.mp-weather-animation .wxs-sun,
+.mp-weather-animation .wxs-heatsun { height: 31px; left: 48%; top: 14%; width: 31px; }
+.mp-weather-animation--empty { color: var(--mp-faint); font: 12px ui-monospace, "SFMono-Regular", Consolas, monospace; }
+.mp-weather-info { align-items: flex-start; display: flex; flex: 1; flex-direction: column; gap: 3px; min-width: 0; }
+.mp-weather-info strong { color: var(--mp-text); font-size: 12px; line-height: 1.3; }
+.mp-model-card > .mp-referee-profile { align-items: flex-start; border-top: 1px solid var(--mp-rule); gap: 10px; margin: 5px 12px 0; padding: 7px 0 0; }
+.mp-referee-portrait { background: rgba(7, 29, 41, 0.95); border: 1px solid rgba(180, 221, 229, 0.28); border-radius: 50%; flex: 0 0 auto; height: 84px; overflow: hidden; position: relative; width: 84px; }
+.mp-referee-portrait img { height: 100%; object-fit: cover; width: 100%; }
+.mp-referee-info { display: flex; flex: 1; flex-direction: column; gap: 2px; line-height: 1.1; min-width: 0; }
+.mp-referee-info > .mp-eyebrow { font-size: 11px; line-height: 1; }
+.mp-referee-info h2 { color: var(--mp-text); font-family: "Bahnschrift", "Franklin Gothic Medium", sans-serif; font-size: 18px; line-height: 1.1; margin: 0; }
+.mp-referee-profile--empty .mp-referee-info { grid-column: 1 / -1; }
+.mp-referee-info p { color: var(--mp-muted); font-size: 10px; line-height: 1.25; margin: 0; }
+.mp-referee-meta { align-items: center; color: var(--mp-faint); display: flex; flex-wrap: wrap; font-size: 11px; gap: 4px 8px; line-height: 1.05; }
+.mp-referee-ratings { border-top: 1px solid var(--mp-rule); display: grid; gap: 4px 10px; grid-template-columns: repeat(2, minmax(0, 1fr)); margin: 0; padding: 3px 0 0; }
+.mp-referee-ratings > div { align-items: baseline; display: flex; flex-wrap: wrap; gap: 3px 6px; min-width: 0; }
+.mp-referee-ratings dt { color: var(--mp-faint); font-size: 11px; line-height: 1.1; }
+.mp-referee-ratings dd { color: var(--mp-text); font-size: 13px; font-weight: 700; line-height: 1.15; margin: 0; overflow-wrap: anywhere; }
+
+.mp-referee-profile:has(.mp-referee-season) { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: start; }
+.mp-referee-season { border-top: 1px solid var(--mp-rule); grid-column: 1 / -1; margin-top: 0; padding-top: 8px; min-width: 0; }
+.mp-referee-season h3 { color: var(--mp-muted); font-size: 11px; font-weight: 700; margin: 0 0 7px; }
+.mp-referee-season-values { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px 10px; margin: 0; align-items: end; }
+.mp-referee-season-values dt { color: var(--mp-muted); font-size: 10px; overflow-wrap: anywhere; }
+.mp-referee-season-values dd { color: var(--mp-text); font-size: 18px; font-weight: 800; margin: 2px 0 0; line-height: 1.1; }
+.mp-referee-season-values dd.is-low { color: var(--mp-green); }
+.mp-referee-season-values dd.is-elevated { color: var(--mp-yellow); }
+.mp-referee-season-values dd.is-high { color: var(--mp-red); }
+.mp-referee-season p { color: var(--mp-muted); font-size: 9px; line-height: 1.4; margin: 8px 0 0; }
+.match-preview-scene.mp-layout-free .match-preview-panel--center[data-mp-layout-item] { overflow-y: auto !important; overscroll-behavior: contain; scrollbar-width: thin; scrollbar-color: rgba(34, 230, 255, 0.35) rgba(255, 255, 255, 0.04); }
+
+.mp-no-fixture {
+    align-items: center;
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    justify-content: center;
+    margin: 10px 5% 40px;
+    min-height: 260px;
+    text-align: center;
+}
+
+.mp-no-fixture-mark {
+    align-items: center;
+    border: 1px solid rgba(34, 230, 255, 0.28);
+    border-radius: 50%;
+    color: var(--mp-cyan);
+    display: flex;
+    font-size: 24px;
+    height: 56px;
+    justify-content: center;
+    margin-bottom: 15px;
+    width: 56px;
+}
+
+.mp-no-fixture h2 {
+    font-family: "Bahnschrift", "Franklin Gothic Medium", sans-serif;
+    font-size: clamp(18px, 1.7vw, 26px);
+    margin: 8px 0;
+}
+
+.mp-no-fixture p {
+    color: var(--mp-muted);
+    font-size: 12px;
+    line-height: 1.5;
+    margin: 0;
+    max-width: 390px;
+}
+
+.mp-heading-link {
+    align-items: center;
+    display: inline-flex;
+    font-size: 10px;
+    gap: 5px;
+    white-space: nowrap;
+}
+
+.mp-spotlights { display: grid; gap: 0 8px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.mp-spotlights > .mp-inline-empty { grid-column: 1 / -1; }
+.mp-spotlight {
+    border-bottom: 1px solid var(--mp-rule);
+    min-width: 0;
+    padding: 8px 5px;
+}
+.mp-spotlight:nth-child(odd) { border-right: 1px solid var(--mp-rule); }
+
+.mp-spotlight-label {
+    color: var(--mp-cyan);
+    display: block;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    line-height: 1.25;
+    margin-bottom: 5px;
+    text-transform: uppercase;
+}
+
+.mp-spotlight-player {
+    align-items: center;
+    color: var(--mp-text);
+    display: flex;
+    gap: 6px;
+    text-decoration: none;
+}
+
+.mp-avatar--spotlight { height: 48px; width: 48px; }
+.mp-spotlight-copy strong { font-size: 14px; line-height: 1.2; overflow-wrap: break-word; word-break: normal; }
+.mp-spotlight-copy small { font-size: 10px; line-height: 1.2; }
+.mp-spotlight-value {
+    color: var(--mp-green);
+    display: block;
+    font-family: ui-monospace, "SFMono-Regular", Consolas, monospace;
+    font-size: 11px;
+    margin: 3px 0 0 52px;
+}
+
+.mp-spotlight-empty {
+    align-items: center;
+    color: var(--mp-faint);
+    display: flex;
+    font-size: 9px;
+    gap: 9px;
+}
+
+.mp-avatar--empty { align-items: center; color: var(--mp-faint); display: flex; justify-content: center; }
+.mp-news { border-top: 1px solid var(--mp-rule); margin-top: 12px; padding-top: 14px; }
+.mp-news .mp-subsection-heading { align-items: flex-end; margin-bottom: 8px; }
+.mp-layout-free .mp-news > .mp-subsection-heading {
+    /* Keep the heading in flow: the unsaved empty-state sibling must start below it. */
+    position: relative !important;
+    top: auto !important;
+    left: auto !important;
+    width: 100% !important;
+    height: auto !important;
+    margin: 0 0 8px !important;
+}
+.mp-news-brand { align-items: center; display: flex; gap: 8px; min-width: 0; }
+.mp-news-brand-mark { filter: drop-shadow(0 0 10px rgba(229, 9, 20, 0.32)); flex: 0 0 24px; height: 42px; width: 24px; }
+.mp-news .mp-subsection-heading .mp-news-brand-title {
+    color: var(--mp-text);
+    font-family: "Bahnschrift", "Franklin Gothic Medium", sans-serif;
+    font-size: 18px;
+    font-weight: 900;
+    letter-spacing: 0.045em;
+    line-height: 1;
+    margin: 3px 0 0;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+.mp-news-brand-title b { color: #e50914; }
+.mp-layout-free .mp-news .mp-subsection-heading .mp-news-brand-title { font-size: 18px !important; }
+.mp-news-list { display: grid; gap: 8px; grid-template-columns: minmax(0, 1fr); }
+
+.mp-news-item {
+    align-items: flex-end;
+    aspect-ratio: 2.1 / 1;
+    background: #06131c;
+    border: 1px solid rgba(189, 226, 234, 0.16);
+    border-radius: 4px;
+    color: var(--mp-text);
+    display: flex;
+    isolation: isolate;
+    min-width: 0;
+    overflow: hidden;
+    padding: 9px 10px 8px;
+    position: relative;
+    text-decoration: none;
+    transition: transform 160ms ease;
+}
+
+.mp-news-item:hover { border-color: rgba(229, 9, 20, 0.76); transform: translateY(-1px); }
+.mp-news-thumb,
+.mp-news-thumb img {
+    inset: 0;
+    position: absolute;
+}
+.mp-news-thumb { background: center 42% / cover no-repeat url("../images/backgrounds/stadium-hero-night.jpg"); z-index: -2; }
+.mp-news-thumb img { height: 100%; object-fit: cover; width: 100%; }
+.mp-news-shade {
+    background: linear-gradient(180deg, rgba(2, 8, 14, 0.05) 15%, rgba(2, 8, 14, 0.25) 38%, rgba(2, 8, 14, 0.94) 100%);
+    inset: 0;
+    pointer-events: none;
+    position: absolute;
+    z-index: -1;
+}
+.mp-news-new {
+    align-self: flex-start;
+    background: #e50914;
+    border-radius: 3px;
+    box-shadow: 0 3px 12px rgba(229, 9, 20, 0.28);
+    color: #fff;
+    font-size: 9px;
+    font-weight: 900;
+    letter-spacing: 0.08em;
+    line-height: 1;
+    padding: 4px 7px;
+    position: absolute;
+    left: 9px;
+    top: 8px;
+}
+.mp-news-copy {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    gap: 3px;
+    min-width: 0;
+}
+.mp-news-copy .mp-news-category {
+    color: var(--mp-cyan);
+    font-size: 9px;
+    font-weight: 900;
+    letter-spacing: 0.075em;
+    line-height: 1.1;
+    overflow-wrap: anywhere;
+    text-transform: uppercase;
+}
+.mp-news-copy strong {
+    color: #f4fbff;
+    font-family: "Bahnschrift", "Franklin Gothic Medium", sans-serif;
+    font-size: 14px;
+    font-weight: 900;
+    letter-spacing: 0.015em;
+    line-height: 1.12;
+    overflow-wrap: anywhere;
+    text-transform: uppercase;
+    text-shadow: 0 1px 8px rgba(0, 0, 0, 0.7);
+}
+.mp-news-meta {
+    align-items: center;
+    color: rgba(244, 251, 255, 0.8);
+    display: flex;
+    flex-wrap: wrap;
+    font-size: 9px;
+    font-weight: 700;
+    gap: 3px 6px;
+    line-height: 1.1;
+    margin-top: 3px;
+    min-width: 0;
+}
+.mp-news-meta time { color: rgba(244, 251, 255, 0.66); }
+.mp-news-author-mark {
+    align-items: center;
+    background: #e50914;
+    border-radius: 3px;
+    color: #fff;
+    display: inline-flex;
+    flex: 0 0 auto;
+    font-size: 8px;
+    font-weight: 900;
+    height: 17px;
+    justify-content: center;
+    letter-spacing: -0.03em;
+    width: 17px;
+}
+.mp-news-empty { align-items: center; border-top: 1px solid var(--mp-rule); color: var(--mp-faint); display: flex; gap: 9px; padding: 12px 0; }
+.mp-news-empty > span { color: var(--mp-cyan); font-size: 18px; }
+.mp-news-empty p { font-size: 14px; line-height: 1.4; margin: 0; }
+
+@media (max-width: 1050px) and (min-width: 768px) {
+    .mp-news-copy strong { font-size: 12px; }
+    .mp-news-meta { font-size: 8px; }
+}
+
+@media (max-width: 767px) {
+    .mp-news-item { aspect-ratio: 2.45 / 1; }
+    .mp-news-copy strong { font-size: 15px; }
+}
+
+.mp-visually-hidden {
+    clip: rect(0, 0, 0, 0);
+    clip-path: inset(50%);
+    height: 1px;
+    overflow: hidden;
+    position: absolute;
+    white-space: nowrap;
+    width: 1px;
+}
+
+.match-preview-page a:focus-visible,
+.match-preview-page button:focus-visible {
+    outline: 2px solid var(--mp-cyan);
+    outline-offset: 3px;
+}
+
+.match-preview-page a:hover .mp-player-name,
+.match-preview-page a:hover .mp-spotlight-copy strong,
+.match-preview-page a:hover .mp-news-copy strong {
+    color: var(--mp-cyan);
+}
+
+@media (max-width: 1050px) {
+    .match-preview-panels { gap: 1%; grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.7fr) minmax(0, 0.95fr); }
+    .match-preview-panel--scout,
+    .match-preview-panel--club { padding-left: 12px; padding-right: 12px; }
+    .mp-match-content { padding-left: 18px; padding-right: 18px; }
+    .mp-pitch { margin-inline: -12px; width: calc(100% + 24px); }
+    .mp-report-layout { margin-left: -18px; margin-right: -18px; width: calc(100% + 36px); }
+}
+
+@media (max-width: 767px) {
+    .match-preview-page .container {
+        background-position: center center;
+        min-height: 1177.5px;
+    }
+    .match-preview-scene { margin-inline: 14px; min-height: 950px; }
+    .match-preview-content { inset: 0; }
+    .match-preview-panels {
+        bottom: 20px;
+        gap: 12px;
+        grid-template-columns: minmax(0, 1fr);
+        grid-template-rows: minmax(0, 0.95fr) minmax(0, 1.3fr) minmax(0, 0.95fr);
+        left: 14px;
+        right: 14px;
+        top: max(120px, calc(var(--mp-header-bottom, 108px) + 12px));
+    }
+    .match-preview-panel { min-height: 0; }
+    .match-preview-panel--scout,
+    .match-preview-panel--club { padding: 15px 16px 58px; }
+    .mp-match-content { padding: 18px 16px 24px; }
+    .mp-pitch { margin-inline: -16px; width: calc(100% + 32px); }
+    .mp-versus { grid-template-columns: minmax(0, 1fr) 96px minmax(0, 1fr); }
+    .mp-versus-mark { padding-top: 82px; }
+    .mp-report-layout { grid-template-columns: minmax(0, 1fr); margin-left: -16px; margin-right: -16px; width: calc(100% + 32px); }
+}

@@ -1,0 +1,619 @@
+/* =========================================================
+   Job-Angebote  —  /management/job-angebote/
+   Scope: .job-offers-page
+   v10 — AAA Premium redesign
+   ========================================================= */
+
+.job-offers-page .ws-content-area,
+.job-offers-page .dashboard-artboard { background: #06090f; }
+
+/* Overwrite any parent width cap scoped to this page only */
+.job-offers-page .ws-content-area { max-width: none !important; }
+.job-offers-page .ws-main-content  { max-width: none !important; }
+
+.jo-artboard {
+  width: 100%;
+  padding: 0 40px 60px;
+  box-sizing: border-box;
+}
+
+/* ── Header ─────────────────────────────────────────────────────────────── */
+.jo-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  padding: 36px 0 24px;
+  border-bottom: 1px solid rgba(201,168,76,.15);
+  margin-bottom: 20px;
+}
+.jo-eyebrow {
+  font-size: .7rem;
+  font-weight: 700;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,.3);
+  margin: 0 0 4px;
+}
+.jo-title {
+  font-size: 1.9rem;
+  font-weight: 300;
+  color: #fff;
+  margin: 0;
+  letter-spacing: .01em;
+}
+.jo-title strong { font-weight: 800; color: #c9a84c; }
+.jo-back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: .72rem;
+  font-weight: 700;
+  letter-spacing: .07em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,.4);
+  text-decoration: none;
+  border: 1px solid rgba(255,255,255,.12);
+  border-radius: 6px;
+  padding: 8px 16px;
+  transition: color .18s, border-color .18s;
+}
+.jo-back-btn svg { width: 14px; height: 14px; fill: currentColor; }
+.jo-back-btn:hover { color: rgba(255,255,255,.75); border-color: rgba(255,255,255,.3); }
+
+/* ── Filterleiste ────────────────────────────────────────────────────────── */
+.jo-filters {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding: 12px 16px;
+  background: #0c1118;
+  border: 1px solid rgba(255,255,255,.07);
+  border-radius: 8px;
+  margin-bottom: 16px;
+}
+.jo-filter-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.jo-filter-icon { display: flex; align-items: center; }
+.jo-filter-icon svg { width: 14px; height: 14px; fill: rgba(255,255,255,.35); }
+.jo-select {
+  appearance: none;
+  background: #0a1120;
+  border: 1px solid rgba(255,255,255,.12);
+  border-radius: 6px;
+  color: rgba(255,255,255,.7);
+  font-size: .78rem;
+  font-weight: 600;
+  padding: 6px 28px 6px 10px;
+  cursor: pointer;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23ffffff66' d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 6px center;
+  background-size: 16px;
+  transition: border-color .15s;
+}
+.jo-select:focus { outline: none; border-color: rgba(201,168,76,.5); }
+.jo-search-group { flex: 1; min-width: 160px; position: relative; }
+.jo-search-icon {
+  position: absolute;
+  left: 10px; top: 50%; transform: translateY(-50%);
+  width: 14px; height: 14px; fill: rgba(255,255,255,.3);
+  pointer-events: none;
+}
+.jo-search-input {
+  width: 100%;
+  background: #0a1120;
+  border: 1px solid rgba(255,255,255,.12);
+  border-radius: 6px;
+  color: rgba(255,255,255,.8);
+  font-size: .78rem;
+  padding: 7px 10px 7px 30px;
+  transition: border-color .15s;
+}
+.jo-search-input:focus { outline: none; border-color: rgba(201,168,76,.5); }
+.jo-search-input::placeholder { color: rgba(255,255,255,.25); }
+.jo-reset-btn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  background: transparent;
+  border: 1px solid rgba(255,255,255,.1);
+  border-radius: 6px;
+  color: rgba(255,255,255,.4);
+  font-size: .72rem;
+  font-weight: 700;
+  letter-spacing: .05em;
+  padding: 6px 12px;
+  cursor: pointer;
+  text-transform: uppercase;
+  transition: color .15s, border-color .15s;
+  white-space: nowrap;
+}
+.jo-reset-btn svg { width: 12px; height: 12px; fill: currentColor; }
+.jo-reset-btn:hover { color: rgba(255,255,255,.7); border-color: rgba(255,255,255,.25); }
+
+/* ── Hinweisband ─────────────────────────────────────────────────────────── */
+.jo-notice {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(201,168,76,.06);
+  border: 1px solid rgba(201,168,76,.2);
+  border-radius: 8px;
+  color: rgba(201,168,76,.85);
+  font-size: .8rem;
+  padding: 10px 16px;
+  margin-bottom: 14px;
+}
+.jo-notice svg { width: 14px; height: 14px; fill: currentColor; flex-shrink: 0; }
+
+/* ── Ergebniszähler ──────────────────────────────────────────────────────── */
+.jo-count-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+.jo-count { font-size: .8rem; color: rgba(255,255,255,.35); font-weight: 600; }
+.jo-timestamp { font-size: .72rem; color: rgba(255,255,255,.2); }
+
+/* ── Kartenliste ─────────────────────────────────────────────────────────── */
+.jo-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* ── Einzelkarte ─────────────────────────────────────────────────────────── */
+.jo-card {
+  display: grid;
+  grid-template-columns:
+    minmax(250px, 1.05fr)
+    minmax(320px, 1.35fr)
+    110px
+    minmax(235px, 1fr)
+    130px
+    220px;
+  min-height: 128px;
+  align-items: stretch;
+
+  background: linear-gradient(110deg, rgba(17,26,36,.98), rgba(8,14,22,.98));
+  border: 1px solid rgba(255,255,255,.09);
+  border-radius: 10px;
+  overflow: hidden;
+
+  box-shadow:
+    0 8px 24px rgba(0,0,0,.22),
+    inset 0 1px 0 rgba(255,255,255,.025);
+
+  transition:
+    border-color .2s ease,
+    box-shadow .2s ease,
+    transform .2s ease;
+}
+.jo-card:hover {
+  border-color: rgba(201,168,76,.35);
+  box-shadow:
+    0 12px 34px rgba(0,0,0,.4),
+    0 0 20px rgba(201,168,76,.05);
+  transform: translateY(-1px);
+}
+
+/* ── Wappen + Vereinsinfo ────────────────────────────────────────────────── */
+.jo-card-identity {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding: 18px 20px;
+  border-right: 1px solid rgba(255,255,255,.07);
+  min-width: 0;
+}
+.jo-crest-link { flex-shrink: 0; display: block; }
+.jo-crest,
+.jo-crest--missing {
+  width: 80px;
+  height: 80px;
+  flex: 0 0 80px;
+}
+.jo-crest {
+  object-fit: contain;
+  filter:
+    drop-shadow(0 7px 12px rgba(0,0,0,.55))
+    drop-shadow(0 0 8px rgba(255,255,255,.04));
+}
+.jo-crest--missing {
+  border-radius: 50%;
+  background: rgba(255,255,255,.06);
+  border: 2px solid rgba(255,255,255,.1);
+}
+.jo-club-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  min-width: 0;
+}
+.jo-club-name {
+  font-size: 1.05rem;
+  line-height: 1.15;
+  font-weight: 800;
+  color: #f2f5f7;
+  text-decoration: none;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: color .15s;
+}
+.jo-club-name:hover { color: #c9a84c; }
+.jo-league-row {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.jo-flag { width: 20px; height: 14px; object-fit: cover; vertical-align: middle; border-radius: 2px; }
+.jo-league-name {
+  font-size: .76rem;
+  color: rgba(255,255,255,.58);
+  font-weight: 600;
+}
+.jo-youth-info {
+  font-size: .68rem;
+  color: rgba(255,255,255,.3);
+  font-weight: 500;
+  font-style: italic;
+}
+
+/* ── Stadion-Banner ──────────────────────────────────────────────────────── */
+.jo-card-stadium {
+  position: relative;
+  min-height: 128px;
+  overflow: hidden;
+  border-right: 1px solid rgba(255,255,255,.07);
+  background: #101821;
+}
+.jo-stadium-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: .88;
+  transform: scale(1.01);
+}
+.jo-stadium-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to top,
+    rgba(4,8,13,.98)  0%,
+    rgba(4,8,13,.62) 25%,
+    rgba(4,8,13,.12) 66%,
+    rgba(4,8,13,.04) 100%
+  );
+}
+.jo-stadium-caption {
+  position: absolute;
+  left: 16px;
+  right: 14px;
+  bottom: 13px;
+  z-index: 2;
+}
+.jo-stadium-name {
+  display: block;
+  font-size: .84rem;
+  font-weight: 800;
+  color: #fff;
+  text-shadow: 0 2px 5px rgba(0,0,0,.9);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.jo-stadium-cap {
+  display: block;
+  margin-top: 3px;
+  font-size: .7rem;
+  color: rgba(255,255,255,.68);
+}
+
+/* ── Tabellenplatz ───────────────────────────────────────────────────────── */
+.jo-card-standing {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  padding: 12px 8px;
+  background: linear-gradient(180deg, rgba(0,0,0,.12), rgba(0,0,0,.27));
+  border-right: 1px solid rgba(255,255,255,.07);
+}
+.jo-stand-label {
+  font-size: .57rem;
+  font-weight: 700;
+  letter-spacing: .09em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,.34);
+}
+.jo-stand-num {
+  font-size: 2rem;
+  font-weight: 900;
+  line-height: 1;
+  color: #fff;
+}
+.jo-stand-num--dash { font-size: 1.5rem; color: rgba(255,255,255,.2); }
+.jo-situation {
+  font-size: .58rem;
+  font-weight: 700;
+  text-align: center;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+.sit-cl   { color: #00d4ff; background: rgba(0,212,255,.1); }
+.sit-el   { color: #ff9f00; background: rgba(255,159,0,.1); }
+.sit-top  { color: #5cf57a; background: rgba(92,245,122,.08); }
+.sit-mid  { color: rgba(255,255,255,.45); }
+.sit-warn { color: #ffbb33; background: rgba(255,187,51,.1); }
+.sit-rel  { color: #ff4d4d; background: rgba(255,77,77,.1); }
+
+/* ── Wettbewerbe ─────────────────────────────────────────────────────────── */
+.jo-card-comps {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 15px 18px;
+  border-right: 1px solid rgba(255,255,255,.07);
+}
+.jo-comps-title {
+  margin-bottom: 8px;
+  font-size: .61rem;
+  font-weight: 800;
+  letter-spacing: .09em;
+  text-transform: uppercase;
+  color: #20cce8;
+}
+.jo-comp-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.jo-comp-item {
+  display: grid;
+  grid-template-columns: 15px minmax(0,1fr) 16px;
+  align-items: center;
+  gap: 7px;
+  min-height: 16px;
+  font-size: .72rem;
+  font-weight: 600;
+}
+.jo-comp--yes { color: rgba(255,255,255,.82); }
+.jo-comp--no  { color: rgba(255,255,255,.28); }
+
+/* Left icon (competition symbol) */
+.jo-comp-sym {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 15px;
+  height: 15px;
+}
+.jo-comp-sym svg { width: 12px; height: 12px; fill: currentColor; }
+.jo-comp--yes .jo-comp-sym svg { fill: rgba(255,255,255,.55); }
+.jo-comp--no  .jo-comp-sym svg { fill: rgba(255,255,255,.18); }
+.jo-comp-logo {
+  width: 14px;
+  height: 14px;
+  object-fit: contain;
+  display: block;
+  filter: drop-shadow(0 0 2px rgba(0,0,0,.6));
+}
+
+/* Right check/dash */
+.jo-comp-check {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.jo-comp-icon {
+  width: 12px;
+  height: 12px;
+  fill: #54d769;
+  flex-shrink: 0;
+}
+.jo-comp-dash {
+  color: rgba(255,255,255,.2);
+  font-size: .8rem;
+}
+
+/* ── Top-Spieler ─────────────────────────────────────────────────────────── */
+.jo-card-toplayer {
+  position: relative;
+  overflow: hidden;
+  border-left: 1px solid rgba(255,255,255,.06);
+  min-height: 128px;
+}
+.jo-toplayer-label {
+  position: absolute;
+  top: 9px;
+  left: 0; right: 0;
+  text-align: center;
+  font-size: .58rem;
+  font-weight: 800;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,.32);
+  z-index: 3;
+  pointer-events: none;
+}
+.jo-toplayer-name {
+  position: absolute;
+  bottom: 0;
+  left: 0; right: 0;
+  padding: 28px 6px 7px;
+  background: linear-gradient(to top, rgba(6,9,15,.96) 40%, transparent);
+  text-align: center;
+  font-size: .67rem;
+  font-weight: 700;
+  color: rgba(255,255,255,.88);
+  z-index: 3;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  pointer-events: none;
+}
+.jo-toplayer-portrait {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: top center;
+  display: block;
+}
+.jo-toplayer-noimg {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255,255,255,.2);
+  font-size: 1.1rem;
+}
+
+/* ── Aktionsbereich ──────────────────────────────────────────────────────── */
+.jo-card-action {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 9px;
+  padding: 15px 16px;
+  min-width: 0;
+}
+
+.jo-badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-height: 38px;
+  padding: 9px 12px;
+  border-radius: 7px;
+  font-size: .72rem;
+  font-weight: 900;
+  letter-spacing: .07em;
+  text-transform: uppercase;
+}
+.jo-badge-icon { font-size: .85rem; line-height: 1; }
+
+.jo-badge--free {
+  color: #f1c85a;
+  background: linear-gradient(180deg, rgba(212,171,58,.22), rgba(118,88,18,.15));
+  border: 1px solid rgba(224,184,68,.55);
+  box-shadow:
+    inset 0 0 16px rgba(212,171,58,.08),
+    0 0 12px rgba(212,171,58,.04);
+}
+.jo-badge--normal {
+  color: #d7e2ef;
+  background: linear-gradient(180deg, rgba(146,164,185,.22), rgba(63,78,96,.18));
+  border: 1px solid rgba(161,181,204,.4);
+}
+.jo-badge--top {
+  color: #ff8179;
+  background: linear-gradient(180deg, rgba(197,52,50,.24), rgba(92,20,21,.2));
+  border: 1px solid rgba(238,75,70,.58);
+  box-shadow: 0 0 13px rgba(219,56,51,.08);
+}
+
+.jo-apply-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  min-height: 39px;
+  border-radius: 7px;
+  border: 1px solid rgba(34,217,239,.72);
+  background: linear-gradient(180deg, #118aa2 0%, #07576c 100%);
+  color: #fff;
+  font-size: .76rem;
+  font-weight: 900;
+  letter-spacing: .055em;
+  text-transform: uppercase;
+  cursor: pointer;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.18),
+    0 0 13px rgba(16,193,220,.08);
+  transition: background .15s, border-color .15s;
+}
+.jo-apply-btn svg { width: 14px; height: 14px; fill: currentColor; }
+.jo-apply-btn:hover:not(:disabled) {
+  border-color: #5deaff;
+  background: linear-gradient(180deg, #18a7c1 0%, #086d85 100%);
+}
+.jo-apply-btn:disabled {
+  cursor: not-allowed;
+  opacity: .38;
+  filter: grayscale(.25);
+}
+
+.jo-details-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  color: rgba(255,255,255,.42);
+  font-size: .68rem;
+  font-weight: 700;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  text-decoration: none;
+  transition: color .15s;
+}
+.jo-details-btn svg { width: 12px; height: 12px; fill: currentColor; }
+.jo-details-btn:hover { color: rgba(255,255,255,.8); }
+
+/* ── Leer-Zustände ───────────────────────────────────────────────────────── */
+.jo-empty, .jo-empty-filter {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  padding: 60px 40px;
+  color: rgba(255,255,255,.25);
+  text-align: center;
+  font-size: .88rem;
+  line-height: 1.6;
+}
+.jo-empty svg, .jo-empty-filter svg {
+  width: 40px; height: 40px; fill: rgba(255,255,255,.1);
+}
+
+/* ── Footer-Notiz ────────────────────────────────────────────────────────── */
+.jo-footer-note {
+  font-size: .72rem;
+  color: rgba(255,255,255,.2);
+  text-align: center;
+  margin-top: 32px;
+  border-top: 1px solid rgba(255,255,255,.05);
+  padding-top: 16px;
+}
+
+/* ── Responsive ──────────────────────────────────────────────────────────── */
+@media (max-width: 1180px) {
+  .jo-card {
+    grid-template-columns: 250px minmax(300px, 1fr) 100px;
+  }
+  .jo-card-toplayer { display: none; }
+  .jo-card-comps {
+    grid-column: 1 / 3;
+    border-top: 1px solid rgba(255,255,255,.07);
+  }
+  .jo-card-action {
+    grid-column: 3;
+    grid-row: 1 / 3;
+  }
+}

@@ -1,0 +1,383 @@
+/*
+ * Standalone, opt-in controls for per-user match-preview layout editing.
+ * Kept outside the preview skin so its regular presentation is unaffected.
+ */
+.mp-layout-open,
+.mp-layout-tools,
+.mp-layout-selection {
+    --mp-layout-accent: #22e6ff;
+    --mp-layout-text: #f4fbff;
+    --mp-layout-muted: rgba(224, 240, 245, 0.72);
+    --mp-layout-bg: rgba(5, 22, 36, 0.97);
+    --mp-layout-rule: rgba(159, 211, 224, 0.24);
+    --mp-layout-yellow: #ffd166;
+    box-sizing: border-box;
+    color: var(--mp-layout-text);
+    font-family: "Bahnschrift", "Franklin Gothic Medium", sans-serif;
+}
+
+.mp-layout-open {
+    align-items: center;
+    background: var(--mp-layout-bg);
+    border: 1px solid rgba(34, 230, 255, 0.52);
+    border-radius: 3px;
+    bottom: 14px;
+    box-shadow: 0 5px 18px rgba(0, 0, 0, 0.34);
+    color: var(--mp-layout-text);
+    cursor: pointer;
+    display: inline-flex;
+    font-size: 12px;
+    font-weight: 700;
+    justify-content: center;
+    letter-spacing: 0.035em;
+    min-height: 40px;
+    padding: 0 13px;
+    pointer-events: auto;
+    position: fixed;
+    right: 16px;
+    z-index: 1204;
+}
+
+.mp-layout-open:hover,
+.mp-layout-open:focus-visible {
+    background: rgba(8, 39, 55, 0.98);
+    border-color: var(--mp-layout-accent);
+}
+
+.mp-layout-open[hidden] {
+    display: none !important;
+}
+
+.mp-layout-tools {
+    background: var(--mp-layout-bg);
+    border: 1px solid var(--mp-layout-rule);
+    border-top: 2px solid var(--mp-layout-accent);
+    border-radius: 3px;
+    bottom: 12px;
+    box-shadow: 0 8px 28px rgba(0, 0, 0, 0.42);
+    display: grid;
+    gap: 8px;
+    left: 50%;
+    max-height: calc(100dvh - 24px);
+    max-width: 1180px;
+    overflow: auto;
+    padding: 10px 12px;
+    pointer-events: auto;
+    position: fixed;
+    transform: translateX(-50%);
+    width: calc(100vw - 150px);
+    z-index: 1203;
+}
+
+.mp-layout-tools[hidden] {
+    display: none !important;
+}
+
+.mp-layout-tools__heading {
+    align-items: baseline;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 3px 10px;
+    justify-content: space-between;
+}
+
+.mp-layout-tools__title {
+    color: var(--mp-layout-accent);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+}
+
+.mp-layout-tools__hint,
+.mp-layout-tools__disclaimer {
+    color: var(--mp-layout-muted);
+    font-size: 10px;
+    line-height: 1.35;
+    margin: 0;
+}
+
+.mp-layout-tools__controls,
+.mp-layout-tools__actions {
+    align-items: end;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 7px;
+}
+
+.mp-layout-tools__field {
+    display: flex;
+    flex: 0 0 auto;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.mp-layout-tools__field label,
+.mp-layout-tools__visibility {
+    color: var(--mp-layout-muted);
+    font-size: 10px;
+    line-height: 1.2;
+}
+
+.mp-layout-tools__field select,
+.mp-layout-tools__field input {
+    background: rgba(13, 38, 52, 0.96);
+    border: 1px solid var(--mp-layout-rule);
+    border-radius: 2px;
+    color: var(--mp-layout-text);
+    font: 11px ui-monospace, "SFMono-Regular", Consolas, monospace;
+    height: 29px;
+    min-width: 0;
+    padding: 3px 6px;
+}
+
+.mp-layout-tools__field select { width: 150px; }
+.mp-layout-tools__field input { width: 76px; }
+.mp-layout-tools__field--font input { width: 84px; }
+
+.mp-layout-tools__field select:focus-visible,
+.mp-layout-tools__field input:focus-visible,
+.mp-layout-tools button:focus-visible,
+.mp-layout-open:focus-visible {
+    border-color: var(--mp-layout-accent);
+    outline: 2px solid var(--mp-layout-accent);
+    outline-offset: 2px;
+}
+
+.mp-layout-tools button {
+    align-items: center;
+    background: rgba(11, 38, 53, 0.96);
+    border: 1px solid var(--mp-layout-rule);
+    border-radius: 2px;
+    color: var(--mp-layout-text);
+    cursor: pointer;
+    display: inline-flex;
+    font: 600 10px "Bahnschrift", "Franklin Gothic Medium", sans-serif;
+    justify-content: center;
+    min-height: 29px;
+    padding: 4px 8px;
+    white-space: nowrap;
+}
+
+.mp-layout-tools button:hover:not(:disabled) {
+    border-color: rgba(34, 230, 255, 0.66);
+    color: var(--mp-layout-accent);
+}
+
+.mp-layout-tools button:disabled {
+    cursor: not-allowed;
+    opacity: 0.48;
+}
+
+.mp-layout-tools__visibility {
+    align-items: center;
+    display: inline-flex;
+    gap: 6px;
+    min-height: 29px;
+    padding: 0 3px;
+}
+
+.mp-layout-tools__visibility input {
+    accent-color: var(--mp-layout-accent);
+    height: 15px;
+    margin: 0;
+    width: 15px;
+}
+
+.mp-layout-tools__actions { margin-left: auto; }
+.mp-layout-tools__actions [data-action="save"],
+.mp-layout-tools__actions #mp-layout-save {
+    border-color: rgba(34, 230, 255, 0.52);
+    color: var(--mp-layout-accent);
+}
+.mp-layout-tools__actions [data-action="reset"],
+.mp-layout-tools__actions #mp-layout-reset { color: var(--mp-layout-yellow); }
+
+.mp-layout-tools__footer {
+    align-items: center;
+    border-top: 1px solid rgba(159, 211, 224, 0.12);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 12px;
+    justify-content: space-between;
+    padding-top: 6px;
+}
+
+#mp-layout-status {
+    color: var(--mp-layout-accent);
+    font-size: 10px;
+    line-height: 1.35;
+    min-height: 1.35em;
+}
+
+.mp-layout-selection {
+    border: 1px solid var(--mp-layout-accent);
+    box-shadow: 0 0 0 1px rgba(3, 16, 26, 0.76), inset 0 0 0 1px rgba(34, 230, 255, 0.16);
+    pointer-events: none;
+    position: fixed;
+    z-index: 1205;
+}
+
+.mp-layout-free .mp-crest-link > .mp-crest-frame {
+    height: 100%;
+    width: 100%;
+}
+.mp-layout-free .mp-kit img {
+    flex: 1 1 auto;
+    height: calc(100% - 20px);
+    min-height: 0;
+    width: 100%;
+}
+.mp-layout-free [data-mp-layout-item] {
+    max-height: none !important;
+    max-width: none !important;
+    min-height: 0 !important;
+    min-width: 0 !important;
+}
+.mp-layout-free .mp-match-content {
+    overflow: visible;
+}
+.mp-layout-editing [data-mp-layout-item] {
+    touch-action: none;
+}
+.mp-layout-free [data-mp-layout-font],
+.mp-layout-free [data-mp-layout-font] :is(h1, h2, h3, p, strong, small, span, dt, dd) {
+    font-size: var(--mp-layout-font) !important;
+}
+
+.mp-layout-selection .mp-layout-drag-label,
+.mp-layout-selection .mp-layout-resize-handle {
+    align-items: center;
+    background: var(--mp-layout-bg);
+    border: 1px solid var(--mp-layout-accent);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+    color: var(--mp-layout-text);
+    display: inline-flex;
+    justify-content: center;
+    pointer-events: auto;
+    position: absolute;
+    touch-action: none;
+}
+
+.mp-layout-selection .mp-layout-drag-label {
+    border-radius: 2px;
+    cursor: move;
+    font: 600 10px "Bahnschrift", "Franklin Gothic Medium", sans-serif;
+    left: -1px;
+    max-width: min(260px, 70vw);
+    min-height: 28px;
+    overflow: hidden;
+    padding: 4px 9px;
+    text-overflow: ellipsis;
+    top: -31px;
+    white-space: nowrap;
+}
+
+.mp-layout-selection .mp-layout-resize-handle {
+    border-radius: 50%;
+    height: 18px;
+    padding: 0;
+    width: 18px;
+}
+
+.mp-layout-selection .mp-layout-resize-handle[data-edge="n"] {
+    cursor: ns-resize;
+    left: 50%;
+    top: -9px;
+    transform: translateX(-50%);
+}
+
+.mp-layout-selection .mp-layout-resize-handle[data-edge="ne"] {
+    cursor: nesw-resize;
+    right: -9px;
+    top: -9px;
+}
+
+.mp-layout-selection .mp-layout-resize-handle[data-edge="e"] {
+    cursor: ew-resize;
+    right: -9px;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+.mp-layout-selection .mp-layout-resize-handle[data-edge="se"] {
+    bottom: -9px;
+    cursor: nwse-resize;
+    right: -9px;
+}
+
+.mp-layout-selection .mp-layout-resize-handle[data-edge="s"] {
+    bottom: -9px;
+    cursor: ns-resize;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.mp-layout-selection .mp-layout-resize-handle[data-edge="sw"] {
+    bottom: -9px;
+    cursor: nesw-resize;
+    left: -9px;
+}
+
+.mp-layout-selection .mp-layout-resize-handle[data-edge="w"] {
+    cursor: ew-resize;
+    left: -9px;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+.mp-layout-selection .mp-layout-resize-handle[data-edge="nw"] {
+    cursor: nwse-resize;
+    left: -9px;
+    top: -9px;
+}
+
+.match-preview-scene.mp-layout-editing .match-preview-content {
+    -webkit-mask-image: none;
+    mask-image: none;
+}
+
+.match-preview-scene.mp-layout-free [data-mp-layout-item],
+.match-preview-scene.mp-layout-free [data-mp-layout-item] .mp-layout-group,
+.match-preview-scene.mp-layout-free .mp-layout-group {
+    max-height: none !important;
+    max-width: none !important;
+    min-height: 0 !important;
+    min-width: 0 !important;
+    overflow: visible !important;
+}
+
+.match-preview-scene.mp-layout-free [data-mp-layout-item].mp-model-viewport {
+    isolation: isolate;
+    overflow: hidden !important;
+}
+
+.match-preview-scene:not(.mp-layout-editing) .mp-layout-item-hidden {
+    display: none !important;
+}
+
+.match-preview-scene.mp-layout-editing .mp-layout-item-hidden {
+    opacity: 0.3;
+}
+
+@media (max-width: 640px) {
+    .mp-layout-tools {
+        bottom: 66px;
+        left: 12px;
+        max-height: calc(100dvh - 82px);
+        padding: 9px;
+        transform: none;
+        width: calc(100vw - 24px);
+    }
+
+    .mp-layout-tools__controls,
+    .mp-layout-tools__actions { gap: 6px; }
+    .mp-layout-tools__actions { margin-left: 0; }
+    .mp-layout-tools__field select { width: 132px; }
+    .mp-layout-tools__field input { width: 65px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .mp-layout-open,
+    .mp-layout-tools button { scroll-behavior: auto; }
+}

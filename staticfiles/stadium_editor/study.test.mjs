@@ -4,6 +4,7 @@ import fs from 'node:fs';
 import * as THREE from './stage/vendor/three.module.js';
 import {applyStudyCamera, projectStudy, dortmundAdapter} from './study_camera.js';
 import {selectDeclaredSources, createStudyLighting} from './study_lighting.js';
+import {createStudyShadowProbe} from './study_shadows.js';
 
 test('shared field has identical projection, full visibility and responsive scaling', () => {
   for (const concept of ['perspective','cutaway']) for (const width of [1880,700,330]) {
@@ -102,4 +103,41 @@ test('alignment audit checks loaded lamp material/vertices and rejects stale ori
   material.userData.sourceMaterial='unverified';
   assert.throws(()=>lighting.inspectAlignment(),/ausrichtung/);
   lighting.dispose();geometry.dispose();material.dispose();
+});
+test('isolated shadows use existing roofs and declared lights; caster control preserves visibility and restores defaults', () => {
+  const root=new THREE.Scene(),roof=new THREE.Mesh(new THREE.BoxGeometry(),
+    new THREE.MeshStandardMaterial({side:THREE.DoubleSide}));
+  root.add(roof);
+  const light=new THREE.SpotLight();light.distance=150;light.userData.sourceId='declared';
+  const handle={roofMeshes:[roof],stage:{sceneRoot:root,
+    renderer:{shadowMap:{enabled:false,type:THREE.BasicShadowMap}}}};
+  let audits=0;
+  const lighting={sources:[light],inspectAlignment(){audits++;}};
+  const probe=createStudyShadowProbe(handle,lighting);
+  assert.equal(audits,1);
+  assert.equal(light.castShadow,false);
+  probe.setState(true);
+  assert.equal(probe.inspect().visibleRoofCasters,1);
+  assert.equal(light.castShadow,true);
+  assert.equal(roof.material.clipShadows,true);
+  assert.equal(roof.material.shadowSide,THREE.DoubleSide);
+  assert.equal(light.shadow.mapSize.x,2048);
+  assert.equal(light.shadow.camera.far,150);
+  probe.setState(true,false);
+  assert.equal(probe.inspect().visibleRoofCasters,0);
+  assert.equal(roof.visible,true);
+  assert.equal(light.castShadow,true);
+  roof.visible=false;
+  probe.setState(true);
+  assert.equal(probe.inspect().visibleRoofCasters,0);
+  probe.dispose();
+  assert.equal(handle.stage.renderer.shadowMap.enabled,false);
+  assert.equal(handle.stage.renderer.shadowMap.type,THREE.BasicShadowMap);
+  assert.equal(roof.castShadow,false);
+  assert.equal(roof.receiveShadow,false);
+  assert.equal(roof.material.clipShadows,false);
+  assert.equal(roof.material.shadowSide,null);
+  assert.equal(light.castShadow,false);
+  assert.throws(()=>createStudyShadowProbe(handle,{sources:[]}),/deklarierte/);
+  roof.geometry.dispose();roof.material.dispose();
 });
