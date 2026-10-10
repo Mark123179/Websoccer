@@ -1768,3 +1768,73 @@ mtime_ms = 1791637256811
 storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:6e4eaecc-e6c5-4f64-8de5-e8845034f33b/96c20c28-6851-43a8-aa1a-2dd754436add/4f012679-21e8-4fcb-972e-b17ed9a2e1ac"
 storage_version_token = "1791637319650474"
 content_type = "image/png"
+
+[[outputs]]
+id = "wcKdNmRB5zp-iDcs_R4WJ"
+uri = "file://generated-artifacts/elversberg-blueprint-comparison/comparison.png"
+type = "image"
+title = "Elversberg – Blueprint-Vergleich"
+description = "Links räumlich, rechts flach. Oben Dach an, unten Dach aus. Gleiche 75%-Kamera und unverändertes Originalstadion. Quellen: © OpenStreetMap contributors, ODbL 1.0; bedingte Höhen © LVGL 2022, dl-de/by-2-0, www.lvgl.saarland.de."
+logical_id = "56bc7e36-4064-4f55-9deb-7f2f19abb844"
+content_hash = "sha256:551fab0c8c737e9341f8a08a2e4cb5411f4f5697c8e992741d3fc9f2e9159489"
+size = 673125
+mtime_ms = 1791638902951
+storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:6e4eaecc-e6c5-4f64-8de5-e8845034f33b/56bc7e36-4064-4f55-9deb-7f2f19abb844/6ab60e91-6d6c-408a-adaf-99731ff830d5"
+storage_version_token = "1791639207484486"
+content_type = "image/png"
+
+[[outputs]]
+id = "ZmTXgse4yEJ57Dc69VsHW"
+uri = "file://generated-artifacts/elversberg-blueprint-comparison/spatial_roof_on.png"
+type = "image"
+title = "Elversberg – Räumlicher Blueprint – Dach an"
+description = "Native Gesamtansicht, 1880 × 940 Pixel. Tagesstudie; teilweise schematische Höhen, flaches Gelände, keine erfundenen Baumkronen. Quellen: © OpenStreetMap contributors, ODbL 1.0; bedingte Höhen © LVGL 2022, dl-de/by-2-0, www.lvgl.saarland.de."
+logical_id = "459debf7-f185-4f12-86bb-7182c338a1d0"
+content_hash = "sha256:143489167385081916469e33ef45f6cd3be6b6e27e206ffb2261e45985bab40b"
+size = 317274
+mtime_ms = 1791638900315
+storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:6e4eaecc-e6c5-4f64-8de5-e8845034f33b/459debf7-f185-4f12-86bb-7182c338a1d0/978b073b-7f57-4b6f-aabb-e752788ea350"
+storage_version_token = "1791639208442213"
+content_type = "image/png"
+
+[[outputs]]
+id = "8hiClv66Zq-_B3qr4gXEr"
+uri = "file://generated-artifacts/elversberg-blueprint-comparison/spatial_roof_off.png"
+type = "image"
+title = "Elversberg – Räumlicher Blueprint – Dach aus"
+description = "Native Gesamtansicht, 1880 × 940 Pixel. Tagesstudie; teilweise schematische Höhen, flaches Gelände, keine erfundenen Baumkronen. Quellen: © OpenStreetMap contributors, ODbL 1.0; bedingte Höhen © LVGL 2022, dl-de/by-2-0, www.lvgl.saarland.de."
+logical_id = "0823ada5-128e-4172-8f09-4f1d7603339d"
+content_hash = "sha256:5c56a17817587cc990e9d277819262b651e95a934550e5baaf08ea6316ef8bd7"
+size = 390963
+mtime_ms = 1791638901511
+storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:6e4eaecc-e6c5-4f64-8de5-e8845034f33b/0823ada5-128e-4172-8f09-4f1d7603339d/54b309b3-ad0d-4b5f-aedf-5913ec80984e"
+storage_version_token = "1791639209007328"
+content_type = "image/png"
+
+[[outputs]]
+id = "UObFH0GSHg0NiOacfl6n6"
+uri = "file://generated-artifacts/elversberg-blueprint-comparison/flat_roof_on.png"
+type = "image"
+title = "Elversberg – Flacher Blueprint – Dach an"
+description = "Native Gesamtansicht, 1880 × 940 Pixel. Tagesstudie; teilweise schematische Höhen, flaches Gelände, keine erfundenen Baumkronen. Quellen: © OpenStreetMap contributors, ODbL 1.0; bedingte Höhen © LVGL 2022, dl-de/by-2-0, www.lvgl.saarland.de."
+logical_id = "e7df243c-1130-48d4-8e06-1312b16f86b3"
+content_hash = "sha256:d1b5e98e6c15ba6862839aa59d2e87786c816f2980d1c3a7691e1be639b3e8df"
+size = 321495
+mtime_ms = 1791638900867
+storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:6e4eaecc-e6c5-4f64-8de5-e8845034f33b/e7df243c-1130-48d4-8e06-1312b16f86b3/a896d906-f5fe-4d6b-8ad4-c97c3eb65dc4"
+storage_version_token = "1791639209550073"
+content_type = "image/png"
+
+[[outputs]]
+id = "3JnRlybFPXnQjBWpZM42I"
+uri = "file://generated-artifacts/elversberg-blueprint-comparison/flat_roof_off.png"
+type = "image"
+title = "Elversberg – Flacher Blueprint – Dach aus"
+description = "Native Gesamtansicht, 1880 × 940 Pixel. Tagesstudie; teilweise schematische Höhen, flaches Gelände, keine erfundenen Baumkronen. Quellen: © OpenStreetMap contributors, ODbL 1.0; bedingte Höhen © LVGL 2022, dl-de/by-2-0, www.lvgl.saarland.de."
+logical_id = "8dbef920-a574-44b0-b09b-a918a8c450fe"
+content_hash = "sha256:e04fda19aaf3dddb12dc3b0c5e3bbd9ee06d73a462bc201d7c2f4919ede704e4"
+size = 398337
+mtime_ms = 1791638902075
+storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:6e4eaecc-e6c5-4f64-8de5-e8845034f33b/8dbef920-a574-44b0-b09b-a918a8c450fe/c6c02c37-1533-4081-b161-06f846a4dabb"
+storage_version_token = "1791639210149666"
+content_type = "image/png"

@@ -5,7 +5,7 @@ description: Verbindliche Bildhierarchie, nicht abgenommene Umfeldversuche und b
 
 ## Aktuelles Ziel
 
-„Hauptteil des Bildes soll weiterhin das Spielfeld sein, dort soll der 2D Modus auch ablaufen.“ Darum das 3D-Stadion: sichtlicher Unterschied zwischen Elversberg vor etwa 14.000 und einem Stadion vor etwa 80.000, Dach an/aus sowie Tag/Nacht auswählbar. Die möglichst fotorealistische echte Umgebung soll Dortmund, Elversberg und später London oder Braga erkennbar machen.
+„Hauptteil des Bildes soll weiterhin das Spielfeld sein, dort soll der 2D Modus auch ablaufen.“ Darum das 3D-Stadion: sichtlicher Unterschied zwischen Elversberg vor etwa 14.000 und einem Stadion vor etwa 80.000, Dach an/aus sowie Tag/Nacht auswählbar. Die echte Ortslage soll erhalten bleiben; Fotorealismus ist nach der erneuten Qualitätskritik nicht mehr als alleiniger Zielstil vorauszusetzen.
 
 **Why:** Der Nutzer lehnte auch die letzte Foto-/3D-Gesamtansicht ab: „das ist es nicht.“ Seine zweite neue Referenz zeigt ungefähr die gewünschte Nähe. Er betonte, dass der genaue Weg zum Ziel noch offen ist.
 
@@ -119,6 +119,21 @@ lassen; der geografische Blick hängt weiterhin vom Verein ab. Ältere
 Umfeldregistrierungen aus der Gegenrichtung nicht unverändert übernehmen.
 
 ## Bisheriger Bildansatz
+
+Der Nutzer beanstandete die Qualität der fotografischen Vorbereitung und
+fragte nach einer „vereinfachten BLUEPRINT Variante“: „Umfeld im 3D-Stil aber
+mit unserem Stil wie im 2D-Modus“. Er wählte den Vergleich räumlicher und
+flacher Blueprint-Darstellung.
+
+**Why:** Die technischen Foto-/Maskenvorlagen überzeugten ihn visuell nicht.
+Der vorhandene dunkle 2D-Kartenstil ist seine ausdrücklich genannte
+Gestaltungsreferenz, nicht eine neue frei erfundene Low-Poly-Stadt.
+
+**How to apply:** Blueprint-Vergleiche als separate Gestaltungsstudien mit
+echtem Stadion und unveränderter 75%-Kamera behandeln. Räumliche
+Offline-Vorbereitung ist erlaubt; daraus weder eine Freigabe einer
+Laufzeitstadt noch eine Auswahl des räumlichen Stils ableiten. Ältere
+Fotorealismus-/Higgsfield-Vorgaben nicht auf diese Studie übertragen.
 
 „Wir nehmen unser Stadionmodell und das Spielfeld wie gehabt und das Umfeld machen wir als zwei Bilder Tag & Nacht je Verein.“ „Ich werde die Bilder liefern.“
 
