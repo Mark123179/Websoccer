@@ -84,8 +84,8 @@ class AdminLiveStoryTestTests(TestCase):
         self.store(sample_run())
         response = self.client.get(reverse('story_test_start'))
         self.assertContains(response, 'id="ticker-stadium-preview"')
-        self.assertContains(response, 'ticker_stadium_preview.js?v=20')
-        self.assertContains(response, 'ticker_stadium_preview.css?v=20')
+        self.assertContains(response, 'ticker_stadium_preview.js?v=21')
+        self.assertContains(response, 'ticker_stadium_preview.css?v=21')
         self.assertNotContains(response, 'id="ticker-camera-height"')
         self.assertNotContains(response, 'id="ticker-camera-reset"')
         self.assertContains(response, 'Feste Kamera')
@@ -95,11 +95,10 @@ class AdminLiveStoryTestTests(TestCase):
         self.assertContains(response, 'stage/vendor/three.module.js')
         self.assertContains(response, 'noch ohne Spieleranimation')
         self.assertContains(response, 'id="ticker-stadium-environment"')
-        background = response.context['ticker_stadium_environment']['imageBackground']
-        self.assertEqual(background['clubFmId'], 907)
-        self.assertEqual(background['model'], 'dortmund')
-        self.assertEqual(set(background['images']), {'day', 'night'})
-        self.assertNotIn('naturalPackage', response.context['ticker_stadium_environment'])
+        # Without an imported BVB in this isolated database, never invent
+        # an unrelated stadium or fall back to the old photographs.
+        self.assertEqual(response.context['ticker_stadium_environment'], {'unavailable': True})
+        self.assertNotContains(response, '"imageBackground"')
         self.assertNotContains(
             self.client.get(reverse('story_test_conference')), 'ticker-stadium-preview')
         normal = render_to_string('game/live_ticker.html', {

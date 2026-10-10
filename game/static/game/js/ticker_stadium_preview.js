@@ -22,9 +22,10 @@ if (canvasHost && statusHost) {
   const defaultHeight = Number(heightControl?.defaultValue || 50);
   let cameraFrame = 0;
   let canonicalMode = false;
+  let spatialDortmund = false;
   const controlsEnabled = enabled => {
-    if (heightControl) heightControl.disabled = !enabled || canonicalMode;
-    if (heightReset) heightReset.disabled = !enabled || canonicalMode;
+    if (heightControl) heightControl.disabled = !enabled || canonicalMode || spatialDortmund;
+    if (heightReset) heightReset.disabled = !enabled || canonicalMode || spatialDortmund;
     if (roofControl) roofControl.disabled = !enabled;
     if (dayControl) dayControl.disabled = !enabled;
   };
@@ -38,6 +39,7 @@ if (canvasHost && statusHost) {
   const updateDay = () => {
     const day = dayControl?.checked ?? true;
     if (canonicalMode) sceneHandle?.update?.({day});
+    else if (spatialDortmund) sceneHandle?.update?.({day, floodlight: !day});
     if (dayValue) dayValue.textContent = day ? 'Tageslicht' : 'Nacht';
   };
   dayControl?.addEventListener('change', updateDay);
@@ -98,6 +100,9 @@ if (canvasHost && statusHost) {
     setState('loading', 'Stadionansicht wird geladen …');
     try {
       const config = readJSON(document.getElementById('ticker-stadium-environment')?.textContent, {});
+      spatialDortmund = config.renderer === 'dortmund-spatial';
+      if (spatialDortmund && !config.sceneUrl)
+        throw new Error('Die gemeinsame BVB-Scene-Adresse fehlt.');
       if (config.renderer === 'canonical' && !config.sceneUrl) {
         throw new Error('Die kanonische Stadion-Scene-Adresse fehlt; es wird kein Ersatzmodell geladen.');
       }
@@ -162,9 +167,19 @@ if (canvasHost && statusHost) {
       setState('loading', 'Originales Dortmunder Stadion wird geladen …');
       if (config.unavailable) throw new Error('Die Dortmunder Umfeldquelle ist derzeit nicht verfügbar. Der Ticker läuft weiter.');
       const {mountDortmundScene} = await import(sceneURL.href);
-      const surroundings = config.surroundings ??
+      let presentation = config;
+      if (spatialDortmund) {
+        const response = await fetch(config.sceneUrl, {credentials:'same-origin'});
+        if (!response.ok) throw new Error('Die gemeinsame BVB-Scene konnte nicht geladen werden.');
+        const scene = await response.json();
+        if (scene.club?.id !== config.clubId ||
+            scene.presentation?.renderer !== 'dortmund-spatial')
+          throw new Error('Die BVB-Scene gehört nicht zum gewählten Verein.');
+        presentation = scene.presentation;
+      }
+      const surroundings = presentation.surroundings ??
         readJSON(canvasHost.dataset.surroundings, {});
-      const frame = config.frame ?? readJSON(canvasHost.dataset.frame, {});
+      const frame = presentation.frame ?? readJSON(canvasHost.dataset.frame, {});
       const mounted = await mountDortmundScene({
         element: canvasHost,
         surroundings,
@@ -175,6 +190,8 @@ if (canvasHost && statusHost) {
         compact: false,
         transparentBackground: Boolean(config.imageBackground),
         tickerPreview: true,
+        spatialTicker: spatialDortmund,
+        runtimeLighting: spatialDortmund,
         naturalPackage: config.naturalPackage,
         imageBackground: config.imageBackground,
         onStatus: message => {
@@ -186,12 +203,18 @@ if (canvasHost && statusHost) {
         return;
       }
       sceneHandle = mounted;
+      if (spatialDortmund) {
+        await sceneHandle.update({designColors: presentation.designColors,
+          day: dayControl?.checked ?? true, floodlight: dayControl ? !dayControl.checked : false});
+      }
       // This view is a still preview: first frame and ResizeObserver redraws only.
       sceneHandle?.setActive(false);
       controlsEnabled(true);
       if (Number(heightControl?.value || defaultHeight) !== defaultHeight) updateCamera();
       if (roofControl && !roofControl.checked) updateRoof();
-      setState('ready', 'SIGNAL IDUNA PARK · 3D-Stadion · Bildbasiertes Umfeld · Feste Kamera');
+      setState('ready', spatialDortmund
+        ? 'SIGNAL IDUNA PARK · Gemeinsamer räumlicher Ortsplan · Feste 75%-Feldkamera'
+        : 'SIGNAL IDUNA PARK · 3D-Stadion · Bildbasiertes Umfeld · Feste Kamera');
     } catch (error) {
       if (stopped || thisAttempt !== attempt) return;
       canvasHost.replaceChildren();

@@ -4,6 +4,7 @@ import {previewSupportsMaterial, sourceOpaqueColor} from './dortmund_source_mate
 import {addReconstructedFacade, reconstructedFacadeVisible, sourceFacadePreviewColor} from './dortmund_reconstructed_facade.js?v=2';
 import {buildDortmundSurroundings} from './dortmund_surroundings.js?v=51';
 import {tickerCameraFrame, tickerHeightElevation, TICKER_ELEVATION, TICKER_AZIMUTH, TICKER_VIEW_OFFSET} from './dortmund_ticker_camera.js?v=3';
+import {applyStudyCamera} from './study_camera.js?v=3';
 import {TICKER_ROOF_NAMES, setTickerRoofVisibility} from './dortmund_ticker_roof.js?v=1';
 import {naturalProfileFromUpdate} from './natural_profile.js?v=1';
 import {applyImageCameraFrame} from './image_background_camera.js?v=1';
@@ -29,7 +30,12 @@ export async function mountDortmundScene({
   includeSurroundings = true, interactive = true, autoRotate = false, compact = false,
   transparentBackground = false, compactZoom = 1, verticalFraming = 0, tickerPreview = false,
   naturalPackage = null, imageBackground = null,
+  spatialTicker = false, runtimeLighting = false,
 }) {
+  if (spatialTicker && (!tickerPreview || imageBackground || naturalPackage || !includeSurroundings))
+    throw new Error('Räumlicher BVB-Ticker benötigt seinen eigenen 3D-Ortsplan ohne Fotohintergrund.');
+  if (runtimeLighting && (imageBackground || naturalPackage))
+    throw new Error('Belegte BVB-Leuchten dürfen nicht mit einem fremden Lichtprofil gemischt werden.');
   if (imageBackground && (!tickerPreview || imageBackground.model !== 'dortmund' || naturalPackage))
     throw new Error('Bildbasiertes Umfeld benötigt die passende Admin-Stadionansicht.');
   if (imageBackground) { transparentBackground = true; includeSurroundings = false; }
@@ -90,6 +96,8 @@ export async function mountDortmundScene({
   const geometries = [], textures = [], materials = new Map(), facadeMaterials = new Map(), cutawayMaterials = [];
   const facadeSourceParts = [], roof = [], shell = [], tickerRoof = [];
   let resizeObserver;
+  let declaredLighting = null;
+  const originalMeshes = [];
   let animationActive = true, lastAnimationTime = null;
   const fitCompactCamera = () => {
     const bounds = new THREE.Box3().setFromObject(world);
@@ -122,6 +130,18 @@ export async function mountDortmundScene({
     distance = required * 1.10 / compactZoom;
   };
   const positionCamera = () => {
+    if (spatialTicker) {
+      // Use the approved Elversberg projection itself, not a new field-fit
+      // approximation. Only rotate its frame into the untouched Unity axes.
+      applyStudyCamera(camera, 'approved-elversberg',
+        renderer.domElement.clientWidth, renderer.domElement.clientHeight);
+      const rotation = new THREE.Quaternion().setFromAxisAngle(
+        new THREE.Vector3(0, 1, 0), -Math.PI / 2);
+      camera.position.applyQuaternion(rotation);
+      camera.quaternion.premultiply(rotation);
+      camera.updateMatrixWorld(true);
+      return;
+    }
     camera.position.set(target.x + distance * Math.sin(azimuth) * Math.cos(elevation),
       target.y + distance * Math.sin(elevation),
       target.z + distance * Math.cos(azimuth) * Math.cos(elevation));
@@ -146,7 +166,7 @@ export async function mountDortmundScene({
        target.set(framing.target.x, framing.target.y, framing.target.z);
     }
     // Shift projection, not the canvas or model: shared viewers stay unchanged.
-      const viewOffset = tickerPreview ? TICKER_VIEW_OFFSET : verticalFraming;
+      const viewOffset = spatialTicker ? 0 : tickerPreview ? TICKER_VIEW_OFFSET : verticalFraming;
       const scopedViewOffset = naturalPackage ? -.24 : viewOffset;
        if (!imageLayer && scopedViewOffset) camera.setViewOffset(width, height, 0,
         height * clamp(scopedViewOffset, -0.25, 0.25), width, height);
@@ -223,6 +243,7 @@ export async function mountDortmundScene({
     imageProfileControls?.remove();
     imageLighting?.dispose();
     imageLayer?.dispose();
+    declaredLighting?.dispose();
     delete element.dataset.imageBackground;
     delete element.dataset.imageProfile;
     if (colorBands) {
@@ -307,6 +328,9 @@ export async function mountDortmundScene({
       geometries.push(geometry);
       const mesh = new THREE.Mesh(geometry, groupMaterials);
       mesh.name = `ORIGINAL_${entry.name}`;
+      mesh.userData.sourcePathId = entry.pathId;
+      mesh.userData.sourceParts = entry.parts.filter(previewSupportsMaterial);
+      originalMeshes.push(mesh);
       if (naturalPackage || imageBackground) {
         mesh.castShadow = true;
         mesh.receiveShadow = true;
@@ -331,6 +355,16 @@ export async function mountDortmundScene({
       });
     }
     facade = addReconstructedFacade(THREE, modelRoot);
+    if (runtimeLighting) {
+      const [{createDortmundRuntimeLighting}, response] = await Promise.all([
+        import('./dortmund_runtime_lighting.js'),
+        fetch(new URL('./study_assets/dortmund_lights.json', import.meta.url)),
+      ]);
+      if (!response.ok) throw new Error('BVB-Leuchtendeklaration fehlt.');
+      declaredLighting = createDortmundRuntimeLighting(THREE, scene, modelRoot,
+        originalMeshes, await response.json(), hemisphere, sun);
+      declaredLighting.setState({day: true, floodlight: false});
+    }
     if (imageBackground) {
       const {configureImageLighting} = await import('./image_background_scene.js?v=2');
       const bounds = new THREE.Box3();
@@ -439,6 +473,7 @@ export async function mountDortmundScene({
         list.forEach(material => {
           if (object.name.startsWith('ORIGINAL_st081_pitch_')) {
             material.clippingPlanes = [];
+            if (spatialTicker) return;
             material.color.set(object.name === 'ORIGINAL_st081_pitch_0' ? '#438c32' : '#f3f5e8');
             if (object.name === 'ORIGINAL_st081_pitch_1') {
               material.emissive.set('#b9c3a9');
@@ -468,6 +503,10 @@ export async function mountDortmundScene({
     animate(performance.now());
     return {
       kind: 'three', stage: {renderer, render}, dispose,
+      lightingEvidence: () => declaredLighting?.evidence.map(({light, ...item}) => ({
+        ...item, position: light.position.toArray(),
+        direction: light.target.position.clone().sub(light.position).normalize().toArray(),
+      })) || [],
       setTickerCameraHeight(degrees) {
         if (disposed || !tickerPreview || imageBackground) return;
         elevation = tickerHeightElevation(degrees);
@@ -574,6 +613,8 @@ export async function mountDortmundScene({
         } else if (naturalPackage && explicitNaturalProfile) {
           naturalLighting?.setProfile(explicitNaturalProfile)
             .catch(error => onStatus(`Lichtprofil nicht verfügbar · ${error.message}`));
+        } else if (declaredLighting) {
+          declaredLighting.setState({day, floodlight});
         } else if (!naturalPackage && typeof floodlight === 'boolean') {
           sun.intensity = floodlight ? 2 : 1.5;
         }

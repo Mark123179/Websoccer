@@ -1318,10 +1318,15 @@ async function ensureThreeStage(){
   try{
     if(isDortmundScene){
       const {mountDortmundScene} = await import(editorModuleUrl('./dortmund_editor_scene.js'));
+      const response = await fetch(EDITOR.liveSceneUrl, {credentials:'same-origin'});
+      if(!response.ok) throw new Error('Gemeinsame BVB-Scene konnte nicht geladen werden.');
+      const runtime = (await response.json()).presentation;
+      if(runtime?.renderer !== 'dortmund-spatial') throw new Error('BVB-Ortsplan fehlt.');
       const mounted = await mountDortmundScene({
         element: host,
-        surroundings: editorBackground(),
-        frame: D.meta,
+        surroundings: runtime.surroundings,
+        frame: runtime.frame,
+        runtimeLighting: true,
         onStatus: text => { const node = document.getElementById('deSceneStatus'); if(node) node.textContent = text; },
       });
       stageAdapter = mounted;

@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 
 
 def _stadium_preview_environment(club_id=None):
-    """Independent Dortmund study, not an image fallback for test-game clubs."""
+    """Current club-keyed spatial scene; never a photograph fallback."""
     if club_id is not None:
         from .models import Club
         from .stadium_scene_context import ticker_scene_context
@@ -27,10 +27,15 @@ def _stadium_preview_environment(club_id=None):
             raise ValueError("Ungültiger Stadionverein.")
         context = ticker_scene_context(club)
         if context is None:
-            raise ValueError("Für diesen Verein gibt es keine Elversberger Laufzeitszene.")
+            raise ValueError("Für diesen Verein gibt es keine freigegebene räumliche Laufzeitszene.")
         return context
-    from stadium_editor.image_backgrounds import load_image_background
-    return {'imageBackground': load_image_background(907)}
+    from .models import Club
+    from .stadium_scene_context import ticker_scene_context
+    club = Club.objects.filter(fm_inside_id=907).select_related("stadium").first()
+    context = ticker_scene_context(club)
+    if context is None:
+        raise ValueError("Für den BVB fehlt die gemeinsame räumliche Stadion-Scene.")
+    return context
 
 
 def admin_only(view):

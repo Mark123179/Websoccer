@@ -60,3 +60,15 @@ nicht isoliert. Das ist kein Nachweis eines defekten Stadionmodells.
 Kamera-/Dach-/Lichtzustände verwenden. Aufnahmehilfen nur im temporären
 Browserkontext einsetzen. DOM-Hintergrundbilder gehören zum Tickerbild und
 müssen beim Canvas-Export positionsgetreu mit aufgenommen werden.
+
+Ein zurückgekehrter Renderaufruf belegt noch keine abgeschlossene
+GPU-Ausgabe. Eine Aufnahme muss tatsächlich fertig und visuell geprüft sein,
+bevor sie als Nachweis zählt.
+
+**Why:** Bei der gemeinsamen Feldprojektion kehrte der Renderaufruf zurück,
+während der anschließende Bildexport hängen blieb. CPU-Statusmeldungen
+allein hätten eine fertige Ansicht fälschlich bestätigt.
+
+**How to apply:** Keine erfolgreich gemeldeten Renderaufrufe mit fertigen
+Bildnachweisen gleichsetzen. Frühere Bilder oder Kamerabelege verlieren
+ihre Gültigkeit, sobald die geprüfte Projektion geändert wurde.

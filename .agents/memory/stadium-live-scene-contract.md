@@ -70,7 +70,29 @@ getrennte Editor-, Ticker- und Exportkulissen. Die 2D-Projektion und
 darstellen; unterschiedliche Kameras sind kein abweichender Bestand.
 Die Freigabe betrifft Elversberg, nicht einen automatischen Vereins-Rollout.
 
+Für die BVB-Abnahme erwartet der Nutzer ebenfalls den Elversberg-Modus:
+„Warum ist das Stadionumfeld noch nicht im Elversberg Modus und hat noch das
+alte Bild?“ Die fünf Ansichten des bisherigen BVB-Fotomodus erfüllten diese
+Erwartung nicht.
+
+**Why:** Die Bitte, das Ganze für den BVB vorzuzeigen, wurde zu eng als reine
+Aufnahme des Altstands ausgelegt; der Nutzer hat das ausdrücklich korrigiert.
+
+**How to apply:** BVB-Abnahme nicht mit dem alten Fotohintergrund als neue
+gemeinsame räumliche Darstellung ausgeben. Die eigenen BVB-Modell- und
+Umfelddaten verwenden, keine Elversberger Ortsobjekte übernehmen.
+
 ## Verbindliche Stadionabnahme je Verein
+
+„Möchte nur fertige angezegit bekommen.“ Keine Zwischenbilder oder
+Teilserien als Abnahme vorzeigen.
+
+**Why:** Der Nutzer hat diese Grenze bei der BVB-Umstellung ausdrücklich
+erneut genannt.
+
+**How to apply:** Erst die vollständig geprüften fünf Ansichten gemeinsam
+vorzeigen. Bei einem Prüfblocker den Blocker benennen, statt alte oder
+ungeprüfte Aufnahmen als fertigen neuen Stand auszugeben.
 
 Der Nutzer verlangt: „Für jeden Verein möchte ich die Abnahme der 5 Bilder
 machen. 2D, 3D Editor, LiveTicker, LiveTicker ohne Dach und bei Nacht.“

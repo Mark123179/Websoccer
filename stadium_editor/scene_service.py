@@ -21,4 +21,8 @@ def current_live_scene(stadium):
         for position, block in enumerate(effective["blocks"]):
             block.update(trusted[block.get("id", position)])
         payload = standard_design_for_geometry(stadium, effective)
-    return build_live_scene(stadium, geometry, payload)
+    scene = build_live_scene(stadium, geometry, payload)
+    if stadium.club.fm_inside_id == 907:
+        from .dortmund_runtime import runtime_presentation
+        scene["presentation"] = runtime_presentation(stadium, geometry, payload)
+    return scene
