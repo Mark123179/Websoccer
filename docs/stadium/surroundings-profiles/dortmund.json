@@ -1,0 +1,36 @@
+{
+  "version": 1,
+  "id": "dortmund",
+  "label": "Dortmund",
+  "model_adapter": "unity-dortmund",
+  "rear_stand": "WEST",
+  "hidden_front_stand": "OST",
+  "camera_bearing_deg": 82.003,
+  "osm_file": "stadium_editor/blueprints/v2/dortmund.json",
+  "stadium_way": 17235929,
+  "pitch_way": 17235988,
+  "ground_source": {
+    "type": "orthophoto",
+    "metadata": "generated-artifacts/dortmund-site-study/source.json",
+    "image": "generated-artifacts/dortmund-site-study/orthophoto_north_up.jpg",
+    "credit": "Geobasis NRW, nw_dop_rgb, dl-de/zero-2-0; © OpenStreetMap contributors, ODbL 1.0"
+  },
+  "hidden_footprint": {"type": "osm-ring", "relation_id": 531985},
+  "photo_stadium_removal": {
+    "type": "source-raster-polygons",
+    "source_size": [2048, 2048],
+    "source_sha256": "9462a31f4edb5eec7e301f32476e88e31e412e3c67ea8c4ca51ceadcce307a6b",
+    "polygons": [
+      [[690, 625], [1200, 625], [1330, 770], [1330, 1370], [1250, 1410], [690, 1410]]
+    ],
+    "reason": "Konservative, am Originalfoto kontrollierte Entfernung einschließlich auskragender Dächer, Fassaden, Pylone und Stadionschatten. Keine vermessene zusätzliche Stadionfläche."
+  },
+  "priority_features": [],
+  "gaps": [
+    {"topic": "Aufnahmedatum", "status": "unknown", "impact": "Luftbild ist keine bestätigte Aufnahme des aktuellen Bauzustands."},
+    {"topic": "Innenboden", "status": "unknown", "impact": "Unter dem fotografierten Stadion fehlen Bodenbelege; kein Stadtvorplatz."},
+    {"topic": "Höhen und Vegetation", "status": "unknown", "impact": "Bodenverdeckung belegt keine Sicht auf aufrechte Fassaden oder Baumkronen."}
+  ],
+  "photo_references": [],
+  "reference_notes": "Die fast vollständige Bodenverdeckung bei Dach-an erlaubt keine pauschale Aussage über höhere Nachbarobjekte."
+}

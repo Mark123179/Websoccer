@@ -1642,3 +1642,129 @@ mtime_ms = 1791631054000
 storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:6e4eaecc-e6c5-4f64-8de5-e8845034f33b/92c987f3-755c-4c3c-985e-2b49374fbbf8/7360f568-ea07-42a9-95f4-8ecda87b5f68"
 storage_version_token = "1791631174684871"
 content_type = "application/octet-stream"
+
+[[outputs]]
+id = "eCEcohPV-y6Wfm0cCTCeG"
+uri = "file://generated-artifacts/stadium-surroundings/elversberg/guide.html"
+type = "html"
+title = "Elversberg – aktualisiertes Umfeldpaket"
+description = "Aktuelle Anleitung mit sechs Referenz-/Masken-PNGs, Quellen und kopierbaren Tag-/Nacht-Prompts. Höhen bleiben bedingt; Gelände, Baumkronen und finale Bildabnahme offen."
+logical_id = "b73a983b-e450-438f-a430-64502de68fb2"
+content_hash = "sha256:82c823df724e537e76a05eb83ac2d02f7fadba2b12ed589d14f575288ac79cbd"
+size = 1212346
+mtime_ms = 1791637263299
+storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:6e4eaecc-e6c5-4f64-8de5-e8845034f33b/b73a983b-e450-438f-a430-64502de68fb2/670e181e-e36c-45bb-b340-e09753f2fcd1"
+storage_version_token = "1791637317742031"
+content_type = "text/html"
+
+[[outputs]]
+id = "fnq--No84So63iy329ye6"
+uri = "file://generated-artifacts/stadium-surroundings/dortmund/guide.html"
+type = "html"
+title = "Dortmund – korrigiertes Umfeldpaket"
+description = "Aktuelle Übergabe: Dach-/Fassaden-/Pylon-/Schattenreste zusätzlich am Originalfoto entfernt. Sechs einzeln herunterladbare PNGs, quellbildgebundene Kontrollmaske und deutsche Prompts. Ersetzt die frühere Dortmunder Anleitung."
+logical_id = "9c9f0f38-782b-4e71-9aff-4ec1ac89f35e"
+content_hash = "sha256:801ae62ac3324b13b5a9ba5f1da62dfb9b6f052ff7394376c3701b1df798a5f8"
+size = 22867206
+mtime_ms = 1791637257915
+storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:6e4eaecc-e6c5-4f64-8de5-e8845034f33b/9c9f0f38-782b-4e71-9aff-4ec1ac89f35e/85a6dc31-78da-4f3e-9b87-716133461486"
+storage_version_token = "1791637317121707"
+content_type = "text/html"
+
+[[outputs]]
+id = "mn9EznZf4ylmYb0E33SV9"
+uri = "file://generated-artifacts/stadium-surroundings/elversberg/01_background_reference.png"
+type = "image"
+title = "Elversberg – registrierte Arbeitsvorlage"
+description = "1880 × 940, schematische OSM-Vorlage ohne Vereinsstadion. Grau ist unbekannter Stadion-/Innenboden, kein belegter Vorplatz."
+logical_id = "02f0f61e-c786-4eb0-9f7c-22a2a86de94f"
+content_hash = "sha256:88f7a666d4806de9186733685dcb0e3b42b0b33b692e85221f0fd000dbc9188c"
+size = 190644
+mtime_ms = 1791636432179
+storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:6e4eaecc-e6c5-4f64-8de5-e8845034f33b/02f0f61e-c786-4eb0-9f7c-22a2a86de94f/a939917d-7802-40ec-88fa-65ea7863733e"
+storage_version_token = "1791636654249307"
+content_type = "image/png"
+
+[[outputs]]
+id = "-gYnNramnlCOEq231n7sv"
+uri = "file://generated-artifacts/stadium-surroundings/elversberg/06_conditional_height_reference.png"
+type = "image"
+title = "Elversberg – bedingte Höhenreferenz"
+description = "Stadionfreie violette Gebäudehüllen am Originalstandort. Flaches Bezugsniveau; keine Originalfassaden, keine angenommene Lidl-Höhe."
+logical_id = "f85e93bd-022b-4807-af9d-674e03589466"
+content_hash = "sha256:99835353139c5344270e19eb73e19409c4878a9ac195c605d1f188dac2dcb47b"
+size = 153695
+mtime_ms = 1791636433815
+storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:6e4eaecc-e6c5-4f64-8de5-e8845034f33b/f85e93bd-022b-4807-af9d-674e03589466/29b3933b-70c9-406b-a7d0-821fcb333698"
+storage_version_token = "1791636656117505"
+content_type = "image/png"
+
+[[outputs]]
+id = "ZTlFOJJXtOt5Tz4PUxn57"
+uri = "file://generated-artifacts/stadium-surroundings/dortmund/01_background_reference.png"
+type = "image"
+title = "Dortmund – korrigierte stadionfreie Arbeitsvorlage"
+description = "Aktuelle PNG-Vorlage, 1880 × 940. Die Aussparung entfernt auch fotografierte Stadionreste außerhalb des Grundrisses; konservative Bildentfernung ist keine vermessene zusätzliche Stadionfläche. Ersetzt die frühere Dortmunder PNG-Vorlage."
+logical_id = "7e3895d1-41cc-4b6d-8a5a-feafedb1d5f4"
+content_hash = "sha256:56aa3506a6ad7ea33a3b2d6afdb3559289aded103c4004d1e10eb01db077fd5f"
+size = 214161
+mtime_ms = 1791637255531
+storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:6e4eaecc-e6c5-4f64-8de5-e8845034f33b/7e3895d1-41cc-4b6d-8a5a-feafedb1d5f4/83358055-fdf3-480f-ba1c-b30a6d10b979"
+storage_version_token = "1791637318385744"
+content_type = "image/png"
+
+[[outputs]]
+id = "cdpbXK-UF_dhJdGY7q5U9"
+uri = "file://generated-artifacts/stadium-surroundings/elversberg/02_unknown_stadium_ground_mask.png"
+type = "image"
+title = "Elversberg – Stadionentfernung und unbekannter Boden"
+description = "Separate Kontrollmaske; Weiß markiert die ausgesparte Arbeitsfläche, nicht belegte Außenanlagen."
+logical_id = "ba835156-8167-4166-b1c7-e5e5c8bcd81e"
+content_hash = "sha256:e7aa5f3305d46ebb85a279589763deb47cc72a2c77d7edb66ba25b1b02666ef5"
+size = 5243
+mtime_ms = 1791636432195
+storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:6e4eaecc-e6c5-4f64-8de5-e8845034f33b/ba835156-8167-4166-b1c7-e5e5c8bcd81e/37a72f85-ff1e-4695-8fb7-b04683476a32"
+storage_version_token = "1791636657922601"
+content_type = "image/png"
+
+[[outputs]]
+id = "IthOmf6MrVCy2_oO8VrUQ"
+uri = "file://generated-artifacts/stadium-surroundings/dortmund/02_unknown_stadium_ground_mask.png"
+type = "image"
+title = "Dortmund – korrigierte Bildentfernungsmaske"
+description = "Aktuelle kameraregistrierte Kontrollmaske für unbekannten Innenboden und konservativ entfernte Stadion-Fotoanteile samt Schatten. Ersetzt die frühere Dortmunder Maske."
+logical_id = "ff25b9ea-9643-40a6-a8df-a5145593e103"
+content_hash = "sha256:1c47b4cd1c77e064fe8c82f57ad4750d89a9e038f0ba5251eb6e04863c328a36"
+size = 4248
+mtime_ms = 1791637255543
+storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:6e4eaecc-e6c5-4f64-8de5-e8845034f33b/ff25b9ea-9643-40a6-a8df-a5145593e103/220dfd2c-cc46-408e-bf14-6f274039c3a7"
+storage_version_token = "1791637319041679"
+content_type = "image/png"
+
+[[outputs]]
+id = "VKGQj_l8fXzF68CAXfmzR"
+uri = "file://generated-artifacts/stadium-surroundings/elversberg/03_keep_pitch_mask.png"
+type = "image"
+title = "Gemeinsame 75%-Feldschutzmaske"
+description = "Identisch für beide Piloten, Dächer und Tageszeiten. Beim diagnostischen Zusammensetzen bleiben 416.792 Feldpixel exakt aus dem jeweiligen Originalrender erhalten."
+logical_id = "116cc169-516c-439b-944d-6dc5e1772338"
+content_hash = "sha256:88c363ee46f85b0109accee02d2fc066ff34bce8fed5b1d02bda181a04fff6bc"
+size = 3654
+mtime_ms = 1791636432207
+storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:6e4eaecc-e6c5-4f64-8de5-e8845034f33b/116cc169-516c-439b-944d-6dc5e1772338/de27bf16-32fb-42ba-b518-cfd2685fe9f0"
+storage_version_token = "1791636659245436"
+content_type = "image/png"
+
+[[outputs]]
+id = "iGGXGB9XQeuhN2YzUEEeB"
+uri = "file://generated-artifacts/stadium-surroundings/dortmund/07_source_stadium_removal_mask.png"
+type = "image"
+title = "Dortmund – Luftfoto-Kontrollmaske"
+description = "2048 × 2048, Nord oben. Separat an Fotoquelle und Bildgröße gebundene Stadionbild-Entfernung; wird in die gemeinsame Kamera projiziert. Keine Laufzeit-Silhouette und keine zusätzliche vermessene Stadionfläche."
+logical_id = "96c20c28-6851-43a8-aa1a-2dd754436add"
+content_hash = "sha256:6d529ee00cd2c4fd5c9109efd2eaf25394fb573bf593100f18e0bad981221710"
+size = 6324
+mtime_ms = 1791637256811
+storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:6e4eaecc-e6c5-4f64-8de5-e8845034f33b/96c20c28-6851-43a8-aa1a-2dd754436add/4f012679-21e8-4fcb-972e-b17ed9a2e1ac"
+storage_version_token = "1791637319650474"
+content_type = "image/png"

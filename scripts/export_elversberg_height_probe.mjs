@@ -83,6 +83,9 @@ try{
       return {name,rgbaBottomUp:btoa(binary)};
     }
     const captures=[];
+    // Offline template aid, independent of stadium/roof occupancy. Still
+    // conditional measured-height envelopes on an unverified flat datum.
+    captures.push(capture('environment_only',null,false));
     for(const roof of [true,false]){
       h.setRoof(roof);
       const state=roof?'roof':'no_roof';

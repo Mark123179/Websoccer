@@ -142,3 +142,5 @@
 - [Pilot-Präfix-Testisolierung](pilot-prefix-test-isolation.md) — TestCase isoliert keine HTTP-Weiterleitungen; Präfix-Tests dürfen nicht über den Proxy den echten Pilot treffen.
 - [Creator-Source-ID-Projektion](creator-source-link-projection.md) — Kanonische IDs anzeigen; fehlende Links nur lesend ableiten, niemals als Quellwerte zurückschreiben.
 - [Amtliche Gebäudehöhen](official-building-height-evidence.md) — measured-Höhen brauchen räumliche Zuordnung und Gelände; Saarland-WFS-Zähler können trotz gefüllter Seiten falsch sein.
+- [Studienartefakte zwischen Aufgaben](stadium-study-artifact-portability.md) — Frühere Abnahme garantiert keine vorhandenen ignorierten Rohbelege; gegen die freigegebene Kamera neu erzeugen.
+- [Luftfoto und Grundriss](orthophoto-stadium-removal.md) — Stadionbild separat entfernen: Dächer, Pylone und Schatten reichen über Bodenmasken hinaus.

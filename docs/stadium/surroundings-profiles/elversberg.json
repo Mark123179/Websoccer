@@ -1,0 +1,44 @@
+{
+  "version": 1,
+  "id": "elversberg",
+  "label": "Elversberg",
+  "model_adapter": "blueprint-v2",
+  "rear_stand": "SUED",
+  "hidden_front_stand": "NORD",
+  "camera_bearing_deg": 41.129,
+  "osm_file": "stadium_editor/blueprints/v2/elversberg.json",
+  "stadium_way": 1154632806,
+  "pitch_way": 31339206,
+  "ground_source": {
+    "type": "osm-schematic",
+    "credit": "© OpenStreetMap contributors, ODbL 1.0; Höhenbefunde ©LVGL 2022, dl-de/by-2-0, www.lvgl.saarland.de"
+  },
+  "hidden_footprint": {
+    "type": "blueprint-stand",
+    "path": "stadium_editor/blueprints/v2/elversberg_v2.json",
+    "stand": "NORD"
+  },
+  "height_evidence": "generated-artifacts/elversberg-height-visibility/height_inputs.json",
+  "priority_features": [
+    {"osm_id": 30887518, "name": "Wasgau", "status": "conditional", "note": "Höhenhülle 9,379 m; kein vollständiger Fassaden-/Geländenachweis."},
+    {"osm_id": 53864244, "name": "TVE-Halle", "status": "conditional", "note": "Mehrteilige Höhenhülle bis 14,204 m; Originalfoto historisch."},
+    {"osm_id": 53864241, "name": "Lidl", "status": "unknown", "note": "Amtliche Zuordnung verworfen. Keine angenommene 6-m-Höhe als Beleg verwenden."}
+  ],
+  "gaps": [
+    {"topic": "Gelände relativ zum Spielfeld", "status": "unknown", "impact": "Flaches Bezugsniveau ist nur eine Vorbereitungshilfe; Hanglage und Sichtlinien bleiben offen."},
+    {"topic": "Baumkronen und Waldkante", "status": "unknown", "impact": "Kartierte Grünfläche belegt keine Kronenhöhe oder vollständige Verdeckung."},
+    {"topic": "Gebäude und Dachformen", "status": "conditional", "impact": "43 von 70 bodensichtbaren Gebäuden bedingt höhenzugeordnet, 27 offen; echte Dachformen fehlen."},
+    {"topic": "Flutlicht", "status": "unknown", "impact": "Keine bestätigten Modellleuchten; nicht im Hintergrund erfinden."},
+    {"topic": "Innenboden", "status": "unknown", "impact": "Geländegrenze ist kein vermessener Gebäudegrundriss; ausgeblendete Tribüne nicht als Vorplatz ausgeben."}
+  ],
+  "photo_references": [
+    {
+      "url": "https://www.spiesen-elversberg.de/fileadmin/user_upload/Spiesen-Elversberg/PDF/Sportstaettenkonzept.pdf#page=24",
+      "subject": "TVE-Fassade und Luftbild",
+      "date": "2017",
+      "status": "historical",
+      "reuse": "Nur Quellenlink; Weiterverwendungsrechte nicht bestätigt."
+    }
+  ],
+  "reference_notes": "Schematische OSM-Ortsvorlage mit bedingten Höhenhüllen. Kein Luftbild und keine ortsverifizierte Fotokulisse."
+}
