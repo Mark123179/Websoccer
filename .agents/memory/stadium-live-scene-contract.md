@@ -53,6 +53,23 @@ bleiben unverändert.
 **How to apply:** Zum Beispiel `procedural-ring` nur für einen Renderer, der
 explizite Dachsegmente benötigt, transient auflösen und nie zurückschreiben.
 
+## Nutzerforderung: Editor-/Ticker-Parität mit Umgebung
+
+„Die 3D Ansicht im Liveticker muss natürlich identisch sein mit dem 3D
+Stadioneditor und dem 2D Stadioneditor.“
+
+**Why:** Der Nutzer verlangt nach dem nicht überzeugenden Elversberger
+Blueprint-Vergleich ausdrücklich Verbesserung und Umgebung direkt in 3D,
+einschließlich Spielansicht und Liveticker. Das ist keine weitere reine
+Bildstudie; die frühere Offline-/Admin-only-Grenze gilt für diesen Auftrag
+nicht mehr.
+
+**How to apply:** Gemeinsamen Stadion- und Umfeldbestand verwenden, nicht
+getrennte Editor-, Ticker- und Exportkulissen. Die 2D-Projektion und
+3D-Geometrie müssen dieselben Ortsobjekte und denselben aktuellen Ausbau
+darstellen; unterschiedliche Kameras sind kein abweichender Bestand.
+Die Freigabe betrifft Elversberg, nicht einen automatischen Vereins-Rollout.
+
 ## Kamera- und Sichtwechsel
 
 Orbit-Kameraänderungen dürfen die Stadiongeometrie nicht neu erzeugen. Eine
