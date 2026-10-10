@@ -76,9 +76,10 @@ Der Nutzer verlangt: „Für jeden Verein möchte ich die Abnahme der 5 Bilder
 machen. 2D, 3D Editor, LiveTicker, LiveTicker ohne Dach und bei Nacht.“
 
 **Why:** Der Nutzer hat dieses Abnahmeformat ausdrücklich für jeden Verein
-vorgegeben.
+vorgegeben und ergänzt: „zeig mir immer alle 5 aufeinmal“.
 
-**How to apply:** Je Verein diese fünf aktuellen Ansichten vorlegen. Die
+**How to apply:** Je Verein alle fünf aktuellen Ansichten gemeinsam vorlegen,
+nicht einzeln oder als unvollständige Teilserie. Die
 Abnahme eines anderen Vereins nicht übertragen; fehlende oder blockierte
 Aufnahmen offen benennen und nicht durch unmarkierte ältere Bilder ersetzen.
 
