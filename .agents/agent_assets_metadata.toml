@@ -1306,3 +1306,73 @@ mtime_ms = 1791623939960
 storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:6e4eaecc-e6c5-4f64-8de5-e8845034f33b/c9fdbe45-d5da-45a0-be93-b5d1141cd947/dfd9ab56-f0ad-4ee8-ae8b-d9ce4c9ebc93"
 storage_version_token = "1791624160871332"
 content_type = "image/jpeg"
+
+[[outputs]]
+id = "h0IF0I7DBkNeZQp2PmH1N"
+uri = "file://generated-artifacts/stadium-frame-probe/four_states.jpg"
+type = "image"
+title = "Gemeinsame Kamera — vier Dachzustände im Vergleich"
+description = "Oben Dortmund, unten Elversberg; links mit Dach, rechts ohne Dach. Jede Ansicht ist für diesen Vergleich gleichmäßig auf halbe Auflösung verkleinert. Der offene Stadionrahmen passt vollständig hinein. Die Feldprojektion ist in allen vier Zuständen identisch. Nur eine Bildprobe, nicht integriert."
+logical_id = "3ba75084-ac8d-4b93-89cf-069aff086dfc"
+content_hash = "sha256:29fb8ae56efaf0339aa9e164e61e6fa8b08626feced79715405a367cd74adefe"
+size = 302685
+mtime_ms = 1791625546215
+storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:6e4eaecc-e6c5-4f64-8de5-e8845034f33b/3ba75084-ac8d-4b93-89cf-069aff086dfc/59aabd60-180d-44fc-a867-c9133f7f1fc2"
+storage_version_token = "1791625641593134"
+content_type = "image/jpeg"
+
+[[outputs]]
+id = "HjWC25maaCQsHxCysPcij"
+uri = "file://generated-artifacts/stadium-frame-probe/dortmund_roof.png"
+type = "image"
+title = "Dortmund — mit Dach · volle Auflösung"
+description = "1880 × 940 Pixel. Gemeinsame feste Kamera; kameraseitige Tribüne weiterhin ausgeblendet. Neutraler Studienhintergrund, noch keine Ortskulisse oder Änderung der Spielansicht."
+logical_id = "c30e57c6-fc19-4e78-94c1-a3eacee066ba"
+content_hash = "sha256:e37d3b5b697ec0e8cd14ec08ba353e0e2fbc4d644bac5deb2edf2f4836ae33bf"
+size = 517371
+mtime_ms = 1791625379927
+storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:6e4eaecc-e6c5-4f64-8de5-e8845034f33b/c30e57c6-fc19-4e78-94c1-a3eacee066ba/9af856eb-bab6-4ad5-8306-45364ffe98fa"
+storage_version_token = "1791625642401100"
+content_type = "image/png"
+
+[[outputs]]
+id = "97OMu_4pKYzKNywxeh8km"
+uri = "file://generated-artifacts/stadium-frame-probe/dortmund_no_roof.png"
+type = "image"
+title = "Dortmund — ohne Dach · volle Auflösung"
+description = "1880 × 940 Pixel. Gemeinsame feste Kamera; kameraseitige Tribüne weiterhin ausgeblendet. Neutraler Studienhintergrund, noch keine Ortskulisse oder Änderung der Spielansicht."
+logical_id = "d8b3c41e-61af-4ca3-ba06-26bc783809ca"
+content_hash = "sha256:6eef0cc8006391ed44ab563e879cc6a05c9d6d30d4457b001b0d1523551e4b09"
+size = 815891
+mtime_ms = 1791625379927
+storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:6e4eaecc-e6c5-4f64-8de5-e8845034f33b/d8b3c41e-61af-4ca3-ba06-26bc783809ca/a1c89e49-8884-4b67-a902-180e4c6b50ca"
+storage_version_token = "1791625642987471"
+content_type = "image/png"
+
+[[outputs]]
+id = "66HJFX-8p3DFxPsMiXXto"
+uri = "file://generated-artifacts/stadium-frame-probe/elversberg_roof.png"
+type = "image"
+title = "Elversberg — mit Dach · volle Auflösung"
+description = "1880 × 940 Pixel. Gemeinsame feste Kamera; kameraseitige Tribüne weiterhin ausgeblendet. Neutraler Studienhintergrund, noch keine Ortskulisse oder Änderung der Spielansicht."
+logical_id = "f4d26a0b-a101-4667-b4cf-13d7eb44a3c3"
+content_hash = "sha256:f2dec7468448b39edca51a4fcbc891ffeaadab69f28061207934054e1b12f84a"
+size = 177860
+mtime_ms = 1791625379931
+storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:6e4eaecc-e6c5-4f64-8de5-e8845034f33b/f4d26a0b-a101-4667-b4cf-13d7eb44a3c3/b0780c38-ddad-4438-916b-3871327c6c8c"
+storage_version_token = "1791625643930253"
+content_type = "image/png"
+
+[[outputs]]
+id = "r6IYzxzWeRlUgp1BwsCML"
+uri = "file://generated-artifacts/stadium-frame-probe/elversberg_no_roof.png"
+type = "image"
+title = "Elversberg — ohne Dach · volle Auflösung"
+description = "1880 × 940 Pixel. Gemeinsame feste Kamera; kameraseitige Tribüne weiterhin ausgeblendet. Neutraler Studienhintergrund, noch keine Ortskulisse oder Änderung der Spielansicht."
+logical_id = "cea8ea37-65bf-4b58-baae-856ff702a0b3"
+content_hash = "sha256:15c578339aa87f6f44af91d786f47a9598dce4919c41df048b967b4bc49b5727"
+size = 228417
+mtime_ms = 1791625379931
+storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:6e4eaecc-e6c5-4f64-8de5-e8845034f33b/cea8ea37-65bf-4b58-baae-856ff702a0b3/272d5649-81cf-44af-bca4-2e76b3aae9a5"
+storage_version_token = "1791625644501332"
+content_type = "image/png"

@@ -44,6 +44,17 @@ nicht pro Verein automatisch einpassen. Dortmund mit und ohne Dach beurteilen
 und die identische Feldprojektion beim Vergleich mit anderen Vereinen erhalten.
 Keine vollständige Stadtpanorama-Kamera als dafür freigegeben behandeln.
 
+Der Nutzer wählte ausdrücklich den offenen Stadionrahmen: Die drei sichtbaren
+Seiten samt Dach sollen ins Bild passen; die kameraseitige Tribüne bleibt
+ausgeblendet und das Spielfeld vorne frei.
+
+**Why:** Der Nutzer bestätigte diese Variante nach der Erklärung, dass ein
+vollständiger vorderer Tribünen-/Dachaufbau das 2D-Spielfeld verdecken kann.
+
+**How to apply:** Beim Rückzoom nicht zusätzlich die Vorderseite wieder
+einblenden. Zoom oder Kameraabstand nicht pro Dachzustand ändern; beide
+Dachzustände und Vereine müssen dieselbe Feldprojektion verwenden.
+
 ## Bisheriger Bildansatz
 
 „Wir nehmen unser Stadionmodell und das Spielfeld wie gehabt und das Umfeld machen wir als zwei Bilder Tag & Nacht je Verein.“ „Ich werde die Bilder liefern.“
