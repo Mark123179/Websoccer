@@ -76,6 +76,21 @@ bestätigt: „Diesen Mittelweg beibehalten“ / „Beibehalten“.
 aufbauen und die Kamera nicht erneut ungefragt verändern. Die Auswahl
 der Kamera ist keine Abnahme fertiger Umfelder oder Freigabe des produktiven Einbaus.
 
+## Elversberg: Bauzustände der Referenzen
+
+Die überdachte semi-permanente Nordtribüne von 2023–2024 und der erneute
+Nordtribünenbau von 2026 sind unterschiedliche Referenzzustände.
+
+**Why:** Vereins- und Herstellerquellen zeigen bzw. beschreiben den früheren
+überdachten Zustand, während die Vereinsmitteilung zur Saison 2026/2027
+erneut laufende Bauarbeiten nennt. Ältere Fotos allein belegen nicht den
+aktuellen Stadionzustand.
+
+**How to apply:** Dach- und Umfeldreferenzen nach Bauzustand trennen.
+Eine Ergänzung im vereinfachten Bestandsmodell nicht als vermessene
+Rekonstruktion oder Aktualisierung auf den Neubau ausgeben. Quellen und
+Einordnung: `docs/stadium/elversberg-roof-reference-check.md`.
+
 ## Bisheriger Bildansatz
 
 „Wir nehmen unser Stadionmodell und das Spielfeld wie gehabt und das Umfeld machen wir als zwei Bilder Tag & Nacht je Verein.“ „Ich werde die Bilder liefern.“

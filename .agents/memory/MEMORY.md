@@ -132,7 +132,7 @@
 - [Verifikationsbelege](verification-evidence.md) — Parität braucht identische Startbedingungen; Baseline-Tests und Diagnosezahlen nicht ohne Kontrollläufe interpretieren.
 - [Persistierte Tickertexte](persisted-ticker-stories.md) — Gelesene Geschichten bei Paketwechseln erhalten; nur freigegebene Fälle mit Export neu aufbauen, Version pro Geschichte.
 - [Admin-Ticker-Test](admin-ticker-test.md) — Originaltempo; Reset simuliert dieselben Mannschaften neu, Reload setzt fort; ausschließlich Admins.
-- [Spielfeldzentrierte Spielansicht](stadium-natural-assets.md) — Spielfeld für 2D-Spiel ist Hauptfläche; echte Stadionunterschiede und erkennbare Ortskulisse, letzte Bildstudie nicht abgenommen.
+- [Spielfeldzentrierte Spielansicht](stadium-natural-assets.md) — gemeinsame 75%-Kamera bestätigt; Umfeld noch offen; Elversberger Dachreferenzen nach Bauzustand trennen.
 - [Spielvorschau-Aufbau](match-preview-visual-contract.md) — drei transparente Kacheln, Mitte breiter; Originalkabine mit Stuhl/Tasche im Vordergrund; echte Gegnerdaten und persönliche Anordnung erhalten.
 - [Schiedsrichtervergleich](referee-preview-comparison.md) — aktuelle Saison in der Spielvorschau; Vergleich mit allen Schiedsrichtern der gesamten Sim statt nur dem Wettbewerb.
 - [Creator-3D-Vereinsassets](creator-club-3d-assets.md) — 3D-Trikots sind PNG-Texturen für Home/Away/Third; aktuelles Stadion bedeutet den durch den Manager ausgebauten Zustand.
