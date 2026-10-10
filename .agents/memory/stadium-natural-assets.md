@@ -73,6 +73,18 @@ Promptschleifen empfehlen. Eine deterministisch registrierte Bildgrundlage
 und tatsächlichen Pixelschutz prüfen; KI-Ausgaben nicht allein wegen
 realistischeren Ortsmerkmalen als einbaufertig behandeln.
 
+Eine nahe Feldkamera kann das echte Umfeld bereits geometrisch aus dem
+Bildausschnitt ausschließen; bessere Hintergrundquellen lösen das nicht.
+
+**Why:** Die registrierte Dortmund-Orthofotoprobe liegt fast ganz innerhalb
+der Stadiongrundfläche. Freie Schnittflächen gehören überwiegend zur
+ausgeblendeten Tribüne, nicht zu einem echten Stadtvorplatz.
+
+**How to apply:** Vor weiteren Umfeldbildern die Sichtbarkeit gegen den
+realen Stadiongrundriss und die Modellverdeckung prüfen. Keine Landmarken
+für mehr Ortsbezug künstlich versetzen. Eine weiter gefasste Kamera nur nach
+Nutzerentscheidung und weiterhin gemeinsam für alle Vereinsfelder prüfen.
+
 Für die Umfeld-Erstellung wählte der Nutzer „Vorlagen für Higgsfield vorbereiten“
 statt direkter KI-Erstellung hier.
 

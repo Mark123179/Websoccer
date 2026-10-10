@@ -35,3 +35,6 @@ credentials.json
 backups/
 *.sql.gz
 *.dump
+
+# Generated diagnostic imagery and source rasters
+/generated-artifacts/

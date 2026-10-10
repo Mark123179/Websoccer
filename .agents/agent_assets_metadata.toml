@@ -1278,3 +1278,31 @@ mtime_ms = 1791485970058
 storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:6e4eaecc-e6c5-4f64-8de5-e8845034f33b/6011c4fc-722c-4196-a06f-6847b3e4e340/8735d225-1c9b-4718-9763-fc2e627040be"
 storage_version_token = "1791485997594862"
 content_type = "image/jpeg"
+
+[[outputs]]
+id = "LqcvAGcocuYBmncb3ngCd"
+uri = "file://generated-artifacts/dortmund-site-study/geographic_audit.jpg"
+type = "image"
+title = "Dortmund — echte Ortslage und Kameraausschnitt"
+description = "Amtliches Orthofoto: Cyan zeigt den Bodenausschnitt der unveränderten Kamera, Rot den Stadiongrundriss, Grün das reale Feld. Quelle: Geobasis NRW, WMS NW DOP, Datenlizenz Deutschland Zero 2.0 (https://www.govdata.de/dl-de/zero-2-0); Grundrisse © OpenStreetMap contributors, ODbL. Das Bildflugdatum ist noch nicht festgestellt."
+logical_id = "47a9b6ad-e03c-4445-b14d-667aec0f0d42"
+content_hash = "sha256:517fe73852e1004ae5a3a00d96bf53cf8a7722205a912bd14f2b46e9b4cc1cf6"
+size = 1952432
+mtime_ms = 1791623939996
+storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:6e4eaecc-e6c5-4f64-8de5-e8845034f33b/47a9b6ad-e03c-4445-b14d-667aec0f0d42/502b4f69-1e73-4c4b-96b3-5777a5f14052"
+storage_version_token = "1791624159614354"
+content_type = "image/jpeg"
+
+[[outputs]]
+id = "up2MUZsdXfcqAf5vgCIkr"
+uri = "file://generated-artifacts/dortmund-site-study/camera_feasibility.jpg"
+type = "image"
+title = "Dortmund — unveränderte Kamera mit Originalmodell"
+description = "Deterministische Modellüberlagerung auf der registrierten Bodenvorlage, keine KI. Das Feld bleibt pixelgenau. Schraffur kennzeichnet unbekannten Boden unter der ausgeblendeten Stadionfläche. Technische Machbarkeitsprobe, kein fertiger Hintergrund und kein App-Einbau. Geobasis NRW / dl-de/zero-2-0; OSM / ODbL."
+logical_id = "c9fdbe45-d5da-45a0-be93-b5d1141cd947"
+content_hash = "sha256:6faa42aa1819d9866ee69634814129e4865a56bee1c4d147ab9b763cf34ea680"
+size = 374001
+mtime_ms = 1791623939960
+storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:6e4eaecc-e6c5-4f64-8de5-e8845034f33b/c9fdbe45-d5da-45a0-be93-b5d1141cd947/dfd9ab56-f0ad-4ee8-ae8b-d9ce4c9ebc93"
+storage_version_token = "1791624160871332"
+content_type = "image/jpeg"
