@@ -91,6 +91,22 @@ Eine Ergänzung im vereinfachten Bestandsmodell nicht als vermessene
 Rekonstruktion oder Aktualisierung auf den Neubau ausgeben. Quellen und
 Einordnung: `docs/stadium/elversberg-roof-reference-check.md`.
 
+## Bildseiten und geografische Richtung
+
+Eine gemeinsame spielfeldbezogene Kamera bedeutet nicht automatisch dieselbe
+geografische Blickrichtung an jedem Standort. Die Plätze liegen unterschiedlich
+gedreht; Tribünennamen können vereinfachte Richtungssektoren bezeichnen.
+
+**Why:** Bei der Klärung der Dachabdeckung wurden eine Modellbezeichnung
+und eine echte Himmelsrichtung zu leicht gleichgesetzt. Die sichtbare
+Dachhälfte allein belegt weder einen fehlenden Originalmesh noch den
+geografisch passenden Referenzzustand.
+
+**How to apply:** Erst vorne/hinten/links/rechts im tatsächlichen Render
+zuordnen, dann die Kartenlage und Modellorientierung abgleichen. Eine
+Dachkorrektur nicht allein aus dem Namen „Nordtribüne“ oder einem Foto aus
+anderer Blickrichtung ableiten.
+
 ## Bisheriger Bildansatz
 
 „Wir nehmen unser Stadionmodell und das Spielfeld wie gehabt und das Umfeld machen wir als zwei Bilder Tag & Nacht je Verein.“ „Ich werde die Bilder liefern.“

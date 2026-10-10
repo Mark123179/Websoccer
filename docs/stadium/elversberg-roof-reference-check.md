@@ -33,6 +33,15 @@ Anwendungsassets übernommen.
 
 ## Einordnung
 
+Die Modellbezeichnungen sind keine exakten Kamerahimmelsrichtungen.
+Die Elversberger Feldachse im ursprünglichen OSM-Auszug liegt diagonal:
+In der aktuellen Studienausrichtung befindet sich die Kamera ungefähr
+südwestlich, die hintere Modellseite „NORD“ ungefähr nordöstlich.
+Außerdem wurde diese Tribüne im Blueprint-Generator parametrisch ergänzt,
+weil sie im verwendeten OSM-Auszug fehlte. Es handelt sich nicht um ein
+vollständig vermessenes Originalmodell. Ein fehlender Dachabschnitt in
+diesen Daten ist deshalb nicht automatisch ein verlorener Originalmesh.
+
 Für den überdachten historischen Referenzzustand ist die halbierte
 Dachabdeckung der bestehenden Bildprobe nicht stimmig. Eine Ergänzung der
 fehlenden Hälfte ist als Korrektur dieser vereinfachten Probe sinnvoll.
