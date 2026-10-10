@@ -3,6 +3,11 @@
 'use strict';
 
 const EDITOR = window.STADIUM_EDITOR;
+const viewportPreferences = window.StadiumEditorViewport;
+const viewportKey = `stadium-editor:2d-view:v1:${EDITOR.liveSceneUrl}`;
+let viewportStorage = null;
+try { viewportStorage = window.localStorage; } catch (_) {}
+let viewport2D = viewportPreferences.load(viewportStorage, viewportKey);
 
 /* ── Palette: Index 0 = Beton/ungestaltet ─────────────────────── */
 let PALETTE = [
@@ -132,8 +137,9 @@ function stadiumMaxRadius(){
     ? Math.max(configured, derived)
     : derived;
 }
-function fitView(){
-  if(document.querySelector('.stadium-editor-content.is-dortmund') && blocks?.length){
+function fitBaseView(){
+  if((document.querySelector('.stadium-editor-content.is-dortmund') ||
+      D?.surroundings?.style==='elversberg-blueprint') && blocks?.length){
     const points = blocks.flatMap(block => block.quad || []);
     const xs = points.map(point => point[0]), ys = points.map(point => point[1]);
     const left = Math.min(...xs), right = Math.max(...xs);
@@ -148,6 +154,30 @@ function fitView(){
   const R = 430 * (D ? stadiumMaxRadius()/138 : 1); // relative Stadiongröße konstant halten
   SC = Math.min(W, H) / (2*R) * 1.55;
   CX = W/2; CY = H/2 + 6;
+}
+function fitView(){
+  fitBaseView();
+  SC *= viewport2D.factor;
+  CX -= viewport2D.center[0] * SC;
+  CY += viewport2D.center[1] * SC;
+  const label = document.getElementById('zoom2dValue');
+  if(label) label.textContent = `${Math.round(viewport2D.factor*100)}%`;
+}
+function persistViewport(){
+  const saved = viewportPreferences.save(viewportStorage, viewportKey, viewport2D);
+  document.getElementById('zoom2dValue').title = saved
+    ? 'Zoom wird in diesem Browser je Stadion gemerkt'
+    : 'Browserspeicher nicht verfügbar; Zoom gilt nur für diese Sitzung';
+}
+function zoom2D(factor, point=[W/2,H/2]){
+  if(view!=='2d' || !D || !W || !H) return;
+  const before = s2w(...point);
+  viewport2D.factor = viewportPreferences.clamp(viewport2D.factor*factor);
+  fitView();
+  const after = s2w(...point);
+  viewport2D.center[0] += before[0]-after[0];
+  viewport2D.center[1] += before[1]-after[1];
+  fitView(); renderAll(); persistViewport();
 }
 const w2s = (x,y) => [CX + x*SC, CY - y*SC];
 const s2w = (px,py) => [(px-CX)/SC, (CY-py)/SC];
@@ -2107,6 +2137,23 @@ async function exportDesign(){
 }
 
 /* ── Interaktion ──────────────────────────────────────────────── */
+cvOverlay.addEventListener('wheel', e=>{
+  if(view!=='2d' || !D) return;
+  e.preventDefault();
+  const rect = cvOverlay.getBoundingClientRect();
+  const delta = e.deltaY * (e.deltaMode===1 ? 16 : e.deltaMode===2 ? H : 1);
+  zoom2D(Math.exp(-Math.max(-300,Math.min(300,delta))*.002), [
+    (e.clientX-rect.left)*W/rect.width,
+    (e.clientY-rect.top)*H/rect.height,
+  ]);
+}, {passive:false});
+document.getElementById('zoom2dIn').onclick = ()=>zoom2D(1.25);
+document.getElementById('zoom2dOut').onclick = ()=>zoom2D(.8);
+document.getElementById('zoom2dReset').onclick = ()=>{
+  if(view!=='2d' || !D) return;
+  viewport2D = viewportPreferences.defaults();
+  fitView(); renderAll(); persistViewport();
+};
 cvOverlay.addEventListener('mousemove', e => {
   const [wx,wy] = s2w(e.offsetX,e.offsetY);
   if(dragOverlay && overlay){ overlay.wx = wx-dragOff[0]; overlay.wy = wy-dragOff[1]; renderOverlay(); return; }
@@ -2333,6 +2380,7 @@ function setView(v){
   document.getElementById('btn2d').classList.toggle('active', v==='2d');
   document.getElementById('btn3d').classList.toggle('active', v==='3d');
   document.getElementById('rot3d').style.display = v==='3d' ? 'flex' : 'none';
+  document.getElementById('zoom2dControls').hidden = v==='3d';
   document.getElementById('toolsPanel').style.opacity = v==='3d' ? .35 : 1;
   document.getElementById('toolsPanel').style.pointerEvents = v==='3d' ? 'none' : 'auto';
   if(v==='3d'){

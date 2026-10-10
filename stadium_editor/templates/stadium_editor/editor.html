@@ -78,6 +78,10 @@
 .stage-three-ready #stageThree{visibility:visible;pointer-events:auto;z-index:2}
 .stage-three-ready #cvBase,.stage-three-ready #cvBlocks,.stage-three-ready #cvOverlay{z-index:0}
 #cvOverlay{cursor:crosshair}
+.editor-zoom{display:flex;align-items:center;gap:6px;white-space:nowrap}
+.editor-zoom[hidden]{display:none}
+.editor-zoom .btn{padding:6px 9px}
+.editor-zoom output{min-width:42px;text-align:center;color:var(--muted);font-size:11px}
 /* ── Panels ─────────────────────────────────────── */
 .panel{border:1px solid var(--line);border-radius:var(--radius);padding:11px 12px;background:rgba(7,17,26,.5)}
 .panel h3{
@@ -178,6 +182,12 @@
 <div class="editor-toolbar">
   <a class="editor-back" href="{% url 'stadium_detail' %}">← {% if is_dortmund_editor %}STADION-MENÜ{% else %}ZUR STADIONVERWALTUNG{% endif %}</a>
   <div class="editor-toolbar-spacer"></div>
+  <div class="editor-zoom" id="zoom2dControls" role="group" aria-label="2D-Zoom">
+    <button type="button" class="btn" id="zoom2dOut" aria-label="2D herauszoomen" title="Herauszoomen">−</button>
+    <output id="zoom2dValue" aria-live="polite">100%</output>
+    <button type="button" class="btn" id="zoom2dIn" aria-label="2D hineinzoomen" title="Hineinzoomen">+</button>
+    <button type="button" class="btn" id="zoom2dReset" title="Stadion einpassen und Zoom zurücksetzen">Einpassen</button>
+  </div>
   <div id="rot3d"><span>Drehung</span><input type="range" id="yawSlider" min="-180" max="180" value="0">
     <span>Neigung</span><input type="range" id="tiltSlider" min="28" max="80" value="54" style="width:90px">
     <select id="stageCamera" aria-label="3D-Kamera">{% if is_dortmund_editor %}<option value="exterior">Außen</option><option value="interior">Innen</option><option value="roof-corner">Dach / Ecke</option><option value="opposite">Gegenseite</option><option value="distance">Fernansicht</option>{% else %}<option value="orbit">Orbit</option><option value="seat">Sitz</option>{% endif %}</select>
@@ -402,5 +412,6 @@ window.STADIUM_EDITOR = {
 </script>
 <script src="{% static 'stadium_editor/expansion_geometry.js' %}?v=35"></script>
 <script src="{% static 'stadium_editor/elversberg_canopies.js' %}?v=1"></script>
-<script src="{% static 'stadium_editor/editor.js' %}?v=58"></script>
+<script src="{% static 'stadium_editor/editor_viewport.js' %}?v=1"></script>
+<script src="{% static 'stadium_editor/editor.js' %}?v=59"></script>
 {% endblock %}

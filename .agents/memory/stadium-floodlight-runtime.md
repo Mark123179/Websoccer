@@ -17,6 +17,18 @@ Ausrichtungen antwortete er: „ahso okay, liefere ich später nach.“
 **How to apply:** Die angekündigte Nachlieferung als Quelle für die spätere
 Deklaration prüfen; bis dahin keine erfundenen Positionen als Nachweis verwenden.
 
+Der Nutzer erlaubt vorerst die sichtbaren schematischen Elversberger Masten:
+„Nur 2D-Zoom merken; schematische Masten vorerst behalten“. Er wurde darüber
+informiert, dass die V2-Angabe von vier 30-m-Masten zu generierten
+Eckpositionen führt, nicht zu nachgewiesenen echten Montageorten.
+
+**Why:** Auf die Herkunftserklärung wählte er ausdrücklich das vorläufige
+Beibehalten und bat um eine Nachtansicht.
+
+**How to apply:** Diese vorläufige Darstellung darf bleiben; Nachtaufnahmen
+mit diesen Quellen als schematisch kennzeichnen. Die Freigabe ersetzt weder
+die spätere Nachlieferung noch den Nachweis realer Leuchtenpositionen.
+
 Flutlicht ist ein eigener Laufzeitzustand und darf nicht aus Tag/Nacht abgeleitet
 werden. Ein reiner Flutlichtwechsel verändert bestehende Lichtintensitäten und
 Leuchtenemissionen, ohne Geometrie, Kamera oder Design neu aufzubauen.

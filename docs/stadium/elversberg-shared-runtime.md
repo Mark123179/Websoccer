@@ -42,6 +42,23 @@ Dortmund und andere Vereine behalten ihre bisherigen Rendererpfade.
 - Keine neuen Elversberger Lichtquellen. Echte Leuchten bleiben ein
   gesonderter Auftrag; Tag/Nacht verändert nicht den Ortsbestand.
 
+Die sichtbaren Flutlichtmasten stammen aus der vorhandenen V2-Angabe
+`count: 4, height: 30`. Der allgemeine Renderer erzeugt daraus Eckpositionen
+außerhalb der Tribünenbegrenzung. Diese Darstellung ist **schematisch** und
+kein Nachweis realer Montageorte. Nach der ausdrücklichen Herkunftserklärung
+hat der Nutzer ihr vorläufiges Beibehalten und eine Nachtaufnahme gewählt.
+`elversberg-night-schematic-canvas.png` zeigt Nacht mit separat
+eingeschaltetem schematischem Flutlicht; die Quellen wurden nicht neu
+positioniert oder als reale Elversberger Leuchten deklariert.
+
+Der 2D-Editor startet nun stadionnah. Mausrad, Plus/Minus und „Einpassen“
+steuern ausschließlich die lokale Ansicht. Der gewählte Zoom wird im Browser
+je Stadion gemerkt, nicht in Geometrie oder Design geschrieben. Bei
+gesperrtem Browserspeicher bleibt der Zoom für die Sitzung nutzbar; der
+Hinweis an der Prozentanzeige benennt die fehlende dauerhafte Speicherung.
+Plus/Minus, Mausrad, Neuladen, Fenstergrößenwechsel und Zurücksetzen wurden
+schreibgeschützt mit echten Elversberger Daten im Browser geprüft.
+
 Bei nicht verfügbarer Umfeldquelle wird keine Ersatzstadt erzeugt. Die
 optionalen Umfelddetails fehlen dann mit einer ausdrücklichen Warnung.
 

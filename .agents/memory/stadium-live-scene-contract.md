@@ -72,9 +72,10 @@ Die Freigabe betrifft Elversberg, nicht einen automatischen Vereins-Rollout.
 
 Die Tagesgestaltung des 3D-Editors und Livetickers ist vom Nutzer bestätigt:
 „3D Editor super, LiveTicker ebenfalls“. Der 2D-Editor wirkt ihm dagegen
-zu weit entfernt; er möchte den Zoom selbst festlegen. Die sichtbaren
+zu weit entfernt; er möchte den Zoom selbst festlegen und merken. Die sichtbaren
 Lichtmasten wurden ausdrücklich hinterfragt, nicht als echte Leuchten
-freigegeben.
+freigegeben; ihre vorläufige schematische Darstellung ist anschließend
+ausdrücklich erlaubt worden (siehe Flutlicht-Laufzeitvertrag).
 
 **Why:** Der Nutzer hat die räumlichen Tagesansichten bestätigt, aber weder
 den großen anfänglichen 2D-Umgebungsrahmen noch die Herkunft der Lichtmasten.

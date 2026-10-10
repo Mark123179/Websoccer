@@ -1880,3 +1880,31 @@ mtime_ms = 1791649321911
 storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:6e4eaecc-e6c5-4f64-8de5-e8845034f33b/4124e914-ec2e-4d6f-b8be-b2e2a342fc47/8d973950-97f8-41e6-b181-fe39e71fbbe3"
 storage_version_token = "1791649482410313"
 content_type = "image/png"
+
+[[outputs]]
+id = "qmaXMHyby97o8BC9u4g_R"
+uri = "file://generated-artifacts/elversberg-shared-runtime/elversberg-night-schematic-canvas.png"
+type = "image"
+title = "Elversberg bei Nacht – schematisches Flutlicht"
+description = "Echte WebGL-Nachtaufnahme mit eingeschaltetem Flutlicht. Die vier generierten Masten bleiben vorläufig schematisch; ihre Standorte sind nicht vermessen."
+logical_id = "e6c79649-f479-4ffb-9530-776037c066e7"
+content_hash = "sha256:060cfea7600812475d8ed68625894101fd0adebbedc3272eacb9d22b13d17720"
+size = 662172
+mtime_ms = 1791651434398
+storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:6e4eaecc-e6c5-4f64-8de5-e8845034f33b/e6c79649-f479-4ffb-9530-776037c066e7/5b059d53-8ce1-4b27-90a4-12213ad70a17"
+storage_version_token = "1791651720315421"
+content_type = "image/png"
+
+[[outputs]]
+id = "A29n1UfRktTsqnavncomF"
+uri = "file://generated-artifacts/elversberg-shared-runtime/editor-2d-user-zoom.png"
+type = "image"
+title = "2D-Editor – stadionnaher Start und gespeicherter Zoom"
+description = "Zoom per Mausrad und +/−; Einpassen setzt die Ansicht zurück. Der Zoom bleibt beim Neuladen im selben Browser erhalten."
+logical_id = "5e1ad5d2-45a3-42e4-8dc1-df2d5399e573"
+content_hash = "sha256:8faf00d8f73757946c63ec088c74284c82149ae4018c97122fcbb6fc8a3dc9df"
+size = 484943
+mtime_ms = 1791651663710
+storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:6e4eaecc-e6c5-4f64-8de5-e8845034f33b/5e1ad5d2-45a3-42e4-8dc1-df2d5399e573/136965ee-1072-4c66-b515-4db7e1cfd841"
+storage_version_token = "1791651721569429"
+content_type = "image/png"
