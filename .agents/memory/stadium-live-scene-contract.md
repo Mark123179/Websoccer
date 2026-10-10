@@ -70,6 +70,18 @@ getrennte Editor-, Ticker- und Exportkulissen. Die 2D-Projektion und
 darstellen; unterschiedliche Kameras sind kein abweichender Bestand.
 Die Freigabe betrifft Elversberg, nicht einen automatischen Vereins-Rollout.
 
+## Verbindliche Stadionabnahme je Verein
+
+Der Nutzer verlangt: „Für jeden Verein möchte ich die Abnahme der 5 Bilder
+machen. 2D, 3D Editor, LiveTicker, LiveTicker ohne Dach und bei Nacht.“
+
+**Why:** Der Nutzer hat dieses Abnahmeformat ausdrücklich für jeden Verein
+vorgegeben.
+
+**How to apply:** Je Verein diese fünf aktuellen Ansichten vorlegen. Die
+Abnahme eines anderen Vereins nicht übertragen; fehlende oder blockierte
+Aufnahmen offen benennen und nicht durch unmarkierte ältere Bilder ersetzen.
+
 Die Tagesgestaltung des 3D-Editors und Livetickers ist vom Nutzer bestätigt:
 „3D Editor super, LiveTicker ebenfalls“. Der 2D-Editor wirkt ihm dagegen
 zu weit entfernt; er möchte den Zoom selbst festlegen und merken. Die sichtbaren
