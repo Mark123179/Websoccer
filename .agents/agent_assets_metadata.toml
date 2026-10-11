@@ -2314,3 +2314,17 @@ mtime_ms = 1791740824197
 storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:6e4eaecc-e6c5-4f64-8de5-e8845034f33b/b55254d8-a4d4-4396-b0f9-f9e0aec97cab/8a3b54ac-490d-46ba-bc0c-1ae25723d146"
 storage_version_token = "1791740947898433"
 content_type = "application/octet-stream"
+
+[[outputs]]
+id = "x80Z1n8s3xCUUKTjkzvka"
+uri = "file://generated-artifacts/allianzarena-rasen-angeglichen/rasen-vorher-nachher.jpg"
+type = "image"
+title = "Zwischenstand – dunkle Rechtecke noch nicht beseitigt"
+description = "Die Rasenunterlage wurde angeglichen. Der Vergleich zeigt jedoch verbleibende dunkle Rechtecke; die Korrektur ist noch nicht abgeschlossen."
+logical_id = "8b67e4ab-ec09-4a39-96a4-bf49ac575ecc"
+content_hash = "sha256:4f90a19eb97818d9ab9016e0feb5469f67f4b3b2771f56b94c3a18222c054b8d"
+size = 102584
+mtime_ms = 1791742118638
+storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:6e4eaecc-e6c5-4f64-8de5-e8845034f33b/8b67e4ab-ec09-4a39-96a4-bf49ac575ecc/6efec3f2-eba9-415c-9064-2ecdb8ac0046"
+storage_version_token = "1791742210105194"
+content_type = "image/jpeg"
