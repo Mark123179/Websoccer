@@ -2286,3 +2286,31 @@ mtime_ms = 1791740053993
 storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:6e4eaecc-e6c5-4f64-8de5-e8845034f33b/acc804e2-f097-4140-9ea9-d1b01eeb8a5b/11e1f1a1-2843-4665-832b-34f68be72e6d"
 storage_version_token = "1791740086877916"
 content_type = "application/octet-stream"
+
+[[outputs]]
+id = "6SOY6qMVL87E2C6vVbl_h"
+uri = "file://generated-artifacts/allianzarena-bodendetails-korrigiert/bodendetails-vorher-nachher.jpg"
+type = "image"
+title = "Weitere Bodenmasken korrigiert – Vergleich"
+description = "Die harten weiß-schwarzen Balken sind korrigiert. Die dunklere, anders texturierte Rasenunterlage ist weiterhin sichtbar."
+logical_id = "13e22384-919d-4ead-b6f4-e41e9b127811"
+content_hash = "sha256:a7739c1adb1eb1d74e26475c3188f26f5f5073a4969a4e9e0884947c6ff8f130"
+size = 102788
+mtime_ms = 1791740852703
+storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:6e4eaecc-e6c5-4f64-8de5-e8845034f33b/13e22384-919d-4ead-b6f4-e41e9b127811/a869880a-5b20-4872-8fb4-fcd013421a6e"
+storage_version_token = "1791740947064419"
+content_type = "image/jpeg"
+
+[[outputs]]
+id = "w-dxAKNyjVXqrApN6STYk"
+uri = "file://generated-artifacts/allianzarena-bodendetails-korrigiert/stadionpaket-915-allianzarena-bodendetails-korrigiert.zip"
+type = "unspecified"
+title = "Allianz Arena – ergänzte Bodenmasken-Korrektur"
+description = "Transparenz für alle 34 maskierten Boden-Detailflächen; fünf Ansichten geprüft. Dunklere Rasenunterlage nicht angeglichen. Kein Spielimport."
+logical_id = "b55254d8-a4d4-4396-b0f9-f9e0aec97cab"
+content_hash = "sha256:13bb34cedb01eca927b2a779cc5a90eb509a0a38999cb88a7df38508b0ec0d9b"
+size = 19963564
+mtime_ms = 1791740824197
+storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:6e4eaecc-e6c5-4f64-8de5-e8845034f33b/b55254d8-a4d4-4396-b0f9-f9e0aec97cab/8a3b54ac-490d-46ba-bc0c-1ae25723d146"
+storage_version_token = "1791740947898433"
+content_type = "application/octet-stream"

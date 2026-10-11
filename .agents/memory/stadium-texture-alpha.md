@@ -27,3 +27,31 @@ korrigieren“ statt der angebotenen Entfernung dieser Bodenmarkierungen.
 **How to apply:** Diese Entscheidung bei weiteren Paketkorrekturen
 bewahren. Sie hebt die separate Ausblendung von Choreo und Fangnetzen
 nicht auf und ist keine Freigabe für einen Spielimport.
+
+Bei einer fehlerhaften Bodenmaske die übrigen Boden-Detailmaterialien
+derselben Quelle ebenfalls auf Alpha-Masken prüfen, nicht nur das zuerst
+auffällige weiße Material.
+
+**Why:** Die erste, auf weiße Trägerflächen begrenzte Korrektur ließ
+rechteckige Gebrauchsspuren und harte Streifen anderer Bodenmaterialien
+zurück. Auch diese waren keine echten Lichtschatten, sondern unmaskierte
+Originaltexturen.
+
+**How to apply:** Originalmasken über einem kontrastierenden Hintergrund
+ansehen und die ganze Materialfamilie in denselben Vorher-/Nachher-Ansichten
+prüfen. Bei Raycast-Diagnosen ausgeblendete und durch die Ticker-Schnittebene
+abgeschnittene Flächen ausschließen; ein Geometrietreffer allein beweist
+bei transparenten Texturen keinen sichtbaren Bildbeitrag.
+
+Eine Alpha-Korrektur ist keine Zusage, dass alle dunklen Bodenflecken
+verschwinden: In der Allianz-Arena-Quelle liegt unter den Markierungen
+auch eine anders texturierte Rasenunterlage. Deren rechteckige
+Materialkontraste sind von den transparenten Gebrauchsspuren zu trennen.
+
+**Why:** Nach der vollständigen Bodenmasken-Korrektur verschwanden die
+harten weiß-schwarzen Streifen, während Teile der dunkleren Rasenunterlage
+weiter sichtbar blieben.
+
+**How to apply:** Die korrigierte Ansicht tatsächlich ansehen und
+verbleibende Materialkontraste offen benennen; keine vollständige
+Bodenbereinigung allein aus aktivierter Transparenz ableiten.
