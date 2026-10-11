@@ -2132,3 +2132,17 @@ mtime_ms = 1791669162144
 storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:6e4eaecc-e6c5-4f64-8de5-e8845034f33b/fed07c7a-9162-44af-83c9-e761ca7aa795/069e2d13-dbff-4dc2-938f-ec06af9a7715"
 storage_version_token = "1791669760616446"
 content_type = "image/png"
+
+[[outputs]]
+id = "f2Tz7YP82PpKKmKBMHbnz"
+uri = "file://generated-artifacts/gladbach-review/borussia-park-fuenf-ansichten.jpg"
+type = "image"
+title = "Borussia-Park · Alle fünf Ansichten"
+description = "2D-Editor, 3D-Editor, Ticker mit Dach, Ticker ohne Dach und Nachtansicht mit Flutlicht in einem Bild."
+logical_id = "f1ecb8de-8c52-4a55-af1a-b7c751e401e0"
+content_hash = "sha256:90a6c5fd0d2a201ee2c268c0dd0f66cef5e32491e61a360b437c613b03ae1f6e"
+size = 820789
+mtime_ms = 1791705202598
+storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:6e4eaecc-e6c5-4f64-8de5-e8845034f33b/f1ecb8de-8c52-4a55-af1a-b7c751e401e0/8f4ff5ac-44b3-4399-bc94-ced608ed9435"
+storage_version_token = "1791705210718741"
+content_type = "image/jpeg"
