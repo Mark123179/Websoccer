@@ -147,4 +147,5 @@
 - [Luftfoto und Grundriss](orthophoto-stadium-removal.md) — Stadionbild separat entfernen: Dächer, Pylone und Schatten reichen über Bodenmasken hinaus.
 - [Stadionmodell-Übergabe](stadium-model-handoff.md) — Registry als Übergabestelle für Claude; weitere Stadien ohne erneute vereinsbezogene Codearbeit.
 - [Allianz-Arena Darstellung](allianz-arena-presentation.md) — Choreo rechts und undurchsichtige Fangnetze ausblenden; Tore und Tornetze bleiben erhalten.
+- [Stadion-Texturmasken](stadium-texture-alpha.md) — Weiße „schwebende“ Flächen können Bodenmarkierungen mit ignorierter Alpha-Maske sein; erst Material und Geometrie prüfen.
 - [Überlappende Dach- und Ranghöhen](stadium-roof-height-overlap.md) — Höhenbasierte Dachschalter können Oberrang-Stufen ausblenden; Schema- und Hashprüfung reichen nicht.
