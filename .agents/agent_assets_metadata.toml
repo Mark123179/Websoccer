@@ -2258,3 +2258,31 @@ mtime_ms = 1791734373401
 storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:6e4eaecc-e6c5-4f64-8de5-e8845034f33b/f3d964b1-a619-4b54-be79-cbb12d75eef2/a72e70a2-6f99-4400-ad0b-56c234d7a192"
 storage_version_token = "1791734386039830"
 content_type = "application/octet-stream"
+
+[[outputs]]
+id = "SBkvIqI5IvWCRu8R2CXMR"
+uri = "file://generated-artifacts/allianzarena-transparenz-korrigiert/transparenz-vorher-nachher.jpg"
+type = "image"
+title = "Bodenmarkierungen: vorher und korrigiert"
+description = "Gleiche Kamera: links die weißen Trägerflächen, rechts die korrekt transparente Originaltextur."
+logical_id = "bfc0b500-78a3-4218-9fe8-1142ed4c57c9"
+content_hash = "sha256:08b05217487843e6499b9c0f1ada9b6400baa77c07447350497eab747b4517b0"
+size = 88331
+mtime_ms = 1791740059905
+storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:6e4eaecc-e6c5-4f64-8de5-e8845034f33b/bfc0b500-78a3-4218-9fe8-1142ed4c57c9/e4f57343-2d5e-4ab7-b79a-b475339c37c7"
+storage_version_token = "1791740086009145"
+content_type = "image/jpeg"
+
+[[outputs]]
+id = "Rgpj48qmk43LJeaJAc2dO"
+uri = "file://generated-artifacts/allianzarena-transparenz-korrigiert/stadionpaket-915-allianzarena-transparenz-korrigiert.zip"
+type = "unspecified"
+title = "Allianz Arena – Transparenz korrigiert"
+description = "Korrigierter Paket-Renderer, Manifest und fünf neu gerenderte Ansichten. Choreo und Fangnetze bleiben ausgeblendet. Nicht ins Spiel importiert."
+logical_id = "acc804e2-f097-4140-9ea9-d1b01eeb8a5b"
+content_hash = "sha256:c14eaa3881b455db77f71abe6f1788d7a51c7a35c2c85a8bc28d35d9b7af8ce3"
+size = 19969086
+mtime_ms = 1791740053993
+storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:6e4eaecc-e6c5-4f64-8de5-e8845034f33b/acc804e2-f097-4140-9ea9-d1b01eeb8a5b/11e1f1a1-2843-4665-832b-34f68be72e6d"
+storage_version_token = "1791740086877916"
+content_type = "application/octet-stream"

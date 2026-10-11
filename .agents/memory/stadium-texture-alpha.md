@@ -17,3 +17,13 @@ unerwünschte Choreos oder absichtlich ausgeblendete Fangnetze.
 ansehen und sichtbare Artefakte den Quellmeshes räumlich zuordnen.
 Markierungen nicht allein wegen ihres fehlerhaften Vorschau-Aussehens
 als Netzhalterungen oder beschädigte Geometrie deklarieren.
+
+Die Bodenmarkierungen der Allianz Arena erhalten und ihre Transparenz
+korrigieren, statt sie auszublenden.
+
+**Why:** Der Nutzer wählte ausdrücklich „Transparenz im Renderer
+korrigieren“ statt der angebotenen Entfernung dieser Bodenmarkierungen.
+
+**How to apply:** Diese Entscheidung bei weiteren Paketkorrekturen
+bewahren. Sie hebt die separate Ausblendung von Choreo und Fangnetzen
+nicht auf und ist keine Freigabe für einen Spielimport.
