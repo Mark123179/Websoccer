@@ -146,5 +146,5 @@
 - [Studienartefakte zwischen Aufgaben](stadium-study-artifact-portability.md) — Frühere Abnahme garantiert keine vorhandenen ignorierten Rohbelege; gegen die freigegebene Kamera neu erzeugen.
 - [Luftfoto und Grundriss](orthophoto-stadium-removal.md) — Stadionbild separat entfernen: Dächer, Pylone und Schatten reichen über Bodenmasken hinaus.
 - [Stadionmodell-Übergabe](stadium-model-handoff.md) — Registry als Übergabestelle für Claude; weitere Stadien ohne erneute vereinsbezogene Codearbeit.
-- [Allianz-Arena Choreo](allianz-arena-presentation.md) — Nur die Choreo rechts ausblenden; Fangnetze hinter beiden Toren bleiben unverändert.
+- [Allianz-Arena Darstellung](allianz-arena-presentation.md) — Choreo rechts und undurchsichtige Fangnetze ausblenden; Tore und Tornetze bleiben erhalten.
 - [Überlappende Dach- und Ranghöhen](stadium-roof-height-overlap.md) — Höhenbasierte Dachschalter können Oberrang-Stufen ausblenden; Schema- und Hashprüfung reichen nicht.
