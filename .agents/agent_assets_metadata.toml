@@ -2174,3 +2174,31 @@ mtime_ms = 1791705694410
 storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:6e4eaecc-e6c5-4f64-8de5-e8845034f33b/9c4e6b91-a8e5-4db9-b6ab-52c287095458/885d66ae-8ba1-4da6-9965-bdafc20527bf"
 storage_version_token = "1791705776574750"
 content_type = "image/jpeg"
+
+[[outputs]]
+id = "wgd95gfSdFaLRaHvbmwAP"
+uri = "file://generated-artifacts/stadium-registry/gladbach-registry-fuenf-ansichten.jpg"
+type = "image"
+title = "Gladbach nach Registry-Umbau · fünf Ansichten"
+description = "Alle fünf Ansichten neu gerendert. Pixel-Diff gegen Vorher und die abgenommene Serie: jeweils 0."
+logical_id = "e8f9d16f-a03b-4104-b5e5-56d8cfb66195"
+content_hash = "sha256:1bf391963bd3682083841b61c0ebb6d10b7499442c38771c691c4a5c3a1255f1"
+size = 806929
+mtime_ms = 1791723242587
+storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:6e4eaecc-e6c5-4f64-8de5-e8845034f33b/e8f9d16f-a03b-4104-b5e5-56d8cfb66195/e4a5fa79-d47f-438a-bce6-aaebddf7e97f"
+storage_version_token = "1791723284992232"
+content_type = "image/jpeg"
+
+[[outputs]]
+id = "WxkccyPMzLs-NrEx6ipBm"
+uri = "file://generated-artifacts/stadium-registry/stadion-registry-abgabe.zip"
+type = "unspecified"
+title = "Registry-Abgabe für Claude"
+description = "Fünf einzelne PNGs, Übersicht, Manifest-Dokumentation, Übergabeablauf, geänderte Dateien, Testausgabe, Pixel-Diffs, Exportnachweis und Ausgabe von check_stadium_model --fmi 908 --assets."
+logical_id = "292ac6c2-aa32-4453-9f58-58ec449e8465"
+content_hash = "sha256:01fe7e8aef037ca36d9ea0461cee78a4c5587342b0cb8b085bd6649aa7694daf"
+size = 4038341
+mtime_ms = 1791723244151
+storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:6e4eaecc-e6c5-4f64-8de5-e8845034f33b/292ac6c2-aa32-4453-9f58-58ec449e8465/7fc87d2a-03d3-49f8-87c8-d179c30e15d7"
+storage_version_token = "1791723285806964"
+content_type = "application/octet-stream"

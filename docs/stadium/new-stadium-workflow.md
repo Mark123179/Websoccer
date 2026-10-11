@@ -238,6 +238,11 @@ Ticker mit Dach, Ticker ohne Dach und Nacht mit Dach und Flutlicht.
 
 ## 7. Technische Einstiegspunkte im Projekt
 
+- `docs/stadium/model-manifest.md`: verbindlicher Registry-/Kalibrierungsvertrag und Übergabeablauf für Claude.
+- `stadium_editor/model_registry.py`: validierte Manifest-Registry unter `blueprints/v2/models/<fmi>.json`.
+- `stadium_editor/unity_runtime.py`: datengetriebene Originalmodell-Präsentation.
+- `scripts/export_stadium_model.py`: parametrischer Offline-Export mit vollständiger Kalibrierung und Quellbelegen.
+- `python manage.py check_stadium_model --fmi <id> --assets`: rein lesende Manifest-/Asset-Prüfung.
 - `stadium_editor/scene_service.py`: aktueller Runtime-Bestand.
 - `stadium_editor/dortmund_runtime.py`: BVB-Präsentationsadapter.
 - `stadium_editor/static/stadium_editor/study_camera.js`: Referenzprojektion.
@@ -252,3 +257,12 @@ Die freigegebenen Vergleichsbilder liegen derzeit unter
 `generated-artifacts/bvb-spatial-review/`. Dieser Ordner ist bewusst
 ignoriert und wird nicht automatisch durch einen Git-Checkout übertragen.
 Für eine externe Übergabe die Bilder ausdrücklich separat bereitstellen.
+
+Für einen bereits vorhandenen Verein mit passender Stadiongeometrie ist
+die Originalmodell-Anbindung nun datengetrieben: **Manifest als
+`models/<fmi>.json` + Assets hochladen + `check_stadium_model` + Worker
+neu starten**. Kein hart verdrahteter Vereinszweig ist dafür erforderlich.
+Claude liefert Manifest, kalibrierte Assets, Quellbelege und die fünf
+Ansichten; fehlende Kalibrierung ist ein Fehler und hat keine Standardwerte.
+Die Registrierung ist keine Freigabe für einen DB-Import oder Änderungen
+an Kapazität, Finanzen, Managerzuordnung, Ausbau oder gespeicherten Designs.

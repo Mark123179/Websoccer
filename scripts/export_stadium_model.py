@@ -1,4 +1,5 @@
-"""Offline, source-bound Borussia-Park export. Never changes game rows."""
+"""Offline source-model export. No registry, database or storage writes."""
+import argparse
 import hashlib
 import json
 from pathlib import Path
@@ -13,11 +14,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 from scripts.export_stadium_study_lights import world
 
-SOURCE = ROOT / "attached_assets/borussiapark_1791666343498.bundle"
-DEST = ROOT / "generated-artifacts/gladbach-model"
-
-
-def main():
+def export_model(SOURCE, seats_path, fmi, name, DEST, calibration):
     DEST.mkdir(parents=True, exist_ok=True)
     env = UnityPy.load(str(SOURCE))
     cache, binary, meshes, tex_refs, lamps = {}, bytearray(), [], {}, []
@@ -132,7 +129,8 @@ def main():
             np.linalg.norm(np.array(f["position"]) - np.array(s["position"]))) is fixture]
     binary_path = DEST / "geometry.bin"
     binary_path.write_bytes(binary)
-    manifest = {"format": "unity-mesh-binary-v1", "clubFmiId": 908,
+    manifest = {"format": "unity-mesh-binary-v1", "clubFmiId": fmi, "stadiumName": name,
+                "calibration": calibration,
                 "source": SOURCE.name, "sourceSha256": hashlib.sha256(SOURCE.read_bytes()).hexdigest(),
                 "geometrySha256": hashlib.sha256(binary).hexdigest(),
                 "meshes": meshes, "textures": list(tex_refs), "fixtures": selected,
@@ -144,13 +142,14 @@ def main():
         for name in ["geometry.bin", *manifest["textures"]]
     }
     manifest["sourceEvidence"] = {}
-    for path in sorted((ROOT / "attached_assets").glob("borussiapark*.json")):
+    for path in sorted(SOURCE.parent.glob("*.json")):
         document = json.loads(path.read_text())
         manifest["sourceEvidence"][path.name] = {
             "sha256": hashlib.sha256(path.read_bytes()).hexdigest(),
-            "count": document.get("total_seats", document.get("probeCount", document.get("lightmapCount"))),
+            "count": document.get("total_seats", document.get("probeCount", document.get("lightmapCount")))
+            if isinstance(document, dict) else len(document) if isinstance(document, list) else None,
         }
-    seats = json.loads((ROOT / "attached_assets/borussiapark_1791666343499.json").read_text())["seats"]
+    seats = json.loads(seats_path.read_text())["seats"]
     index, seat = min(enumerate(seats), key=lambda item:
                       abs(item[1]["pos"][2]+75) + 3*abs(item[1]["pos"][0]) +
                       abs(item[1]["pos"][1]-12))
@@ -159,9 +158,9 @@ def main():
                             "sourceFrameRotationY": 90}
     manifest["assetVersion"] = hashlib.sha256(
         json.dumps(manifest, sort_keys=True).encode()).hexdigest()[:16]
+    from stadium_editor.model_registry import validate_model_manifest
+    validate_model_manifest(manifest)
     (DEST / "manifest.json").write_text(json.dumps(manifest, separators=(",", ":")))
-    (ROOT / "stadium_editor/blueprints/v2/gladbach_model.json").write_text(
-        json.dumps(manifest, separators=(",", ":")))
     print(json.dumps({"meshes": len(meshes), "textures": len(tex_refs),
                       "verifiedLights": len(lights), "runtimeLights": len(selected),
                       "binaryMB": round(len(binary)/1024**2, 2)}))
@@ -169,6 +168,26 @@ def main():
         if m["name"].startswith("center"):
             print(m["name"], [round(m["bounds"][j][1], 1) for j in (0, 1)],
                   sorted({p["material"] for p in m["parts"]})[:4])
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--bundle", type=Path, required=True)
+    parser.add_argument("--seats", type=Path, required=True)
+    parser.add_argument("--fmi", type=int, required=True)
+    parser.add_argument("--name", required=True)
+    parser.add_argument("--out", type=Path, required=True)
+    parser.add_argument("--calibration", type=Path, required=True,
+                        help="JSON-Datei mit dem vollständigen calibration-Block")
+    args = parser.parse_args()
+    calibration = json.loads(args.calibration.read_text())
+    if args.fmi <= 0 or not args.name.strip():
+        parser.error("--fmi muss positiv sein; --name darf nicht leer sein")
+    required = {"roofMinHeight", "skipMeshPrefixes", "crowdPrefix", "pitchPrefix",
+                "tickerRotationY", "tickerFrontCut", "standAxes", "orbitDefault"}
+    if not isinstance(calibration, dict) or not required <= calibration.keys():
+        parser.error("--calibration muss den vollständigen calibration-Block enthalten")
+    export_model(args.bundle, args.seats, args.fmi, args.name, args.out, calibration)
 
 
 if __name__ == "__main__":

@@ -1,16 +1,19 @@
 import * as THREE from './stage/vendor/three.module.js';
 import {applyStudyCamera} from './study_camera.js?v=3';
 import {buildDortmundSurroundings} from './dortmund_surroundings.js?v=51';
+import {validateCalibration, standForCenter, tickerQuaternion} from './unity_calibration.js';
 
 /** Original source geometry, with its own club-scoped runtime presentation. */
 export async function mountUnityStadium({element, presentation, tickerPreview = false, onOrbitChange}) {
-  if (presentation.renderer !== 'unity-spatial' || presentation.clubFmiId !== 908)
+  if (presentation.renderer !== 'unity-spatial')
     throw new Error('Unpassendes Original-Stadionmodell.');
   const response = await fetch(presentation.modelUrl);
   if (!response.ok) throw new Error('Original-Stadionmodell nicht verfügbar.');
   const manifest = await response.json();
-  if (manifest.clubFmiId !== 908 || manifest.sourceSha256 !== presentation.sourceSha256)
+  if (manifest.clubFmiId !== presentation.clubFmiId ||
+      manifest.sourceSha256 !== presentation.sourceSha256)
     throw new Error('Modellquelle gehört nicht zum gewählten Verein.');
+  const calibration = validateCalibration(manifest.calibration);
   const base = new URL('.', new URL(presentation.modelUrl, location.href));
   const binaryResponse = await fetch(new URL('geometry.bin', base));
   if (!binaryResponse.ok) throw new Error('Original-Stadiongeometrie fehlt.');
@@ -38,8 +41,10 @@ export async function mountUnityStadium({element, presentation, tickerPreview = 
   const textures = new Map(), materials = [], geometries = [], roof = [], crowd = [];
   const loader = new THREE.TextureLoader();
   let disposed = false, day = true, floodlight = false, roofVisible = true;
-  let azimuth = .95, elevation = .65, distance = 310, cameraMode = 'orbit';
-  const frontCut = new THREE.Plane(new THREE.Vector3(1,0,0),32);
+  let {azimuth, elevation, distance} = calibration.orbitDefault;
+  let cameraMode = 'orbit';
+  const frontCut = new THREE.Plane(
+    new THREE.Vector3(...calibration.tickerFrontCut.normal), calibration.tickerFrontCut.constant);
   const loadTexture = name => {
     if (!textures.has(name)) textures.set(name, loader.loadAsync(new URL(name,base).href).then(t => {
       t.colorSpace = THREE.SRGBColorSpace; t.flipY=false; return t;
@@ -54,7 +59,7 @@ export async function mountUnityStadium({element, presentation, tickerPreview = 
     }));
     for (const entry of manifest.meshes) {
       // Source-exported generic context is replaced by the club's mapped OSM context.
-      if (entry.name.startsWith('center2_')) continue;
+      if (calibration.skipMeshPrefixes.some(prefix => entry.name.startsWith(prefix))) continue;
       const position = new Float32Array(buffer,entry.positionOffset,entry.vertexCount*3);
       const uv = new Float32Array(buffer,entry.uvOffset,entry.vertexCount*2);
       for (const part of entry.parts) {
@@ -62,16 +67,15 @@ export async function mountUnityStadium({element, presentation, tickerPreview = 
           color: new THREE.Color(...part.color), roughness:.85, metalness:0,
           map: part.texture ? await loadTexture(part.texture) : null,
           side: THREE.DoubleSide,
-          clippingPlanes: tickerPreview && !entry.name.startsWith('st081_pitch_') ? [frontCut] : [],
+          clippingPlanes: tickerPreview && !entry.name.startsWith(calibration.pitchPrefix) ? [frontCut] : [],
         });
         materials.push(material);
         const indices = new Uint32Array(buffer,part.indexOffset,part.indexCount);
         const bodyIndices = [], roofIndices = [];
         for (let i=0;i<indices.length;i+=3) {
-          // Source roof panels start at 26.3m; separate above the 26m eave band.
           // Never classify crowd surfaces as roof, even on an upper tier.
-          const isRoof = !entry.name.startsWith('C_') &&
-            indices.slice(i,i+3).every(index=>position[index*3+1]>=26);
+          const isRoof = !entry.name.startsWith(calibration.crowdPrefix) &&
+            indices.slice(i,i+3).every(index=>position[index*3+1]>=calibration.roofMinHeight);
           (isRoof ? roofIndices : bodyIndices).push(indices[i],indices[i+1],indices[i+2]);
         }
         for (const [list,isRoof] of [[bodyIndices,false],[roofIndices,true]]) {
@@ -85,12 +89,11 @@ export async function mountUnityStadium({element, presentation, tickerPreview = 
           mesh.userData.sourcePathId = entry.pathId;
           model.add(mesh); geometries.push(geometry);
           if(isRoof) roof.push(mesh);
-          if(entry.name.startsWith('C_')) {
+          if(entry.name.startsWith(calibration.crowdPrefix)) {
             geometry.computeBoundingBox();
             const center=geometry.boundingBox.getCenter(new THREE.Vector3());
             // Same right-handed native frame as the surrounding map adapter.
-            mesh.userData.stand = Math.abs(center.x)>Math.abs(center.z)
-              ? (center.x>0?'SUED':'NORD') : (center.z>0?'OST':'WEST');
+            mesh.userData.stand = standForCenter(center, calibration.standAxes);
             mesh.userData.sourceColor=material.color.clone();
             crowd.push(mesh);
           }
@@ -116,7 +119,7 @@ export async function mountUnityStadium({element, presentation, tickerPreview = 
     const pose = () => {
       if(tickerPreview) {
         applyStudyCamera(camera,'approved-elversberg',element.clientWidth,element.clientHeight);
-        const q=new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0,1,0),-Math.PI/2);
+        const q=tickerQuaternion(calibration.tickerRotationY);
         camera.position.applyQuaternion(q); camera.quaternion.premultiply(q);
         camera.updateMatrixWorld(true);
       } else if(cameraMode==='seat') {

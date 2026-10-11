@@ -1,24 +1,25 @@
 """Read-only source-model presentation; existing design and capacity are retained."""
+from copy import deepcopy
+import hashlib
 import json
-from pathlib import Path
 
 from .dortmund_runtime import runtime_presentation
 
-MODEL = Path(__file__).parent / "blueprints" / "v2" / "gladbach_model.json"
-
-
-def gladbach_presentation(stadium, geometry, design):
-    manifest = json.loads(MODEL.read_text())
+def unity_presentation(stadium, geometry, design, manifest):
     if manifest["clubFmiId"] != stadium.club.fm_inside_id:
-        raise ValueError("Borussia-Park-Modell gehört nicht zu diesem Verein.")
+        raise ValueError("Stadionmodell gehört nicht zu diesem Verein: clubFmiId.")
+    fmi = manifest["clubFmiId"]
+    revision = hashlib.sha256(json.dumps(manifest, sort_keys=True).encode()).hexdigest()[:16]
     presentation = runtime_presentation(stadium, geometry, design)
     presentation.update({
         "renderer": "unity-spatial",
-        "modelUrl": f"/stadion/model-assets/908/{manifest['assetVersion']}/manifest.json",
-        "stadium": stadium.name,
+        "modelUrl": f"/stadion/model-assets/{fmi}/{manifest['assetVersion']}/manifest.json?manifest={revision}",
+        "stadium": manifest["stadiumName"],
         "clubId": stadium.club_id,
-        "clubFmiId": stadium.club.fm_inside_id,
+        "clubFmiId": fmi,
+        "assetVersion": manifest["assetVersion"],
         "sourceSha256": manifest["sourceSha256"],
+        "calibration": deepcopy(manifest["calibration"]),
     })
     presentation["surroundings"]["source"] = "OpenStreetMap/BLUEPRINT-Bundle (ODbL)"
     presentation["surroundings"]["heightQuality"] = "schematic"

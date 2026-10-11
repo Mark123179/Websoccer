@@ -5,6 +5,7 @@ from .live_scene import build_live_scene, standard_design_for_geometry
 from .models import StadiumDesign, StadiumGeometry
 from .capacity import distribute_capacities
 from .contracts import geometry_blocks
+from .model_registry import model_manifest
 
 
 def current_live_scene(stadium):
@@ -25,7 +26,7 @@ def current_live_scene(stadium):
     if stadium.club.fm_inside_id == 907:
         from .dortmund_runtime import runtime_presentation
         scene["presentation"] = runtime_presentation(stadium, geometry, payload)
-    elif stadium.club.fm_inside_id == 908:
-        from .gladbach_runtime import gladbach_presentation
-        scene["presentation"] = gladbach_presentation(stadium, geometry, payload)
+    elif (manifest := model_manifest(stadium.club.fm_inside_id)) is not None:
+        from .unity_runtime import unity_presentation
+        scene["presentation"] = unity_presentation(stadium, geometry, payload, manifest)
     return scene
