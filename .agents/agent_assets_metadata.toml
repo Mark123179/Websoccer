@@ -2202,3 +2202,31 @@ mtime_ms = 1791723244151
 storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:6e4eaecc-e6c5-4f64-8de5-e8845034f33b/292ac6c2-aa32-4453-9f58-58ec449e8465/7fc87d2a-03d3-49f8-87c8-d179c30e15d7"
 storage_version_token = "1791723285806964"
 content_type = "application/octet-stream"
+
+[[outputs]]
+id = "HKQQziXazqNg_NQU4f7Fz"
+uri = "file://generated-artifacts/allianzarena-ohne-choreo/bayern/bilder/03-liveticker-roof.png"
+type = "image"
+title = "Allianz Arena ohne rechte Choreo"
+description = "Neu gerenderte Vorschau. Fangnetze und Tribünen sind unverändert."
+logical_id = "ad4c94c3-0c86-481d-91a4-f78b2a154857"
+content_hash = "sha256:ce39722dca717449b424b4cc0f8fed6a1cb1ececf604b5ebccc80f686f242249"
+size = 908610
+mtime_ms = 1791733773333
+storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:6e4eaecc-e6c5-4f64-8de5-e8845034f33b/ad4c94c3-0c86-481d-91a4-f78b2a154857/c57184e0-12e7-40b5-b1f3-f8e125c26725"
+storage_version_token = "1791733862427525"
+content_type = "image/png"
+
+[[outputs]]
+id = "POR0wYf7jPdXnStkN5XFW"
+uri = "file://generated-artifacts/allianzarena-ohne-choreo/stadionpaket-915-allianzarena-ohne-choreo.zip"
+type = "unspecified"
+title = "Korrigiertes Allianz-Arena-Paket"
+description = "V2-Paket mit ausgeblendeter rechter Choreo, aktualisierten Vorschau-Bildern und neu berechneten Paket-Prüfsummen. Noch nicht im Spiel registriert."
+logical_id = "16d3a96e-38e3-4b5f-bcad-6a66662d04f6"
+content_hash = "sha256:933e5e60a60ccda7c2b70f61d9e2374a273f3a2e9c35aa86e986185af54701ee"
+size = 19913680
+mtime_ms = 1791733831441
+storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:6e4eaecc-e6c5-4f64-8de5-e8845034f33b/16d3a96e-38e3-4b5f-bcad-6a66662d04f6/2f969179-8df5-4c93-823b-4fec1e7d3d32"
+storage_version_token = "1791733863512384"
+content_type = "application/octet-stream"
