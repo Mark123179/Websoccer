@@ -73,8 +73,13 @@ werden.
 **Why:** Das Angleichen der Unterlage und zusätzlich naheliegender
 Bodenmaterialien ließ einige der beanstandeten Rechtecke sichtbar.
 Die zuvor behauptete vollständige Zuordnung zur Rasenunterlage war
-damit nicht belegt.
+damit nicht belegt. Erst das gezielte Ausblenden einzelner Modellteile
+ordnete die Restrechtecke eindeutig einem weiteren Bodenobjekt zu,
+das nicht zur nach Namen vermuteten Detailfamilie gehörte. Die
+vorherigen Raycast-Treffer hatten diese sichtbare Ursache nicht belegt.
 
 **How to apply:** Vor weiteren Materialänderungen die sichtbaren Flächen
-isoliert identifizieren. Keine weitere vermeintlich fertige Version
-liefern, nur weil Material- und Archivprüfungen bestanden sind.
+isoliert identifizieren; Meshnamen und Raycast-Treffer nicht als
+abschließenden Sichtbarkeitsbeweis verwenden. Keine vermeintlich
+fertige Version liefern, nur weil Material- und Archivprüfungen
+bestanden sind.
