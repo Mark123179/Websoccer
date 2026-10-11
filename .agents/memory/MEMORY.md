@@ -146,3 +146,4 @@
 - [Studienartefakte zwischen Aufgaben](stadium-study-artifact-portability.md) — Frühere Abnahme garantiert keine vorhandenen ignorierten Rohbelege; gegen die freigegebene Kamera neu erzeugen.
 - [Luftfoto und Grundriss](orthophoto-stadium-removal.md) — Stadionbild separat entfernen: Dächer, Pylone und Schatten reichen über Bodenmasken hinaus.
 - [Stadionmodell-Übergabe](stadium-model-handoff.md) — Registry als Übergabestelle für Claude; weitere Stadien ohne erneute vereinsbezogene Codearbeit.
+- [Überlappende Dach- und Ranghöhen](stadium-roof-height-overlap.md) — Höhenbasierte Dachschalter können Oberrang-Stufen ausblenden; Schema- und Hashprüfung reichen nicht.
