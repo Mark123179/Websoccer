@@ -26,7 +26,8 @@ korrigieren“ statt der angebotenen Entfernung dieser Bodenmarkierungen.
 
 **How to apply:** Diese Entscheidung bei weiteren Paketkorrekturen
 bewahren. Sie hebt die separate Ausblendung von Choreo und Fangnetzen
-nicht auf und ist keine Freigabe für einen Spielimport.
+nicht auf. Zur späteren Übernahmefreigabe für Bayern siehe
+[Allianz-Arena-Darstellung](allianz-arena-presentation.md).
 
 Bei einer fehlerhaften Bodenmaske die übrigen Boden-Detailmaterialien
 derselben Quelle ebenfalls auf Alpha-Masken prüfen, nicht nur das zuerst
@@ -63,7 +64,8 @@ Die Allianz-Arena-Rasenunterlage an das Spielfeld angleichen.
 angleichen“ statt der Beibehaltung der originalen Rasenunterlage.
 
 **How to apply:** Bei weiteren Paketänderungen diese optische Entscheidung
-bewahren. Sie bleibt paketbezogen, ohne Freigabe für einen Spielimport.
+bewahren. Zur späteren Übernahmefreigabe für Bayern siehe
+[Allianz-Arena-Darstellung](allianz-arena-presentation.md).
 
 Auch eine Rasenangleichung allein beweist nicht die Ursache sichtbarer
 dunkler Rechtecke. Die auffälligen Bildflächen müssen unabhängig von

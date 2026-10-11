@@ -1,0 +1,65 @@
+"""Register an approved source-model package after verifying durable assets.
+
+No ORM writes. Existing registrations cannot be replaced by this command.
+"""
+import argparse
+from concurrent.futures import ThreadPoolExecutor
+import hashlib
+import json
+import os
+from pathlib import Path
+import sys
+
+ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT))
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "core.settings")
+
+from game.object_storage_backend import get_client
+from stadium_editor.model_registry import manifest_path, validate_model_manifest
+
+
+def register(package, fmi):
+    raw = (package / "models" / f"{fmi}.json").read_bytes()
+    manifest = json.loads(raw)
+    validate_model_manifest(manifest)
+    if manifest["clubFmiId"] != fmi:
+        raise ValueError("Verein passt nicht zur expliziten Ziel-ID.")
+    target = manifest_path(fmi)
+    if target.exists() and target.read_bytes() != raw:
+        raise ValueError("Registrierung besteht bereits; keine automatische Überschreibung.")
+    assets = package / "stadium-models" / str(fmi) / manifest["assetVersion"]
+    names = ["geometry.bin", *manifest["textures"]]
+    # Verify the entire package before any storage writes.
+    for name in names:
+        if hashlib.sha256((assets / name).read_bytes()).hexdigest() != manifest["assetSha256"][name]:
+            raise ValueError(f"Asset-Prüfsumme stimmt nicht: {name}")
+
+    def store(name):
+        client = get_client()
+        key = f"stadium-models/{fmi}/{manifest['assetVersion']}/{name}"
+        if not client.exists(key):
+            client.upload_from_bytes(key, (assets / name).read_bytes())
+        if hashlib.sha256(client.download_as_bytes(key)).hexdigest() != manifest["assetSha256"][name]:
+            raise ValueError(f"Gespeicherte Asset-Prüfsumme stimmt nicht: {name}")
+
+    with ThreadPoolExecutor(max_workers=4) as executor:
+        for index, _ in enumerate(executor.map(store, names), 1):
+            if index % 20 == 0 or index == len(names):
+                print(f"Assets dauerhaft geprüft: {index}/{len(names)}", flush=True)
+    if not target.exists():
+        with target.open("xb") as file:
+            file.write(raw)
+    print(f"Modell registriert: {fmi} · {manifest['stadiumName']}")
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--package", type=Path, required=True)
+    parser.add_argument("--fmi", type=int, required=True)
+    args = parser.parse_args()
+    try:
+        register(args.package, args.fmi)
+    except Exception as error:
+        # Storage errors can contain signed URLs: never expose their contents.
+        print(f"Registrierung abgebrochen ({type(error).__name__}).", file=sys.stderr)
+        sys.exit(1)

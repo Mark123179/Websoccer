@@ -110,7 +110,9 @@ if (canvasHost && statusHost) {
         const runtime=(await response.json()).presentation;
         if(runtime?.clubId!==config.clubId||runtime?.renderer!=='unity-spatial')
           throw new Error('Stadion-Scene gehört nicht zum gewählten Verein.');
-        const {mountUnityStadium}=await import(new URL('../../stadium_editor/unity_stadium_scene.js',import.meta.url));
+        const unityURL=new URL('../../stadium_editor/unity_stadium_scene.js',import.meta.url);
+        unityURL.search=new URL(import.meta.url).search;
+        const {mountUnityStadium}=await import(unityURL);
         const mounted=await mountUnityStadium({element:canvasHost,presentation:runtime,tickerPreview:true});
         if(stopped||thisAttempt!==attempt){mounted.dispose();return;}
         sceneHandle=mounted;controlsEnabled(true);

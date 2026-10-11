@@ -3,6 +3,11 @@
 'use strict';
 
 const EDITOR = window.STADIUM_EDITOR;
+const viewportPreferences = window.StadiumEditorViewport;
+const viewportKey = `stadium-editor:2d-view:v1:${EDITOR.liveSceneUrl}`;
+let viewportStorage = null;
+try { viewportStorage = window.localStorage; } catch (_) {}
+let viewport2D = viewportPreferences.load(viewportStorage, viewportKey);
 
 /* ── Palette: Index 0 = Beton/ungestaltet ─────────────────────── */
 let PALETTE = [
@@ -125,12 +130,16 @@ function stadiumMaxRadius(){
   ];
   const derived = Math.max(1, ...points.map(point =>
     Math.hypot(point[0] - center[0], point[1] - center[1])));
+  // Long OSM streets extend far beyond the selected local buildings. They
+  // remain available when zooming out, but must not shrink the initial editor.
+  if(D?.surroundings?.style==='elversberg-blueprint') return Math.max(derived,350);
   return Number.isFinite(configured) && configured > 0
     ? Math.max(configured, derived)
     : derived;
 }
-function fitView(){
-  if(document.querySelector('.stadium-editor-content.is-dortmund') && blocks?.length){
+function fitBaseView(){
+  if((document.querySelector('.stadium-editor-content.is-dortmund') ||
+      D?.surroundings?.style==='elversberg-blueprint') && blocks?.length){
     const points = blocks.flatMap(block => block.quad || []);
     const xs = points.map(point => point[0]), ys = points.map(point => point[1]);
     const left = Math.min(...xs), right = Math.max(...xs);
@@ -146,16 +155,44 @@ function fitView(){
   SC = Math.min(W, H) / (2*R) * 1.55;
   CX = W/2; CY = H/2 + 6;
 }
+function fitView(){
+  fitBaseView();
+  SC *= viewport2D.factor;
+  CX -= viewport2D.center[0] * SC;
+  CY += viewport2D.center[1] * SC;
+  const label = document.getElementById('zoom2dValue');
+  if(label) label.textContent = `${Math.round(viewport2D.factor*100)}%`;
+}
+function persistViewport(){
+  const saved = viewportPreferences.save(viewportStorage, viewportKey, viewport2D);
+  document.getElementById('zoom2dValue').title = saved
+    ? 'Zoom wird in diesem Browser je Stadion gemerkt'
+    : 'Browserspeicher nicht verfügbar; Zoom gilt nur für diese Sitzung';
+}
+function zoom2D(factor, point=[W/2,H/2]){
+  if(view!=='2d' || !D || !W || !H) return;
+  const before = s2w(...point);
+  viewport2D.factor = viewportPreferences.clamp(viewport2D.factor*factor);
+  fitView();
+  const after = s2w(...point);
+  viewport2D.center[0] += before[0]-after[0];
+  viewport2D.center[1] += before[1]-after[1];
+  fitView(); renderAll(); persistViewport();
+}
 const w2s = (x,y) => [CX + x*SC, CY - y*SC];
 const s2w = (px,py) => [(px-CX)/SC, (CY-py)/SC];
 function editorBackground(){
   const legacy = D?.bg || {};
   const live = D?.surroundings || {};
-  const buildings = (legacy.buildings || live.buildings || [])
+  const isBlueprint = live.style === 'elversberg-blueprint';
+  const buildings = (isBlueprint ? live.buildings || [] : (legacy.buildings || live.buildings || []))
     .map(building => ({poly: Array.isArray(building) ? building : building.poly,
-      height: Array.isArray(building) ? 9 : (building.h ?? 9)}))
+      height: Array.isArray(building) ? null : building.h,
+      id: Array.isArray(building) ? null : building.id,
+      heightStatus: Array.isArray(building) ? null : building.heightStatus}))
     .filter(building => Array.isArray(building.poly));
   return {
+    style: isBlueprint ? live.style : '',
     source: live.source || legacy.source || '',
     treeSource: legacy.treeSource || live.treeSource || '',
     green: legacy.green || live.green || [],
@@ -163,7 +200,9 @@ function editorBackground(){
     roads: legacy.roads || live.roads || [],
     buildings: buildings.map(building => building.poly),
     buildingHeights: buildings.map(building => building.height),
-    trees: legacy.trees || live.trees || [],
+    buildingIds: buildings.map(building => building.id),
+    vegetation: isBlueprint ? (live.vegetation || []) : [],
+    trees: isBlueprint ? [] : (legacy.trees || live.trees || []),
   };
 }
 
@@ -342,18 +381,48 @@ function renderBase(){
   for(let x=0;x<W;x+=40){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke();}
   for(let y=0;y<H;y+=40){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke();}
   const path = pts => { ctx.beginPath(); pts.forEach((p,i)=>{const s=w2s(p[0],p[1]); i?ctx.lineTo(s[0],s[1]):ctx.moveTo(s[0],s[1]);}); };
+  const ring = (pts, fill, stroke, width=1) => {
+    if(!Array.isArray(pts)||pts.length<3) return;
+    path(pts); ctx.closePath(); ctx.fillStyle=fill; ctx.fill();
+    if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=width;ctx.stroke();}
+  };
   // Grün
-  for(const g of bg.green || []){ path(g); ctx.closePath(); ctx.fillStyle='rgba(48,242,156,.045)'; ctx.fill(); }
+  for(const g of bg.green || []) ring(g, bg.style ? 'rgba(23,59,50,.72)' : 'rgba(48,242,156,.045)',
+    bg.style ? 'rgba(70,145,119,.55)' : null, .8);
   // Wasser
   for(const g of bg.water || []){ path(g); ctx.closePath(); ctx.fillStyle='rgba(34,140,255,.08)'; ctx.fill(); }
   // Straßen
   for(const r of bg.roads || []){
-    path(r.p); ctx.strokeStyle=`rgba(34,230,255,${r.w===3?.30:r.w===2?.22:.13})`;
-    ctx.lineWidth=r.w*.9; ctx.stroke();
+    path(r.p);
+    if(bg.style){
+      ctx.lineJoin='round';ctx.lineCap='round';ctx.strokeStyle='#19363b';
+      ctx.lineWidth=Math.max(2,(Number(r.w)||5)*SC);ctx.stroke();
+      ctx.strokeStyle='rgba(86,143,150,.55)';ctx.lineWidth=Math.max(.8,ctx.lineWidth*.1);ctx.stroke();
+    }else{
+      ctx.strokeStyle=`rgba(34,230,255,${r.w===3?.30:r.w===2?.22:.13})`;
+      ctx.lineWidth=r.w*.9; ctx.stroke();
+    }
   }
   // Gebäude
-  for(const g of bg.buildings || []){ path(g); ctx.closePath(); ctx.strokeStyle='rgba(34,230,255,.4)'; ctx.lineWidth=1; ctx.stroke(); }
-  drawTrees(ctx, w2s);
+  for(let i=0;i<(bg.buildings||[]).length;i++){
+    const g=bg.buildings[i];
+    if(bg.style) ring(g, '#31505a',
+      'rgba(117,165,171,.7)',1);
+    else { path(g); ctx.closePath(); ctx.strokeStyle='rgba(34,230,255,.4)'; ctx.lineWidth=1; ctx.stroke(); }
+  }
+  if(bg.style){
+    for(const group of bg.vegetation||[]){
+      if(!Array.isArray(group.poly)||group.poly.length<3)continue;
+      ring(group.poly,'rgba(23,59,50,.86)','rgba(70,145,119,.68)',1);
+      for(const canopy of blueprintCanopies(group)){
+        const s=w2s(canopy[0],canopy[1]),r=Math.max(1.4,canopy[2]*SC);
+        ctx.beginPath();ctx.ellipse(s[0],s[1],r,r*.72,0,0,Math.PI*2);
+        ctx.fillStyle='#236047';ctx.fill();ctx.strokeStyle='rgba(93,174,131,.62)';ctx.lineWidth=.7;ctx.stroke();
+        ctx.beginPath();ctx.ellipse(s[0]-r*.12,s[1]-r*.1,r*.46,r*.34,0,0,Math.PI*2);
+        ctx.fillStyle='#347758';ctx.fill();
+      }
+    }
+  }else drawTrees(ctx, w2s);
   drawPitch(ctx, w2s, 1);
 }
 function drawPitch(ctx, toScreen, alpha){
@@ -448,6 +517,24 @@ function drawTrees(ctx, toScreen){
     crownPath(ctx, s[0]+r*.14, s[1]-r*.12, r*.55, sd*3.1);
     ctx.strokeStyle='rgba(48,242,156,.28)'; ctx.lineWidth=.7; ctx.stroke();
   }
+}
+
+function blueprintCanopies(group){
+  const poly=group.poly||[];
+  if(poly.length<3)return [];
+  const helper=globalThis.ElversbergBlueprintCanopies?.vegetationCanopies;
+  if(!helper)return [];
+  const fieldCenter=D.meta.fieldC||[D?._cx||0,D?._cy||0];
+  const theta=Number(D.meta.axisTheta)||0,ct=Math.cos(theta),st=Math.sin(theta);
+  const canonical={...group,poly:poly.map(([x,y])=>{
+    const dx=x-fieldCenter[0],dy=y-fieldCenter[1];
+    return [dx*ct+dy*st,-dx*st+dy*ct];
+  })};
+  return helper(canonical).map(({point,radius})=>[
+    fieldCenter[0]+point[0]*ct-point[1]*st,
+    fieldCenter[1]+point[0]*st+point[1]*ct,
+    radius,
+  ]);
 }
 
 /* ── Block-Layer 2D ───────────────────────────────────────────── */
@@ -579,11 +666,52 @@ function render3D(){
   };
   const finiteProjection = points =>
     points.every(point => point.every(Number.isFinite));
-  // Blaupause flach am Boden
+  // Elversberg uses the same sourced building and vegetation groups as the
+  // top-down blueprint, lifted into shallow, explicitly schematic volumes.
   const path3 = pts => { bctx.beginPath(); pts.forEach((p,i)=>{const s=to3(p[0],p[1],0); i?bctx.lineTo(s[0],s[1]):bctx.moveTo(s[0],s[1]);}); };
-  for(const g of bg.green || []){ path3(g); bctx.closePath(); bctx.fillStyle='rgba(48,242,156,.04)'; bctx.fill(); }
-  for(const r of bg.roads || []){ path3(r.p); bctx.strokeStyle=`rgba(34,230,255,${r.w===3?.22:.1})`; bctx.lineWidth=r.w*.8; bctx.stroke(); }
-  for(const g of bg.buildings || []){ path3(g); bctx.closePath(); bctx.strokeStyle='rgba(34,230,255,.28)'; bctx.lineWidth=.8; bctx.stroke(); }
+  if(bg.style){
+    const polyScreen=(points,fill,stroke=null,lineWidth=1)=>{
+      if(!points?.length)return;
+      bctx.beginPath();points.forEach((p,i)=>{i?bctx.lineTo(p[0],p[1]):bctx.moveTo(p[0],p[1]);});
+      bctx.closePath();bctx.fillStyle=fill;bctx.fill();
+      if(stroke){bctx.strokeStyle=stroke;bctx.lineWidth=lineWidth;bctx.stroke();}
+    };
+    for(const green of bg.green||[])polyScreen(green.map(p=>to3(p[0],p[1],0)),
+      'rgba(23,59,50,.78)','rgba(70,145,119,.52)',.8);
+    for(const road of bg.roads||[]){
+      const points=(road.p||[]).map(p=>to3(p[0],p[1],0));
+      bctx.beginPath();points.forEach((p,i)=>i?bctx.lineTo(p[0],p[1]):bctx.moveTo(p[0],p[1]));
+      bctx.lineCap='round';bctx.lineJoin='round';bctx.strokeStyle='#19363b';
+      bctx.lineWidth=Math.max(2,(Number(road.w)||5)*S3);bctx.stroke();
+      bctx.strokeStyle='rgba(86,143,150,.5)';bctx.lineWidth=Math.max(.8,bctx.lineWidth*.1);bctx.stroke();
+    }
+    for(let index=0;index<(bg.buildings||[]).length;index++){
+      const poly=bg.buildings[index],height=Math.max(1,Number(bg.buildingHeights[index])||6);
+      const base=poly.map(p=>to3(p[0],p[1],0)),top=poly.map(p=>to3(p[0],p[1],height));
+      for(let i=0;i<base.length;i++){
+        const next=(i+1)%base.length;
+        polyScreen([base[i],base[next],top[next],top[i]],i%2?'#203a43':'#294750',
+          'rgba(92,139,148,.35)',.7);
+      }
+      polyScreen(top,'#31505a','rgba(117,165,171,.64)',.8);
+    }
+    for(const group of bg.vegetation||[]){
+      const poly=group.poly||[];
+      polyScreen(poly.map(p=>to3(p[0],p[1],0)),'rgba(23,59,50,.88)','rgba(70,145,119,.64)',.8);
+      const h=Number(group.height)||4;
+      for(const [x,y,r] of blueprintCanopies(group)){
+        const s=to3(x,y,h),radius=Math.max(1.2,r*S3);
+        bctx.beginPath();bctx.ellipse(s[0],s[1],radius,radius*.68,0,0,Math.PI*2);
+        bctx.fillStyle='#236047';bctx.fill();bctx.strokeStyle='rgba(93,174,131,.55)';bctx.lineWidth=.7;bctx.stroke();
+        bctx.beginPath();bctx.ellipse(s[0]-radius*.12,s[1]-radius*.1,radius*.45,radius*.32,0,0,Math.PI*2);
+        bctx.fillStyle='#347758';bctx.fill();
+      }
+    }
+  }else{
+    for(const g of bg.green || []){ path3(g); bctx.closePath(); bctx.fillStyle='rgba(48,242,156,.04)'; bctx.fill(); }
+    for(const r of bg.roads || []){ path3(r.p); bctx.strokeStyle=`rgba(34,230,255,${r.w===3?.22:.1})`; bctx.lineWidth=r.w*.8; bctx.stroke(); }
+    for(const g of bg.buildings || []){ path3(g); bctx.closePath(); bctx.strokeStyle='rgba(34,230,255,.28)'; bctx.lineWidth=.8; bctx.stroke(); }
+  }
   // Bodenplatte: schließt Durchblicke bei flachen Winkeln
   bctx.beginPath();
   D.outline.forEach((p,i)=>{ const s=to3(p[0],p[1],0); i?bctx.lineTo(s[0],s[1]):bctx.moveTo(s[0],s[1]); });
@@ -1150,6 +1278,7 @@ function scheduleStageDesignUpdate(){
       if(!roofOn) scene.roof = {mode:'explicit', segments:[]};
       stageThree.update({
         scene,
+        roofVisible: roofOn,
         camera: document.getElementById('stageCamera')?.value || 'orbit',
         day: Boolean(document.getElementById('stageDay')?.checked),
         floodlight: Boolean(document.getElementById('stageFloodlight')?.checked),
@@ -1188,12 +1317,36 @@ async function ensureThreeStage(){
   if(!host) return;
   stageAdapter = {kind:'loading'};
   try{
+    if(EDITOR.unityScene){
+      const {mountUnityStadium} = await import(editorModuleUrl('./unity_stadium_scene.js'));
+      const response = await fetch(EDITOR.liveSceneUrl,{credentials:'same-origin'});
+      if(!response.ok) throw new Error('Gemeinsame Original-Stadion-Scene konnte nicht geladen werden.');
+      stageScene=await response.json();
+      const runtime=stageScene.presentation;
+      const mounted=await mountUnityStadium({element:host,presentation:runtime,
+        onOrbitChange:orbit=>{
+          yaw3d=orbit.azimuth;tilt3d=90-orbit.elevation;
+          document.getElementById('yawSlider').value=yaw3d;
+          document.getElementById('tiltSlider').value=tilt3d;
+        }});
+      stageAdapter=mounted;stageThree=mounted;
+      activateThreeStage();
+      mounted.update({day:Boolean(document.getElementById('stageDay')?.checked),
+        floodlight:Boolean(document.getElementById('stageFloodlight')?.checked),
+        roofVisible:roofOn});
+      return;
+    }
     if(isDortmundScene){
       const {mountDortmundScene} = await import(editorModuleUrl('./dortmund_editor_scene.js'));
+      const response = await fetch(EDITOR.liveSceneUrl, {credentials:'same-origin'});
+      if(!response.ok) throw new Error('Gemeinsame BVB-Scene konnte nicht geladen werden.');
+      const runtime = (await response.json()).presentation;
+      if(runtime?.renderer !== 'dortmund-spatial') throw new Error('BVB-Ortsplan fehlt.');
       const mounted = await mountDortmundScene({
         element: host,
-        surroundings: editorBackground(),
-        frame: D.meta,
+        surroundings: runtime.surroundings,
+        frame: runtime.frame,
+        runtimeLighting: true,
         onStatus: text => { const node = document.getElementById('deSceneStatus'); if(node) node.textContent = text; },
       });
       stageAdapter = mounted;
@@ -2009,6 +2162,23 @@ async function exportDesign(){
 }
 
 /* ── Interaktion ──────────────────────────────────────────────── */
+cvOverlay.addEventListener('wheel', e=>{
+  if(view!=='2d' || !D) return;
+  e.preventDefault();
+  const rect = cvOverlay.getBoundingClientRect();
+  const delta = e.deltaY * (e.deltaMode===1 ? 16 : e.deltaMode===2 ? H : 1);
+  zoom2D(Math.exp(-Math.max(-300,Math.min(300,delta))*.002), [
+    (e.clientX-rect.left)*W/rect.width,
+    (e.clientY-rect.top)*H/rect.height,
+  ]);
+}, {passive:false});
+document.getElementById('zoom2dIn').onclick = ()=>zoom2D(1.25);
+document.getElementById('zoom2dOut').onclick = ()=>zoom2D(.8);
+document.getElementById('zoom2dReset').onclick = ()=>{
+  if(view!=='2d' || !D) return;
+  viewport2D = viewportPreferences.defaults();
+  fitView(); renderAll(); persistViewport();
+};
 cvOverlay.addEventListener('mousemove', e => {
   const [wx,wy] = s2w(e.offsetX,e.offsetY);
   if(dragOverlay && overlay){ overlay.wx = wx-dragOff[0]; overlay.wy = wy-dragOff[1]; renderOverlay(); return; }
@@ -2235,6 +2405,7 @@ function setView(v){
   document.getElementById('btn2d').classList.toggle('active', v==='2d');
   document.getElementById('btn3d').classList.toggle('active', v==='3d');
   document.getElementById('rot3d').style.display = v==='3d' ? 'flex' : 'none';
+  document.getElementById('zoom2dControls').hidden = v==='3d';
   document.getElementById('toolsPanel').style.opacity = v==='3d' ? .35 : 1;
   document.getElementById('toolsPanel').style.pointerEvents = v==='3d' ? 'none' : 'auto';
   if(v==='3d'){
@@ -2289,6 +2460,7 @@ if(window.ResizeObserver){
     if(!designResponse.ok) throw new Error('Gespeicherter Entwurf konnte nicht geladen werden.');
     const design = await designResponse.json();
     initStadium(geometry, design);
+    if(geometry.surroundings?.warning) toast(geometry.surroundings.warning);
     buildPaletteUI(); syncPal(); resize();
     requestAnimationFrame(() => requestAnimationFrame(resize));
   }catch(error){

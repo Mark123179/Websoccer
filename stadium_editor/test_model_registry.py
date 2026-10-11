@@ -93,6 +93,31 @@ class RegistryTests(SimpleTestCase):
         with self.assertLogs(registry.logger, level="WARNING"):
             self.assertIsNone(registry.model_manifest(1003))
 
+    def test_optional_material_fields_are_strict_and_backwards_compatible(self):
+        registry.validate_model_manifest(self.manifest)
+        for field, good, bad_values in (
+            ("transparent", True, (1, "true", None)),
+            ("alphaTest", 0.03, (-1, 1.01, True, float("nan"))),
+            ("uvProjection", [0, 0, -0.01, 0.5, 0.02, 0, 0, 0.5],
+             ([], [0] * 7, [0] * 9, [True] * 8, [float("inf")] * 8)),
+        ):
+            m = deepcopy(self.manifest)
+            m["meshes"][0]["parts"][0][field] = good
+            registry.validate_model_manifest(m)
+            for bad in bad_values:
+                with self.subTest(field=field, value=bad):
+                    m["meshes"][0]["parts"][0][field] = bad
+                    with self.assertRaisesRegex(ValueError, field):
+                        registry.validate_model_manifest(m)
+
+    def test_optional_roof_prefixes_reject_invalid_values(self):
+        m = deepcopy(self.manifest)
+        m["calibration"]["roofMeshPrefixes"] = ["roof_"]
+        registry.validate_model_manifest(m)
+        for value in ("roof_", [""], [None], None):
+            m["calibration"]["roofMeshPrefixes"] = value
+            with self.assertRaisesRegex(ValueError, "roofMeshPrefixes"):
+                registry.validate_model_manifest(m)
     def test_arbitrary_registered_club_uses_unity_and_calibration(self):
         self.write(1002)
         stadium = SimpleNamespace(club=SimpleNamespace(fm_inside_id=1002), club_id=500, capacity_total=20)

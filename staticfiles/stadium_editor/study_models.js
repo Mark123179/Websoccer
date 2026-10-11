@@ -1,9 +1,10 @@
 import * as THREE from 'three';
-import {createStadiumStage} from './stage/stadium_stage.js?v=study-2';
+import {createStadiumStage} from './stage/stadium_stage.js?v=study-3';
 import {previewSupportsMaterial, sourceOpaqueColor} from './dortmund_source_materials.js';
 import {TICKER_ROOF_NAMES} from './dortmund_ticker_roof.js?v=1';
-import {studyPreset, dortmundAdapter} from './study_camera.js?v=1';
+import {studyPreset, dortmundAdapter} from './study_camera.js?v=3';
 import {addStudyGoals} from './study_pitch_details.js?v=1';
+import {mountStadiumStage} from './stadium_stage_adapter.js?v=3';
 
 const modelBase = new URL('./dortmund_original/', import.meta.url);
 let modelTask;
@@ -29,26 +30,39 @@ async function originalData() {
 function emptyScene() {
   return {blocks: [], palette: ['#172129'], mainStand: 'SUED', roof: {}, steckbrief: {}, outline: []};
 }
-function elversbergSource(source) {
-  const copy = structuredClone(source);
-  // A right-handed 180-degree rotation puts the actual south/main stand on
-  // the camera side; playing coordinates are shared, not club-dependent.
-  const point = p => [-p[0], -p[1], ...p.slice(2)];
-  copy.blocks.forEach(block => { block.quad = block.quad.map(point); });
-  copy.outline = copy.outline.map(point);
-  const roofs = copy.roof.segments.map(segment => ({...segment, quad: segment.quad.map(point)}));
-  copy.roof = {};
-  copy.steckbrief = {};
-  copy.surroundings = {};
-  return {copy, roofs};
-}
-
 export async function mountStudyModel({host, club, source, concept}) {
+  if (club === 'elversberg') {
+    const scene = source?.scene || source?.liveScene || source;
+    if (!scene?.schema || scene?.frame?.name !== 'pitch' ||
+        scene?.surroundings?.style !== 'elversberg-blueprint') {
+      throw new Error('Die kanonische Elversberg-Live-Scene oder ihr Blueprint-Umfeld fehlt.');
+    }
+    const api = await mountStadiumStage({
+      element: host, scene, mode: 'live', camera: 'match', day: true,
+      preset: studyPreset(concept), roofVisible: true,
+      surroundings: true, coordinateRotation: 0,
+    });
+    if (api.kind !== 'three' || !api.stage) {
+      api.dispose?.();
+      throw api.reason || new Error('Die gemeinsame Elversberg-Szene konnte nicht gestartet werden.');
+    }
+    const pitchGroup = api.stage.sceneRoot.children.find(group => group.isGroup &&
+      group.children.some(mesh => api.stage.pitchMaterials.has(mesh.material)));
+    pitchGroup?.traverse(mesh => { if (mesh.isMesh) mesh.userData.studyPitch = true; });
+    addStudyGoals(api.stage.sceneRoot);
+    const model = new THREE.Group();
+    const canvas = api.stage.renderer.domElement;
+    return {
+      stage: api.stage, api, canvas, model, roofMeshes: [],
+      allMeshes: [],
+      setRoof(visible) { return api.update({roofVisible: Boolean(visible)}); },
+      dispose() { api.dispose(); },
+    };
+  }
   const canvas = document.createElement('canvas');
   host.append(canvas);
   const width = host.clientWidth, height = host.clientHeight;
-  const elversberg = club === 'elversberg' ? elversbergSource(source) : null;
-  const stage = createStadiumStage({canvas, width, height, scene: elversberg?.copy || emptyScene(),
+  const stage = createStadiumStage({canvas, width, height, scene: emptyScene(),
     drawPitch: true, preset: studyPreset(concept), view: 'match',
     surroundings: false, facade: false, floodlight: false, coordinateRotation: 0});
   const pitchGroup = stage.sceneRoot.children.find(group => group.isGroup &&
@@ -58,7 +72,7 @@ export async function mountStudyModel({host, club, source, concept}) {
   for(const material of stage.pitchMaterials) material.color.set(stripe++%2?'#2d7b3b':'#337f42');
   addStudyGoals(stage.sceneRoot);
   stage.renderer.localClippingEnabled = true;
-  const roofGroup = new THREE.Group(), model = dortmundAdapter();
+  const model = dortmundAdapter();
   const allMeshes = [], roofMeshes = [];
   if (club === 'dortmund') {
     try {
@@ -94,19 +108,6 @@ export async function mountStudyModel({host, club, source, concept}) {
       }
       stage.sceneRoot.add(model);
     } catch (error) { stage.dispose(); canvas.remove(); throw error; }
-  } else {
-    for (const segment of elversberg.roofs) {
-      if (segment.quad.reduce((sum, p) => sum + p[1], 0) / 4 > 35) continue;
-      const points = segment.quad.map((p, i) => [-p[0], segment.heights?.[i] ?? segment.z, p[1]]);
-      const geometry = new THREE.BufferGeometry();
-      geometry.setAttribute('position', new THREE.Float32BufferAttribute(points.flat(), 3));
-      geometry.setIndex([0,1,2,0,2,3]); geometry.computeVertexNormals();
-      const mesh = new THREE.Mesh(geometry, new THREE.MeshStandardMaterial({
-        color: '#818b91', side: THREE.DoubleSide, roughness: .9,
-      }));
-      roofGroup.add(mesh); roofMeshes.push(mesh);
-    }
-    stage.sceneRoot.add(roofGroup);
   }
   // Disable the standard renderer's preview lighting and emissive fill.
   // The study owns its explicit, auditable daylight and declared fixture lights.

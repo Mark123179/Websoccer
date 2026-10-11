@@ -57,6 +57,13 @@ def validate_model_manifest(manifest):
             require(part.get("texture"), lambda v: v is None or v in manifest["textures"], key + ".texture")
             require(part.get("indexOffset"), lambda v: integer(v) and v % 4 == 0, key + ".indexOffset")
             require(part.get("indexCount"), lambda v: integer(v) and v > 0 and v % 3 == 0, key + ".indexCount")
+            if "transparent" in part:
+                require(part["transparent"], lambda v: type(v) is bool, key + ".transparent")
+            if "alphaTest" in part:
+                require(part["alphaTest"], lambda v: number(v) and 0 <= v <= 1, key + ".alphaTest")
+            if "uvProjection" in part:
+                require(part["uvProjection"], lambda v: isinstance(v, list) and
+                        len(v) == 8 and all(number(n) for n in v), key + ".uvProjection")
     require(manifest.get("fixtures"), lambda v: isinstance(v, list) and 0 < len(v) <= 12, "fixtures")
     require(manifest.get("verifiedFixtureCount"), lambda v: integer(v) and
             v >= len(manifest["fixtures"]), "verifiedFixtureCount")
@@ -83,6 +90,9 @@ def validate_model_manifest(manifest):
         require(evidence.get("sha256"), digest, f"sourceEvidence.{name}.sha256")
     require(manifest.get("calibration"), lambda v: isinstance(v, dict), "calibration")
     c = manifest["calibration"]
+    if "roofMeshPrefixes" in c:
+        require(c["roofMeshPrefixes"], lambda v: isinstance(v, list) and all(text(n) for n in v),
+                "calibration.roofMeshPrefixes")
     for field in ("roofMinHeight", "tickerRotationY"):
         require(c.get(field), number, "calibration." + field)
     require(c.get("skipMeshPrefixes"), lambda v: isinstance(v, list) and all(text(n) for n in v),

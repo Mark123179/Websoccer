@@ -19,6 +19,7 @@ import {PITCH, buildPitchLayout} from './pitch_geometry.js?v=1';
 import {buildFloodlightPlan} from './stadium_lighting.js?v=1';
 import {lightingPreset} from './stadium_lighting_presets.js?v=1';
 import {ringVertexHeight, ringFasciaHeights} from './roof_ring_profile.mjs?v=1';
+import {buildElversbergEnvironment, isElversbergBlueprint} from '../elversberg_blueprint_environment.js?v=2';
 
 const SKY_URLS = Object.freeze({
   day: new URL('./assets/stadium_sky_day.png?v=1', import.meta.url).href,
@@ -156,8 +157,8 @@ export function createStadiumStage({ canvas, scene, width, height, drawPitch = f
   const drawFacade = facade === null ? (isOrbit && scene.facade !== false) : facade;
   const groundLevel = (scene.steckbrief && scene.steckbrief.sunken) || 0;   // Gelände über Rasenniveau (versenkte Stadien)
   if (isOrbit) drawPitch = true;
-  const W = width || canvas.clientWidth || preset.frame[0];
-  const H = height || canvas.clientHeight || preset.frame[1];
+  let W = width || canvas.clientWidth || preset.frame[0];
+  let H = height || canvas.clientHeight || preset.frame[1];
 
   /* Koordinaten: Szene (X, Y, Z) → gedreht (mainStand bei +Y) → three (x = −X, y = Z, z = Y).
    * Die Abbildung ist eine echte Drehung (det = +1): Kamera auf der Haupttribüne, +X links im Bild. */
@@ -220,10 +221,11 @@ export function createStadiumStage({ canvas, scene, width, height, drawPitch = f
     camera.projectionMatrix.makePerspective(-cx / F * n, (W - cx) / F * n, cy / F * n, -(H - cy) / F * n, n, preset.far);
     camera.projectionMatrixInverse.copy(camera.projectionMatrix).invert();
     const tilt = preset.tilt * Math.PI / 180;
-    const camY = PITCH.width / 2 + preset.distance;      // Szene-Y der Kamera (Kameraseite)
+    const cameraSide = preset.cameraSide === -1 ? -1 : 1;
+    const camY = cameraSide * (PITCH.width / 2 + preset.distance);
     camera.position.set(0, preset.height, camY);
     camera.up.set(0, 1, 0);
-    camera.lookAt(0, preset.height - Math.sin(tilt), camY - Math.cos(tilt));
+    camera.lookAt(0, preset.height - Math.sin(tilt), camY - cameraSide * Math.cos(tilt));
     camera.updateMatrixWorld(true);
   }
   camera.updateProjectionMatrix = applyCamera;
@@ -291,10 +293,34 @@ export function createStadiumStage({ canvas, scene, width, height, drawPitch = f
     const tri = (a, b, d) => { bodyPos.push(a.x, a.y, a.z, b.x, b.y, b.z, d.x, d.y, d.z); bodyCol.push(c.r, c.g, c.b, c.r, c.g, c.b, c.r, c.g, c.b); };
     tri(p0, p1, p2); tri(p0, p2, p3);
   };
+  const pushRoofQuad = (p0, p1, p2, p3, color) => {
+    const c = new THREE.Color(color);
+    const tri = (a, b, d) => {
+      roofPos.push(a.x, a.y, a.z, b.x, b.y, b.z, d.x, d.y, d.z);
+      roofCol.push(c.r, c.g, c.b, c.r, c.g, c.b, c.r, c.g, c.b);
+    };
+    tri(p0, p1, p2); tri(p0, p2, p3);
+  };
 
   if (design && design.blocks) for (const b of scene.blocks) if (design.blocks[b.id]) b.rle = design.blocks[b.id];
   const mainStand = scene.mainStand;
-  const drawn = isOrbit ? scene.blocks.slice() : scene.blocks.filter(b => b.stand !== mainStand);
+  let cutawayStand = mainStand;
+  if (isElversbergBlueprint(scene.surroundings)) {
+    const standDepth = new Map();
+    for (const block of scene.blocks) {
+      const midpoint = block.quad.reduce((sum, point) => [
+        sum[0] + point[0] / block.quad.length, sum[1] + point[1] / block.quad.length,
+      ], [0, 0]);
+      const depth = rot(midpoint)[1];
+      const value = standDepth.get(block.stand) || {sum: 0, count: 0};
+      value.sum += depth; value.count += 1; standDepth.set(block.stand, value);
+    }
+    const cameraSide = preset.cameraSide === -1 ? -1 : 1;
+    cutawayStand = [...standDepth].sort((a, b) =>
+      (b[1].sum / b[1].count - a[1].sum / a[1].count) * cameraSide,
+    )[0]?.[0] || mainStand;
+  }
+  const drawn = isOrbit ? scene.blocks.slice() : scene.blocks.filter(b => b.stand !== cutawayStand);
   // Sitzfarben: Helligkeitsboden, damit schwarze Schalen nicht im Körper verschwinden
   const hsl = { h: 0, s: 0, l: 0 };
   const palette = scene.palette.map(h => { const c = new THREE.Color(h); c.getHSL(hsl); if (hsl.l < rules.seatMinL) c.setHSL(hsl.h, hsl.s, rules.seatMinL); return c; });
@@ -409,6 +435,7 @@ export function createStadiumStage({ canvas, scene, width, height, drawPitch = f
 
   // Dach: Dortmunds vermessener geschlossener Kranz oder die bisherigen Einzelplatten.
   const roofSegs = (scene.roof && scene.roof.segments) || [];
+  const roofObjects = [];
   const camLimit = PITCH.width / 2 + 6;
   const ringRoof = scene.roof && scene.roof.ring;
   if (ringRoof) {
@@ -418,14 +445,21 @@ export function createStadiumStage({ canvas, scene, width, height, drawPitch = f
     lightingMaterials.roofs.add(ringMaterial);
     const mesh = new THREE.Mesh(buildRingRoofGeometry(ringRoof, rot), ringMaterial);
     mesh.rotation.x = -Math.PI / 2;
+    mesh.userData.stadiumRoof = true;
+    roofObjects.push(mesh);
     three.add(mesh);
     for (let i = 0; i < ringRoof.inner.length; i++) {
       const a = ringRoof.inner[i], b = ringRoof.inner[(i + 1) % ringRoof.inner.length];
       if (!isOrbit && (rot(a)[1] + rot(b)[1]) / 2 > camLimit) continue;
       const fascia = ringFasciaHeights(ringRoof.zInner, rules.fascia);
       const p0 = toWorld(a, fascia.top), p1 = toWorld(b, fascia.top);
-      pushQuad(p0, p1, p1.clone().setY(fascia.bottom),
-        p0.clone().setY(fascia.bottom), rules.fasciaColor, true);
+      const fasciaBottomP1 = p1.clone().setY(fascia.bottom);
+      const fasciaBottomP0 = p0.clone().setY(fascia.bottom);
+      if (isElversbergBlueprint(scene.surroundings)) {
+        pushRoofQuad(p0, p1, fasciaBottomP1, fasciaBottomP0, rules.fasciaColor);
+      } else {
+        pushQuad(p0, p1, fasciaBottomP1, fasciaBottomP0, rules.fasciaColor, true);
+      }
     }
   }
   for (const seg of ringRoof ? [] : roofSegs) {
@@ -446,7 +480,13 @@ export function createStadiumStage({ canvas, scene, width, height, drawPitch = f
       const m = mid(seg.quad[e[0]], seg.quad[e[1]]); const d = pitchDistance(m);
       return !best || d < best.d ? { e, d } : best; }, null).e;
     const p0 = pts[inner[0]], p1 = pts[inner[1]];
-    pushQuad(p0, p1, p1.clone().setY(p1.y - rules.fascia), p0.clone().setY(p0.y - rules.fascia), rules.fasciaColor, true);
+    const fasciaBottomP1 = p1.clone().setY(p1.y - rules.fascia);
+    const fasciaBottomP0 = p0.clone().setY(p0.y - rules.fascia);
+    if (isElversbergBlueprint(scene.surroundings)) {
+      pushRoofQuad(p0, p1, fasciaBottomP1, fasciaBottomP0, rules.fasciaColor);
+    } else {
+      pushQuad(p0, p1, fasciaBottomP1, fasciaBottomP0, rules.fasciaColor, true);
+    }
   }
 
   // Fassade: Außenkontur senkrecht bis über den obersten Rang (nur Außenansicht)
@@ -539,8 +579,14 @@ export function createStadiumStage({ canvas, scene, width, height, drawPitch = f
   for (const source of lightPlan.sources) {
     addSpot(source, toWorld(source.position, source.position[2]));
   }
-  // Umfeld aus OSM: Gebäude extrudiert, Straßen und Grün flach
-  if (drawSurroundings && scene.surroundings) {
+  // The Elversberg blueprint is the shared, pitch-framed surroundings source.
+  // All its forms are real scene geometry and use the same supplied identities
+  // in editor, study, ticker and the 2D projection.
+  if (drawSurroundings && isElversbergBlueprint(scene.surroundings)) {
+    three.add(buildElversbergEnvironment(scene.surroundings, {rot, toWorld, groundLevel}));
+  }
+  // Legacy OSM surroundings stay untouched for every other club.
+  if (drawSurroundings && scene.surroundings && !isElversbergBlueprint(scene.surroundings)) {
     const S = scene.surroundings;
     const shapeOf = pts => new THREE.Shape(pts.map(p => { const r = rot(p); return new THREE.Vector2(-r[0], -r[1]); }));
     const bMat = new THREE.MeshLambertMaterial();
@@ -592,17 +638,22 @@ export function createStadiumStage({ canvas, scene, width, height, drawPitch = f
   });
   lightingMaterials.structures.add(bodyMaterial);
   three.add(new THREE.Mesh(bodyGeo, bodyMaterial));
-  // Dach-Unterseiten: nur Vorderseiten, Normale nach unten → von oben unsichtbar (Regel: nie eine Dachoberseite)
+  // Legacy match views keep underside-only roofs. Elversberg's approved high
+  // field camera must see the same roof surfaces as its 3D editor.
   const roofGeo = new THREE.BufferGeometry();
   roofGeo.setAttribute('position', new THREE.Float32BufferAttribute(roofPos, 3));
   roofGeo.setAttribute('color', new THREE.Float32BufferAttribute(roofCol, 3));
   roofGeo.computeVertexNormals();
   const roofMaterial = new THREE.MeshLambertMaterial({
     vertexColors: true,
-    side: isOrbit ? THREE.DoubleSide : THREE.FrontSide,
+    side: isOrbit || isElversbergBlueprint(scene.surroundings)
+      ? THREE.DoubleSide : THREE.FrontSide,
   });
   lightingMaterials.roofs.add(roofMaterial);
-  three.add(new THREE.Mesh(roofGeo, roofMaterial));
+  const roofMesh = new THREE.Mesh(roofGeo, roofMaterial);
+  roofMesh.userData.stadiumRoof = true;
+  roofObjects.push(roofMesh);
+  three.add(roofMesh);
 
   // Sitze als Instanzen
   let seats = null;
@@ -697,6 +748,25 @@ export function createStadiumStage({ canvas, scene, width, height, drawPitch = f
     return { x: (ndc.x + 1) / 2 * W, y: (1 - ndc.y) / 2 * H, d, visible: d > preset.near };
   }
   function render() { renderer.render(three, camera); }
+  function resize(nextWidth, nextHeight) {
+    W = Math.max(1, Math.round(nextWidth || W));
+    H = Math.max(1, Math.round(nextHeight || H));
+    renderer.setSize(W, H, false);
+    applyCamera();
+    if (skyMesh && isSeat) {
+      const distance = 500;
+      const imageAspect = 2688 / 1520;
+      const viewHeight = 2 * Math.tan(camera.fov * Math.PI / 360) * distance;
+      const viewWidth = viewHeight * camera.aspect;
+      const skyWidth = Math.max(viewWidth, viewHeight * imageAspect) * 1.02;
+      const skyHeight = Math.max(viewHeight, viewWidth / imageAspect) * 1.02;
+      skyMesh.geometry.dispose();
+      skyMesh.geometry = new THREE.PlaneGeometry(skyWidth, skyHeight);
+      skyMesh.position.z = -distance;
+    }
+    render();
+    return {width: W, height: H};
+  }
   let exposureMultiplier = Math.max(0.2, Number(exposure) || 1);
   function setExposure(value, shouldRender = true) {
     exposureMultiplier = Math.max(0.2, Number(value) || 1);
@@ -757,6 +827,13 @@ export function createStadiumStage({ canvas, scene, width, height, drawPitch = f
     else if (fps > 70 && pr < max) renderer.setPixelRatio(Math.min(max, pr + 0.2));
   }
   let floodlightsEnabled = false;
+  let roofVisible = true;
+  function setRoofVisible(visible, shouldRender = true) {
+    roofVisible = Boolean(visible);
+    roofObjects.forEach(object => { object.visible = roofVisible; });
+    if (shouldRender) render();
+    return roofVisible;
+  }
   function setFloodlights(enabled, shouldRender = true) {
     floodlightsEnabled = Boolean(enabled);
     for (const source of floodlightSources) {
@@ -798,11 +875,11 @@ export function createStadiumStage({ canvas, scene, width, height, drawPitch = f
   }
 
   return {
-    project, render, dispose, camera, renderer, seatAt, adaptQuality,
+    project, render, resize, dispose, camera, renderer, seatAt, adaptQuality,
     // Read-only study integration: adding source geometry does not change the
     // existing renderer's camera, lights or default editor behavior.
     sceneRoot: three, pitchMaterials: lightingMaterials.pitch,
-    setFloodlights, setLightingMode, setExposure,
+    setFloodlights, setLightingMode, setExposure, setRoofVisible,
     backgroundReady() {
       const texture = skyTextures[lightingMode];
       return !texture ||

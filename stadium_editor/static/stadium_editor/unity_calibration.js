@@ -7,6 +7,9 @@ export function validateCalibration(calibration) {
   const text = value => typeof value === 'string' && value.trim().length > 0;
   const vector = value => Array.isArray(value) && value.length === 3 && value.every(Number.isFinite);
   if (!object(calibration)) fail('calibration');
+  if (calibration.roofMeshPrefixes !== undefined &&
+      (!Array.isArray(calibration.roofMeshPrefixes) || !calibration.roofMeshPrefixes.every(text)))
+    fail('roofMeshPrefixes');
   for (const field of ['roofMinHeight', 'tickerRotationY'])
     if (!Number.isFinite(calibration[field])) fail(field);
   if (!Array.isArray(calibration.skipMeshPrefixes) || !calibration.skipMeshPrefixes.every(text))

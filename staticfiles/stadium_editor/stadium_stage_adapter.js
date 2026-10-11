@@ -2,6 +2,8 @@
  * Shared adapter for the supplied stadium_stage.js black box.
  * Runtime consumers only pass canonical Live Scenes to this module.
  */
+import {convertElversbergSurroundings, isElversbergBlueprint} from './elversberg_blueprint_environment.js?v=2';
+import {studyPreset} from './study_camera.js?v=3';
 function stageModuleUrl() {
   const adapterUrl = new URL(import.meta.url);
   const stageUrl = new URL('./stage/stadium_stage.js', adapterUrl);
@@ -159,7 +161,9 @@ export function applyEditorDesign(
 ) {
   const next = structuredClone(scene);
   if (!next.surroundings && geometry?.surroundings) {
-    next.surroundings = structuredClone(geometry.surroundings);
+    next.surroundings = structuredClone(convertElversbergSurroundings(
+      geometry.surroundings, geometry,
+    ));
   }
   const colours = palette.map(item => Array.isArray(item) ? item[0] : item);
   if (colours.length) next.palette = colours;
@@ -349,8 +353,21 @@ function cameraName(value) {
 
 export async function mountStadiumStage({
   element, canvas: fallbackCanvas, scene, fallback, mode = 'live',
-  camera = 'orbit', day = false, floodlight = false, exposure = 1, onReady,
+  camera = 'orbit', day = false, floodlight = false, exposure = 1,
+  preset = null, roofVisible = true, surroundings = null,
+  coordinateRotation = null, onReady,
 } = {}) {
+  if(scene?.presentation?.renderer==='unity-spatial') {
+    const url=new URL('./unity_stadium_scene.js',import.meta.url);
+    url.search=new URL(import.meta.url).search;
+    const {mountUnityStadium}=await import(url.href);
+    const mounted=await mountUnityStadium({
+      element,presentation:scene.presentation,tickerPreview:camera==='match',
+    });
+    await mounted.update({camera,day,floodlight,roofVisible,exposure});
+    onReady?.(mounted);
+    return mounted;
+  }
   let fallbackRenderer = null;
   let stage = null;
   let resizeTimer = 0;
@@ -362,6 +379,12 @@ export async function mountStadiumStage({
   const state = {
     scene,
     camera: cameraName(camera),
+    coordinateRotation: coordinateRotation === null
+      ? (isElversbergBlueprint(scene?.surroundings) && cameraName(camera) === 'match' ? 0 : null)
+      : coordinateRotation,
+    preset: preset || (isElversbergBlueprint(scene?.surroundings)
+      ? studyPreset('approved-elversberg') : null),
+    roofVisible: Boolean(roofVisible),
     day: Boolean(day),
     floodlight: Boolean(floodlight),
     exposure: Number(exposure) || 1,
@@ -371,12 +394,26 @@ export async function mountStadiumStage({
 
   const showFallback = reason => {
     element?.parentElement?.classList.remove('stage-three', 'stage-three-ready');
-    element?.replaceChildren();
     if (element) delete element.stadiumProject;
-    if (typeof fallback === 'function' && fallbackCanvas && !fallbackRenderer) {
-      fallbackRenderer = fallback(fallbackCanvas, scene, reason);
+    if (typeof fallback === 'function' && element && !fallbackRenderer) {
+      const canvas = fallbackCanvas || document.createElement('canvas');
+      canvas.classList.add('stadium-stage__webgl');
+      canvas.setAttribute('aria-hidden', 'true');
+      element.replaceChildren(canvas);
+      fallbackRenderer = fallback(canvas, scene, reason);
+    } else {
+      element?.replaceChildren();
     }
-    return {kind: 'canvas', renderer: fallbackRenderer, reason};
+    return {
+      kind: 'canvas', renderer: fallbackRenderer, reason,
+      update(next = {}) {
+        if ('roofVisible' in next) fallbackRenderer?.setRoofVisible?.(next.roofVisible);
+        if ('day' in next) fallbackRenderer?.setDay?.(next.day);
+        return Promise.resolve();
+      },
+      setTickerRoofVisible(visible) { fallbackRenderer?.setRoofVisible?.(visible); },
+      dispose() { fallbackRenderer?.dispose?.(); },
+    };
   };
 
   if (!STADIUM_STAGE_CONFIG.enabled || !element || !scene || !webglAvailable()) {
@@ -405,17 +442,24 @@ export async function mountStadiumStage({
         scene: blackboxScene(state.scene),
         ...size,
         drawPitch: true,
-        surroundings: mode === 'editor' ? true : null,
+        surroundings: surroundings === null
+          ? (mode === 'editor' || isElversbergBlueprint(state.scene?.surroundings) ? true : null)
+          : surroundings,
         rules: mode === 'editor'
+          && !isElversbergBlueprint(state.scene?.surroundings)
           ? {...mod.RULES, seatPitch: .8, rowPitch: 1}
           : mod.RULES,
         view: state.camera,
+        ...(state.preset ? {preset: state.preset} : {}),
+        ...(state.coordinateRotation === null
+          ? {} : {coordinateRotation: state.coordinateRotation}),
         orbit: state.orbit,
         lighting: state.day ? 'day' : 'night',
         floodlight: state.floodlight,
         exposure: state.exposure,
       };
       stage = mod.createStadiumStage(options);
+      stage.setRoofVisible?.(state.roofVisible, false);
       if (state.camera === 'seat' && !options.seat) {
         const block = selectSeatBlock(options.scene);
         const seat = block && stage.seatAt(
@@ -426,6 +470,7 @@ export async function mountStadiumStage({
           stage = mod.createStadiumStage({...options, seat});
         }
       }
+      stage.setRoofVisible?.(state.roofVisible, false);
       stage.setExposure?.(state.exposure, false);
       if (state.camera === 'seat' &&
           (state.seatLook.yaw || state.seatLook.pitch)) {
@@ -553,7 +598,11 @@ export async function mountStadiumStage({
         return;
       }
       clearTimeout(resizeTimer);
-      resizeTimer = window.setTimeout(() => rebuild({}).catch(() => {}), 120);
+      resizeTimer = window.setTimeout(() => {
+        lastWidth = size.width;
+        lastHeight = size.height;
+        stage?.resize?.(size.width, size.height);
+      }, 120);
     });
     observer.observe(element);
 
@@ -563,6 +612,10 @@ export async function mountStadiumStage({
       update(next = {}) {
         const patch = {...next};
         if ('camera' in patch) patch.camera = cameraName(patch.camera);
+        if (!('coordinateRotation' in patch) && 'camera' in patch &&
+            isElversbergBlueprint(state.scene?.surroundings)) {
+          patch.coordinateRotation = patch.camera === 'match' ? 0 : null;
+        }
         const keys = Object.keys(patch);
         const onlyRuntimeLighting = keys.length > 0 && keys.every(
           key => ['day', 'floodlight', 'exposure'].includes(key),
@@ -580,7 +633,17 @@ export async function mountStadiumStage({
             state.exposure = Number(patch.exposure) || 1;
             stage.setExposure?.(state.exposure, false);
           }
+          if ('roofVisible' in patch) {
+            state.roofVisible = Boolean(patch.roofVisible);
+            stage.setRoofVisible?.(state.roofVisible, false);
+          }
           stage.render();
+          return Promise.resolve();
+        }
+        const onlyRoof = keys.length > 0 && keys.every(key => key === 'roofVisible');
+        if (onlyRoof && stage) {
+          state.roofVisible = Boolean(patch.roofVisible);
+          stage.setRoofVisible?.(state.roofVisible, true);
           return Promise.resolve();
         }
         const onlyOrbit = keys.length > 0 && keys.every(key => key === 'orbit');

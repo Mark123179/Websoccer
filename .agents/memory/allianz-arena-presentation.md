@@ -12,5 +12,16 @@ und undruchsichtig, das sollte auch nicht sein. dann machen wir auch
 die leider lieber weg“.
 
 **How to apply:** Bei weiteren Allianz-Arena-Paketänderungen diese
-Darstellungsentscheidung bewahren. Sie ist keine Freigabe für
-Registrierung, Änderungen an Spieldaten oder Entfernung von Tornetzen.
+Darstellungsentscheidung bewahren. Sie erlaubt weder Änderungen an
+Spieldaten noch die Entfernung von Tornetzen.
+
+Die korrigierte Allianz Arena ist abgenommen und darf für den FC Bayern
+übernommen werden.
+
+**Why:** Nach dem Vergleich mit beseitigten dunklen Rasenrechtecken
+bestätigte der Nutzer: „Muss nich mehr, kann direkt für den FC Bayern
+übernommen werden. ISt fertig und gut.“
+
+**How to apply:** Diese Freigabe ersetzt die vorherige Paket-only-Grenze
+für die abgenommene Allianz Arena. Den freigegebenen optischen Zustand
+bei der Übernahme erhalten.

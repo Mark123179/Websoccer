@@ -63,10 +63,25 @@ export async function mountUnityStadium({element, presentation, tickerPreview = 
       const position = new Float32Array(buffer,entry.positionOffset,entry.vertexCount*3);
       const uv = new Float32Array(buffer,entry.uvOffset,entry.vertexCount*2);
       for (const part of entry.parts) {
+        let partUv = uv;
+        if (part.uvProjection !== undefined) {
+          const p = part.uvProjection;
+          if (!Array.isArray(p) || p.length !== 8 || !p.every(Number.isFinite))
+            throw new Error('Ungültige Boden-Texturprojektion.');
+          partUv = new Float32Array(entry.vertexCount*2);
+          for (let i=0;i<entry.vertexCount;i++) {
+            const x=position[i*3], y=position[i*3+1], z=position[i*3+2];
+            partUv[i*2]=p[0]*x+p[1]*y+p[2]*z+p[3];
+            partUv[i*2+1]=p[4]*x+p[5]*y+p[6]*z+p[7];
+          }
+        }
         const material = new THREE.MeshStandardMaterial({
           color: new THREE.Color(...part.color), roughness:.85, metalness:0,
           map: part.texture ? await loadTexture(part.texture) : null,
           side: THREE.DoubleSide,
+          transparent: part.transparent === true,
+          alphaTest: part.alphaTest ?? 0,
+          depthWrite: part.transparent !== true,
           clippingPlanes: tickerPreview && !entry.name.startsWith(calibration.pitchPrefix) ? [frontCut] : [],
         });
         materials.push(material);
@@ -74,7 +89,10 @@ export async function mountUnityStadium({element, presentation, tickerPreview = 
         const bodyIndices = [], roofIndices = [];
         for (let i=0;i<indices.length;i+=3) {
           // Never classify crowd surfaces as roof, even on an upper tier.
-          const isRoof = !entry.name.startsWith(calibration.crowdPrefix) &&
+          const roofCandidate = !entry.name.startsWith(calibration.crowdPrefix) &&
+            (!(calibration.roofMeshPrefixes||[]).length ||
+             calibration.roofMeshPrefixes.some(prefix=>entry.name.startsWith(prefix)));
+          const isRoof = roofCandidate &&
             indices.slice(i,i+3).every(index=>position[index*3+1]>=calibration.roofMinHeight);
           (isRoof ? roofIndices : bodyIndices).push(indices[i],indices[i+1],indices[i+2]);
         }
@@ -82,7 +100,7 @@ export async function mountUnityStadium({element, presentation, tickerPreview = 
           if (!list.length) continue;
           const geometry = new THREE.BufferGeometry();
           geometry.setAttribute('position',new THREE.BufferAttribute(position,3));
-          geometry.setAttribute('uv',new THREE.BufferAttribute(uv,2));
+          geometry.setAttribute('uv',new THREE.BufferAttribute(partUv,2));
           geometry.setIndex(list); geometry.computeVertexNormals();
           const mesh = new THREE.Mesh(geometry,material);
           mesh.name = `SOURCE_${entry.name}_${isRoof?'roof':'body'}`;
