@@ -9,13 +9,35 @@ import json
 import os
 from pathlib import Path
 import sys
+import tempfile
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "core.settings")
 
 from game.object_storage_backend import get_client
-from stadium_editor.model_registry import manifest_path, validate_model_manifest
+from stadium_editor.model_registry import manifest_path, model_manifest, validate_model_manifest
+
+
+def _publish_manifest(target, raw):
+    """Publish complete bytes atomically, never replacing an existing entry."""
+    temporary = None
+    try:
+        with tempfile.NamedTemporaryFile(dir=target.parent, prefix=".registration-",
+                                         delete=False) as file:
+            temporary = Path(file.name)
+            file.write(raw)
+            file.flush()
+            os.fsync(file.fileno())
+        # Unlike replace(), link() fails if another registration won the race.
+        try:
+            os.link(temporary, target)
+        except FileExistsError:
+            if target.read_bytes() != raw:
+                raise ValueError("Registrierung besteht bereits; keine automatische Überschreibung.")
+    finally:
+        if temporary is not None:
+            temporary.unlink()
 
 
 def register(package, fmi):
@@ -38,7 +60,10 @@ def register(package, fmi):
         client = get_client()
         key = f"stadium-models/{fmi}/{manifest['assetVersion']}/{name}"
         if not client.exists(key):
-            client.upload_from_bytes(key, (assets / name).read_bytes())
+            data = (assets / name).read_bytes()
+            if hashlib.sha256(data).hexdigest() != manifest["assetSha256"][name]:
+                raise ValueError(f"Asset-Prüfsumme stimmt nicht: {name}")
+            client.upload_from_bytes(key, data)
         if hashlib.sha256(client.download_as_bytes(key)).hexdigest() != manifest["assetSha256"][name]:
             raise ValueError(f"Gespeicherte Asset-Prüfsumme stimmt nicht: {name}")
 
@@ -46,9 +71,8 @@ def register(package, fmi):
         for index, _ in enumerate(executor.map(store, names), 1):
             if index % 20 == 0 or index == len(names):
                 print(f"Assets dauerhaft geprüft: {index}/{len(names)}", flush=True)
-    if not target.exists():
-        with target.open("xb") as file:
-            file.write(raw)
+    _publish_manifest(target, raw)
+    model_manifest.cache_clear()
     print(f"Modell registriert: {fmi} · {manifest['stadiumName']}")
 
 
