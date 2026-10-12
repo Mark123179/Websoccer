@@ -12,6 +12,7 @@ from django.test import SimpleTestCase
 
 from scripts import register_stadium_model as command
 from . import model_registry as registry
+from .test_pitch_validation import source as pitch_source
 
 
 class RegistrationTests(SimpleTestCase):
@@ -24,8 +25,9 @@ class RegistrationTests(SimpleTestCase):
         self.models.mkdir()
         self.fmi = 999001
         self.version = "synthetic-v1"
+        pitch, geometry = pitch_source()
         self.payloads = {
-            "geometry.bin": b"synthetic geometry",
+            "geometry.bin": geometry,
             "first.webp": b"synthetic first texture",
             "last.webp": b"synthetic last texture",
         }
@@ -37,10 +39,7 @@ class RegistrationTests(SimpleTestCase):
             "sourceSha256": "a" * 64, "geometrySha256": digests["geometry.bin"],
             "assetVersion": self.version, "textures": ["first.webp", "last.webp"],
             "assetSha256": digests,
-            "meshes": [{"name": "test", "positionOffset": 0, "uvOffset": 0,
-                        "vertexCount": 3, "parts": [
-                            {"color": [1, 1, 1], "texture": "first.webp",
-                             "indexOffset": 0, "indexCount": 3}]}],
+            "meshes": pitch["meshes"],
             "fixtures": [{"position": [0, 1, 0], "direction": [0, -1, 0],
                           "color": [1, 1, 1], "range": 10, "angle": 60,
                           "intensity": 1, "meshDistance": 0,

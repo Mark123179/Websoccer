@@ -15,6 +15,18 @@ einen klaren Datenvertrag und prüfbare Pakete erhalten, statt pro Verein
 erneut feste Sonderfälle einzubauen. Das ist keine pauschale Freigabe
 für Vereinsanlagen oder Änderungen an Spieldaten.
 
+Neue Stadionpakete dürfen den gemeinsamen Spielfeldvertrag nicht unbemerkt
+verletzen. Unbekannte Liniengeometrie muss ausdrücklich als nicht automatisch
+messbar gemeldet werden; ein Paket darf deshalb weder still bestehen noch
+ungefragt skaliert werden.
+
+**Why:** Der Nutzer nennt die gleichen Spielfeldmaße als kritische Voraussetzung
+für den späteren 2D-Spielablauf, unabhängig von den unterschiedlichen Rasenflächen.
+
+**How to apply:** Die Mittellinienmaße der Quellgeometrie belegen, nicht die
+Gesamt-Bounding-Box einschließlich Linienbreite, Eckbögen und Hintertormarkierungen.
+Fehlende ignorierte Prüfartefakte sind kein Nachweis; an den Originalen neu messen.
+
 Interne Vereinsnummern aus externen Stadionpaketen nicht ungeprüft
 übernehmen. Den Zielverein über die kanonische FMI-ID auflösen.
 

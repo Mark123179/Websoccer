@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
+import {execFileSync} from 'node:child_process';
 
 import {
   PITCH,
@@ -11,6 +12,14 @@ function close(actual, expected, message) {
   assert.ok(Math.abs(actual - expected) < 1e-9,
     `${message}: expected ${expected}, received ${actual}`);
 }
+
+test('2D pitch dimensions agree with the source registration contract', () => {
+  const contract = JSON.parse(execFileSync('python', ['-c',
+    'import json; from stadium_editor.pitch_validation import PITCH_LENGTH, PITCH_WIDTH; print(json.dumps(dict(length=PITCH_LENGTH,width=PITCH_WIDTH)))'],
+    {cwd: new URL('../..', import.meta.url), encoding: 'utf8'}));
+  assert.deepEqual(PITCH, contract);
+  assert.deepEqual(PITCH, {length: 105, width: 68});
+});
 
 test('pitch surface and every marking share one quarter-turn transform', () => {
   for (const degrees of [0, 90, 180, 270]) {

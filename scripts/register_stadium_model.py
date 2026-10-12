@@ -16,7 +16,10 @@ sys.path.insert(0, str(ROOT))
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "core.settings")
 
 from game.object_storage_backend import get_client
-from stadium_editor.model_registry import manifest_path, model_manifest, validate_model_manifest
+from stadium_editor.model_registry import (
+    manifest_path, model_manifest, validate_model_manifest, validate_pitch_geometry,
+)
+from stadium_editor.pitch_validation import PitchValidationError
 
 
 def _publish_manifest(target, raw):
@@ -55,6 +58,10 @@ def register(package, fmi):
     for name in names:
         if hashlib.sha256((assets / name).read_bytes()).hexdigest() != manifest["assetSha256"][name]:
             raise ValueError(f"Asset-Prüfsumme stimmt nicht: {name}")
+    measurement = validate_pitch_geometry(manifest, (assets / "geometry.bin").read_bytes())
+    print("Spielfeld geprüft: "
+          f"{measurement['lineCenterLengthMeters']:.3f} × "
+          f"{measurement['lineCenterWidthMeters']:.3f} m (Linienmittelachsen).")
 
     def store(name):
         client = get_client()
@@ -83,6 +90,9 @@ if __name__ == "__main__":
     args = parser.parse_args()
     try:
         register(args.package, args.fmi)
+    except PitchValidationError as error:
+        print(f"Registrierung abgebrochen: {error}", file=sys.stderr)
+        sys.exit(1)
     except Exception as error:
         # Storage errors can contain signed URLs: never expose their contents.
         print(f"Registrierung abgebrochen ({type(error).__name__}).", file=sys.stderr)

@@ -6,10 +6,11 @@ import math
 from pathlib import Path
 import re
 
+from .pitch_validation import validate_pitch_geometry
+
 MODEL_DIR = Path(__file__).parent / "blueprints" / "v2" / "models"
 logger = logging.getLogger(__name__)
 STANDS = {"NORD", "SUED", "OST", "WEST"}
-
 
 def validate_model_manifest(manifest):
     """Raise ValueError naming the first missing/invalid field."""
