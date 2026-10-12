@@ -27,6 +27,27 @@ Fehler. Für Legacy-Exporte ohne deklarierten Geometriehash erzeugt nur der
 Einzelprüfer den Hash aus der Eingabedatei; die Registrierung verlangt
 weiterhin die vorhandenen Manifest-Prüfsummen.
 
+## Offline-Modell-Export
+
+`scripts/export_stadium_model.py` prüft die erfasste Quell-Weltgeometrie
+unmittelbar nach der Mesh-Erfassung, bevor Texturen dekodiert oder
+Paketdateien geschrieben werden. Es gilt derselbe rein lesende Prüfer wie
+bei der Registrierung, ohne Storage- oder Datenbankzugriff.
+
+Abweichende Maße werden mit Istmaß, Sollmaß und Toleranz gemeldet; nicht
+messbare Quellen mit dem Grund der Ablehnung. Beide Fälle brechen den
+Export mit Exitcode 1 und einer Meldung auf stderr ab, ohne neue
+Ausgabedateien anzulegen oder vorhandene Dateien zu überschreiben.
+Es findet niemals eine automatische Skalierung statt. Gültige Exporte
+behalten ihre Geometrie, Texturen und ihr Manifestformat unverändert.
+
+Die Offline-Tests verwenden synthetische Unity-Quellen und sperren
+Storage-/Datenbankimporte; sie brauchen weder Django-Setup noch Verbindungen:
+
+```sh
+python -m unittest stadium_editor.test_export_stadium_model
+```
+
 ## Messverfahren und Grenzen
 
 Unterstützt wird das Linienmaterial `000STADIUMLINE` mit geometrischen

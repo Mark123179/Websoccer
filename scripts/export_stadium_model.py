@@ -13,9 +13,9 @@ from scipy.spatial import cKDTree
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 from scripts.export_stadium_study_lights import world
+from stadium_editor.pitch_validation import PitchValidationError, validate_pitch_geometry
 
 def export_model(SOURCE, seats_path, fmi, name, DEST, calibration):
-    DEST.mkdir(parents=True, exist_ok=True)
     env = UnityPy.load(str(SOURCE))
     cache, binary, meshes, tex_refs, lamps = {}, bytearray(), [], {}, []
     for obj in env.objects:
@@ -84,6 +84,11 @@ def export_model(SOURCE, seats_path, fmi, name, DEST, calibration):
                        "hierarchy": chain, "positionOffset": po, "uvOffset": uo,
                        "vertexCount": len(vertices), "parts": parts,
                        "bounds": [vertices.min(axis=0).tolist(), vertices.max(axis=0).tolist()]})
+    # Validate the captured source geometry before decoding textures or writing
+    # any package files. Never adapt dimensions to make an invalid source pass.
+    geometry_hash = hashlib.sha256(binary).hexdigest()
+    validate_pitch_geometry({"meshes": meshes, "geometrySha256": geometry_hash}, binary)
+    DEST.mkdir(parents=True, exist_ok=True)
     for name, pointer in tex_refs.items():
         image = pointer.read().image
         image.thumbnail((1024, 1024))
@@ -132,7 +137,7 @@ def export_model(SOURCE, seats_path, fmi, name, DEST, calibration):
     manifest = {"format": "unity-mesh-binary-v1", "clubFmiId": fmi, "stadiumName": name,
                 "calibration": calibration,
                 "source": SOURCE.name, "sourceSha256": hashlib.sha256(SOURCE.read_bytes()).hexdigest(),
-                "geometrySha256": hashlib.sha256(binary).hexdigest(),
+                 "geometrySha256": geometry_hash,
                 "meshes": meshes, "textures": list(tex_refs), "fixtures": selected,
                 "verifiedFixtureCount": len(lights),
                 "limits": ["Source meshes and UVs; simplified browser materials, not original Unity shaders.",
@@ -187,8 +192,13 @@ def main():
                 "tickerRotationY", "tickerFrontCut", "standAxes", "orbitDefault"}
     if not isinstance(calibration, dict) or not required <= calibration.keys():
         parser.error("--calibration muss den vollständigen calibration-Block enthalten")
-    export_model(args.bundle, args.seats, args.fmi, args.name, args.out, calibration)
+    try:
+        export_model(args.bundle, args.seats, args.fmi, args.name, args.out, calibration)
+    except PitchValidationError as error:
+        print(f"Modell-Export abgebrochen: {error}", file=sys.stderr)
+        return 1
+    return 0
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())
