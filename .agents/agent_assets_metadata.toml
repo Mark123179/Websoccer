@@ -2342,3 +2342,17 @@ mtime_ms = 1791744016442
 storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:6e4eaecc-e6c5-4f64-8de5-e8845034f33b/ed57a39c-ceb7-49fd-a5fe-3365c9366677/a7f5a72c-3a35-4c76-8bf9-337f0b8b4558"
 storage_version_token = "1791744100870950"
 content_type = "application/octet-stream"
+
+[[outputs]]
+id = "2lFVAcp9zt_2952vVKvcV"
+uri = "file://generated-artifacts/leverkusen-pruefung/dach-draufsicht.png"
+type = "image"
+title = "BayArena – unabhängige Dachkontrolle"
+description = "Draufsicht des gelieferten Modells im aktuellen Spielrenderer. Tragwerk und Seilnetz sind sichtbar, die flächige Dachdeckung ist nicht erkennbar. Das Modell wurde nicht ins Spiel übernommen."
+logical_id = "c8f4412c-ad07-40ef-90fc-a3f46b4ae18e"
+content_hash = "sha256:c50762fc3e3b5dce18936f67923f3d621d69904786a50205a4bd3d3c57a878e7"
+size = 1198474
+mtime_ms = 1791791883744
+storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:6e4eaecc-e6c5-4f64-8de5-e8845034f33b/c8f4412c-ad07-40ef-90fc-a3f46b4ae18e/e4c81986-f6e9-4f6d-8cd0-aad122faca8e"
+storage_version_token = "1791792218346896"
+content_type = "image/png"

@@ -3,6 +3,17 @@ name: Spielfeldzentrierte Spielansicht und Ortskulisse
 description: Verbindliche Bildhierarchie, nicht abgenommene Umfeldversuche und bisherige Entscheidungen zu gelieferten Vereinsbildern.
 ---
 
+## Tore zusammen mit Spielern
+
+„Tore werden wir mit den Spieler hinzufügen, bisher sollte niemand Tore haben.“
+
+**Why:** Der Nutzer hat den bisherigen Zustand und die Reihenfolge ausdrücklich
+klargestellt; fehlende Tore sind derzeit kein Importdefekt.
+
+**How to apply:** Stadionmodelle vorerst ohne nachgerüstete Tore prüfen.
+Tore erst zusammen mit den Spielern ergänzen, nicht vorgezogen bei einer
+einzelnen Stadionübernahme.
+
 ## Aktuelles Ziel
 
 „Hauptteil des Bildes soll weiterhin das Spielfeld sein, dort soll der 2D Modus auch ablaufen.“ Darum das 3D-Stadion: sichtlicher Unterschied zwischen Elversberg vor etwa 14.000 und einem Stadion vor etwa 80.000, Dach an/aus sowie Tag/Nacht auswählbar. Die echte Ortslage soll erhalten bleiben; Fotorealismus ist nach der erneuten Qualitätskritik nicht mehr als alleiniger Zielstil vorauszusetzen.
