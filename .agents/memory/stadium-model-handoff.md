@@ -27,3 +27,14 @@ Verein verändern.
 Zielidentität anhand der FMI-ID prüfen. Listenindizes für Umfeldkorrekturen
 nur verwenden, wenn die betroffenen Quelldaten nachweislich übereinstimmen;
 ein Paket allein erteilt keine Freigabe für Datenlöschungen.
+
+Eine ausdrücklich erlaubte Zwischenübernahme trotz bekanntem Dachmangel
+ist nicht mit fachlicher Dachabnahme gleichzusetzen.
+
+**Why:** Bei der BayArena verlangte der Nutzer nach dem Hinweis auf die
+ungeklärte Dachdeckung „und direkt übernehmen“. Der gelieferte Stand darf
+also genutzt werden, ohne die Dachfrage als gelöst auszugeben.
+
+**How to apply:** Diese bewusste Zwischenfreigabe bei späteren Dachprüfungen
+berücksichtigen. Korrekturen weiterhin an der Originalquelle belegen;
+die Freigabe nicht auf andere Stadionpakete übertragen.
