@@ -134,6 +134,19 @@ class OfflineExportTests(TestCase):
         fixture[3].read.assert_not_called()
         self.assertEqual(self.snapshot(), before)
 
+    def test_full_export_with_texture_preserves_stadium_name(self):
+        fixture = self.unity_source()
+        self.export(fixture)
+
+        manifest = json.loads((self.out / "manifest.json").read_text())
+        self.assertEqual(manifest["stadiumName"], "Teststadion")
+        self.assertEqual(manifest["textures"], ["texture-7.webp"])
+        self.assertEqual((self.out / "texture-7.webp").read_bytes(), b"texture")
+        fixture[3].read.assert_called_once_with()
+        self.assertEqual(manifest["geometrySha256"],
+                         hashlib.sha256((self.out / "geometry.bin").read_bytes()).hexdigest())
+        self.assertEqual(manifest["verifiedFixtureCount"], 1)
+
     def test_valid_export_is_byte_identical_to_ungated_export(self):
         fixture = self.unity_source()
         with patch.object(command, "validate_pitch_geometry"):

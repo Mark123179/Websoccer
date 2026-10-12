@@ -89,10 +89,10 @@ def export_model(SOURCE, seats_path, fmi, name, DEST, calibration):
     geometry_hash = hashlib.sha256(binary).hexdigest()
     validate_pitch_geometry({"meshes": meshes, "geometrySha256": geometry_hash}, binary)
     DEST.mkdir(parents=True, exist_ok=True)
-    for name, pointer in tex_refs.items():
+    for texture_name, pointer in tex_refs.items():
         image = pointer.read().image
         image.thumbnail((1024, 1024))
-        image.save(DEST / name, "WEBP", quality=86)
+        image.save(DEST / texture_name, "WEBP", quality=86)
     if not lamps:
         raise ValueError("No actual lamp-material geometry found")
     tree = cKDTree(np.asarray(lamps))
