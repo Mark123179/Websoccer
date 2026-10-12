@@ -14,3 +14,16 @@ vereinsbezogene Arbeit am Anwendungscode ermöglichen.
 einen klaren Datenvertrag und prüfbare Pakete erhalten, statt pro Verein
 erneut feste Sonderfälle einzubauen. Das ist keine pauschale Freigabe
 für Vereinsanlagen oder Änderungen an Spieldaten.
+
+Interne Vereinsnummern aus externen Stadionpaketen nicht ungeprüft
+übernehmen. Den Zielverein über die kanonische FMI-ID auflösen.
+
+**Why:** Ein Leverkusen-Paket nannte eine interne Vereinsnummer aus
+einem anderen Datenbestand. Die FMI-ID stimmte, die lokale Vereinsnummer
+jedoch nicht. Eine Korrektur nach der fremden Nummer könnte den falschen
+Verein verändern.
+
+**How to apply:** Vor Registrierung oder Geometriekorrekturen die
+Zielidentität anhand der FMI-ID prüfen. Listenindizes für Umfeldkorrekturen
+nur verwenden, wenn die betroffenen Quelldaten nachweislich übereinstimmen;
+ein Paket allein erteilt keine Freigabe für Datenlöschungen.
