@@ -1,0 +1,92 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Synthetic Unity ground regression</title>
+<style>body { margin: 0 } #stage { width: 256px; height: 128px }</style>
+<div id="stage"></div>
+<script type="module">
+import * as THREE from '../static/stadium_editor/stage/vendor/three.module.js';
+import {mountUnityStadium} from '../static/stadium_editor/unity_stadium_scene.js';
+
+window.groundReady = (async () => {
+  const legacy = new URLSearchParams(location.search).has('legacy');
+  const api = await mountUnityStadium({
+    element: document.querySelector('#stage'),
+    presentation: {
+      renderer: 'unity-spatial', modelUrl: `/fixture/${legacy ? 'legacy' : 'modern'}/manifest.json`,
+      clubFmiId: 999999, sourceSha256: 'synthetic-ground', stadium: 'Synthetic',
+    },
+  });
+  const {renderer, scene, model} = api.stage;
+  const camera = new THREE.OrthographicCamera(-4, 4, 2, -2, .1, 100);
+  camera.position.set(0, 20, 0);
+  camera.up.set(0, 0, -1);
+  camera.lookAt(0, 0, 0);
+  camera.updateMatrixWorld(true);
+  renderer.setPixelRatio(1);
+  renderer.setSize(256, 128, false);
+  const target = new THREE.WebGLRenderTarget(256, 128);
+  const find = name => model.children.find(mesh => mesh.name === `SOURCE_${name}_body`);
+  const base = find('pitch_base'), marker = find('pitch_markers'), projected = find('pitch_projected');
+  const sample = (x, z) => {
+    const pixel = new Uint8Array(4);
+    renderer.readRenderTargetPixels(target, Math.floor((x + 4) * 32),
+      Math.floor((2 - z) * 32), 1, 1, pixel);
+    return [...pixel];
+  };
+  const render = () => {
+    renderer.setRenderTarget(target);
+    renderer.render(scene, camera);
+    renderer.setRenderTarget(null);
+    // Also render the visible canvas, so the harness is inspectable.
+    renderer.render(scene, camera);
+  };
+  window.groundTest = {
+    api,
+    inspect() {
+      return {
+        marker: {transparent: marker.material.transparent,
+          alphaTest: marker.material.alphaTest, depthWrite: marker.material.depthWrite},
+        projected: {transparent: projected.material.transparent,
+          alphaTest: projected.material.alphaTest, depthWrite: projected.material.depthWrite},
+        uv: [...projected.geometry.attributes.uv.array],
+        sourceUv: [...marker.geometry.attributes.uv.array],
+      };
+    },
+    markers() {
+      projected.visible = false; marker.visible = false;
+      render();
+      const positions = [-3, -1, 1, 3];
+      const background = positions.map(x => sample(x, 0));
+      marker.visible = true; render();
+      return {background, actual: positions.map(x => sample(x, 0))};
+    },
+    projection() {
+      base.visible = false; marker.visible = false; projected.visible = true;
+      render();
+      return [[-2, -1], [2, -1], [2, 1], [-2, 1]].map(([x, z]) => sample(x, z));
+    },
+    // An opaque foreground drawn first must NOT block an opaque surface
+    // between it and the ground when depthWrite is correctly disabled.
+    depthProbe() {
+      projected.visible = false; base.visible = true; marker.visible = true;
+      const material = new THREE.MeshBasicMaterial({color: '#ff0000', side: THREE.DoubleSide});
+      const geometry = new THREE.PlaneGeometry(8, 4);
+      const probe = new THREE.Mesh(geometry, material);
+      probe.rotation.x = -Math.PI / 2; probe.position.y = .1;
+      // Both opaque and transparent meshes are forced into a known sequence.
+      const old = marker.material.transparent;
+      marker.material.transparent = false;
+      marker.material.needsUpdate = true;
+      marker.renderOrder = 1; probe.renderOrder = 2;
+      scene.add(probe); render();
+      const pixel = sample(3, 0);
+      scene.remove(probe); geometry.dispose(); material.dispose();
+      marker.material.transparent = old; marker.material.needsUpdate = true;
+      marker.renderOrder = 0;
+      return pixel;
+    },
+    dispose() { target.dispose(); api.dispose(); },
+  };
+  return true;
+})();
+</script>
