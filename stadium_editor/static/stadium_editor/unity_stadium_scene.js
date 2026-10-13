@@ -1,7 +1,7 @@
 import * as THREE from './stage/vendor/three.module.js';
 import {applyStudyCamera} from './study_camera.js?v=3';
-import {buildDortmundSurroundings} from './dortmund_surroundings.js?v=51';
-import {validateCalibration, standForCenter, tickerQuaternion} from './unity_calibration.js';
+import {buildDortmundSurroundings} from './dortmund_surroundings.js?v=52';
+import {validateCalibration, standForCenter, tickerQuaternion} from './unity_calibration.js?v=2';
 
 /** Original source geometry, with its own club-scoped runtime presentation. */
 export async function mountUnityStadium({element, presentation, tickerPreview = false, onOrbitChange}) {
@@ -31,7 +31,8 @@ export async function mountUnityStadium({element, presentation, tickerPreview = 
   scene.fog = new THREE.Fog('#071316', 850, 1800);
   const model = new THREE.Group();
   scene.add(model);
-  const environment = buildDortmundSurroundings(THREE, presentation.surroundings, presentation.frame);
+  const environment = buildDortmundSurroundings(THREE, presentation.surroundings,
+    presentation.frame, calibration.surroundingsAxes);
   scene.add(environment.group);
   const hemisphere = new THREE.HemisphereLight(0xe7f1f2, 0x344045, 1.35);
   const sun = new THREE.DirectionalLight(0xfff3d4, 1.5);

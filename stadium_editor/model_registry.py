@@ -11,6 +11,24 @@ from .pitch_validation import validate_pitch_geometry
 MODEL_DIR = Path(__file__).parent / "blueprints" / "v2" / "models"
 logger = logging.getLogger(__name__)
 STANDS = {"NORD", "SUED", "OST", "WEST"}
+AXES = ("+x", "-x", "+z", "-z")
+
+
+def validate_surroundings_axes(calibration):
+    """Optional mapping of the editor's north end and west side to model axes."""
+    if "surroundingsAxes" not in calibration:
+        return None
+    axes = calibration["surroundingsAxes"]
+    if not isinstance(axes, dict) or set(axes) != {"NORD", "WEST"}:
+        raise ValueError("Ungültiges oder fehlendes Feld: calibration.surroundingsAxes")
+    for stand in ("NORD", "WEST"):
+        if not isinstance(axes[stand], str) or axes[stand] not in AXES:
+            raise ValueError(f"Ungültiges oder fehlendes Feld: calibration.surroundingsAxes.{stand}")
+        if calibration["standAxes"].get(axes[stand]) != stand:
+            raise ValueError(f"calibration.surroundingsAxes.{stand} widerspricht standAxes")
+    if axes["NORD"][1] == axes["WEST"][1]:
+        raise ValueError("Ungültiges oder fehlendes Feld: calibration.surroundingsAxes")
+    return axes
 
 def validate_model_manifest(manifest):
     """Raise ValueError naming the first missing/invalid field."""
@@ -110,6 +128,7 @@ def validate_model_manifest(manifest):
                 "calibration.standAxes." + axis)
     require(list(c["standAxes"].values()), lambda v: len(v) == 4 and set(v) == STANDS,
             "calibration.standAxes")
+    validate_surroundings_axes(c)
     require(c.get("orbitDefault"), lambda v: isinstance(v, dict), "calibration.orbitDefault")
     for field in ("azimuth", "elevation", "distance"):
         require(c["orbitDefault"].get(field), number, "calibration.orbitDefault." + field)

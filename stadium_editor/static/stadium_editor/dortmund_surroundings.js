@@ -1,6 +1,24 @@
 // The editor's existing map is the only source for this environment.
 // Heights and tree forms are schematic, not a surveyed reconstruction.
-export function editorPointToDortmund(point, frame = {}) {
+// Optional mapping of the editor's north end and west side to the source-model axes.
+// The default reproduces the existing transformation exactly.
+const UNIT = Object.freeze({
+  '+x': Object.freeze({index:0, sign:1}), '-x': Object.freeze({index:0, sign:-1}),
+  '+z': Object.freeze({index:1, sign:1}), '-z': Object.freeze({index:1, sign:-1}),
+});
+export const SURROUNDINGS_AXES_DEFAULT = Object.freeze({NORD:'+z', WEST:'-x'});
+
+export function resolveSurroundingsAxes(axes = SURROUNDINGS_AXES_DEFAULT) {
+  if (axes === null || typeof axes !== 'object' || Array.isArray(axes) ||
+      Object.keys(axes).length !== 2 ||
+      !Object.hasOwn(axes, 'NORD') || !Object.hasOwn(axes, 'WEST') ||
+      !Object.hasOwn(UNIT, axes.NORD) || !Object.hasOwn(UNIT, axes.WEST) ||
+      UNIT[axes.NORD].index === UNIT[axes.WEST].index)
+    throw new Error('Die Ortsplan-Achsen des Stadionmodells sind ungültig.');
+  return {north: UNIT[axes.NORD], west: UNIT[axes.WEST]};
+}
+
+export function editorPointToDortmund(point, frame = {}, axes = SURROUNDINGS_AXES_DEFAULT) {
   if (!Array.isArray(point) || point.length < 2 ||
       !point.slice(0, 2).every(value => typeof value === 'number' && Number.isFinite(value))) {
     throw new Error('Das Stadionumfeld enthält eine ungültige Position.');
@@ -11,15 +29,19 @@ export function editorPointToDortmund(point, frame = {}) {
       !center.every(Number.isFinite) || !Number.isFinite(theta)) {
     throw new Error('Der Koordinatenrahmen des Stadionumfelds ist ungültig.');
   }
+  const {north, west} = resolveSurroundingsAxes(axes);
   const dx = point[0] - center[0], dy = point[1] - center[1];
   const u = dx * Math.cos(theta) + dy * Math.sin(theta);
   const v = -dx * Math.sin(theta) + dy * Math.cos(theta);
-  // Editor +X is goal-to-goal; Unity +Z is goal-to-goal.
-  // Preserve handedness: editor +Y (across the pitch) becomes Unity -X.
-  return [-v, u];
+  const result = [0, 0];
+  result[north.index] = north.sign * u;
+  result[west.index] = west.sign * v;
+  return result;
 }
 
-export function buildDortmundSurroundings(THREE, data = {}, frame = {}) {
+export function buildDortmundSurroundings(THREE, data = {}, frame = {},
+  axes = SURROUNDINGS_AXES_DEFAULT) {
+  resolveSurroundingsAxes(axes);
   const group = new THREE.Group();
   group.name = 'EDITOR_SURROUNDINGS_3D';
   group.userData.source = data.source || '';
@@ -31,7 +53,7 @@ export function buildDortmundSurroundings(THREE, data = {}, frame = {}) {
     resources.forEach(resource => resource.dispose());
     resources.clear();
   };
-  const point = p => editorPointToDortmund(p, frame);
+  const point = p => editorPointToDortmund(p, frame, axes);
   const polygon = raw => {
     if (!Array.isArray(raw)) throw new Error('Eine Umfeldfläche ist ungültig.');
     const points = raw.map(point);
