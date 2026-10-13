@@ -15,6 +15,11 @@ class SurroundingsAxesTests(SimpleTestCase):
                 axes = manifest["calibration"].get("surroundingsAxes")
                 if fmi in (912, 91013388):
                     self.assertEqual(axes, {"NORD": "-z", "WEST": "-x"})
+                elif fmi == 960:
+                    self.assertEqual(axes, {"NORD": "+z", "WEST": "-x"})
+                    self.assertEqual(manifest["calibration"]["standAxes"],
+                                     {"+x": "OST", "-x": "WEST",
+                                      "+z": "NORD", "-z": "SUED"})
                 else:
                     self.assertIsNone(axes)
 

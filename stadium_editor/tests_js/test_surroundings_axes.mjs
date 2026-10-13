@@ -10,6 +10,8 @@ const frankfurt = JSON.parse(readFileSync(
   new URL('../blueprints/v2/models/912.json', import.meta.url))).calibration;
 const leipzig = JSON.parse(readFileSync(
   new URL('../blueprints/v2/models/91013388.json', import.meta.url))).calibration;
+const stuttgart = JSON.parse(readFileSync(
+  new URL('../blueprints/v2/models/960.json', import.meta.url))).calibration;
 const oldMap = (point, frame) => {
   const [cx, cy] = frame.fieldC || [0, 0], theta = frame.axisTheta ?? 0;
   const dx = point[0] - cx, dy = point[1] - cy;
@@ -60,6 +62,22 @@ test('build uses the declared axes without changing source map data', () => {
     assert.equal(box(normal).max.z, -box(mirrored).min.z);
     assert.equal(JSON.stringify(data), snapshot);
   } finally { normal.dispose(); mirrored.dispose(); }
+});
+
+test('Stuttgart keeps Cannstatter home end by Carl Benz Center and away end by SCHARRena', () => {
+  assert.equal(validateCalibration(stuttgart), stuttgart);
+  assert.deepEqual(stuttgart.surroundingsAxes, {NORD:'+z', WEST:'-x'});
+  assert.equal(standForCenter({x:0, z:80}, stuttgart.standAxes), 'NORD');
+  assert.equal(standForCenter({x:65, z:-80}, stuttgart.standAxes), 'SUED');
+  assert.equal(standForCenter({x:-95, z:0}, stuttgart.standAxes), 'WEST');
+  const frame = {fieldC:[-0.4,0.2], axisTheta:2.4435};
+  // Geographic landmark offsets independently documented in the source package.
+  const carlBenz = editorPointToDortmund([-153,79], frame, stuttgart.surroundingsAxes);
+  const scharrena = editorPointToDortmund([89,-73], frame, stuttgart.surroundingsAxes);
+  const oppositeSide = editorPointToDortmund([88,110], frame, stuttgart.surroundingsAxes);
+  assert.ok(carlBenz[1] > 150, 'Carl Benz Center must be beyond the native +z home end');
+  assert.ok(scharrena[1] < -100, 'SCHARRena must be beyond the native -z away end');
+  assert.ok(oppositeSide[0] > 100, 'Molly-Schauffele-Halle must remain on the east side');
 });
 
 test('invalid axes fail closed even for an empty map', () => {
