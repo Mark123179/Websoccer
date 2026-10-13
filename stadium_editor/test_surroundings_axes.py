@@ -7,13 +7,13 @@ from . import model_registry as registry
 
 
 class SurroundingsAxesTests(SimpleTestCase):
-    def test_registered_models_and_frankfurt_are_valid(self):
+    def test_registered_models_and_mirrored_surroundings_are_valid(self):
         for fmi in registry.registered_fmi_ids():
             with self.subTest(fmi=fmi):
                 manifest = registry.model_manifest(fmi)
                 registry.validate_model_manifest(manifest)
                 axes = manifest["calibration"].get("surroundingsAxes")
-                if fmi == 912:
+                if fmi in (912, 91013388):
                     self.assertEqual(axes, {"NORD": "-z", "WEST": "-x"})
                 else:
                     self.assertIsNone(axes)

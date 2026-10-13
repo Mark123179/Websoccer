@@ -8,6 +8,8 @@ import * as THREE from '../static/stadium_editor/stage/vendor/three.module.js';
 
 const frankfurt = JSON.parse(readFileSync(
   new URL('../blueprints/v2/models/912.json', import.meta.url))).calibration;
+const leipzig = JSON.parse(readFileSync(
+  new URL('../blueprints/v2/models/91013388.json', import.meta.url))).calibration;
 const oldMap = (point, frame) => {
   const [cx, cy] = frame.fieldC || [0, 0], theta = frame.axisTheta ?? 0;
   const dx = point[0] - cx, dy = point[1] - cy;
@@ -23,9 +25,10 @@ test('existing models preserve their map coordinates including signed zero', () 
   assert.deepEqual(editorPointToDortmund([52.5,0]), [-0,52.5]);
 });
 
-test('Frankfurt places the north end at -z and the west side at -x', () => {
-  assert.equal(validateCalibration(frankfurt), frankfurt);
-  const axes = frankfurt.surroundingsAxes;
+for (const [name, calibration] of [['Frankfurt', frankfurt], ['Leipzig', leipzig]]) {
+test(`${name} places the north end at -z and the west side at -x`, () => {
+  assert.equal(validateCalibration(calibration), calibration);
+  const axes = calibration.surroundingsAxes;
   assert.deepEqual(axes, {NORD:'-z', WEST:'-x'});
   for (const [editor, expected] of [
     [[100,0], [0,-100]], [[-100,0],[0,100]],
@@ -33,11 +36,12 @@ test('Frankfurt places the north end at -z and the west side at -x', () => {
     const mapped = editorPointToDortmund(editor, {}, axes);
     for (let index=0; index<2; index++)
       assert.ok(Math.abs(mapped[index]-expected[index]) < 1e-9);
-    assert.equal(standForCenter({x:expected[0], z:expected[1]}, frankfurt.standAxes),
+    assert.equal(standForCenter({x:expected[0], z:expected[1]}, calibration.standAxes),
       editor[0] > 0 ? 'NORD' : editor[0] < 0 ? 'SUED' :
         editor[1] > 0 ? 'WEST' : 'OST');
   }
 });
+}
 
 test('build uses the declared axes without changing source map data', () => {
   const data = {buildings:[[[0,0],[10,0],[10,20],[0,20]]], buildingHeights:[12]};
