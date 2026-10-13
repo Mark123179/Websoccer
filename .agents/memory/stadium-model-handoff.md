@@ -93,3 +93,24 @@ der frühen Prüfung ungültiger Achsen.
 **How to apply:** Tests gegen die tatsächlich für den Einbau gewählte
 Fassung ausführen. Abweichende Diffs aus dem geprüften Endstand neu
 erzeugen; unveränderte Bestandsfehler mit einem Kontrolllauf unterscheiden.
+
+## Kurvenlage und abgeleitete Heimkurvenmarkierung
+
+Kurvenzuordnungen gegen einen offiziellen Stadionplan und geografische
+Umfeldanker prüfen, nicht allein gegen die automatisch aus der Rohblaupause
+abgeleitete Heimkurve. Eine falsche Darstellung rechtfertigt keinen
+pauschalen Nord-/Süd-Tausch der wirtschaftlichen Kapazitäten.
+
+**Why:** Der offizielle MHPArena-Plan ordnet die Cannstatter Heimkurve dem
+Carl-Benz-Center-Ende (NW), die Untertürkheimer Kurve samt Gästebereich dem
+SCHARRena-Ende (SO) zu. Das Stuttgart-Paket folgte dagegen einer aus dem
+Roh-Sitzraster abgeleiteten SUED-Heimkurve und spiegelte damit das Umfeld
+längs zum Quellmodell. Die wirtschaftlichen Stehplatzkapazitäten hatten
+die große Heimseite bereits im NORD. Roh-Rastergrößen und wirtschaftliche
+Kapazitäten waren hier keine austauschbaren Belege.
+
+**How to apply:** Quellmodell, geografische Umfeldtransformation,
+explizite Heimkurvenmetadaten und Kapazitätsdaten getrennt vergleichen.
+Ein technisch gültiges Achsenpaar beweist nur Labelkonsistenz, nicht die
+richtige reale Lage. Quelle: offizieller Blockplan auf
+https://www.mhparena-stuttgart.de/arena/arenaplan .
