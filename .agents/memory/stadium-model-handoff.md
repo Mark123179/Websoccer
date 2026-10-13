@@ -80,3 +80,16 @@ dieser Schalter für den hängenden Videowürfel bereits nachprüfbar.
 Halterungen anhand der Quelle dem Dachschalter zuordnen und beide Zustände
 im Editor sowie Ticker prüfen. Fehlende Quelltafeln nicht erfinden; bei
 unklarer Montage vor einer geometrischen Änderung Rückfrage stellen.
+
+Bei Stadionpaketen mit Diff-Dateien und vollständigen Nachher-Dateien
+beide Fassungen auf Übereinstimmung prüfen, statt sie als austauschbar
+zu behandeln.
+
+**Why:** Ein korrigiertes Frankfurt-Paket enthielt eine ältere Diff-Datei
+und eine neuere vollständige Umfeld-Datei. Nur die vollständige Fassung
+erhielt das Altverhalten einschließlich vorzeichenbehafteter Null und
+der frühen Prüfung ungültiger Achsen.
+
+**How to apply:** Tests gegen die tatsächlich für den Einbau gewählte
+Fassung ausführen. Abweichende Diffs aus dem geprüften Endstand neu
+erzeugen; unveränderte Bestandsfehler mit einem Kontrolllauf unterscheiden.
