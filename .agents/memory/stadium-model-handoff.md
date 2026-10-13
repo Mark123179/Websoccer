@@ -50,3 +50,15 @@ also genutzt werden, ohne die Dachfrage als gelöst auszugeben.
 **How to apply:** Diese bewusste Zwischenfreigabe bei späteren Dachprüfungen
 berücksichtigen. Korrekturen weiterhin an der Originalquelle belegen;
 die Freigabe nicht auf andere Stadionpakete übertragen.
+
+Eine fehlende Dachhaut in einer exportierten Stadionansicht beweist nicht,
+dass die Originalquelle keine Dachhaut enthält. Exportierte Wurzeln müssen
+gegen die gesamte Quellhierarchie abgeglichen werden.
+
+**Why:** Bei der BayArena lag die echte Dachhaut unter einer im
+Standardexport ausgelassenen Zusatzwurzel. Die vorläufig übernommene
+Fassung war deshalb ohne Deckung, obwohl sie im Original vorhanden war.
+
+**How to apply:** Vor Rekonstruktionen alle Quellwurzeln samt Meshes,
+Materialien und Transparenz isoliert prüfen. Ergänzende Wurzeln gezielt
+für das betroffene Modell exportieren, nicht pauschal für andere Stadien.
