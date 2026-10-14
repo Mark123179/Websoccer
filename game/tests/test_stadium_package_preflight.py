@@ -9,7 +9,9 @@ from unittest.mock import patch
 
 from django.test import SimpleTestCase
 
-from stadium_editor.package_preflight import inspect_package
+from stadium_editor.package_preflight import (
+    CHECK_HEAP_MIB, CHECK_TIMEOUT_SECONDS, RUNNER, inspect_package,
+)
 from stadium_editor.surroundings_ground import validated_ground_fields
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -90,6 +92,39 @@ class StadiumPackagePreflightTests(SimpleTestCase):
         with patch("stadium_editor.package_preflight.subprocess.run",
                    side_effect=FileNotFoundError):
             self.assertEqual(inspect_package({})["findings"][0]["code"], "checker_failed")
+
+    def test_resource_limits_never_report_partial_success(self):
+        for failure in [
+            subprocess.TimeoutExpired(["node"], CHECK_TIMEOUT_SECONDS),
+            subprocess.CompletedProcess(["node"], -6, stdout="", stderr="heap exhausted"),
+        ]:
+            kwargs = {"side_effect": failure} if isinstance(failure, Exception) else {"return_value": failure}
+            with self.subTest(failure=type(failure).__name__):
+                with patch("stadium_editor.package_preflight.subprocess.run", **kwargs) as run:
+                    report = inspect_package({"groundLevel": 0, "trees": [[100, 100]]})
+                self.assertFalse(report["ok"])
+                self.assertTrue(report["terrainDeclared"])
+                self.assertEqual(report["findings"][0]["code"], "checker_failed")
+                args, options = run.call_args
+                self.assertEqual(args[0], ["node", f"--max-old-space-size={CHECK_HEAP_MIB}", str(RUNNER)])
+                self.assertEqual(options["timeout"], CHECK_TIMEOUT_SECONDS)
+        with patch("stadium_editor.package_preflight.MAX_INPUT_BYTES", 1):
+            with patch("stadium_editor.package_preflight.subprocess.run") as run:
+                report = inspect_package({"groundLevel": 0})
+            run.assert_not_called()
+            self.assertFalse(report["ok"])
+            self.assertTrue(report["terrainDeclared"])
+            self.assertEqual(report["findings"][0]["code"], "checker_failed")
+
+    def test_large_serialized_catalog_keeps_final_source_indices(self):
+        trees = [[200 + i % 1000, 200 + i // 1000] for i in range(100000)]
+        trees.extend([[0, 0], [10, 0], [None, 0]])
+        report = inspect_package({"data": {
+            "groundLevel": 0, "groundCutout": self.hole, "trees": trees,
+        }})
+        self.assertFalse(report["ok"])
+        self.assertEqual([f["path"] for f in report["findings"]],
+                         ["data.trees[100000]", "data.trees[100001]", "data.trees[100002]"])
 
     def test_cli_is_read_only_and_has_clear_exit_status(self):
         with TemporaryDirectory() as directory:

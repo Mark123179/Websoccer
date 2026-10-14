@@ -1,6 +1,6 @@
 import * as THREE from './stage/vendor/three.module.js';
 import {applyStudyCamera} from './study_camera.js?v=3';
-import {buildDortmundSurroundings} from './dortmund_surroundings.js?v=53';
+import {buildDortmundSurroundings} from './dortmund_surroundings.js?v=55';
 import {validateCalibration, standForCenter, tickerQuaternion} from './unity_calibration.js?v=2';
 
 /** Original source geometry, with its own club-scoped runtime presentation. */

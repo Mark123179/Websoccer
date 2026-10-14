@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import * as THREE from '../static/stadium_editor/stage/vendor/three.module.js';
 import {buildDortmundSurroundings} from '../static/stadium_editor/dortmund_surroundings.js';
-import {validateSurroundingsGround, groundPolygonRelation}
+import {validateSurroundingsGround, groundPolygonRelation, createGroundCutoutChecks, pointInGroundCutout}
   from '../static/stadium_editor/surroundings_ground.js';
 
 const hole = [[-10,-10],[10,-10],[10,10],[-10,10]];
@@ -103,4 +103,27 @@ test('cutout is in model coordinates, independent of editor rotation and reflect
   assert.deepEqual(env.group.userData.terrain.omitted.green,[0]);
   assert.equal(JSON.stringify(input),before);
   env.dispose();
+});
+
+test('cached cutout edges preserve concavity, winding and EPS boundary decisions', () => {
+  const concave = [[-10,-10],[10,-10],[10,-4],[-4,-4],[-4,10],[-10,10]];
+  for (const cutout of [hole,[...hole].reverse(),concave,[...concave].reverse()]) {
+    const checks = createGroundCutoutChecks(cutout), before = structuredClone(cutout);
+    for (const point of [[10,0],[10+1e-10,0],[10+1e-6,0],[-10,-10],
+      [0,0],[-8,8],[20,20]])
+      assert.equal(checks.pointInside(point),pointInGroundCutout(point,cutout));
+    for (const polygon of [square(0,0),square(10,0),square(10+1e-6,0),
+      square(-30,-30,60),[[-30,-1],[30,-1],[30,1],[-30,1]],square(20,20)])
+      assert.equal(checks.polygonRelation(polygon),groundPolygonRelation(polygon,cutout));
+    assert.deepEqual(cutout,before);
+  }
+  assert.equal(createGroundCutoutChecks(null).pointInside([0,0]),false);
+  assert.equal(createGroundCutoutChecks(null).polygonRelation(square(0,0)),'outside');
+  const checks = createGroundCutoutChecks(hole);
+  assert.equal(checks.pointInside([10,0]),true);
+  assert.equal(checks.pointInside([10+1e-6,0]),false);
+  assert.equal(checks.polygonRelation(square(10,0)),'overlap');
+  assert.equal(checks.polygonRelation(square(10+1e-6,0)),'outside');
+  assert.equal(createGroundCutoutChecks(concave).pointInside([0,0]),false);
+  assert.equal(createGroundCutoutChecks(concave).pointInside([-8,8]),true);
 });

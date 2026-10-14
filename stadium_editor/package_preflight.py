@@ -7,6 +7,10 @@ from .surroundings_data import project_surroundings
 from .surroundings_ground import validated_ground_fields
 
 RUNNER = Path(__file__).with_name("surroundings_preflight.mjs")
+# Fail explicitly on pathological inputs; never return a partial inspection.
+CHECK_TIMEOUT_SECONDS = 120
+CHECK_HEAP_MIB = 512
+MAX_INPUT_BYTES = 128 * 1024 * 1024
 _UNSET = object()
 
 
@@ -54,9 +58,16 @@ def inspect_package(package, *, frame=_UNSET, axes=_UNSET):
         if axes is not _UNSET:
             payload["axes"] = axes
         raw = json.dumps(payload, allow_nan=False)
+        # json.dumps uses ASCII escaping by default, so character count = bytes.
+        if len(raw) > MAX_INPUT_BYTES:
+            return _failure(
+                "renderer", "Prüfpaket überschreitet 128 MiB; vollständige Prüfung nicht ausgeführt.",
+                "checker_failed", terrain_declared=terrain_declared,
+            )
         result = subprocess.run(
-            ["node", str(RUNNER)], input=raw, text=True, capture_output=True,
-            timeout=120, check=False,
+            ["node", f"--max-old-space-size={CHECK_HEAP_MIB}", str(RUNNER)],
+            input=raw, text=True, capture_output=True,
+            timeout=CHECK_TIMEOUT_SECONDS, check=False,
         )
         if result.returncode:
             return _failure("renderer", "Die lokale Rendererprüfung ist fehlgeschlagen.", "checker_failed",
