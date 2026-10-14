@@ -10,15 +10,19 @@ const intersects = (a, b, c, d) =>
   (cross(a, b, c) * cross(a, b, d) < 0 && cross(c, d, a) * cross(c, d, b) < 0) ||
   onSegment(a, b, c) || onSegment(a, b, d) || onSegment(c, d, a) || onSegment(c, d, b);
 
-export function pointInGroundCutout(p, polygon) {
+function pointInEdges(p, lines) {
   let inside = false;
-  for (const [a, b] of edges(polygon)) {
+  for (const [a, b] of lines) {
     if (onSegment(a, b, p)) return true;
     if ((a[1] > p[1]) !== (b[1] > p[1]) &&
         p[0] < (b[0] - a[0]) * (p[1] - a[1]) / (b[1] - a[1]) + a[0])
       inside = !inside;
   }
   return inside;
+}
+
+export function pointInGroundCutout(p, polygon) {
+  return pointInEdges(p, edges(polygon));
 }
 
 export function validateSurroundingsGround(data = {}) {
@@ -63,14 +67,29 @@ export function validateSurroundingsGround(data = {}) {
 
 // Fail closed for crossings, including edges crossing with every vertex outside,
 // or a surrounding polygon enclosing the entire hole. No source data are erased.
-export function groundPolygonRelation(points, cutout) {
+function polygonRelation(points, cutout, cutoutEdges) {
   if (!cutout) return 'outside';
-  const hits = points.map(p => pointInGroundCutout(p, cutout));
-  const crossing = edges(points).some(([a, b]) =>
-    edges(cutout).some(([c, d]) => intersects(a, b, c, d)));
+  const lines = edges(points);
+  const hits = points.map(p => pointInEdges(p, cutoutEdges));
+  const crossing = lines.some(([a, b]) =>
+    cutoutEdges.some(([c, d]) => intersects(a, b, c, d)));
   if (crossing) return 'overlap';
   if (hits.every(Boolean)) return 'inside';
-  if (hits.some(Boolean) || cutout.some(p => pointInGroundCutout(p, points)))
+  if (hits.some(Boolean) || cutout.some(p => pointInEdges(p, lines)))
     return 'overlap';
   return 'outside';
+}
+
+export function groundPolygonRelation(points, cutout) {
+  return polygonRelation(points, cutout, cutout ? edges(cutout) : []);
+}
+
+// Cache only the already validated, source-declared cutout's edges. All boundary,
+// winding and EPS decisions remain in the same functions used by public checks.
+export function createGroundCutoutChecks(cutout) {
+  const lines = cutout ? edges(cutout) : [];
+  return {
+    pointInside: p => !!cutout && pointInEdges(p, lines),
+    polygonRelation: points => polygonRelation(points, cutout, lines),
+  };
 }
