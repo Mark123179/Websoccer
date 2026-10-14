@@ -2552,3 +2552,45 @@ mtime_ms = 1791975910754
 storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:6e4eaecc-e6c5-4f64-8de5-e8845034f33b/59ee8a3c-cd6b-4f82-9790-b5b3416afe39/2f8956ce-23e0-48ff-a22f-7e41d787a685"
 storage_version_token = "1791975937494979"
 content_type = "text/markdown"
+
+[[outputs]]
+id = "ILebOJr8raGdZbctAivUO"
+uri = "file://docs/stadionpakete/ANWEISUNG_FUER_CLAUDE_NACH_AUGSBURG_V2.md"
+type = "text"
+title = "Claude-Anweisung nach Augsburg V2"
+description = "Verbindlicher Gelände- und Dachvertrag, Schutzdaten und Anforderungen für zukünftige Stadionpakete."
+logical_id = "3292215b-ffbf-488a-bc73-c8be8e971e74"
+content_hash = "sha256:732f4f45bf4cdd889c50a09726e2d8c0dc937306b1a898d29d2c14fb177f5bec"
+size = 8426
+mtime_ms = 1791986281406
+storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:6e4eaecc-e6c5-4f64-8de5-e8845034f33b/3292215b-ffbf-488a-bc73-c8be8e971e74/d86ad18e-56df-4b45-be91-bc9fbe014946"
+storage_version_token = "1791986357401397"
+content_type = "text/markdown"
+
+[[outputs]]
+id = "IBGLFcz0WCzl6osxUx38f"
+uri = "file://generated-artifacts/augsburg-v2-korrektur/stadionpaket-2238-v2-replit-korrigiert.zip"
+type = "unspecified"
+title = "Augsburg V2 – korrigiertes Übergabepaket"
+description = "Aktueller Renderer, korrigierte Vorschau, neue Ansichten und 246 geprüfte Dateiprüfsummen; ohne private Backups."
+logical_id = "d04da543-20ff-46de-9984-dbcdee44f9df"
+content_hash = "sha256:f9ab88b3387050d0fc1a3d952f6959456ba2b270b231e09c6baa45be2390d4b0"
+size = 27936648
+mtime_ms = 1791986335230
+storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:6e4eaecc-e6c5-4f64-8de5-e8845034f33b/d04da543-20ff-46de-9984-dbcdee44f9df/86acbe67-412f-499c-bb6a-85a83146edb1"
+storage_version_token = "1791986358555008"
+content_type = "application/octet-stream"
+
+[[outputs]]
+id = "mnmtoKxwupflgP9tB1FHQ"
+uri = "file://generated-artifacts/augsburg-v2-korrektur/augsburg-v2-korrektur-ansichten.jpg"
+type = "image"
+title = "Augsburg V2 – neue Replit-Ansichten"
+description = "Neun Software-WebGL-Ansichten mit dem aktuellen Renderer und dem gespeicherten Geländeanschluss."
+logical_id = "00c9a3d0-f598-454e-9f47-6e56e1b53a02"
+content_hash = "sha256:dc67eb4059156368968cd69dfb8b7d7cbc69869ed1b4ce4833cb288b9cdc8553"
+size = 272882
+mtime_ms = 1791986253790
+storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:6e4eaecc-e6c5-4f64-8de5-e8845034f33b/00c9a3d0-f598-454e-9f47-6e56e1b53a02/c9266c28-d26c-41e1-934c-31685d529785"
+storage_version_token = "1791986359285015"
+content_type = "image/jpeg"

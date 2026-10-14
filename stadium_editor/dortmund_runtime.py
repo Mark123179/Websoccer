@@ -2,6 +2,7 @@
 from copy import deepcopy
 
 from .surroundings import with_dortmund_mapped_trees
+from .surroundings_ground import validated_ground_fields
 
 
 def runtime_presentation(stadium, geometry, design):
@@ -20,6 +21,8 @@ def runtime_presentation(stadium, geometry, design):
         "buildingIds": [None if isinstance(b, list) else b.get("id") for b in buildings],
         "trees": legacy.get("trees") or live.get("trees") or [],
     }
+    # Terrain is deliberately opt-in and is never inferred from club identity.
+    surroundings.update(validated_ground_fields(live))
     palette = design.get("palette") or []
     stands = {int(b.get("id", i)): b.get("stand") for i, b in enumerate(geometry["blocks"])}
     totals = {}

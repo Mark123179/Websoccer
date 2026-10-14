@@ -96,6 +96,16 @@ erzeugen; unveränderte Bestandsfehler mit einem Kontrolllauf unterscheiden.
 
 ## Kurvenlage und abgeleitete Heimkurvenmarkierung
 
+Bei angeforderten Stadionpaket-Korrekturen zugleich eine aktualisierte
+Anweisung für Claude zu zukünftigen Arbeiten liefern.
+
+**Why:** Der Nutzer hat diesen Ablauf wiederholt vorgegeben:
+„wie immer, korrigieren und anweisungen an Claude für zukünftige Arbeiten“.
+
+**How to apply:** Die konkret freigegebenen Korrekturen ausführen und
+die daraus verbindlichen Anforderungen als übergebbare Anweisung
+festhalten; eine Paketprüfung allein erweitert nicht die Freigabe.
+
 Kurvenzuordnungen gegen einen offiziellen Stadionplan und geografische
 Umfeldanker prüfen, nicht allein gegen die automatisch aus der Rohblaupause
 abgeleitete Heimkurve. Eine falsche Darstellung rechtfertigt keinen

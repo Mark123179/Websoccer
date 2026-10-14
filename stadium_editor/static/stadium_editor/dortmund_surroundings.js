@@ -2,6 +2,8 @@
 // Heights and tree forms are schematic, not a surveyed reconstruction.
 // Optional mapping of the editor's north end and west side to the source-model axes.
 // The default reproduces the existing transformation exactly.
+import {validateSurroundingsGround, pointInGroundCutout,
+  groundPolygonRelation} from './surroundings_ground.js?v=1';
 const UNIT = Object.freeze({
   '+x': Object.freeze({index:0, sign:1}), '-x': Object.freeze({index:0, sign:-1}),
   '+z': Object.freeze({index:1, sign:1}), '-z': Object.freeze({index:1, sign:-1}),
@@ -42,6 +44,7 @@ export function editorPointToDortmund(point, frame = {}, axes = SURROUNDINGS_AXE
 export function buildDortmundSurroundings(THREE, data = {}, frame = {},
   axes = SURROUNDINGS_AXES_DEFAULT) {
   resolveSurroundingsAxes(axes);
+  const terrain = validateSurroundingsGround(data);
   const group = new THREE.Group();
   group.name = 'EDITOR_SURROUNDINGS_3D';
   group.userData.source = data.source || '';
@@ -88,6 +91,19 @@ export function buildDortmundSurroundings(THREE, data = {}, frame = {},
   };
   try {
     const green = [], water = [], roads = [], walls = [], roofs = [];
+    const omitted = {green: [], water: []};
+    const relation = points => groundPolygonRelation(points, terrain.cutout);
+    const rejectOverlap = (points, label) => {
+      if (relation(points) !== 'outside')
+        throw new Error(`${label} berührt die groundCutout-Aussparung; Quelle prüfen, nichts automatisch löschen.`);
+    };
+    const omitSurface = (points, layer, index) => {
+      const result = relation(points);
+      if (result === 'overlap')
+        throw new Error(`${layer}[${index}] kreuzt die groundCutout-Aussparung; Quelle prüfen.`);
+      if (result === 'inside') { omitted[layer].push(index); return true; }
+      return false;
+    };
     const greenContours = [], waterContours = [], roadContours = [], buildingContours = [];
     let radius = 450;
     const includeBounds = points => {
@@ -99,17 +115,19 @@ export function buildDortmundSurroundings(THREE, data = {}, frame = {},
         target.push(ax, y, az, bx, y, bz);
       }
     };
-    for (const raw of data.green || []) {
+    for (const [index, raw] of (data.green || []).entries()) {
       const points = polygon(raw);
+      if (omitSurface(points, 'green', index)) continue;
       includeBounds(points); surface(green, points, -.18);
       lineLoop(greenContours, points, -.145);
     }
-    for (const raw of data.water || []) {
+    for (const [index, raw] of (data.water || []).entries()) {
       const points = polygon(raw);
+      if (omitSurface(points, 'water', index)) continue;
       includeBounds(points); surface(water, points, -.16);
       lineLoop(waterContours, points, -.135);
     }
-    for (const road of data.roads || []) {
+    for (const [roadIndex, road] of (data.roads || []).entries()) {
       if (!Array.isArray(road.p)) throw new Error('Eine Straße im Stadionumfeld ist ungültig.');
       const points = road.p.map(point), width = road.w ?? 1;
       if (!Number.isFinite(width) || width <= 0) throw new Error('Eine Straßenbreite ist ungültig.');
@@ -126,10 +144,15 @@ export function buildDortmundSurroundings(THREE, data = {}, frame = {},
         const nx = -(bz - az) / length * half, nz = (bx - ax) / length * half;
         const a = [ax + nx, -.12, az + nz], b = [bx + nx, -.12, bz + nz];
         const c = [bx - nx, -.12, bz - nz], d = [ax - nx, -.12, az - nz];
+        rejectOverlap([a, b, c, d].map(p => [p[0], p[2]]), `roads[${roadIndex}]`);
         triangle(roads, a, b, c); triangle(roads, a, c, d);
       }
       // Small joins close the turns of the simplified road strips.
       for (const [x, z] of points) {
+        rejectOverlap(Array.from({length: 8}, (_, i) => [
+          x + Math.cos(i * Math.PI / 4) * half,
+          z + Math.sin(i * Math.PI / 4) * half,
+        ]), `roads[${roadIndex}]`);
         for (let i = 0; i < 8; i++) {
           const a = i * Math.PI / 4, b = (i + 1) * Math.PI / 4;
           triangle(roads, [x, -.12, z],
@@ -141,6 +164,7 @@ export function buildDortmundSurroundings(THREE, data = {}, frame = {},
     (data.buildings || []).forEach((raw, index) => {
       const points = polygon(raw), height = data.buildingHeights?.[index] ?? 9;
       if (!Number.isFinite(height) || height <= 0) throw new Error('Eine Gebäudehöhe ist ungültig.');
+      rejectOverlap(points, `buildings[${index}]`);
       includeBounds(points);
       lineLoop(buildingContours, points, height + .025);
       surface(roofs, points, height);
@@ -152,14 +176,33 @@ export function buildDortmundSurroundings(THREE, data = {}, frame = {},
       }
     });
     const trees = (data.trees || []).map(point);
+    if (terrain.cutout && trees.some(p => pointInGroundCutout(p, terrain.cutout)))
+      throw new Error('Ein Baum liegt in der groundCutout-Aussparung; Quelle prüfen.');
     includeBounds(trees);
-    // No terrain elevation is present in the 2D data: do not invent relief.
-    const ground = new THREE.Mesh(own(new THREE.PlaneGeometry(radius * 2, radius * 2)),
+    // Flat source-declared elevation only: never invent relief from 2D data.
+    let groundGeometry;
+    if (terrain.cutout) {
+      includeBounds(terrain.cutout);
+      const shape = new THREE.Shape();
+      shape.moveTo(-radius, -radius); shape.lineTo(radius, -radius);
+      shape.lineTo(radius, radius); shape.lineTo(-radius, radius); shape.closePath();
+      const hole = new THREE.Path();
+      terrain.cutout.forEach(([x, z], i) => i ? hole.lineTo(x, -z) : hole.moveTo(x, -z));
+      hole.closePath(); shape.holes.push(hole);
+      groundGeometry = own(new THREE.ShapeGeometry(shape));
+    } else groundGeometry = own(new THREE.PlaneGeometry(radius * 2, radius * 2));
+    const ground = new THREE.Mesh(groundGeometry,
       material('#03070c'));
     ground.name = 'ENV_GROUND';
     ground.rotation.x = -Math.PI / 2;
     ground.position.y = -.35;
     group.add(ground);
+    if (Object.hasOwn(data, 'groundLevel')) {
+      group.position.y = terrain.level;
+      group.userData.terrain = {
+        groundLevel: terrain.level, groundCutout: terrain.cutout, omitted,
+      };
+    }
     if (green.length) mesh('ENV_GREEN', green, material('#09261e'));
     if (water.length) mesh('ENV_WATER', water, material('#071b26'));
     if (roads.length) mesh('ENV_ROADS', roads, material('#061116'));
