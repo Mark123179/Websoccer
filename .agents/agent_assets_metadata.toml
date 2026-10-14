@@ -2496,3 +2496,45 @@ mtime_ms = 1791963864551
 storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:6e4eaecc-e6c5-4f64-8de5-e8845034f33b/6d1874b2-2808-4429-96be-46c544867a9a/a5c4c703-86c2-43d7-8ebb-1594c749f666"
 storage_version_token = "1791963883932528"
 content_type = "image/jpeg"
+
+[[outputs]]
+id = "lsUSMxtmlW87Dgu5wap0Y"
+uri = "file://docs/stadionpakete/ANWEISUNG_FUER_CLAUDE_NACH_BREMEN.md"
+type = "text"
+title = "Neue Anweisung für Claude nach Bremen"
+description = "Verbindliche Korrekturen, geschützte Stehplatzverteilung und strikte Freigaberegeln."
+logical_id = "c5a6c88f-e137-49f8-b0c8-08bc14ed1a67"
+content_hash = "sha256:7090a5e9dc01fb305cf3552b042b974d4bc8de1697dde2cb62e28758d0335b72"
+size = 4522
+mtime_ms = 1791968079795
+storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:6e4eaecc-e6c5-4f64-8de5-e8845034f33b/c5a6c88f-e137-49f8-b0c8-08bc14ed1a67/0a05a730-4884-4531-8ee2-75a1382f9986"
+storage_version_token = "1791968361779705"
+content_type = "text/markdown"
+
+[[outputs]]
+id = "4Ilphj5cbykBNQ7VBYGmi"
+uri = "file://generated-artifacts/bremen-korrektur/stadionpaket-948-replit-korrigiert.zip"
+type = "unspecified"
+title = "Bremen – korrigiertes Stadionpaket"
+description = "Neun neue Kontrollansichten, korrigiertes Vorschauwerkzeug und 227 geprüfte Prüfsummen. Ohne private Datenbankbackups."
+logical_id = "cef28168-f461-45d1-9a68-e30580df47b8"
+content_hash = "sha256:48db384c39cd1e6164b0d1980afe545d9dfdd50b3c201561cc72537bf324590f"
+size = 25133732
+mtime_ms = 1791968332822
+storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:6e4eaecc-e6c5-4f64-8de5-e8845034f33b/cef28168-f461-45d1-9a68-e30580df47b8/9a3d4c20-f49c-484c-8a10-f254e10b7061"
+storage_version_token = "1791968362611586"
+content_type = "application/octet-stream"
+
+[[outputs]]
+id = "0fBUyODEqEP7H3wtzzyI2"
+uri = "file://generated-artifacts/bremen-korrektur/bremen-korrektur-ansichten.jpg"
+type = "image"
+title = "Bremen – aktuelle Kontrollansichten"
+description = "Editor, Ticker ohne Dach sowie Nacht mit und ohne Flutlicht im aktuellen Renderer."
+logical_id = "ec56098c-4506-4a7a-b76b-30f408d0f613"
+content_hash = "sha256:7da64776d4030be0e213ab0294733dbdab75319bec1865c1a4c4ac4021236fec"
+size = 187068
+mtime_ms = 1791968323635
+storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:6e4eaecc-e6c5-4f64-8de5-e8845034f33b/ec56098c-4506-4a7a-b76b-30f408d0f613/dd5e88ad-7225-4cde-a1b6-32e8aefb54b3"
+storage_version_token = "1791968363309381"
+content_type = "image/jpeg"
