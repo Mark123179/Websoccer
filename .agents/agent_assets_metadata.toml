@@ -2538,3 +2538,17 @@ mtime_ms = 1791968323635
 storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:6e4eaecc-e6c5-4f64-8de5-e8845034f33b/ec56098c-4506-4a7a-b76b-30f408d0f613/dd5e88ad-7225-4cde-a1b6-32e8aefb54b3"
 storage_version_token = "1791968363309381"
 content_type = "image/jpeg"
+
+[[outputs]]
+id = "JIvdW-vDb679IyYM7Hgn4"
+uri = "file://docs/stadionpakete/ANWEISUNG_FUER_CLAUDE_NACH_AUGSBURG.md"
+type = "text"
+title = "Neue Claude-Anweisung nach Augsburg"
+description = "Korrigierter lokaler Zielstand, Schutzdaten und konkrete Prüfaufträge für Dachtrennung und Geländeanschluss."
+logical_id = "59ee8a3c-cd6b-4f82-9790-b5b3416afe39"
+content_hash = "sha256:cc8aeb7c84e0f2ae02a2bb783c60a576b8725e2314e04889bbc98d8132c20ada"
+size = 7677
+mtime_ms = 1791975910754
+storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:6e4eaecc-e6c5-4f64-8de5-e8845034f33b/59ee8a3c-cd6b-4f82-9790-b5b3416afe39/2f8956ce-23e0-48ff-a22f-7e41d787a685"
+storage_version_token = "1791975937494979"
+content_type = "text/markdown"
