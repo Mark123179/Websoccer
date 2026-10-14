@@ -1,5 +1,9 @@
 # Verbindliche Anweisung für zukünftige Stadionpakete
 
+> Aktuelle Ergänzung nach dem Freiburg-Review:
+> `ANWEISUNG_FUER_CLAUDE_NACH_FREIBURG.md` – insbesondere Nachtkalibrierung,
+> eindeutige Peilungen und vollständige, ungefilterte Vorschauen beachten.
+
 Du bereitest Stadionmodelle für eine bestehende Websoccer-Anwendung vor.
 Liefere datengetriebene Pakete für die vorhandene Stadionmodell-Registry,
 keine neuen vereinsbezogenen Sonderfälle im gemeinsamen Renderer.

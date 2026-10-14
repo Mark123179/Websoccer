@@ -2398,3 +2398,59 @@ mtime_ms = 1791918517762
 storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:6e4eaecc-e6c5-4f64-8de5-e8845034f33b/63e55e42-c5f3-4bb7-92f1-9cdac814031e/8a1c5d45-0436-4f41-ba01-7335129d51c9"
 storage_version_token = "1791918589427021"
 content_type = "text/markdown"
+
+[[outputs]]
+id = "GnGBs-Pa4eW5y39EGy-ER"
+uri = "file://docs/stadionpakete/ANWEISUNG_FUER_CLAUDE_NACH_FREIBURG.md"
+type = "text"
+title = "Neue Claude-Anweisung nach dem Freiburg-Review"
+description = "Verbindliche Regeln für Nachtbeleuchtung, Peilungen, vollständiges Umfeld, Schutzdaten und reproduzierbare Stadionpakete."
+logical_id = "12d4cd78-f2e8-42c8-8820-580dbc4a0146"
+content_hash = "sha256:27f9292437b093a82a33ab2f268d4271d59565c6506ff2f23f33f2ac531b0dd3"
+size = 6717
+mtime_ms = 1791960534002
+storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:6e4eaecc-e6c5-4f64-8de5-e8845034f33b/12d4cd78-f2e8-42c8-8820-580dbc4a0146/0a9965bd-133d-4953-bd70-9a8723088235"
+storage_version_token = "1791960873958106"
+content_type = "text/markdown"
+
+[[outputs]]
+id = "skv1JwOB1ipFqtRn4Vr_2"
+uri = "file://generated-artifacts/stadionkorrektur/freiburg-nacht-vorher-nachher.jpg"
+type = "image"
+title = "Freiburg – Nachtbeleuchtung vorher/nachher"
+description = "Identische Kamera und Exposure. Nur die Intensität der zwölf belegten Leuchten wurde kalibriert."
+logical_id = "44fb589a-7ec7-4045-8d82-fb650ad825a1"
+content_hash = "sha256:fb594e72c099815597d80e35172b81ed73defcc211576d6780c0c954ed1a4fdc"
+size = 86487
+mtime_ms = 1791960822987
+storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:6e4eaecc-e6c5-4f64-8de5-e8845034f33b/44fb589a-7ec7-4045-8d82-fb650ad825a1/d31d8f79-48da-4981-adac-636bc418d097"
+storage_version_token = "1791960874536670"
+content_type = "image/jpeg"
+
+[[outputs]]
+id = "e7D3dValch321QATn9Mqe"
+uri = "file://generated-artifacts/stadionkorrektur/stadionpaket-944-replit-korrigiert.zip"
+type = "unspecified"
+title = "Freiburg – korrigiertes Stadionpaket"
+description = "Korrigierte Nachtbeleuchtung und Peilungsangabe, neue Kontrollbilder und erneuerte Prüfsummen. Noch nicht neu im Projekt registriert."
+logical_id = "154152ec-e179-45cc-9db2-b60346a2595b"
+content_hash = "sha256:9f744ba9e3e223c1623c978345e0aec613ca45a2ffb3cda20c5f2ffa0a1f5fba"
+size = 16787379
+mtime_ms = 1791960786837
+storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:6e4eaecc-e6c5-4f64-8de5-e8845034f33b/154152ec-e179-45cc-9db2-b60346a2595b/3cfa2913-6c2d-41ee-9cf4-2530040fb2ff"
+storage_version_token = "1791960875306568"
+content_type = "application/octet-stream"
+
+[[outputs]]
+id = "IV7Yy4sIzEGAbN1ulgH23"
+uri = "file://generated-artifacts/stadionkorrektur/stadionpaket-960-replit-korrigiert.zip"
+type = "unspecified"
+title = "Stuttgart – korrigiertes Vorschaupaket"
+description = "Vollständiges Umfeld mit 102 Gebäuden und neue Kontrollbilder. Das bereits registrierte Modell und seine Beleuchtung bleiben unverändert."
+logical_id = "4f37ff41-fa53-4bbd-b81c-ae7dd8aa62d4"
+content_hash = "sha256:baec1baa3ad8eda77a5703fcdb4ba7ab3c7b92bf86d658bbbd36dca231b078d2"
+size = 17906970
+mtime_ms = 1791960822731
+storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:6e4eaecc-e6c5-4f64-8de5-e8845034f33b/4f37ff41-fa53-4bbd-b81c-ae7dd8aa62d4/ba8a4993-35d4-4753-9d9b-8bac42b50ad7"
+storage_version_token = "1791960876339398"
+content_type = "application/octet-stream"

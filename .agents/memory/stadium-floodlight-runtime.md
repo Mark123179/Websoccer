@@ -63,6 +63,10 @@ das Spielfeld trotz echter Quellen unlesbar machen.
 Positionen, Winkel und Richtungen erhalten; Tag/Nacht und Flutlicht separat
 prüfen. Selbstleuchtende Editor-Materialien nicht ungeprüft in eine
 quellgebundene Nachtstudie übernehmen.
+Modellspezifische Helligkeitskorrekturen nicht über gemeinsame Lichtwerte
+erzwingen, damit andere Stadien unverändert bleiben. Bereits in Exportwerte
+eingerechnete Faktoren mit Quellwertbeleg und idempotenter Anwendung absichern;
+eine erneute Übergabe darf sie nicht ein zweites Mal multiplizieren.
 
 Dachabschattung benötigt einen Vergleich mit weiterhin sichtbarem Dach,
 bei dem ausschließlich dessen Schattenwurf abgeschaltet wird.
