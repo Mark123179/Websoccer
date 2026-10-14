@@ -2454,3 +2454,45 @@ mtime_ms = 1791960822731
 storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:6e4eaecc-e6c5-4f64-8de5-e8845034f33b/4f37ff41-fa53-4bbd-b81c-ae7dd8aa62d4/ba8a4993-35d4-4753-9d9b-8bac42b50ad7"
 storage_version_token = "1791960876339398"
 content_type = "application/octet-stream"
+
+[[outputs]]
+id = "uPOxzAY_sj18uubTfClSz"
+uri = "file://docs/stadionpakete/ANWEISUNG_FUER_CLAUDE_NACH_WOLFSBURG.md"
+type = "text"
+title = "Neue Anweisung für Claude nach Wolfsburg"
+description = "Korrekturen, Schutzwerte und verbindliche Vorgaben für weitere Stadionpakete."
+logical_id = "adc93f50-69e0-45e7-a794-bc8354e1b5fe"
+content_hash = "sha256:a0514c3fd5d6397bb25f67556fc5a38bc001309e6f0918374df21486742e244e"
+size = 3745
+mtime_ms = 1791963581140
+storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:6e4eaecc-e6c5-4f64-8de5-e8845034f33b/adc93f50-69e0-45e7-a794-bc8354e1b5fe/45f4a832-20d8-4106-a9aa-8df3b543ec7b"
+storage_version_token = "1791963882313996"
+content_type = "text/markdown"
+
+[[outputs]]
+id = "OCvaFU3acs3cV_JpTE6hO"
+uri = "file://generated-artifacts/wolfsburg-korrektur/stadionpaket-961-replit-korrigiert.zip"
+type = "unspecified"
+title = "Wolfsburg – korrigiertes Stadionpaket"
+description = "Mit korrigiertem Vorschauwerkzeug, neun neuen Ansichten und 195 geprüften Prüfsummen. Ohne private Datenbankbackups."
+logical_id = "48996f9c-d4c8-4ae5-9403-7784a97b9866"
+content_hash = "sha256:2891a9ace6ac851ce1d08e4e9d998790ed0b37c899eb2fd000974ded87a0544f"
+size = 24442912
+mtime_ms = 1791963866619
+storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:6e4eaecc-e6c5-4f64-8de5-e8845034f33b/48996f9c-d4c8-4ae5-9403-7784a97b9866/d120d2ff-5722-4b7a-8798-c96198fd9111"
+storage_version_token = "1791963883086057"
+content_type = "application/octet-stream"
+
+[[outputs]]
+id = "vE2670ukRe19__jX9tk6N"
+uri = "file://generated-artifacts/wolfsburg-korrektur/wolfsburg-korrektur-ansichten.jpg"
+type = "image"
+title = "Wolfsburg – neue Kontrollansichten"
+description = "Editor, Dach aus und Nacht mit beziehungsweise ohne Flutlicht im aktuellen Renderer."
+logical_id = "6d1874b2-2808-4429-96be-46c544867a9a"
+content_hash = "sha256:2ad88516beee23ec0a22bd06b4c6a585cbcc86a6cc6581887cc50823787639f1"
+size = 175183
+mtime_ms = 1791963864551
+storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:6e4eaecc-e6c5-4f64-8de5-e8845034f33b/6d1874b2-2808-4429-96be-46c544867a9a/a5c4c703-86c2-43d7-8ebb-1594c749f666"
+storage_version_token = "1791963883932528"
+content_type = "image/jpeg"

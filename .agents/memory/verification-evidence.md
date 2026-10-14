@@ -32,3 +32,13 @@ Alte Stadion-Silhouetten niemals nachträglich mit einem Inhaltsnachweis versehe
 **Why:** Ein nachträglicher Hash würde nur die vorhandene Datei bestätigen, nicht ihre tatsächliche Zugehörigkeit zur protokollierten Kamera, Orientierung oder zum Dachzustand.
 
 **How to apply:** Nachweise während des Exports erzeugen und vor der Kartenauswertung prüfen. Sie belegen die Zuordnung der exportierten Bytes, sind aber weder eine Signatur gegen absichtlich gefälschte Protokolle noch eine visuelle Nutzerabnahme.
+
+Eine funktionierende Stadion-Paketvorschau belegt keine Lauffähigkeit mit
+dem gespeicherten Umfeld, wenn ihr Hilfsskript Quelldaten bereinigt.
+
+**Why:** Eine Paketvorschau entfernte eine ungültige Zweipunkt-Wasserfläche,
+während dieselbe Fläche im lokalen Bestand den gemeinsamen Renderer stoppte.
+
+**How to apply:** Vorschau-Transformationen mit der tatsächlichen Laufzeiteingabe
+vergleichen. Ungültige Flächen melden; genehmigte Ausnahmen exakt auf Inhalt
+und Verein begrenzen, statt Gebäude oder andere Defekte pauschal zu entfernen.
