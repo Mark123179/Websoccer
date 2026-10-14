@@ -17,7 +17,7 @@ test('pitch-length axis maps onto the Unity pitch-length axis, not across it', (
   zero.forEach(value => close(value, 0));
 });
 
-test('3D receives the actual 2D polygons, source and matching building heights', () => {
+test('editor background preserves mapped polygons, source and explicit heights for rendering', () => {
   const controller = readFileSync(new URL('../static/stadium_editor/editor.js', import.meta.url), 'utf8');
   const fn = controller.match(/function editorBackground\(\)\{[\s\S]*?\n\}/)[0];
   const D = {
@@ -28,7 +28,6 @@ test('3D receives the actual 2D polygons, source and matching building heights',
   assert.deepEqual(data.buildings, [square]);
   assert.deepEqual(data.buildingHeights, [12]);
   assert.equal(data.source, 'OpenStreetMap (ODbL)');
-  assert.match(controller, /surroundings: editorBackground\(\),\s*frame: D\.meta/);
   const before = JSON.stringify(data), environment = buildDortmundSurroundings(THREE, data);
   assert.deepEqual(environment.group.userData.counts,
     {green: 1, water: 0, roads: 1, buildings: 1, trees: 0});
@@ -44,13 +43,42 @@ test('3D receives the actual 2D polygons, source and matching building heights',
   environment.dispose();
 });
 
-test('legacy buildings keep the same 2D precedence and receive a schematic height', () => {
+test('Dortmund 3D receives surroundings and frame from the shared live-scene presentation', () => {
+  const controller = readFileSync(new URL('../static/stadium_editor/editor.js', import.meta.url), 'utf8');
+  const stage = controller.match(/async function ensureThreeStage\(\)\{[\s\S]*?\n\}/)?.[0];
+  assert.ok(stage, '3D stage initialization must exist');
+  const branch = stage.match(/if\(isDortmundScene\)\{[\s\S]*?\n    \}/)?.[0];
+  assert.ok(branch, 'Dortmund live-scene branch must exist');
+  assert.match(branch, /fetch\(EDITOR\.liveSceneUrl,\s*\{credentials:'same-origin'\}\)/);
+  assert.match(branch, /if\(!response\.ok\)\s*throw new Error\(/);
+  assert.match(branch, /const runtime = \(await response\.json\(\)\)\.presentation;/);
+  assert.match(branch, /if\(runtime\?\.renderer !== 'dortmund-spatial'\)\s*throw new Error\(/);
+  assert.match(branch, /await mountDortmundScene\(\{\s*element: host,\s*surroundings: runtime\.surroundings,\s*frame: runtime\.frame,/);
+});
+
+test('legacy buildings keep 2D precedence and unknown heights; renderer alone supplies 9 metres', () => {
   const controller = readFileSync(new URL('../static/stadium_editor/editor.js', import.meta.url), 'utf8');
   const fn = controller.match(/function editorBackground\(\)\{[\s\S]*?\n\}/)[0];
   const data = JSON.parse(JSON.stringify(vm.runInNewContext(`${fn}; editorBackground()`,
     {D: {bg: {buildings: [square]}, surroundings: {buildings: [{poly: [], h: 12}]}}})));
   assert.deepEqual(data.buildings, [square]);
-  assert.deepEqual(data.buildingHeights, [9]);
+  assert.deepEqual(data.buildingHeights, [null], 'editor must not invent a source height');
+  const before = JSON.stringify(data);
+  const environment = buildDortmundSurroundings(THREE, data);
+  try {
+    assert.equal(environment.group.userData.counts.buildings, 1);
+    const walls = environment.group.getObjectByName('ENV_BUILDINGS').geometry;
+    walls.computeBoundingBox();
+    close(walls.boundingBox.min.x, -20); close(walls.boundingBox.max.x, 0);
+    close(walls.boundingBox.min.z, 0); close(walls.boundingBox.max.z, 10);
+    close(walls.boundingBox.min.y, -.05); close(walls.boundingBox.max.y, 9);
+    const roofs = environment.group.getObjectByName('ENV_BUILDING_ROOFS').geometry;
+    roofs.computeBoundingBox();
+    close(roofs.boundingBox.min.y, 9); close(roofs.boundingBox.max.y, 9);
+    assert.equal(JSON.stringify(data), before, 'schematic height must not be written into source data');
+  } finally {
+    environment.dispose();
+  }
 });
 
 test('roads, water and only supplied trees are rendered, with a few batched meshes', () => {
