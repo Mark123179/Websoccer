@@ -26,6 +26,19 @@ export function validateCalibration(calibration) {
     if (!stands.has(calibration.standAxes[axis])) fail(`standAxes.${axis}`);
   if (Object.keys(calibration.standAxes).length !== 4 ||
       new Set(Object.values(calibration.standAxes)).size !== 4) fail('standAxes');
+  if (calibration.surroundingsAxes !== undefined) {
+    const axes = calibration.surroundingsAxes;
+    if (!object(axes) || Object.keys(axes).length !== 2 ||
+        !Object.hasOwn(axes, 'NORD') || !Object.hasOwn(axes, 'WEST'))
+      fail('surroundingsAxes');
+    for (const stand of ['NORD', 'WEST']) {
+      if (!['+x', '-x', '+z', '-z'].includes(axes[stand]))
+        fail(`surroundingsAxes.${stand}`);
+      if (calibration.standAxes[axes[stand]] !== stand)
+        throw new Error(`Kalibrierung widerspricht standAxes: surroundingsAxes.${stand}`);
+    }
+    if (axes.NORD[1] === axes.WEST[1]) fail('surroundingsAxes');
+  }
   if (!object(calibration.orbitDefault)) fail('orbitDefault');
   for (const field of ['azimuth', 'elevation', 'distance'])
     if (!Number.isFinite(calibration.orbitDefault[field])) fail(`orbitDefault.${field}`);
