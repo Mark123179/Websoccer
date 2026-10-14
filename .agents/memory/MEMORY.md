@@ -150,3 +150,4 @@
 - [Stadion-Texturmasken](stadium-texture-alpha.md) — Bodenartefakte sichtbar isolieren; Meshnamen und Raycasts beweisen die Ursache nicht. Markierungen erhalten und Rasenangleichung bewahren.
 - [Überlappende Dach- und Ranghöhen](stadium-roof-height-overlap.md) — Höhenbasierte Dachschalter können Oberrang-Stufen ausblenden; Schema- und Hashprüfung reichen nicht.
 - [Red Bull Arena Abnahme](leipzig-stadium-presentation.md) — Gästeblock-Netz bleibt erhalten; Zentralstadion-Wall und Brücken bleiben ausgeschlossen.
+- [Gelände-Paketvorprüfung](terrain-package-preflight.md) — Renderer als CPU-Prüforakel verwenden; innenliegende Flächen sind Hinweise, keine Quellbereinigung.

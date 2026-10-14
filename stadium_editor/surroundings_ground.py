@@ -6,8 +6,9 @@ EPS = 1e-8
 
 
 def _number(value, limit):
-    return (type(value) in (int, float) and math.isfinite(value)
-            and abs(value) <= limit)
+    # Compare before converting huge JSON integers to float in isfinite().
+    return (type(value) in (int, float) and abs(value) <= limit
+            and math.isfinite(value))
 
 
 def _cross(a, b, c):
