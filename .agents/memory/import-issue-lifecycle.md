@@ -32,3 +32,15 @@ Die Anzeige bürgerlicher Namen statt display_name zunächst nur inventarisieren
 **Why:** Nachtrag 14 autorisiert die Prüfung ausdrücklich, nicht die Änderung der Namensanzeige.
 
 **How to apply:** Listen, Aufstellung, Ticker und Suche getrennt berichten. Paketseitige Regeln zu Namen, Leihende und Marktwert-Vereins-ID sind kein Auftrag für neue serverseitige Ersatzwert- oder Namensmatching-Logik.
+
+Die beim Leihverein vergebene Rückennummer bleibt dem Spieler erhalten, auch
+bei seiner Rückkehr zum Stammverein. Ein leerer Nummernwert im Paket des
+Stammvereins darf die vorhandene Nummer nicht löschen.
+
+**Why:** Der Nutzer hat ausdrücklich klargestellt: Ibrahimovic ist von Bayern
+an Augsburg verliehen, Augsburg gibt ihm die 21; er behält sie auch bei der
+Rückkehr zu Bayern.
+
+**How to apply:** Importreihenfolge und Leihrückkehr dürfen diesen Nummernerhalt
+nicht verletzen. Diese fachliche Festlegung ist kein Nachweis einer bereits
+umgesetzten technischen Korrektur.
