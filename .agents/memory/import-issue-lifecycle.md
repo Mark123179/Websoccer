@@ -46,3 +46,13 @@ nicht verletzen. Leere oder fehlende Paketwerte erhalten die vorhandene Nummer;
 eine tatsächlich gelieferte neue Nummer darf weiterhin übernommen werden.
 Bei der Leihrückkehr keine neue Nummer automatisch vergeben, auch nicht bei
 einer Doppelbelegung im Stammverein.
+
+Fehlende oder doppelte Rückennummern dürfen die Spielsimulation niemals
+blockieren. Die bestehende Trennung zur manuellen Nummernvergabe ist bestätigt.
+
+**Why:** Der Nutzer hat bestätigt, dass Vereine ohne Manager ihre Nummern nicht
+anpassen und deshalb keine Simulationssperre wegen Rückennummern entstehen darf.
+
+**How to apply:** Keine Pflichtnummern- oder Eindeutigkeitsprüfung als
+Simulationsvoraussetzung ergänzen. Die manuelle Vergabe darf weiterhin eine
+bereits vergebene Nummer ablehnen.
