@@ -38,3 +38,16 @@ HP≥25 (max 2), NP≥10 (max 2), immer ≥1 HP (sonst meistgespielte), Jugend-F
 auf Profilposition (sonst Fehler). Abgeleitete Zusatz-HP (LV+LM→LOV, RV+RM→ROV,
 LM+LF→LOM, RM+RF→ROM) **nur wenn beide Ausgangspositionen HP sind**. Unbekannte
 TM-Positionen werden gewarnt, nicht geraten. Mapping zentral in `TM_POSITION_MAP`.
+
+## Vereinspakete: abweichende freigegebene Zwischenpositionsregel
+Für den neuen Vereinspaketweg gilt die übergebene Fachregel: zwei HP ergeben
+eine zusätzliche HP; zwei NP oder ein HP-/NP-Mischpaar ergeben eine zusätzliche
+NP (ROV/ROM/LOV/LOM). Nicht die ältere compute_positions-Regel als vollständiges
+Prüforakel für neue Pakete verwenden.
+
+**Why:** Die Import-Neuaufbau-Übergabe vom 05.10.2026 erlaubt diese NP ausdrücklich;
+ein Vergleich mit dem älteren Algorithmus würde korrekte Mischfälle als Fehler melden.
+
+**How to apply:** Bei Paketprüfungen die schriftliche Fachregel zusätzlich zum
+Algorithmusvergleich anwenden. Rohdaten ohne Geburtsdatum erlauben keinen
+unabhängigen DOB-Nachweis, auch wenn das Paket einen DOB-Match ausweist.
