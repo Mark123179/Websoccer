@@ -282,7 +282,11 @@ def initialize_player(player, data, club, run):
                           "loaned_in" if player.loan_club_id else "loaned_out")
     player.loan_partner_club = player.owner_club if player.loan_status == "loaned_in" else player.loan_club
     player.squad_team = squad["team"]
-    player.shirt_number = squad.get("shirt_number")
+    # Owner packages often omit the number assigned by the borrowing club.
+    # Missing source data must not erase it, including on a loan return.
+    shirt_number = squad.get("shirt_number")
+    if shirt_number not in (None, ""):
+        player.shirt_number = shirt_number
     player.review_pool = False
     locks = [g for g in run.package_data["gaps"]
              if g["severity"] == "player_lock" and g["ref"] == f"tm:{player.transfermarkt_id}"]

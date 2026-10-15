@@ -15,6 +15,10 @@ Fehlende Parameterkataloge in einem wiederverwendeten Testbestand nicht durch Ä
 
 **How to apply:** Zuerst Testisolation und tatsächlichen Fixture-Stand prüfen, dann den Nachweis auf einer eindeutig getrennten frischen Testdatenbank wiederholen. Entwicklungsbestand, Pilot und Live-Daten weder neu seeden noch zurücksetzen, um einen Test grün zu bekommen.
 
+Bei bewusst deaktivierten Migrationen fehlen auch deren Parameter-Seeds.
+Breite Leihmarkt-Tests brauchen deshalb passende eigene Fixtures; erfolgreiche
+Pakettests allein sind kein Nachweis für die gesamte Leihmarkt-Suite.
+
 Ein absichtlich weiterlaufender Bestand ist kein eingefrorener Snapshot. Änderungen zwischen einer frühen Kontrollmessung und späterer Verifikation offen ausweisen; die frühe Kontrollmessung nicht still ersetzen.
 
 **Why:** Bei der Pilot-Einrichtung änderte sich während der Zugangsdaten-Eingabe der Profil-Fingerprint, obwohl Pilot-Schreibrechte auf den Bestand ausgeschlossen waren.

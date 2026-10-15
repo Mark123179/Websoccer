@@ -42,5 +42,7 @@ an Augsburg verliehen, Augsburg gibt ihm die 21; er behält sie auch bei der
 Rückkehr zu Bayern.
 
 **How to apply:** Importreihenfolge und Leihrückkehr dürfen diesen Nummernerhalt
-nicht verletzen. Diese fachliche Festlegung ist kein Nachweis einer bereits
-umgesetzten technischen Korrektur.
+nicht verletzen. Leere oder fehlende Paketwerte erhalten die vorhandene Nummer;
+eine tatsächlich gelieferte neue Nummer darf weiterhin übernommen werden.
+Bei der Leihrückkehr keine neue Nummer automatisch vergeben, auch nicht bei
+einer Doppelbelegung im Stammverein.
