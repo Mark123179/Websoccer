@@ -27,6 +27,71 @@ class PackageDisplayTests(TestCase):
     def setUp(self):
         self.client.force_login(self.user)
 
+    def test_importstand_is_only_in_creator_tab_not_public_profile(self):
+        response = self.client.get(reverse("club_detail", args=[self.club.pk]))
+        self.assertNotContains(response, "Importierter Vereinsstand")
+        self.assertNotContains(response, "package-t4-panel")
+        self.assertNotIn("package_stadium_capacities", response.context)
+        response = self.client.get(
+            reverse("creator_club_edit", args=[self.club.pk]), {"tab": "importstand"})
+        self.assertContains(response, "Importierter Vereinsstand")
+        self.assertContains(response, 'href="?tab=importstand">Importstand</a>')
+        self.assertEqual(response.context["active_tab"], "importstand")
+        self.assertEqual(len(response.context["package_stadium_capacities"]), 12)
+        self.assertContains(response, self.club.official_name)
+        self.assertNotContains(response, 'name="stadium_name"')
+
+    def test_importstand_preserves_source_capacities_not_expansion_values(self):
+        stadium = self.club.stadium
+        stadium.real_nord_standing = 12345
+        stadium.real_nord_standing_basis = "belegt"
+        stadium.nord_standing = 67890
+        stadium.real_nord_vip = 0
+        stadium.real_ost_vip = None
+        stadium.save(update_fields=[
+            "real_nord_standing", "real_nord_standing_basis", "nord_standing",
+            "real_nord_vip", "real_ost_vip",
+        ])
+        response = self.client.get(
+            reverse("creator_club_edit", args=[self.club.pk]), {"tab": "importstand"})
+        self.assertContains(response, "12345")
+        self.assertContains(response, "belegt")
+        self.assertNotContains(response, "67890")
+        self.assertContains(response, "<strong>0</strong>", html=True)
+        self.assertContains(response, "<strong>Unbekannt</strong>", html=True)
+
+    def test_importstand_is_club_scoped_and_handles_missing_stadium(self):
+        other = m.Club.objects.create(
+            name="Anderer Verein", official_name="Anderer Vereinsstand",
+            league=self.league, founded_year=2001, budget=0)
+        response = self.client.get(
+            reverse("creator_club_edit", args=[other.pk]), {"tab": "importstand"})
+        self.assertContains(response, "Anderer Vereinsstand")
+        self.assertContains(response, "Stadion nicht hinterlegt")
+        self.assertEqual(len(response.context["package_stadium_capacities"]), 12)
+        self.assertTrue(all(row["value"] is None for row in
+                            response.context["package_stadium_capacities"]))
+
+    def test_importstand_is_not_accessible_to_regular_users_or_anonymous(self):
+        self.user.is_staff = False
+        self.user.save(update_fields=["is_staff"])
+        url = reverse("creator_club_edit", args=[self.club.pk]) + "?tab=importstand"
+        response = self.client.get(reverse("club_detail", args=[self.club.pk]))
+        self.assertNotContains(response, "Importierter Vereinsstand")
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 302)
+        self.assertNotContains(response, "Importierter Vereinsstand", status_code=302)
+        self.client.logout()
+        self.assertEqual(self.client.get(url).status_code, 302)
+
+    @override_settings(IMPORT_PACKAGE_MODE=False)
+    def test_importstand_hidden_in_legacy_mode(self):
+        response = self.client.get(
+            reverse("creator_club_edit", args=[self.club.pk]), {"tab": "importstand"})
+        self.assertEqual(response.context["active_tab"], "bilder")
+        self.assertNotContains(response, "Importierter Vereinsstand")
+        self.assertNotContains(response, 'href="?tab=importstand"')
+
     def hall(self, room="club", **extra):
         return self.client.get(reverse("management_halloffame"),
                                dict(club=self.club.pk, raum=room, modus="echt", **extra))

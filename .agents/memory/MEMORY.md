@@ -151,3 +151,4 @@
 - [Überlappende Dach- und Ranghöhen](stadium-roof-height-overlap.md) — Höhenbasierte Dachschalter können Oberrang-Stufen ausblenden; Schema- und Hashprüfung reichen nicht.
 - [Red Bull Arena Abnahme](leipzig-stadium-presentation.md) — Gästeblock-Netz bleibt erhalten; Zentralstadion-Wall und Brücken bleiben ausgeschlossen.
 - [Gelände-Paketvorprüfung](terrain-package-preflight.md) — Renderer als CPU-Prüforakel verwenden; innenliegende Flächen sind Hinweise, keine Quellbereinigung.
+- [Creator-Importstand](creator-importstand-visibility.md) — Importierter Vereinsstand ausschließlich im eigenen Creator-Tab des Vereins, niemals im öffentlichen Profil.

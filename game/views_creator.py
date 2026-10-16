@@ -683,6 +683,7 @@ def creator_vereinslose(request):
     })
 
 
+@staff_member_required
 def creator_club_edit(request, club_id):
     club = get_object_or_404(Club, id=club_id)
     profile, _ = ClubPublicProfile.objects.get_or_create(club=club)
@@ -727,9 +728,25 @@ def creator_club_edit(request, club_id):
     active_tab = request.GET.get('tab', 'bilder')
     if active_tab not in {
         'bilder', 'stammdaten', 'infrastruktur', 'pokale', 'sponsoring',
-        'saisonziele', 'kader', 'import_defekte', 'rekorde',
+        'saisonziele', 'kader', 'import_defekte', 'rekorde', 'importstand',
     }:
         active_tab = 'bilder'
+    if active_tab == 'importstand' and not package_mode():
+        active_tab = 'bilder'
+    package_capacities = []
+    if package_mode() and active_tab == 'importstand':
+        for side, side_label in (
+            ('nord', 'Nord'), ('ost', 'Ost'), ('sued', 'Süd'), ('west', 'West'),
+        ):
+            for kind, kind_label in (
+                ('standing', 'Stehplätze'), ('seating', 'Sitzplätze'), ('vip', 'VIP'),
+            ):
+                field = f'real_{side}_{kind}'
+                package_capacities.append({
+                    'side': side_label, 'kind': kind_label,
+                    'value': getattr(stadium, field, None) if stadium else None,
+                    'basis': getattr(stadium, field + '_basis', None) if stadium else None,
+                })
     active_record_section = request.GET.get('rekordbereich', 'player')
     if active_record_section not in {'player', 'coach', 'club'}:
         active_record_section = 'player'
@@ -791,6 +808,8 @@ def creator_club_edit(request, club_id):
         'goals': goals,
         'all_clubs': all_clubs,
         'active_tab': active_tab,
+        'package_mode': package_mode(),
+        'package_stadium_capacities': package_capacities,
         'all_leagues': visible_leagues().order_by('name'),
         'sponsor_type_choices': ClubSponsor.TYPE_CHOICES,
         'goal_tier_choices': SeasonGoal.TIER_CHOICES,

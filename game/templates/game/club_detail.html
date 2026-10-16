@@ -16,50 +16,6 @@
 
 {% block content %}
 <section class="club-dashboard club-profile-shell">
-    {% if package_mode %}
-    <section class="package-t4-panel" aria-labelledby="package-stadium-title">
-        <header>
-            <p class="package-t4-kicker">Importierter Vereinsstand</p>
-            <h1>{{ club.official_name|default:club.name }}</h1>
-            <p>{{ club.nickname|default:"Kein Spitzname hinterlegt" }}{% if club.motto %} · „{{ club.motto }}“{% endif %}</p>
-            <p>Gegründet {% if club.founded_year %}{{ club.founded_year }}{% else %}Unbekannt{% endif %}</p>
-            <div class="package-t4-colors" aria-label="Vereinsfarben">
-                <span><i style="--club-color:{{ club.color_primary|default:'#d9ded9' }}"></i>Primär</span>
-                <span><i style="--club-color:{{ club.color_secondary|default:'#d9ded9' }}"></i>Sekundär</span>
-                {% if club.color_tertiary %}<span><i style="--club-color:{{ club.color_tertiary }}"></i>Tertiär</span>{% endif %}
-            </div>
-        </header>
-        <div class="package-t4-capacities">
-            <div class="package-t4-capacities__heading">
-                <span>Stadion · {{ profile.stadium.name }}</span>
-                <small>Quellwerte nach Tribüne und Platzart</small>
-            </div>
-            {% for capacity in package_stadium_capacities %}
-            <div class="package-t4-capacity">
-                <span>{{ capacity.side }} · {{ capacity.kind }}</span>
-                <strong>{% if capacity.value != None %}{{ capacity.value }}{% else %}Unbekannt{% endif %}</strong>
-                {% if capacity.basis %}<small>{{ capacity.basis }}</small>{% endif %}
-            </div>
-            {% endfor %}
-        </div>
-    </section>
-    <style>
-        .package-t4-panel{grid-column:1/-1;padding:clamp(1.1rem,3vw,2rem);border:1px solid #b8c6ba;border-radius:18px;background:#edf1e9;color:#26352d}
-        .package-t4-panel h1{margin:.2rem 0;font-size:clamp(1.5rem,3vw,2.3rem)}
-        .package-t4-panel header>p{margin:.3rem 0;color:#58685d}
-        .package-t4-kicker{font-size:.7rem;letter-spacing:.16em;text-transform:uppercase;font-weight:800}
-        .package-t4-colors{display:flex;gap:1rem;flex-wrap:wrap;margin-top:1rem}
-        .package-t4-colors span{display:inline-flex;align-items:center;gap:.45rem;font-size:.8rem}
-        .package-t4-colors i{width:1rem;height:1rem;border-radius:50%;background:var(--club-color);border:1px solid #7a887d}
-        .package-t4-capacities{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:.45rem;margin-top:1.2rem}
-        .package-t4-capacities__heading{grid-column:1/-1;display:flex;justify-content:space-between;gap:1rem;align-items:baseline;border-bottom:1px solid #cbd4ca;padding-bottom:.55rem;margin-bottom:.2rem}
-        .package-t4-capacities__heading span{font-weight:800}.package-t4-capacities__heading small{color:#68776c}
-        .package-t4-capacity{display:grid;grid-template-columns:1fr auto;gap:.2rem .5rem;padding:.55rem .65rem;background:#f8f8f2;border-radius:9px}
-        .package-t4-capacity span{font-size:.78rem}.package-t4-capacity strong{font-variant-numeric:tabular-nums}.package-t4-capacity small{grid-column:1/-1;color:#6d786f;font-size:.65rem}
-        @media(max-width:640px){.package-t4-capacities{grid-template-columns:repeat(2,minmax(0,1fr))}.package-t4-capacities__heading{display:block}}
-    </style>
-    {% endif %}
-
     <main class="club-profile-grid" aria-label="Öffentliches Vereinsprofil">
         {% include 'game/club_profile/cards/identity_card.html' %}
         {% include 'game/club_profile/cards/next_match_card.html' %}

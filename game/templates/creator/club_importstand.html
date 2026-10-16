@@ -1,0 +1,45 @@
+<section aria-labelledby="creator-importstand-title">
+  <div class="creator-card">
+    <div class="creator-card-head">
+      <h2 id="creator-importstand-title">Importierter Vereinsstand</h2>
+    </div>
+    <div class="creator-card-body">
+      <p class="creator-hint">Nur lesend · Import-Stammdaten und Stadion-Quellwerte des ausgewählten Vereins.</p>
+      <h3>{{ club.official_name|default:club.name }}</h3>
+      <p>{{ club.nickname|default:"Kein Spitzname hinterlegt" }}{% if club.motto %} · „{{ club.motto }}“{% endif %}</p>
+      <p>Gegründet {% if club.founded_year %}{{ club.founded_year }}{% else %}Unbekannt{% endif %}</p>
+      <div class="creator-importstand-colors" aria-label="Vereinsfarben">
+        <span><i style="background:{{ club.color_primary|default:'#d9ded9' }}"></i>Primär · {{ club.color_primary|default:"Unbekannt" }}</span>
+        <span><i style="background:{{ club.color_secondary|default:'#d9ded9' }}"></i>Sekundär · {{ club.color_secondary|default:"Unbekannt" }}</span>
+        {% if club.color_tertiary %}<span><i style="background:{{ club.color_tertiary }}"></i>Tertiär · {{ club.color_tertiary }}</span>{% endif %}
+      </div>
+    </div>
+  </div>
+  <div class="creator-card">
+    <div class="creator-card-head"><h2>Stadion · {{ stadium.name|default:"Stadion nicht hinterlegt" }}</h2></div>
+    <div class="creator-card-body">
+      <p class="creator-hint">Quellwerte nach Tribüne und Platzart – unabhängig von späteren Ausbauten.</p>
+      <div class="creator-importstand-capacities">
+        {% for capacity in package_stadium_capacities %}
+        <div class="creator-importstand-capacity">
+          <span>{{ capacity.side }} · {{ capacity.kind }}</span>
+          <strong>{% if capacity.value != None %}{{ capacity.value }}{% else %}Unbekannt{% endif %}</strong>
+          {% if capacity.basis %}<small>{{ capacity.basis }}</small>{% endif %}
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</section>
+<style>
+  .creator-importstand-colors{display:flex;gap:1rem;flex-wrap:wrap;margin-top:1rem}
+  .creator-importstand-colors span{display:inline-flex;align-items:center;gap:.45rem;font-size:.8rem}
+  .creator-importstand-colors i{width:1rem;height:1rem;border-radius:50%;border:1px solid var(--line,#0d2035)}
+  .creator-importstand-capacities{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:.75rem}
+  .creator-importstand-capacity{display:grid;grid-template-columns:1fr auto;gap:.25rem .5rem;padding:.75rem 0;border-bottom:1px solid var(--line,#0d2035)}
+  .creator-importstand-capacity span{font-size:.8rem}
+  .creator-importstand-capacity strong{font-variant-numeric:tabular-nums}
+  .creator-importstand-capacity small{grid-column:1/-1;color:var(--muted,#aabbcc)}
+  @media(max-width:700px){.creator-importstand-capacities{grid-template-columns:repeat(2,minmax(0,1fr))}}
+  @media(max-width:440px){.creator-importstand-capacities{grid-template-columns:1fr}}
+</style>

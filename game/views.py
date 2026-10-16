@@ -3319,21 +3319,6 @@ def club_detail(request, club_id):
                                    if stadium.real_capacity_national is not None else '-'),
             )
         context['package_mode'] = True
-        context['package_stadium_capacities'] = []
-        for side, side_label in (
-            ('nord', 'Nord'), ('ost', 'Ost'), ('sued', 'Süd'), ('west', 'West'),
-        ):
-            for kind, kind_label in (
-                ('standing', 'Stehplätze'), ('seating', 'Sitzplätze'), ('vip', 'VIP'),
-            ):
-                field = f'real_{side}_{kind}'
-                value = getattr(stadium, field, None) if stadium else None
-                context['package_stadium_capacities'].append({
-                    'side': side_label,
-                    'kind': kind_label,
-                    'value': value,
-                    'basis': getattr(stadium, field + '_basis', None) if stadium else None,
-                })
 
     return render(
         request,

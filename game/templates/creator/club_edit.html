@@ -55,6 +55,9 @@
   <nav class="creator-tabs">
     <a class="creator-tab {% if active_tab == 'bilder' %}active{% endif %}" href="?tab=bilder">Bilder</a>
     <a class="creator-tab {% if active_tab == 'stammdaten' %}active{% endif %}" href="?tab=stammdaten">Stammdaten</a>
+    {% if package_mode %}
+    <a class="creator-tab {% if active_tab == 'importstand' %}active{% endif %}" href="?tab=importstand">Importstand</a>
+    {% endif %}
     <a class="creator-tab {% if active_tab == 'infrastruktur' %}active{% endif %}" href="?tab=infrastruktur">Infrastruktur</a>
     <a class="creator-tab {% if active_tab == 'pokale' %}active{% endif %}" href="?tab=pokale">Pokale <span class="creator-tab-badge">{{ trophies|length }}</span></a>
     <a class="creator-tab {% if active_tab == 'sponsoring' %}active{% endif %}" href="?tab=sponsoring">Sponsoring <span class="creator-tab-badge">{{ sponsors|length }}</span></a>
@@ -63,6 +66,10 @@
     <a class="creator-tab {% if active_tab == 'kader' %}active{% endif %}" href="?tab=kader">Kader <span class="creator-tab-badge">{{ players|length }}</span></a>
     <a class="creator-tab {% if active_tab == 'import_defekte' %}active{% endif %} {% if import_defekte %}creator-tab-has-errors{% endif %}" href="?tab=import_defekte">Import-Defekte{% if import_defekte %} <span class="creator-tab-badge creator-tab-badge-error">{{ import_defekte|length }}</span>{% endif %}</a>
   </nav>
+
+  {% if active_tab == 'importstand' and package_mode %}
+    {% include 'creator/club_importstand.html' %}
+  {% endif %}
 
   <!-- ═══ TAB: REKORDE ══════════════════════════════════════════════════════ -->
   {% if active_tab == 'rekorde' %}
@@ -1081,7 +1088,7 @@
 .creator-import-warn--info .creator-import-warn-link:hover { border-color: #55aadd; color: #88ccee; }
 
 /* ── Tabs ── */
-.creator-tabs { display: flex; gap: .25rem; margin-bottom: 1.25rem; border-bottom: 1px solid #0d2035; padding-bottom: 0; }
+.creator-tabs { display: flex; flex-wrap: wrap; gap: .25rem; margin-bottom: 1.25rem; border-bottom: 1px solid #0d2035; padding-bottom: 0; }
 .creator-tab { display: inline-flex; align-items: center; gap: .35rem; padding: .5rem 1rem; font-size: .78rem; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; text-decoration: none; color: #556677; border-radius: 6px 6px 0 0; border: 1px solid transparent; border-bottom: none; transition: color .15s, background .15s; }
 .creator-tab:hover { color: #aabbcc; }
 .creator-tab.active { color: #00d4ff; background: #071525; border-color: #0d2035; border-bottom-color: #071525; margin-bottom: -1px; }
