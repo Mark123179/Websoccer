@@ -1,5 +1,4 @@
 {% extends 'base.html' %}
-{% load package_display %}
 
 {% load static %}
 {% load humanize %}
@@ -17,66 +16,6 @@
 
 {% block content %}
 <section class="club-dashboard club-profile-shell squad-shell">
-    {% if package_mode %}
-    <section class="package-squad-ledger" aria-labelledby="package-squad-heading">
-        <header>
-            <p>Importierter Kaderstand</p>
-            <h1 id="package-squad-heading">Erste Mannschaft</h1>
-            <span>Rückennummern und Positionen aus dem bestätigten Vereinspaket</span>
-        </header>
-        <div class="package-squad-table-wrap">
-            <table class="package-squad-table">
-                <thead><tr><th>Nr.</th><th>Spieler</th><th>Position</th><th>Alter</th><th>Status</th></tr></thead>
-                <tbody>
-                {% for row in package_first_roster %}
-                    <tr>
-                        <td>{% if row.shirt_number != None %}{{ row.shirt_number }}{% else %}—{% endif %}</td>
-                        <td><a href="{% url 'player_detail' row.id %}">{{ row.full_name }}</a></td>
-                        <td>{% if row.main_position_1 %}{{ row.main_position_1 }}{% else %}Unbekannt{% endif %}{% if row.main_position_2 %} · {{ row.main_position_2 }}{% endif %}{% if row.main_position_3 %} · {{ row.main_position_3 }}{% endif %}</td>
-                        <td>{% if row.age != None %}{{ row.age }}{% else %}Unbekannt{% endif %}</td>
-                        <td>{% if row.loan_status == 'loaned_in' or row.loan_status == 'loaned_out' %}{{ row|loan_line }}{% else %}Im Kader{% endif %}</td>
-                    </tr>
-                {% empty %}
-                    <tr><td colspan="5">Für die erste Mannschaft sind keine Spieler importiert.</td></tr>
-                {% endfor %}
-                </tbody>
-            </table>
-        </div>
-        <div class="package-squad-pools">
-            <section>
-                <h2>Leih-Pool</h2>
-                <p class="package-squad-note">Spieler ohne zugeordneten Websoccer-Verein; nicht Teil der aufstellbaren Mannschaft.</p>
-                {% for player in package_loan_pool %}
-                    <a href="{% url 'player_detail' player.id %}">{{ player.full_name }}{% if player|loan_line %}<small>{{ player|loan_line }}</small>{% endif %}</a>
-                {% empty %}<p>Keine passenden Spieler im Leih-Pool.</p>{% endfor %}
-            </section>
-            {% if request.user.is_staff or request.user.is_superuser %}
-            <section>
-                <h2>U21 · Creator-Prüfung</h2>
-                <p class="package-squad-note">Nur im Creator sichtbar und nicht für Aufstellungen verfügbar.</p>
-                {% for player in package_u21_players %}
-                    <a href="{% url 'player_detail' player.id %}">{% if player.shirt_number != None %}{{ player.shirt_number }} · {% endif %}{{ player.full_name }}</a>
-                {% empty %}<p>Keine U21-Spieler importiert.</p>{% endfor %}
-            </section>
-            {% endif %}
-        </div>
-    </section>
-    <style>
-        .package-squad-ledger{margin:0 0 1.4rem;padding:clamp(1rem,2.5vw,1.7rem);background:#edf1e9;border:1px solid #b8c6ba;border-radius:16px;color:#27372e}
-        .package-squad-ledger header p{margin:0;color:#667468;font-size:.7rem;letter-spacing:.16em;text-transform:uppercase;font-weight:800}
-        .package-squad-ledger h1{margin:.25rem 0;font-size:1.65rem}.package-squad-ledger header span,.package-squad-note{color:#657267;font-size:.84rem}
-        .package-squad-table-wrap{overflow:auto;margin-top:1rem}
-        .package-squad-table{width:100%;border-collapse:collapse;text-align:left;min-width:470px}
-        .package-squad-table th{padding:.6rem .65rem;color:#647267;font-size:.7rem;text-transform:uppercase;letter-spacing:.08em}
-        .package-squad-table td{padding:.7rem .65rem;border-top:1px solid #d2dacf;font-size:.87rem}
-        .package-squad-table td:first-child{font-variant-numeric:tabular-nums;font-weight:800}
-        .package-squad-table a,.package-squad-pools a{color:#244a39;text-decoration-color:#9bad9d;text-underline-offset:3px}
-        .package-squad-pools{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1rem;margin-top:1.2rem}
-        .package-squad-pools section{padding:1rem;background:#f8f8f2;border-radius:11px}
-        .package-squad-pools h2{margin:0 0 .35rem;font-size:1rem}.package-squad-pools section>a{display:block;padding:.38rem 0}
-        @media(max-width:640px){.package-squad-pools{grid-template-columns:1fr}}
-    </style>
-    {% endif %}
     <div class="squad-layout">
 
         <!-- ===================== LEFT / MAIN ===================== -->

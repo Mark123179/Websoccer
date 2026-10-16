@@ -4064,28 +4064,6 @@ def _build_squad_context(request, club, squad_title):
             reverse_club_detail(club),
         ),
     }
-    if package_mode():
-        context['package_mode'] = True
-        from django.db.models import Q
-        context['package_first_roster'] = (
-            Player.objects.filter(squad_team='first')
-            .filter(Q(club=club) | Q(owner_club=club))
-            .select_related('club', 'owner_club', 'loan_club')
-            .order_by('shirt_number', 'last_name', 'first_name')
-            .distinct()
-        )
-        context['package_u21_players'] = (
-            Player.objects.filter(club=club, squad_team='u21')
-            .select_related('strength_profile').order_by('shirt_number', 'last_name', 'first_name')
-            if is_creator else []
-        )
-        context['package_loan_pool'] = [
-            player for player in Player.objects.filter(
-                club__isnull=True, review_pool=False,
-            ).select_related('owner_club', 'loan_club').order_by('last_name', 'first_name')
-            if getattr(player, 'is_in_loan_pool', False)
-            and (player.owner_club_id == club.pk or player.loan_club_id == club.pk)
-        ]
     return context
 
 

@@ -734,7 +734,30 @@ def creator_club_edit(request, club_id):
     if active_tab == 'importstand' and not package_mode():
         active_tab = 'bilder'
     package_capacities = []
+    package_roster = {}
     if package_mode() and active_tab == 'importstand':
+        from django.db.models import Q
+        package_roster = {
+            'package_first_roster': (
+                Player.objects.filter(squad_team='first')
+                .filter(Q(club=club) | Q(owner_club=club))
+                .select_related('club', 'owner_club', 'loan_club')
+                .order_by('shirt_number', 'last_name', 'first_name')
+                .distinct()
+            ),
+            'package_u21_players': (
+                Player.objects.filter(club=club, squad_team='u21')
+                .order_by('shirt_number', 'last_name', 'first_name')
+            ),
+            'package_loan_pool': [
+                player for player in Player.objects.filter(
+                    Q(owner_club=club) | Q(loan_club=club),
+                    club__isnull=True, review_pool=False,
+                ).select_related('owner_club', 'loan_club')
+                .order_by('last_name', 'first_name')
+                if getattr(player, 'is_in_loan_pool', False)
+            ],
+        }
         for side, side_label in (
             ('nord', 'Nord'), ('ost', 'Ost'), ('sued', 'Süd'), ('west', 'West'),
         ):
@@ -810,6 +833,7 @@ def creator_club_edit(request, club_id):
         'active_tab': active_tab,
         'package_mode': package_mode(),
         'package_stadium_capacities': package_capacities,
+        **package_roster,
         'all_leagues': visible_leagues().order_by('name'),
         'sponsor_type_choices': ClubSponsor.TYPE_CHOICES,
         'goal_tier_choices': SeasonGoal.TIER_CHOICES,

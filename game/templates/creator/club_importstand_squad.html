@@ -1,0 +1,55 @@
+{% load package_display %}
+<div class="creator-card">
+  <div class="creator-card-head"><h2>Importierter Kaderstand</h2></div>
+  <div class="creator-card-body">
+    <p class="creator-hint">Nur lesend · Erste Mannschaft: Rückennummern und Positionen aus dem bestätigten Vereinspaket.</p>
+    <div class="creator-importstand-table-wrap">
+      <table class="creator-table">
+        <caption class="creator-importstand-caption">Erste Mannschaft</caption>
+        <thead><tr><th scope="col">Nr.</th><th scope="col">Spieler</th><th scope="col">Position</th><th scope="col">Alter</th><th scope="col">Status</th></tr></thead>
+        <tbody>
+          {% for row in package_first_roster %}
+          <tr>
+            <td>{% if row.shirt_number != None %}{{ row.shirt_number }}{% else %}—{% endif %}</td>
+            <td><a href="{% url 'creator_player_edit' row.id %}">{{ row.full_name }}</a></td>
+            <td>{{ row.main_position_1|default:"Unbekannt" }}{% if row.main_position_2 %} · {{ row.main_position_2 }}{% endif %}{% if row.main_position_3 %} · {{ row.main_position_3 }}{% endif %}</td>
+            <td>{% if row.age != None %}{{ row.age }}{% else %}Unbekannt{% endif %}</td>
+            <td>{% if row.loan_status == 'loaned_in' or row.loan_status == 'loaned_out' %}{{ row|loan_line }}{% else %}Im Kader{% endif %}</td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="5">Für die erste Mannschaft sind keine Spieler importiert.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+<div class="creator-card">
+  <div class="creator-card-head"><h2>Leih-Pool</h2></div>
+  <div class="creator-card-body">
+    <p class="creator-hint">Spieler ohne zugeordneten Websoccer-Verein; nicht Teil der aufstellbaren Mannschaft.</p>
+    <ul class="creator-importstand-player-list">
+      {% for player in package_loan_pool %}
+      <li><a href="{% url 'creator_player_edit' player.id %}">{{ player.full_name }}</a>{% if player|loan_line %} · {{ player|loan_line }}{% endif %}</li>
+      {% empty %}<li>Keine passenden Spieler im Leih-Pool.</li>{% endfor %}
+    </ul>
+  </div>
+</div>
+<div class="creator-card">
+  <div class="creator-card-head"><h2>U21 · Creator-Prüfung</h2></div>
+  <div class="creator-card-body">
+    <p class="creator-hint">Nur im Creator sichtbar und nicht für Aufstellungen verfügbar.</p>
+    <ul class="creator-importstand-player-list">
+      {% for player in package_u21_players %}
+      <li><a href="{% url 'creator_player_edit' player.id %}">{% if player.shirt_number != None %}{{ player.shirt_number }} · {% endif %}{{ player.full_name }}</a></li>
+      {% empty %}<li>Keine U21-Spieler importiert.</li>{% endfor %}
+    </ul>
+  </div>
+</div>
+<style>
+  .creator-importstand-table-wrap{overflow-x:auto}
+  .creator-importstand-table-wrap table{min-width:470px}
+  .creator-importstand-caption{text-align:left;padding:0 0 .75rem;font-weight:600}
+  .creator-importstand-player-list{margin:0;padding-left:1.25rem}
+  .creator-importstand-player-list li{padding:.35rem 0}
+</style>

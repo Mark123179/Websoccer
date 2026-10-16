@@ -91,6 +91,60 @@ class PackageDisplayTests(TestCase):
         self.assertEqual(response.context["active_tab"], "bilder")
         self.assertNotContains(response, "Importierter Vereinsstand")
         self.assertNotContains(response, 'href="?tab=importstand"')
+        self.assertNotContains(response, "Importierter Kaderstand")
+
+    def test_imported_squad_is_only_in_creator_importstand(self):
+        for staff in (False, True):
+            self.user.is_staff = staff
+            self.user.save(update_fields=["is_staff"])
+            response = self.client.get(
+                reverse("club_professional_squad", args=[self.club.pk]))
+            self.assertEqual(response.status_code, 200)
+            self.assertNotContains(response, "Importierter Kaderstand")
+            self.assertNotContains(response, "package-squad-ledger")
+            self.assertNotContains(response, "U21 · Creator-Prüfung")
+            self.assertContains(response, 'id="squadFilterBar"')
+            for key in ("package_first_roster", "package_loan_pool", "package_u21_players"):
+                self.assertNotIn(key, response.context)
+        response = self.client.get(
+            reverse("creator_club_edit", args=[self.club.pk]), {"tab": "importstand"})
+        self.assertContains(response, "Importierter Kaderstand")
+        self.assertContains(response, "Leih-Pool")
+        self.assertContains(response, "U21 · Creator-Prüfung")
+        self.assertTrue(response.context["package_first_roster"].exists())
+        player = response.context["package_first_roster"].first()
+        self.assertContains(response, reverse("creator_player_edit", args=[player.pk]))
+        response = self.client.get(
+            reverse("creator_club_edit", args=[self.club.pk]), {"tab": "kader"})
+        self.assertNotContains(response, "Importierter Kaderstand")
+        self.assertNotIn("package_first_roster", response.context)
+
+    def test_imported_squad_scopes_first_team_youth_and_loan_pool(self):
+        other = m.Club.objects.create(
+            name="Anderer Kader", league=self.league, founded_year=2001, budget=0)
+        youth = m.Player.objects.create(
+            first_name="Importstand", last_name="Jugend", club=self.club,
+            squad_team="u21", age=18, potential=60)
+        loan = m.Player.objects.create(
+            first_name="Importstand", last_name="Leihpool", owner_club=self.club,
+            owner_club_tm_id=16, loan_club_tm_id=999999, squad_team="first",
+            loan_status="loaned_out", review_pool=False, age=23, potential=60)
+        unrelated = m.Player.objects.create(
+            first_name="Fremder", last_name="Leihpool", owner_club=other,
+            owner_club_tm_id=999998, loan_club_tm_id=999999, squad_team="first",
+            loan_status="loaned_out", review_pool=False, age=23, potential=60)
+        response = self.client.get(
+            reverse("creator_club_edit", args=[self.club.pk]), {"tab": "importstand"})
+        self.assertIn(youth, response.context["package_u21_players"])
+        self.assertNotIn(youth, response.context["package_first_roster"])
+        self.assertIn(loan, response.context["package_loan_pool"])
+        self.assertNotIn(unrelated, response.context["package_loan_pool"])
+        self.assertNotIn(unrelated, response.context["package_first_roster"])
+        self.assertNotContains(response, unrelated.full_name)
+        response = self.client.get(
+            reverse("creator_club_edit", args=[other.pk]), {"tab": "importstand"})
+        self.assertNotContains(response, youth.full_name)
+        self.assertNotContains(response, loan.full_name)
 
     def hall(self, room="club", **extra):
         return self.client.get(reverse("management_halloffame"),
