@@ -23,6 +23,16 @@ FMInside Dynamic range evidence can be read from the normal page HTML's data-sit
 
 **How to apply:** Inspect the actual source attribute and preserve its wording. Do not confuse a two-digit code with an invalid range or require browser access solely to reveal this HTML attribute.
 
+FMInside-Rohdaten können im Feld `ratings` aktuelle Fähigkeit und Potenzial
+ohne Trennzeichen enthalten, etwa `7073` statt eines einzelnen Ratings.
+
+**Why:** Ein direkter Vergleich dieses Textes mit dem Paket-Rating erzeugt
+falsche Abweichungen, obwohl die separat beschrifteten Quellwerte übereinstimmen.
+
+**How to apply:** Die aktuelle Fähigkeit aus `Current ability … / 100` in den
+Metriken lesen; Potenzial und Dynamic-Bereich getrennt prüfen. Nicht die
+zusammengeklebte Zeichenfolge als Zahl verwenden oder willkürlich aufteilen.
+
 **Why:** The user corrected the schema-switch approach: ordinary post-merge and server deployment commands run migrate without knowing that switch. Hidden required columns would break old-mode inserts and every later migration.
 
 **How to apply:** Same classes/migrations in both modes, no migration drift. Already applied migrations remain immutable; corrections use a follow-up migration. Existing player locks initialize false, existing ordinary clubs playable and prior placeholders non-playable. Preserve legacy runtime/default behavior until takeover; package initialization writes explicit unknowns and locks.
