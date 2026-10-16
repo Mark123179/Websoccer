@@ -169,3 +169,8 @@ run = ["gunicorn", "--bind=0.0.0.0:5000", "--reuse-port", "--workers=2", "core.w
 [postMerge]
 path = "scripts/post-merge.sh"
 timeoutMs = 180000
+
+[userenv]
+
+[userenv.development]
+IMPORT_PACKAGE_MODE = "1"

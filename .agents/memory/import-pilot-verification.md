@@ -33,6 +33,27 @@ falsche Abweichungen, obwohl die separat beschrifteten Quellwerte übereinstimme
 Metriken lesen; Potenzial und Dynamic-Bereich getrennt prüfen. Nicht die
 zusammengeklebte Zeichenfolge als Zahl verwenden oder willkürlich aufteilen.
 
+Die Ziel-Liga eines Pakets aus dem bestätigten Spielaufbau beziehungsweise
+aktuellen Saisonbelegen bestimmen, nicht aus früher bekannter Vereinszugehörigkeit.
+
+**Why:** Die gelieferten TM-Rohdaten führen Elversberg 2026/27 ausdrücklich in
+der Bundesliga; eine Einordnung nach dem älteren Zweitligastand wäre falsch.
+
+**How to apply:** Saisonbezogene Quellen prüfen, wenn das Paket keine Ziel-Liga
+enthält. Bei widersprüchlicher oder fehlender Grundlage nachfragen statt raten.
+
+Bei einer freigegebenen Bestandsumstellung Reset, Erstimporte und Schutzprüfungen
+zusammen committen; eine Sicherung durch tatsächliche isolierte Wiederherstellung
+und Tabellen-Fingerprints prüfen.
+
+**Why:** Ein lang laufender Import kann vom Ausführungszeitlimit beendet werden.
+Ein separat committeter Reset ließe dann trotz korrekter Pakete einen leeren
+oder unvollständigen Hauptbestand zurück.
+
+**How to apply:** Schreibende Dienste vorher pausieren, den gesamten Ablauf auf
+der Wiederherstellung proben und größere Importläufe im Hintergrund ausführen.
+Nach einem Abbruch erst den vollständigen Rollback nachweisen, dann fortsetzen.
+
 **Why:** The user corrected the schema-switch approach: ordinary post-merge and server deployment commands run migrate without knowing that switch. Hidden required columns would break old-mode inserts and every later migration.
 
 **How to apply:** Same classes/migrations in both modes, no migration drift. Already applied migrations remain immutable; corrections use a follow-up migration. Existing player locks initialize false, existing ordinary clubs playable and prior placeholders non-playable. Preserve legacy runtime/default behavior until takeover; package initialization writes explicit unknowns and locks.
