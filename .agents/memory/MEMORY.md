@@ -152,3 +152,4 @@
 - [Red Bull Arena Abnahme](leipzig-stadium-presentation.md) — Gästeblock-Netz bleibt erhalten; Zentralstadion-Wall und Brücken bleiben ausgeschlossen.
 - [Gelände-Paketvorprüfung](terrain-package-preflight.md) — Renderer als CPU-Prüforakel verwenden; innenliegende Flächen sind Hinweise, keine Quellbereinigung.
 - [Creator-Importstand](creator-importstand-visibility.md) — Importierter Vereinsstand ausschließlich im eigenen Creator-Tab des Vereins, niemals im öffentlichen Profil.
+- [Historische Spieleridentitäten](historic-player-import-identities.md) — Rekord-Personen können IDs neuer Kaderspieler belegen; Bezüge erhalten und Vollständigkeit unabhängig prüfen.
