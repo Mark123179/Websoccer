@@ -110,6 +110,8 @@ def _quad_uv(quad, point):
     for _ in range(12):
         x, y = _quad_point(quad, u, v)
         fx, fy = x - point[0], y - point[1]
+        if abs(fx) + abs(fy) < 1e-9:
+            break
         eps = 1e-5
         xu, yu = _quad_point(quad, u + eps, v)
         xv, yv = _quad_point(quad, u, v + eps)
@@ -151,7 +153,8 @@ def spatial_project_design(old_design, old_geometry, new_geometry, stadium_name,
         declared_size = rows * seats
         values = decode_rle(rle, declared_size)
         values = (values + [0] * (rows * seats))[:rows * seats]
-        sources.append((raw_old[block_id]['quad'], rows, seats, values))
+        sources.append((meta['stand'], meta['tier'],
+                        raw_old[block_id]['quad'], rows, seats, values))
     raw_new = {block.get('id', i): block
                for i, block in enumerate(new_geometry.get('blocks', []))}
     blocks = []
@@ -163,7 +166,11 @@ def spatial_project_design(old_design, old_geometry, new_geometry, stadium_name,
                 point = _quad_point(quad, (seat + .5) / meta['seats'],
                                     (row + .5) / meta['rows'])
                 colour = 0
-                for old_quad, old_rows, old_seats, source in sources:
+                for stand, tier, old_quad, old_rows, old_seats, source in sources:
+                    # Upper and lower terraces overlap in plan view.  A colour
+                    # must never migrate to a different stand or tier.
+                    if (stand, tier) != (meta['stand'], meta['tier']):
+                        continue
                     uv = _quad_uv(old_quad, point)
                     if uv is not None:
                         col = min(old_seats - 1, max(0, int(uv[0] * old_seats)))

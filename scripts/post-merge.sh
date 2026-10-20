@@ -2,6 +2,7 @@
 set -e
 
 python3 manage.py migrate --no-input
+python3 manage.py align_koln_official_blocks --if-present --apply
 python3 manage.py collectstatic --no-input --clear 2>/dev/null || true
 
 # ── Regressions-Schnelltest ───────────────────────────────────────────────────

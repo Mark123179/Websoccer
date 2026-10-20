@@ -20,7 +20,7 @@ from scripts.build_mainz_osm_review import build
 from scripts.prepare_koln_study import OUT, ROOT, prepare, write
 
 
-def editor_geometry(stadium, presentation):
+def source_envelope_geometry(stadium, presentation):
     """Source-section envelopes, not invented official block numbers."""
     theta = presentation["frame"]["axisTheta"]
     def project(x, z):
@@ -97,6 +97,18 @@ def editor_geometry(stadium, presentation):
         "limits": "Source-section envelopes, not official numbered block topology. "
                   "Physical grids are independent of economic capacity.",
         "sourceSeatPoints": len(seats), "blocks": evidence})
+    return geometry
+
+
+def editor_geometry(stadium, presentation):
+    """Offer reviewed FC labels, retaining source envelopes as legacy evidence."""
+    from stadium_editor.koln_blocks import build_official_geometry
+    legacy = source_envelope_geometry(stadium, presentation)
+    seats = json.loads((ROOT / "attached_assets/koln_1792488328917.json").read_text())["seats"]
+    geometry, evidence = build_official_geometry(legacy, seats)
+    write("editor-official-block-evidence.json", evidence)
+    effective = distribute_capacities(stadium, geometry)
+    build_live_scene(stadium, geometry, standard_design_for_geometry(stadium, effective))
     return geometry
 
 

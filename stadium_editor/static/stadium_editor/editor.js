@@ -82,8 +82,9 @@ const undoStack = [], redoStack = [];
 function renderableBlock(block, index){
   const geometryRows = Math.max(1, Number(block.rows) || 1);
   const geometrySeats = Math.max(1, Number(block.seats) || 1);
-  const capacity = Number.isFinite(Number(block.previewCapacity))
-    ? Number(block.previewCapacity)
+  const assignedCapacity = block.previewCapacity ?? block.capacity;
+  const capacity = Number.isFinite(Number(assignedCapacity))
+    ? Number(assignedCapacity)
     : geometryRows * geometrySeats;
   const seats = geometrySeats;
   const rows = geometryRows;
@@ -254,6 +255,21 @@ function restoreSavedDesign(savedDesign){
 function initStadium(stadium, savedDesign){
   D = stadium;
   blocks = D.blocks.map(renderableBlock);
+  const officialSelect = document.getElementById('officialBlockSelect');
+  const officialControls = document.getElementById('officialBlockControls');
+  if(officialSelect && officialControls){
+    officialSelect.replaceChildren(new Option('Block wählen …', ''));
+    const official = blocks.filter(block => block.officialBlock);
+    officialControls.hidden = !official.length;
+    for(const block of official){
+      const zone = block.fanZone === 'HEIM' ? ' · Heimkurve' : block.fanZone === 'GAST' ? ' · Gäste' : '';
+      officialSelect.add(new Option(`${block.officialBlock} · ${block.tier === 'UNTER' ? 'Unterrang' : 'Oberrang'}${zone}`, String(block.id)));
+    }
+    officialSelect.onchange = ()=>{
+      if(officialSelect.value === '') return;
+      selection.clear(); selection.add(Number(officialSelect.value)); syncSel();
+    };
+  }
   baseBlockCapacity = blocks.reduce((total, block) => total + block.capacity, 0);
   baseDisplayCapacity = Number(D.capacity_total || D.meta.capacity || baseBlockCapacity);
   designBlockShape = new Map(blocks.map(block => [
@@ -564,6 +580,16 @@ function renderBlocks(){
     } else {
       drawTexturedQuad(ctx, texCache[i], p);
       strokeBlockBorder(ctx, b, p, 1);
+    }
+    if(b.officialBlock){
+      const cx = p.reduce((sum, pt)=>sum+pt[0],0)/4;
+      const cy = p.reduce((sum, pt)=>sum+pt[1],0)/4;
+      ctx.save();
+      ctx.font = 'bold 10px sans-serif';
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.lineWidth = 3; ctx.strokeStyle = '#07111a'; ctx.fillStyle = '#f4fbff';
+      ctx.strokeText(b.officialBlock,cx,cy); ctx.fillText(b.officialBlock,cx,cy);
+      ctx.restore();
     }
   }
 }
@@ -2186,7 +2212,7 @@ cvOverlay.addEventListener('mousemove', e => {
   const nid = b?b.id:null;
   if(nid!==hoverBlock){ hoverBlock=nid; renderOverlay(); }
   document.getElementById('sbHover').textContent = b
-    ? `${standLabel(b.stand)} · ${b.tier}rang · Block ${b.id} · ${b.capacity.toLocaleString('de-DE')} Plätze (${{SITZ:'Sitz',STEH:'Steh',VIP:'VIP'}[b.type]})`
+    ? `${standLabel(b.stand)} · ${b.tier}rang · Block ${b.officialBlock || b.id}${b.fanZone === 'HEIM' ? ' · Heimkurve' : b.fanZone === 'GAST' ? ' · Gäste' : ''} · ${b.capacity.toLocaleString('de-DE')} Spielplätze (${{SITZ:'Sitz',STEH:'Steh',VIP:'VIP'}[b.type]})`
     : '–';
 });
 cvOverlay.addEventListener('mousedown', e => {

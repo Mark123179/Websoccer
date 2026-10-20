@@ -75,6 +75,10 @@ unterschiedlicher OSM-Objekte.
 
 ## Editor-Basis
 
+**Aktueller Abgleich:** [Offizieller FC-Blockplan 2026/27 und sichere Übernahme](koln-official-blocks.md).
+Die nachfolgend beschriebenen 33 Hüllen sind die ursprüngliche, gesicherte
+Ausgangstopologie, nicht mehr die angebotenen Blockbezeichnungen.
+
 Für Köln gibt es im vorhandenen Alt-Blaupausenpaket keine Referenz und
 beim ersten Einbau keine gespeicherte Editor-Geometrie bzw. keinen Entwurf.
 Deshalb wird keine fremde Vereinsblaupause als Ersatz verwendet.
@@ -88,6 +92,11 @@ und keine Behauptung einer 1:1-Rekonstruktion jeder Sitzreihe.
 Die 3D-Ansicht zeigt unabhängig davon die unveränderten Quell-Crowd-Meshes.
 Die bestehenden wirtschaftlichen Sitzart-Buckets werden mit dem vorhandenen
 Adapter auf die Hüllen verteilt, ohne die Stadionwerte zu ändern.
+
+Der aktuelle Builder erzeugt daraus 56 mit dem FC-Plan beschriftete
+Plansektoren. Die Nord-Gästetrennung folgt den räumlich getrennten
+UltraAway-Quellgruppen; die übrigen inneren Trennungen sind schematische
+Planprojektionen, keine aus dem Unity-Modell belegten Ganggrenzen.
 
 ## Reproduktion und Nachweise
 

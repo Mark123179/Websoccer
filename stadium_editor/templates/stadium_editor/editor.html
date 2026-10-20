@@ -6,7 +6,7 @@
 {% block body_class %}stadium-editor-page{% endblock %}
 
 {% block extra_css %}
-{% if is_dortmund_editor %}<link rel="stylesheet" href="{% static 'stadium_editor/dortmund_editor.css' %}?v=15">{% endif %}
+{% if is_dortmund_editor %}<link rel="stylesheet" href="{% static 'stadium_editor/dortmund_editor.css' %}?v=16">{% endif %}
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;700&family=IBM+Plex+Sans:wght@400;500;600;700&family=Oswald:wght@400;500;600&family=Cinzel:wght@600&family=Anton&family=Bebas+Neue&family=Archivo+Black&family=Germania+One&family=Permanent+Marker&display=swap" rel="stylesheet">
 <style>
@@ -90,6 +90,10 @@
 }
 .sel-status{font-size:12px;color:var(--muted);min-height:17px}
 .sel-status b{color:var(--cyan);font-weight:600}
+#officialBlockControls{margin-bottom:10px;font-size:11px;color:var(--muted)}
+#officialBlockSelect{display:block;width:100%;margin:5px 0;background:var(--stadium-bg);border:1px solid var(--line);border-radius:5px;color:var(--text);padding:6px}
+#officialBlockControls p{font-size:10px;line-height:1.45;margin:6px 0}
+#officialBlockControls a{color:var(--cyan)}
 .rowbtns{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
 .rowbtns .btn{padding:6px 10px;font-size:10px;flex:1;text-align:center;min-width:70px}
 /* Palette */
@@ -223,6 +227,12 @@
 
     <div class="panel">
       <h3>Auswahl · Zauberstab</h3>
+      <div id="officialBlockControls" hidden>
+        <label for="officialBlockSelect">FC-Blockplan 2026/27</label>
+        <select id="officialBlockSelect" aria-label="Offiziellen Stadionblock auswählen"></select>
+        <p>Schematische Plansektoren auf den Unity-Sitzgruppen, keine vermessenen Ganggrenzen. Plätze sind wirtschaftliche Spielwerte, keine Quell-Sitzpunktzahlen.</p>
+        <a href="https://fc.de/club/ueber-den-fc/spiel-und-trainingsstaette/rheinenergiestadion" target="_blank" rel="noopener">Offizieller FC-Stadionplan</a>
+      </div>
       <div class="sel-status" id="selStatus">Kein Block gewählt — klick ins Stadion.</div>
       <div class="rowbtns">
         <button class="btn" id="btnSelTier">+ Rang</button>
@@ -414,5 +424,5 @@ window.STADIUM_EDITOR = {
 <script src="{% static 'stadium_editor/expansion_geometry.js' %}?v=35"></script>
 <script src="{% static 'stadium_editor/elversberg_canopies.js' %}?v=1"></script>
 <script src="{% static 'stadium_editor/editor_viewport.js' %}?v=1"></script>
-<script src="{% static 'stadium_editor/editor.js' %}?v=67"></script>
+<script src="{% static 'stadium_editor/editor.js' %}?v=68"></script>
 {% endblock %}

@@ -3,6 +3,7 @@ from copy import deepcopy
 from zipfile import BadZipFile
 
 from django.contrib.auth.decorators import login_required
+from django.db import transaction
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render
 from django.urls import reverse
@@ -122,10 +123,14 @@ def stadium_editor_visible_design(request):
 
 @login_required(login_url='/auth/login/')
 @require_POST
+@transaction.atomic
 def stadium_editor_save_design(request):
     stadium = _owned_stadium(request)
     if not stadium:
         return JsonResponse({'error': 'Stadion nicht gefunden.'}, status=404)
+    # Serialize against topology replacement and capacity changes. An old tab
+    # must never overwrite a freshly projected manager design.
+    stadium = Stadium.objects.select_for_update().get(pk=stadium.pk)
     if len(request.body) > 2 * 1024 * 1024:
         return JsonResponse({'error': 'Design ist zu groß.'}, status=413)
     try:
@@ -133,7 +138,7 @@ def stadium_editor_save_design(request):
         if not isinstance(payload, dict):
             raise ValueError
         geometry = _geometry_payload(
-            stadium, StadiumGeometry.objects.get(stadium=stadium).geometry)
+            stadium, StadiumGeometry.objects.select_for_update().get(stadium=stadium).geometry)
         sanitized = normalize_design_payload(
             payload, geometry=geometry, stadium_name=stadium.name,
             blickrichtung=payload.get('blickrichtung', 'NORD'),
