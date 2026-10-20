@@ -2265,7 +2265,7 @@ def home(request):
         'form': get_form_rows(primary_club, n=5) if primary_club else [],
     }
 
-    # Echte Ligatabelle aus LeagueStandings laden
+    # Real standings, or a read-only zero table during initial preparation.
     overview_league_table = []
     _league_for_table = primary_club.league if primary_club else None
     if _league_for_table:
@@ -2274,12 +2274,8 @@ def home(request):
             _season_key = str(_state.current_season) if _state else '0'
         except Exception:
             _season_key = '0'
-        _all_rows = list(
-            LeagueStandings.objects
-            .filter(league=_league_for_table, season=_season_key)
-            .select_related('club')
-            .order_by('position', '-points', 'club__name')
-        )
+        from .league_table import display_standings
+        _all_rows = display_standings(_league_for_table, _season_key)
         # Top 5 anzeigen, eigenen Verein hervorheben
         for _s in _all_rows[:5]:
             _diff = _s.goals_for - _s.goals_against
@@ -8659,7 +8655,9 @@ def league_detail(request, league_id):
         .order_by('position', '-points', 'club__name')
     )
 
-    total_clubs = standings_qs.count()
+    from .league_table import display_standings
+    display_rows = display_standings(league, current_season, standings_qs)
+    total_clubs = len(display_rows)
     cl_limit = league.cl_spots
     el_limit = cl_limit + league.el_spots
     conf_limit = el_limit + league.conference_spots
@@ -8668,7 +8666,7 @@ def league_detail(request, league_id):
     my_club = current_manager_club(request.user)
 
     table_rows = []
-    for s in standings_qs:
+    for s in display_rows:
         pos = s.position
         if pos <= cl_limit:
             zone = 'cl'
