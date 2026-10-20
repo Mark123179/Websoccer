@@ -20,6 +20,7 @@ html,body{margin:0;background:#060b10;color:white}
 #stage{width:1200px;height:675px;position:relative}
 </style><div id="stage"></div><script type="module">
 import {mountUnityStadium} from '/static/unity_stadium_scene.js';
+import {editorPointToDortmund} from '/static/dortmund_surroundings.js';
 const q=new URLSearchParams(location.search);
 try {
   const {presentation}=await(await fetch('/presentation.json')).json();
@@ -32,7 +33,25 @@ try {
   const env=window.stage.stage.scene.getObjectByName('EDITOR_SURROUNDINGS_3D');
   window.evidence={roofMeshes:roof.length,visibleRoof:roof.filter(x=>x.visible).length,
     fixtures:window.stage.lightingEvidence().length,modelMeshes:window.stage.stage.model.children.length,
-    terrain:env.userData.terrain,counts:env.userData.counts,environmentY:env.position.y};
+    terrain:env.userData.terrain,counts:env.userData.counts,environmentY:env.position.y,
+    buildingParts:env.userData.buildingParts};
+  window.capture=()=>{
+    window.stage.stage.render();
+    if(q.has('detail')){
+      const g=presentation.surroundings.buildingParts.groups.find(g=>g.osm===q.get('detail'));
+      if(!g) throw new Error('Missing Abelbau detail');
+      const points=presentation.surroundings.buildings[g.buildingIndex].map(p=>
+        editorPointToDortmund(p,presentation.frame,presentation.calibration.surroundingsAxes));
+      const x=points.reduce((s,p)=>s+p[0],0)/points.length;
+      const z=points.reduce((s,p)=>s+p[1],0)/points.length;
+      const {camera,renderer,scene}=window.stage.stage;
+      camera.position.set(x+75,65,z+95);camera.lookAt(x,5,z);camera.updateMatrixWorld(true);
+      renderer.render(scene,camera);
+      window.evidence.detail={osm:g.osm,camera:'diagnostic closeup, not gameplay camera',
+        position:camera.position.toArray(),target:[x,5,z]};
+    }
+    return window.stage.stage.renderer.domElement.toDataURL('image/png');
+  };
   window.ready=true;
 }catch(e){window.failure=e.message;console.error(e)}
 </script>`;
@@ -73,6 +92,10 @@ try {
     ['ticker-tag','ticker=1'],['ticker-ohne-dach','ticker=1&roof=0'],
     ['ticker-nacht-flutlicht','ticker=1&night=1&flood=1'],['sitzkamera','seat=1'],
     ['editor-nacht-flutlicht','night=1&flood=1'],
+    ['abel-ost-tag','detail=way/73467119'],
+    ['abel-west-tag','detail=way/73467122'],
+    ['abel-ost-nacht','detail=way/73467119&night=1&flood=1'],
+    ['abel-west-nacht','detail=way/73467122&night=1&flood=1'],
   ]){
     if(selected.size&&!selected.has(name))continue;
     const page=await browser.newPage({viewport:{width:1200,height:675}});
@@ -88,11 +111,14 @@ try {
       throw new Error(JSON.stringify({name,evidence}));
     if(evidence.terrain.omitted.green.length||evidence.terrain.omitted.water.length)
       throw new Error(JSON.stringify({name,message:'omitted source ground features',evidence}));
-    const image=await page.evaluate(()=>{
-      window.stage.stage.render();return window.stage.stage.renderer.domElement.toDataURL('image/png');
-    });
-    await writeFile(path.join(output,name+'.png'),Buffer.from(image.split(',')[1],'base64'));
-    captures.push({name,query,evidence,errors,assetVersion:manifest.assetVersion,installed,
+    if(evidence.buildingParts?.groups.map(g=>g.components).join(',')!=='5,6')
+      throw new Error(JSON.stringify({name,message:'Abelbau components missing',evidence}));
+    const image=await page.evaluate(()=>window.capture());
+    const imageBytes=Buffer.from(image.split(',')[1],'base64');
+    await writeFile(path.join(output,name+'.png'),imageBytes);
+    captures.push({name,query,evidence:await page.evaluate(()=>window.evidence),errors,
+      imageSha256:createHash('sha256').update(imageBytes).digest('hex'),
+      assetVersion:manifest.assetVersion,installed,
       presentationSha256});
     await writeFile(path.join(output,'render-evidence.json'),JSON.stringify(captures,null,2));
     console.log('Captured',name,JSON.stringify(evidence));

@@ -21,6 +21,7 @@ from shapely.ops import unary_union, transform as shape_transform
 from shapely.strtree import STRtree
 
 from stadium_editor.package_preflight import inspect_package
+from scripts.koln_building_parts import component_group, DATUM
 
 STUDY = Path("generated-artifacts/koln-study")
 REVIEW = STUDY / "osm-fresh"
@@ -39,7 +40,10 @@ def lod_buildings(files):
     """Use explicit GroundSurface rings, not a projected roof or bounding box."""
     result, rejected = {}, []
     for file in files:
+        srs_name = None
         for _, root in ET.iterparse(file, events=("end",)):
+            if root.tag == "{" + NS["g"] + "}Envelope":
+                srs_name = root.get("srsName")
             if root.tag != "{" + NS["b"] + "}Building":
                 continue
             components = [root, *root.findall(".//b:BuildingPart", NS)]
@@ -70,15 +74,24 @@ def lod_buildings(files):
                 entry = {
                     "id": identity, "file": file.name, "footprint": footprint,
                     "height": float(height.text), "heightUnit": height.get("uom"),
-                    "baseNHN": min(zs), "attributes": attrs,
+                    "baseNHN": min(zs), "baseMaxNHN": max(zs), "attributes": attrs,
+                    "srsName": srs_name,
                 }
+                roof_zs = [float(v) for ring in obj.findall(
+                    "b:boundedBy/b:RoofSurface//g:posList", NS)
+                    for v in ring.text.split()[2::3]]
+                if roof_zs:
+                    entry.update(roofNHN=max(roof_zs), roofMinNHN=min(roof_zs))
                 if not footprint.is_valid or footprint.area <= 0:
                     rejected.append({"id": identity, "file": file.name,
                                      "reason": "invalid_or_zero_area_footprint"})
                     continue
                 if identity in result:
                     old = result[identity]
-                    if old["height"] != entry["height"] or not old["footprint"].equals(footprint):
+                    if (any(old.get(k) != entry.get(k) for k in
+                            ("height", "heightUnit", "baseNHN", "baseMaxNHN",
+                             "roofNHN", "roofMinNHN", "srsName", "attributes"))
+                            or not old["footprint"].equals(footprint)):
                         raise ValueError(f"Conflicting tile duplicate: {identity}")
                 else:
                     result[identity] = entry
@@ -98,7 +111,7 @@ def select_height(polygon, candidates):
         return None, "no_unique_symmetric_85pct_match"
     c, cover, purity = matches[0]
     if (c["attributes"].get("DatenquelleDachhoehe") != "1000"
-            or not c["heightUnit"].endswith(":m") or not 1 <= c["height"] <= 100):
+            or not (c["heightUnit"] or "").endswith(":m") or not 1 <= c["height"] <= 100):
         return None, "not_documented_laser_height"
     return (c, cover, purity), None
 
@@ -129,6 +142,13 @@ def refine():
     def en_to_utm(x, y, z=None):
         return to_utm.transform(lon + np.asarray(x) / meters[0],
                                 lat + np.asarray(y) / meters[1])
+
+    from_utm = Transformer.from_crs(25832, 4326, always_xy=True)
+
+    def utm_to_editor(x, y, z=None):
+        longitude, latitude = from_utm.transform(x, y)
+        return ((np.asarray(longitude) - lon) * meters[0],
+                (np.asarray(latitude) - lat) * meters[1])
 
     theta = p["frame"]["axisTheta"]
     # Inverse of the common editor->model conversion, using the proven +z north frame.
@@ -182,10 +202,16 @@ def refine():
     buildings, rejected = lod_buildings([HEIGHTS / s["file"] for s in source["sources"]
                                         if s["file"].endswith(".gml")])
     tree = STRtree([c["footprint"] for c in buildings])
-    matches = []
+    matches, groups = [], []
     for index, raw in enumerate(data["buildings"]):
         poly = shape_transform(en_to_utm, Polygon(raw))
-        selected, reason = select_height(poly, [buildings[i] for i in tree.query(poly)])
+        candidates = [buildings[i] for i in tree.query(poly)]
+        selected, reason = select_height(poly, candidates)
+        group = component_group(index, data["buildingIds"][index], poly, candidates, utm_to_editor,
+                                editor_polygon=Polygon(raw))
+        if group:
+            assert selected is None, "Multipart representation must not grant a whole-building height"
+            groups.append(group)
         row = {"index": index, "osm": data["buildingIds"][index],
                "previousHeight": before["buildingHeights"][index]}
         if selected:
@@ -209,6 +235,11 @@ def refine():
         "terrainReferenceNHN": reference,
         "terrainTransition": "OSM stadium footprint +20 m kept at source apron; 40 m smooth model transition, not surveyed",
     }
+    data["buildingParts"] = {
+        "version": 1, "verticalDatum": DATUM, "referenceNHN": reference,
+        "source": "Geobasis NRW LoD2 GroundSurface/RoofSurface; roof laser 1000, ground DGM 1100",
+        "groups": groups,
+    }
     for layer in ("roads","green","water","trees","buildings","buildingIds","groundCutout","groundLevel"):
         assert data[layer] == before[layer], f"Source layer modified: {layer}"
     report = inspect_package(p, axes=p["calibration"]["surroundingsAxes"])
@@ -217,6 +248,7 @@ def refine():
         "sources": source, "buildingMatchPolicy": "Unique symmetric overlap >=85%, Dachhoehe source=1000 (laser); no nearest-neighbor guessing.",
         "buildingCoverage": stats, "officialComponentsRead": len(buildings), "buildings": matches,
         "rejectedOfficialComponents": rejected,
+        "buildingParts": deepcopy(data["buildingParts"]),
         "terrain": {"referenceNHN": reference, "referenceSamplesNHN": reference_samples,
                     "referenceMethod": "Median of 25 native DGM samples inside the painted pitch; Unity pitch is local zero.",
                     "nativeResolutionMeters": 1, "renderGridMeters": 20,

@@ -17,7 +17,8 @@ def package():
     assert integration["stadiumAndDesignUnchanged"] and integration["geometryOutsideEnvironmentUnchanged"]
     renders = json.loads((REVIEW / "installed-views/render-evidence.json").read_text())
     assert {r["name"] for r in renders} == {
-        "ticker-tag", "ticker-nacht-flutlicht", "editor-nacht-flutlicht"}
+        "ticker-tag", "ticker-nacht-flutlicht", "editor-nacht-flutlicht",
+        "abel-ost-tag", "abel-west-tag", "abel-ost-nacht", "abel-west-nacht"}
     assert all(r["installed"] and not r["errors"] and
                r["presentationSha256"] == hashlib.sha256(installed_bytes).hexdigest()
                for r in renders)
@@ -43,7 +44,11 @@ def package():
     panels = []
     for name,title in [("ticker-tag","Spielansicht · Tag"),
                        ("ticker-nacht-flutlicht","Spielansicht · Nacht und Flutlicht"),
-                       ("editor-nacht-flutlicht","Umfeld · Nacht und Flutlicht")]:
+                       ("editor-nacht-flutlicht","Umfeld · Nacht und Flutlicht"),
+                       ("abel-ost-tag","Abelbau Ost · Tag · Diagnosekamera"),
+                       ("abel-west-tag","Abelbau West · Tag · Diagnosekamera"),
+                       ("abel-ost-nacht","Abelbau Ost · Nacht · Diagnosekamera"),
+                       ("abel-west-nacht","Abelbau West · Nacht · Diagnosekamera")]:
         image = REVIEW / "installed-views" / f"{name}.png"
         panels.append(f'<figure><img alt="{html.escape(title)}" src="data:image/png;base64,'
                       f'{base64.b64encode(image.read_bytes()).decode()}">'
@@ -55,6 +60,10 @@ def package():
                    f"<td>{b.get('height',b['previousHeight']):.3f}</td><td>"
                    f"{html.escape(b.get('lodId',b.get('reason','')))}</td></tr>"
                    for b in evidence["buildings"])
+    part_rows = "".join(
+        f"<tr><td>{html.escape(g['osm'])}</td><td>{html.escape(p['lodId'])}</td>"
+        f"<td>{p['baseNHN']:.3f}</td><td>{p['roofNHN']:.3f}</td><td>{p['height']:.3f}</td></tr>"
+        for g in evidence["buildingParts"]["groups"] for p in g["parts"])
     report = f"""<!doctype html><html lang="de"><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Köln · Gelände und Höhenbelege</title>
@@ -82,11 +91,22 @@ Vorplatz und Übergang sind ausdrücklich Modellanpassungen, keine Vermessung.</
 oder an der Bowl ausgeschnitten. Renderer-Vorprüfung: OK, Gelände erkannt, null Befunde.
 Original-WebGL-Renderer und registrierte Anwendungs-Asset-Endpunkte ohne Seitenfehler.</p>
 <section>{''.join(panels)}</section>
+<h2>Abelbauten · explizite Teilkörper</h2>
+<p>Fünf Teilkörper Ost, sechs West. Je Teilkörper amtliche GroundSurface und
+oberes RoofSurface-Niveau in DHHN2016 / NHN. Lokale Darstellung:
+NHN minus {evidence['terrain']['referenceNHN']:.6f} m; groundLevel wird nicht doppelt addiert.
+Keine maximale oder mittlere Höhe für einen gesamten Abelbau.</p>
+<table><thead><tr><th>OSM</th><th>LoD2-ID</th><th>Boden NHN (m)</th>
+<th>Oberes Dachniveau NHN (m)</th><th>Teilhöhe (m)</th></tr></thead><tbody>{part_rows}</tbody></table>
+<p>Darstellungsgrundrisse sind an unveränderten OSM-Grenzen abgeschnitten.
+Nicht zugeordnete und widersprüchlich überdeckte Restflächen bleiben als
+unvermessene Bestandshüllen erhalten. Details siehe buildingParts im JSON-Beleg.</p>
 <h2>Grenzen</h2><ul>
 <li>Kein vermessener Fassaden-/Dachnachbau: einfache Hüllen über dem Gelände.
-Die amtlichen Höhen werden nicht als absolute Dachkanten ausgegeben.</li>
+Außerhalb der expliziten Abel-Teilkörper werden keine absoluten Dachniveaus behauptet.
+Die Teilkörper zeigen ihr oberes Dachniveau horizontal, keine geneigte Dachtopologie.</li>
 <li>Beide Abelbauten bestehen amtlich aus mehreren unterschiedlich hohen
-Teilkörpern. Keine unzulässige Einzelhöhe; die bisherigen Hüllen bleiben unvermessen.</li>
+Teilkörpern. Keine unzulässige Einzelhöhe; ihre OSM-Gesamthüllen bleiben unvermessen.</li>
 <li>20-m-Darstellung generalisiert das Gelände. Keine Übertragung der nativen
 DGM-Genauigkeit auf die Darstellung; keine Ergänzung von Brücken aus dem DGM.</li>
 <li>Baumformen bleiben schematisch. Drei unvollständige OSM-Relationen und drei

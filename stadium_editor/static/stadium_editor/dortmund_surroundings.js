@@ -4,6 +4,7 @@
 // The default reproduces the existing transformation exactly.
 import {validateSurroundingsGround, createGroundCutoutChecks} from './surroundings_ground.js?v=3';
 import {elevationSampler, drapeTriangles, drapeLines} from './measured_ground.js?v=1';
+import {validateBuildingParts} from './building_parts.js?v=1';
 const UNIT = Object.freeze({
   '+x': Object.freeze({index:0, sign:1}), '-x': Object.freeze({index:0, sign:-1}),
   '+z': Object.freeze({index:1, sign:1}), '-z': Object.freeze({index:1, sign:-1}),
@@ -47,6 +48,7 @@ export function createSurroundingsChecks(THREE, data = {}, frame = {},
   axes = SURROUNDINGS_AXES_DEFAULT) {
   resolveSurroundingsAxes(axes);
   const terrain = validateSurroundingsGround(data);
+  const buildingParts = validateBuildingParts(THREE, data);
   const elevation = elevationSampler(terrain.elevation);
   let checkedRadius = 0;
   const checkCoverage = ([x,z]) => {
@@ -132,7 +134,7 @@ export function createSurroundingsChecks(THREE, data = {}, frame = {},
     return p;
   };
   const tree = raw => checkTree(point(raw));
-  return {terrain, elevation, surface, building, road, roadFootprints, tree, point, checkTree};
+  return {terrain, elevation, surface, building, buildingParts, road, roadFootprints, tree, point, checkTree};
 }
 
 export function buildDortmundSurroundings(THREE, data = {}, frame = {},
@@ -143,6 +145,16 @@ export function buildDortmundSurroundings(THREE, data = {}, frame = {},
   group.name = 'EDITOR_SURROUNDINGS_3D';
   group.userData.source = data.source || '';
   group.userData.treeSource = data.treeSource || '';
+  if (checks.buildingParts.size) {
+    group.userData.buildingParts = {
+      referenceNHN: data.buildingParts.referenceNHN,
+      verticalDatum: data.buildingParts.verticalDatum,
+      groups: data.buildingParts.groups.map(g => ({
+        osm:g.osm, components:g.parts.length, residualPolygons:g.residualPolygons.length,
+        heights:g.parts.map(p=>({lodId:p.lodId,baseNHN:p.baseNHN,roofNHN:p.roofNHN})),
+      })),
+    };
+  }
   const resources = new Set();
   const own = resource => { resources.add(resource); return resource; };
   const dispose = () => {
@@ -223,11 +235,14 @@ export function buildDortmundSurroundings(THREE, data = {}, frame = {},
       }
     }
     (data.buildings || []).forEach((raw, index) => {
-      const {points, height, faces} = checks.building(raw, data.buildingHeights?.[index] ?? 9, index);
+      const entries = checks.buildingParts.get(index) ||
+        [{poly:raw,height:data.buildingHeights?.[index] ?? 9}];
+      entries.forEach(entry => {
+      const {points, height, faces} = checks.building(entry.poly, entry.height, index);
       // A flat envelope roof, not a claim to reproduce surveyed roof topology.
       // All wall bottoms follow terrain. Keep the roof above the entire footprint.
       let base = 0;
-      if (terrain.elevation) {
+      if (terrain.elevation && entry.top === undefined) {
         const footprint = [];
         surface(footprint, points, 0, faces);
         const sampled = drapeTriangles(footprint, terrain.elevation, elevation);
@@ -235,12 +250,18 @@ export function buildDortmundSurroundings(THREE, data = {}, frame = {},
         base = sampled.length ? sampled.reduce((max,n,i) => i%3===1 ? Math.max(max,n) : max,
           -Infinity) : Math.max(...points.map(p => elevation(...p)));
       }
-      const top = base + height;
+      const top = entry.top ?? base + height;
       includeBounds(points);
       lineLoop(buildingContours, points, top + .025);
       surface(roofs, points, top, faces);
       for (let i = 0; i < points.length; i++) {
         const [ax, az] = points[i], [bx, bz] = points[(i + 1) % points.length];
+        if (entry.base !== undefined) {
+          const a=[ax,entry.base,az], b=[bx,entry.base,bz];
+          const c=[bx,top,bz], d=[ax,top,az];
+          triangle(walls,a,b,c); triangle(walls,a,c,d);
+          continue;
+        }
         if (terrain.elevation) {
           const bottom = drapeLines([ax,-.35,az,bx,-.35,bz], terrain.elevation, elevation);
           for (let j = 0; j < bottom.length; j += 6) {
@@ -255,6 +276,7 @@ export function buildDortmundSurroundings(THREE, data = {}, frame = {},
         const c = [bx, top, bz], d = [ax, top, az];
         triangle(walls, a, b, c); triangle(walls, a, c, d);
       }
+      });
     });
     const trees = (data.trees || []).map(checks.point);
     trees.forEach(checks.checkTree);

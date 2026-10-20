@@ -41,7 +41,9 @@ export function inspectSurroundings(data = {}, frame = {}, axes = SURROUNDINGS_A
   try {
     checks = createSurroundingsChecks(THREE, data, frame, axes);
   } catch (error) {
-    add('error', 'groundLevel/groundCutout', 'invalid_terrain', error.message);
+    const partsError = error.message.startsWith('buildingParts');
+    add('error', partsError ? 'buildingParts' : 'groundLevel/groundCutout',
+      partsError ? 'invalid_building_parts' : 'invalid_terrain', error.message);
     return report();
   }
   for (const layer of ['green', 'water', 'roads', 'buildings', 'trees']) {
@@ -57,8 +59,11 @@ export function inspectSurroundings(data = {}, frame = {}, axes = SURROUNDINGS_A
         let omitted = false;
         if (layer === 'green' || layer === 'water')
           omitted = checks.surface(values[index], layer, index).omitted;
-        else if (layer === 'buildings')
+        else if (layer === 'buildings') {
           checks.building(values[index], data.buildingHeights?.[index] ?? 9, index);
+          for (const entry of checks.buildingParts.get(index) || [])
+            checks.building(entry.poly, entry.height, index);
+        }
         else if (layer === 'trees') checks.tree(values[index]);
         else {
           const road = checks.road(values[index]);

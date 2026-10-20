@@ -51,3 +51,20 @@ Teilausschnitten erreichbar, obwohl die Gesamtanfrage abgewiesen wurde.
 
 **How to apply:** Dienstgrenzen von räumlicher Datenabdeckung unterscheiden;
 Auflösung und Höhenbezug bei einer Aufteilung unverändert lassen.
+
+## Teilkörper: Quellkonflikte und Projektion
+
+Für ausdrücklich dargestellte LoD2-Teilkörper keine Quellüberlappung durch
+Auswahl des höheren oder niedrigeren Körpers auflösen. Strittige Flächen
+bleiben unvermessen; die Freigabe einer Gesamthöhe ist ein eigener Nachweis.
+
+**Why:** An den westlichen Abelbauten überlappen amtliche Grundkanten minimal.
+Außerdem können inverse PROJ-Transformationen bereits ausgeschnittener
+extrem schmaler Restflächen numerisch ungültige Ringe erzeugen, obwohl
+die amtlichen Originalgrundrisse gültig sind.
+
+**How to apply:** In den Darstellungsrahmen projizieren, erst dort
+partitionieren, Rechengenauigkeit offenlegen und den ursprünglichen
+OSM-Grundriss erhalten. Quell-NHN je Teilkörper direkt auf den
+Spielfeldbezug umrechnen, nicht auf den höchsten generalisierten
+Geländepunkt setzen. Nicht mit einer Dachflächenrekonstruktion verwechseln.

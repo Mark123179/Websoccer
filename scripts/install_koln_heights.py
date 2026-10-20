@@ -56,7 +56,7 @@ def install():
         actual = current_live_scene(stadium)["presentation"]
         assert actual["renderer"] == "unity-spatial"
         for layer in ("roads","green","water","trees","buildings","buildingIds","buildingHeights",
-                      "groundLevel","groundCutout","groundElevation","heightQuality","heightEvidence"):
+                      "groundLevel","groundCutout","groundElevation","heightQuality","heightEvidence","buildingParts"):
             assert actual["surroundings"][layer] == data[layer], layer
         assert Stadium.objects.filter(pk=stadium.pk).values().get() == before["stadium"]
         assert list(StadiumDesign.objects.filter(stadium=stadium).values()) == designs

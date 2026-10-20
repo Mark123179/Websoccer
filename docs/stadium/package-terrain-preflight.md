@@ -24,6 +24,11 @@ Ein Archiv zuvor separat entpacken und die vollständige Nachher-JSON wählen.
 - Reine Umfelddaten mit `green`, `water`, `roads`, `buildings`,
   `buildingHeights`, `trees`, optional `groundLevel`/`groundCutout`.
 
+Explizite `buildingParts` im gemeinsamen Unity-Umfeld werden einschließlich
+NHN-Bezug, vollständiger Grundrisspartition und aller Teilflächen geprüft;
+siehe [Teilkörpervertrag](building-parts-contract.md). Die Deklaration
+bleibt auch bei der Legacy-`bg`-Projektion erhalten.
+
 Für reine Umfelddaten ohne Rahmen gilt wie im Renderer `[0,0]`/Winkel `0`.
 `--frame /pfad/frame.json` überschreibt den Rahmen explizit mit
 `{"fieldC":[…,…],"axisTheta":…}` (Winkel in Radianten).

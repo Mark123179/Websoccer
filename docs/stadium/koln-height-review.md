@@ -67,15 +67,46 @@ Einordnung (`OSM height`, Geschossableitung oder schematisch).
 Die Abelbauten Ost (`way/73467119`) und West (`way/73467122`) haben fünf bzw.
 sechs überdeckende amtliche Teilkörper mit unterschiedlichen Höhen und
 Bodenniveaus. Keine davon deckt jeweils den ganzen OSM-Grundriss ab.
-Ihre bisherigen 6-m-Hüllen bleiben deshalb ausdrücklich **unvermessen**.
+Ihre bisherigen 6-m-Gesamthüllen bleiben deshalb ausdrücklich **unvermessen**.
 Eine maximale, mittlere oder benachbarte Teilkörperhöhe wäre hier keine
 belegte Höhe des ganzen Gebäudes.
 
+### Ergänzung: explizite Abel-Teilkörper
+
+Die beiden Gesamthüllen werden nun **nur in der Darstellung** in ihre
+eindeutig belegten Teilgrundrisse und unvermessene Restflächen aufgeteilt.
+Der [Teilkörpervertrag](building-parts-contract.md) enthält Schema,
+NHN-Umrechnung, Flächenprüfung und Aussagegrenzen. Keine Änderung an
+`select_height`, keine zusätzliche Einzelhöhenfreigabe.
+
+| Bau | LoD2-Teilkörper | Boden m NHN | Oberes Dachniveau m NHN | Teilhöhen m |
+|---|---:|---:|---:|---:|
+| Ost | 5 | 59,987–62,310 | 68,479–71,600 | 8,492–10,673 |
+| West | 6 | 60,418–62,405 | 68,885–71,613 | 8,467–11,003 |
+
+Alle elf Teilkörper stammen aus `LoD2_32_350_5644_1_NW.gml`,
+mit explizitem ETRS89_UTM32-/DHHN2016-NHN-Bezug, Dachquelle `1000` und
+Bodenquelle `1100`. Amtliche IDs, vollständige GroundSurface-Grundrisse,
+abgeschnittene Anzeigeflächen und Quellattribute sind unter `buildingParts`
+im [JSON-Beleg](koln-height-evidence.json) einzeln nachvollziehbar.
+Ihre oberen Dachniveaus werden pro Teilkörper horizontal dargestellt,
+nicht als Nachbau geneigter Dachflächen.
+
+Die Teilkörperflächen überdecken im bisherigen Editorrahmen rund
+1.826,407 m² (Ost) bzw. 1.604,217 m² (West).
+18,853 m² bzw. 48,663 m² Rest behalten die unvermessene 6-m-Hülle.
+Im Westbau überlagern sich zwei amtliche Kanten auf rund 0,00555 m²;
+diese strittige Fläche wird keinem Teilkörper zugeteilt, sondern bleibt
+im unvermessenen Rest. Keine mittlere/maximale Gebäudehöhe und kein
+Verschieben der OSM-Grenzen.
+
 Die Darstellung bleibt eine vereinfachte Gebäudehülle, keine LoD2-Dach- oder
-Fassadenrekonstruktion. Die amtliche relative Gebäudehöhe sitzt über dem
+Fassadenrekonstruktion. **Außerhalb der expliziten Teilkörper** sitzt die amtliche relative Gebäudehöhe über dem
 höchsten dargestellten Geländepunkt des jeweiligen Grundrisses. Wandfüße
 folgen dem Gelände; absolute NHN-Dachkanten werden nicht behauptet.
-Amtliche Bodenhöhen sind separat im Beleg gespeichert.
+Bei den expliziten Abel-Teilkörpern werden stattdessen Boden und oberes
+Dachniveau direkt in NHN relativ zum unveränderten Spielfeldbezug gezeichnet.
+Amtliche Bodenhöhen sind im Beleg gespeichert.
 
 ## Gelände und Anschluss
 
@@ -132,6 +163,16 @@ Der ergänzende native Profilvergleich unten meldet derzeit **FAIL**.
 - Anwendungsworkflow neu gestartet, Systemcheck sauber. Änderungen sind nur
   für ausdrücklich deklarierte Höhenraster aktiv; Altstadien behalten ihre
   bisherigen Geometrie-Fingerprints.
+- Teilkörper-Ergänzung: alle 966 Einzelhöhenzuordnungen, alle 668
+  unvermessenen Statusdatensätze und der vollständige Geländebeleg sind
+  gegenüber dem vorherigen JSON-Beleg **identisch**. Sechs Python-Tests;
+  38 gezielte JS-Tests inklusive bestehender Fingerprints und drei neuer
+  Teilkörperprüfungen erfolgreich. Renderer und Vorprüfung lehnen unter
+  anderem Lücken, Überlappungen, falsche Quellen und falsche NHN-Bezüge ab.
+- Installierte Tag-/Nachtansichten enthalten fünf Ost- und sechs
+  West-Teilkörper. Zusätzlich Nahansichten beider Abelbauten bei Tag und
+  Nacht/Flutlicht mit ausdrücklich diagnostischen Kameras; keine Änderung
+  an der freigegebenen Spielkamera. Bild- und Presentation-Prüfsummen im Beleg.
 
 ## Reproduktion
 
@@ -150,7 +191,7 @@ python -m scripts.check_koln_height_profiles
 node scripts/capture_koln_study.mjs editor-dach-an editor-dach-aus draufsicht ticker-tag ticker-nacht-flutlicht
 # Bilder prüfen; nur Umgebung installieren, keine Registry-/Modelländerung:
 python -m scripts.install_koln_heights
-node scripts/capture_koln_study.mjs --installed ticker-tag ticker-nacht-flutlicht editor-nacht-flutlicht
+node scripts/capture_koln_study.mjs --installed ticker-tag ticker-nacht-flutlicht editor-nacht-flutlicht abel-ost-tag abel-west-tag abel-ost-nacht abel-west-nacht
 python -m scripts.package_koln_heights
 ```
 
