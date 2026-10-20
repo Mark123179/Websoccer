@@ -16,6 +16,21 @@ Vorschau auf eine weitere Einbaufreigabe warten. Diese Erlaubnis betrifft
 Stadionassets und deren Einbindung, nicht Änderungen an wirtschaftlichen
 Kapazitäten, Manager-Ausbauten oder gespeicherten Entwürfen.
 
+Vor einer erstmaligen Editor-Anbindung zusätzlich die vollständige Live-Szene
+mit der vorgesehenen Geometrie und dem realen/abgeleiteten Entwurf rein lesend
+aufbauen. Modellmanifest-, Spielfeld- und Geländeprüfung ersetzen das nicht.
+
+**Why:** Ein neues Stadion ohne vorhandene Editor-Blaupause konnte alle
+Asset- und Geländeprüfungen bestehen, während der Einbau erst nach der
+Registrierung am fehlenden Editor-Umriss scheiterte. Die Transaktion schützte
+die Spieldaten, aber die Registry allein belegte noch keinen funktionierenden
+Einbau.
+
+**How to apply:** Bei neuen Geometrie-Adaptern vor der Aktivierung den gesamten
+Anwendungsvertrag prüfen, einschließlich Umriss, Blockhöhen, Kapazitätsverteilung
+und Entwurfsprojektion. Fehlende Vereinsblaupausen nicht durch eine fremde
+Blaupause oder aus Sitzpunktzahlen abgeleitete wirtschaftliche Werte ersetzen.
+
 Der Nutzer möchte die nächsten Stadien gemeinsam mit Replit Agent statt
 mit Claude erstellen: „erstelle mit dir die nächsten statt mit Claude“.
 

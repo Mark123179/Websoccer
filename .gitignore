@@ -39,3 +39,4 @@ backups/
 # Generated diagnostic imagery and source rasters
 /generated-artifacts/
 /attached_assets/borussiapark*
+/attached_assets/koln*

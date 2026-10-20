@@ -75,12 +75,19 @@ def fetch_source():
                         "bytes": len(response.content)})
 
 
-def build():
-    raw_bytes = (OUT / "raw.json").read_bytes()
+def build(*, study=STUDY, out=OUT, pitch_id=PITCH_ID, stadium_id=STADIUM_ID,
+          stadium_building_id=STADIUM_BUILDING_ID, stadium_wikidata="Q392494",
+          fmi=918, opening=None, north_axis=False):
+    # Explicit configuration lets another reviewed source package reuse the
+    # identical projection/selection rules without copying or editing raw OSM.
+    def write(name, data):
+        (out / name).write_text(json.dumps(data, ensure_ascii=False, indent=2))
+
+    raw_bytes = (out / "raw.json").read_bytes()
     raw = json.loads(raw_bytes)
     nodes = {e["id"]: e for e in raw["elements"] if e["type"] == "node"}
     ways = {e["id"]: e for e in raw["elements"] if e["type"] == "way"}
-    pitch = ways[PITCH_ID]
+    pitch = ways[pitch_id]
     ll = np.array([[nodes[n]["lon"], nodes[n]["lat"]] for n in pitch["nodes"][:-1]])
     center = ll.mean(axis=0)
     meters = np.array([math.cos(math.radians(center[1])), 1]) * 6371000 * math.pi / 180
@@ -94,7 +101,7 @@ def build():
     points = (ll - center) * meters
     edges = np.roll(points, -1, axis=0) - points
     axis = max(edges, key=np.linalg.norm).copy()
-    if axis[0] < 0:
+    if axis[1 if north_axis else 0] < 0:
         axis = -axis
     theta = math.atan2(axis[1], axis[0])
     frame = {"fieldC": [0, 0], "axisTheta": theta, "maxR": 170}
@@ -104,7 +111,7 @@ def build():
     def model_coords(points):
         return [[-float(np.dot(p, short_axis)), float(np.dot(p, axis))] for p in points]
 
-    stadium = Polygon(coords(ways[STADIUM_ID]))
+    stadium = Polygon(coords(ways[stadium_id]))
     extent = box(-800, -800, 800, 800)
     data = {
         "source": "© OpenStreetMap contributors, ODbL; fresh OSM API extract",
@@ -114,8 +121,8 @@ def build():
         "heightQuality": "OSM tag where present; otherwise explicitly schematic",
     }
     evidence = {"rawSha256": hashlib.sha256(raw_bytes).hexdigest(),
-                "fetch": json.loads((OUT / "fetch.json").read_text()),
-                "pitchWay": PITCH_ID, "stadiumWay": STADIUM_ID,
+                "fetch": json.loads((out / "fetch.json").read_text()),
+                "pitchWay": pitch_id, "stadiumWay": stadium_id,
                 "centerLonLat": center.tolist(),
                 "pitchAxisEastNorth": axis.tolist(),
                 "axisThetaDegrees": math.degrees(theta),
@@ -170,12 +177,20 @@ def build():
     for rel in raw["elements"]:
         if rel["type"] != "relation" or rel.get("tags", {}).get("type") != "multipolygon":
             continue
-        if rel["id"] == STADIUM_BUILDING_ID:
-            assert rel["tags"]["wikidata"] == "Q392494"
+        if rel["id"] == stadium_building_id:
+            if stadium_wikidata:
+                assert rel["tags"]["wikidata"] == stadium_wikidata
+            else:
+                # Some stadium building relations have no name/Wikidata.
+                # Bind the explicit relation to both type and pitch location.
+                assert rel.get("tags", {}).get("building") == "stadium"
+                outer = [LineString(coords(ways[m["ref"]])) for m in rel["members"]
+                         if m["type"] == "way" and m.get("role", "outer") == "outer"]
+                assert any(poly.covers(Point(0, 0)) for poly in polygonize(unary_union(outer)))
             relation_way_ids.update(m["ref"] for m in rel["members"] if m["type"] == "way")
             evidence["selectionNotes"].append({
                 "osm": f"relation/{rel['id']}",
-                "reason": "MEWA ARENA itself is represented by the original Unity model, "
+                "reason": "The stadium itself is represented by the original Unity model, "
                           "not duplicated as an OSM building volume.",
             })
             continue
@@ -239,7 +254,7 @@ def build():
         if not kind:
             continue
         # The mapped stadium is evidence for alignment, not another building.
-        if way["id"] == STADIUM_ID:
+        if way["id"] == stadium_id:
             continue
         height = number(tags.get("height"))
         height_kind = "OSM height"
@@ -255,16 +270,17 @@ def build():
             data["trees"].append(xy(node))
             evidence["features"]["trees"].append({"osm": f"node/{node['id']}"})
 
-    opening = bowl_opening()
+    opening = bowl_opening() if opening is None else opening
     write("bowl-opening.json", opening)
     data["groundLevel"] = opening["groundLevel"]
     data["groundCutout"] = opening["groundCutout"]
     evidence["terrainMethod"] = opening["method"]
-    presentation = deepcopy(json.loads((STUDY / "presentation.json").read_text())["presentation"])
+    presentation = deepcopy(json.loads((study / "presentation.json").read_text())["presentation"])
     presentation["frame"] = frame
     presentation["surroundings"] = data
-    presentation["calibration"]["skipMeshPrefixes"] = ["center2_"]
-    manifest = json.loads((STUDY / "manifest.json").read_text())
+    if fmi == 918:
+        presentation["calibration"]["skipMeshPrefixes"] = ["center2_"]
+    manifest = json.loads((study / "manifest.json").read_text())
     manifest["calibration"] = deepcopy(presentation["calibration"])
     manifest["limits"] = [
         text for text in manifest["limits"]
@@ -274,15 +290,15 @@ def build():
         "Fresh OSM surroundings; mapped footprints and tree positions, mostly schematic heights.",
         "Terrain is flat at the source apron level, not a measured DEM.",
         "Source bowl opening protects lower seats and pitch; underground foundations remain buried.",
-        "OSM pitch polygon measures the runoff rectangle (about 118x77m), not the 105x68m painted lines.",
+        "OSM pitch polygon includes runoff; original painted lines remain 105x68m.",
     ]
     manifest.pop("assetVersion")
     manifest["assetVersion"] = hashlib.sha256(
         json.dumps(manifest, sort_keys=True).encode()).hexdigest()[:16]
-    presentation["modelUrl"] = f"/models/918/{manifest['assetVersion']}/manifest.json"
+    presentation["modelUrl"] = f"/models/{fmi}/{manifest['assetVersion']}/manifest.json"
     write("manifest.json", manifest)
     evidence["counts"] = {k: len(data[k]) for k in evidence["features"]}
-    evidence["mappedStadiumModelCoordinates"] = model_coords(coords(ways[STADIUM_ID]))
+    evidence["mappedStadiumModelCoordinates"] = model_coords(coords(ways[stadium_id]))
     write("surroundings.json", data)
     write("evidence.json", evidence)
     write("presentation.json", {"presentation": presentation})
