@@ -17,3 +17,17 @@ oder zu unbelegten Blockzuordnungen geführt.
 Gruppenzuordnung prüfen. Nicht zuordenbare Gruppen offen dokumentieren,
 Kamerapositionen zusätzlich räumlich absichern und wirtschaftliche Kapazität
 weiterhin ausschließlich aus dem bestehenden Stadion übernehmen.
+
+Originale Sitztexturen sind nicht automatisch eine korrekte Vereinsdarstellung.
+Bei erkennbar handgezeichneten oder verzerrten Wappen und Schriftzügen die
+Darstellung gegen ein reales Tribünenfoto und das vorhandene Vereinswappen
+prüfen, statt den Fehler allein mit Quelltreue zu rechtfertigen.
+
+**Why:** Der Nutzer beanstandete ausdrücklich das kindlich gezeichnete
+HSV-Muster der Unity-Quelle und gab dessen Korrektur anhand seines realen
+Tribünenfotos samt direktem Einbau frei.
+
+**How to apply:** Die Freigabe betrifft das HSV-Sitzmuster, nicht die
+Stadiongeometrie oder Kapazitäten. Bei vergleichbaren Korrekturen Muster
+über die tatsächlichen UV-Flächen abgleichen und im Stadion ansehen;
+ein sauberes Wappenbild allein beweist keine unverzerrte Projektion.

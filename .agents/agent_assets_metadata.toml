@@ -2776,3 +2776,17 @@ mtime_ms = 1792500291155
 storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:6e4eaecc-e6c5-4f64-8de5-e8845034f33b/2bfbacda-e324-4194-aef7-05788b8a33b2/1eed8b89-5b6f-4cd8-b693-337af3ece403"
 storage_version_token = "1792500431758496"
 content_type = "application/octet-stream"
+
+[[outputs]]
+id = "LC1rDJ9rsSgcmIbtqm9Iv"
+uri = "file://generated-artifacts/hsv-seating-correction/vergleich.jpg"
+type = "image"
+title = "HSV-Tribüne: Vorher und nachher"
+description = "Oben die Originaltextur, unten die eingebaute Korrektur. Identische Kamera; Rauten und HSV-Schriftzug anhand des Tribünenfotos korrigiert."
+logical_id = "143ccb37-1084-4181-b96d-1f100307b911"
+content_hash = "sha256:def2e8397f37f6ed318839b8d99f54a639c7bf95da0b5c9c1055cb708df3b11c"
+size = 413288
+mtime_ms = 1792501776671
+storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:6e4eaecc-e6c5-4f64-8de5-e8845034f33b/143ccb37-1084-4181-b96d-1f100307b911/807b8889-4d92-4963-8b5b-7806e782aeec"
+storage_version_token = "1792501791896259"
+content_type = "image/jpeg"

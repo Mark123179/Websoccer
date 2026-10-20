@@ -5356,7 +5356,7 @@
     "texture--966822992072655297.webp": "75472be84be95617fd0106d25d5417991f4ffebc354ae89175c03262e93231dd",
     "texture-1030170565945525730.webp": "cd488981693d1373bc6fcdab52074d3ee207edb0a621a222a4aefea7bc97f974",
     "texture-1240414987992286845.webp": "668a8cdbba37708bf8ba8c23309b71561ac6b91775e5ba3c9fcdd7f6cd0ff63c",
-    "texture--8009233366261755537.webp": "9c3e9bbc5b483fe367fa9d3f1f166df098cc11d5ab98917ee86fa9eb8a6be0b8",
+    "texture--8009233366261755537.webp": "841c24a7c87801ef59b5fd7b87150ad213b149a3a5673859954d837d34a53135",
     "texture--905443001973885938.webp": "c930297435cd384845086e0f60dd8e54e5d5d4872ee1e875279985e72c47f802",
     "texture-3676625253913950382.webp": "371a51f8f078d141138433493fcbae723f5f8ecb6aaf8f1e79f770ea78dc15ea",
     "texture-5156661005305352342.webp": "e22f76a857c730fbe7e5ba09b294564ce3a093c16b6a55dbe5d42e670297cf58",
@@ -5427,5 +5427,12 @@
     "sourceIndex": 67995,
     "sourceFrameRotationY": 90
   },
-  "assetVersion": "51bbcc74241c6795"
+  "seatingArtworkRevision": {
+    "baselineAssetVersion": "51bbcc74241c6795",
+    "baselineManifestSha256": "bd6bbc2b490744895dc731bce149b155622542dddb8bef4c647a186ae19ec7c6",
+    "reference": "attached_assets/image_1792501216666.png",
+    "scope": "Original C_front1_ UV triangles only; photo-based seat artwork, not a seat survey.",
+    "geometryUnchanged": true
+  },
+  "assetVersion": "26bbf1d9b445d255"
 }
