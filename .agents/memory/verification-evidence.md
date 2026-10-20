@@ -3,6 +3,22 @@ name: Verification evidence boundaries
 description: User-required controls for parity, regression, baseline tests and diagnostic counts.
 ---
 
+Bei additiven Vereinsimporten unveränderte Bestandsdaten über die vorab
+festgehaltene Menge bestehender IDs vergleichen, nicht über eine nach dem Import
+neu ausgewertete Ausschlussmenge. Neu angelegte Spieler gehören nicht zum
+geschützten Altbestand; gemeinsam referenzierte Leihspieler werden paketgetreu
+aktualisiert und separat ausgewiesen.
+
+**Why:** Neue Vereinspakete können dieselben Leihspieler wie frühere Pakete
+enthalten. Dabei kann eine Quelle den Hauptverein und die andere dessen zweite
+Mannschaft mit eigener TM-ID nennen. Das ist keine Erlaubnis, beide Vereine
+automatisch zusammenzuführen oder pauschal unveränderte Spielerdaten zu behaupten.
+
+**How to apply:** Unveränderliche Liga-/Vereins-/Stadionanker getrennt von
+gelieferten Spieleraktualisierungen belegen. Explizite abweichende Quellbezüge
+offenlegen; fehlt ihr Zielverein lokal, externe Identität und Originalnamen
+erhalten, statt durch Namensähnlichkeit einen Ersatzverein zuzuordnen.
+
 Verifikationsbehauptungen müssen die tatsächlich identischen Startbedingungen nennen: Seed-Satz, Saisonanzahl, sämtliche verwendeten Zufallszustände und bei Tests den Zustand der Testdatenbank.
 
 **Why:** Der Nutzer korrigierte eine Abnahme, die unterschiedliche Saisonumfänge als Vorher/Nachher-Beleg verwendete, lokale Seeds mit vollständig kontrolliertem Zufall gleichsetzte und Testfehler ohne Baseline-Lauf als vorbestehend bezeichnete.
