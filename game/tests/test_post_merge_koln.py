@@ -11,7 +11,7 @@ from django.test import SimpleTestCase
 class PostMergeKolnTests(SimpleTestCase):
     script = Path(__file__).resolve().parents[2] / "scripts/post-merge.sh"
 
-    def run_hook(self, *, enabled=False, refuse_alignment=False):
+    def run_hook(self, *, enabled=False, refuse_alignment=False, regression_exit=0):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             tools = root / "bin"
@@ -25,10 +25,14 @@ class PostMergeKolnTests(SimpleTestCase):
             )
             python.chmod(0o755)
             fake_bash = tools / "bash"
-            fake_bash.write_text("#!/bin/sh\nexit 0\n")
+            fake_bash.write_text(
+                '#!/bin/sh\necho "regression $*" >> "$TEST_CALLS"\n'
+                'exit "$TEST_REGRESSION_EXIT"\n'
+            )
             fake_bash.chmod(0o755)
             env = {"PATH": f"{tools}:{os.defpath}", "TEST_CALLS": str(root / "calls"),
-                   "TEST_REFUSE": "1" if refuse_alignment else "0"}
+                   "TEST_REFUSE": "1" if refuse_alignment else "0",
+                   "TEST_REGRESSION_EXIT": str(regression_exit)}
             if enabled:
                 env["ALIGN_KOLN_OFFICIAL_BLOCKS"] = "1"
             result = subprocess.run([shutil.which("bash"), str(self.script)],
@@ -53,3 +57,16 @@ class PostMergeKolnTests(SimpleTestCase):
         self.assertEqual(result.returncode, 9)
         self.assertIn("align_koln_official_blocks", calls)
         self.assertNotIn("collectstatic", calls)
+
+    def test_regression_timeout_does_not_fail_setup(self):
+        result, calls = self.run_hook(regression_exit=124)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn("regression scripts/run_regression_v3.sh --seasons 10", calls)
+        self.assertIn("Zeitlimit erreicht", result.stderr)
+
+    def test_regression_success_is_reported(self):
+        result, calls = self.run_hook()
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn("regression scripts/run_regression_v3.sh --seasons 10", calls)
+        self.assertIn("Regressions-Snapshot erstellt", result.stdout)
+        self.assertNotIn("WARNUNG", result.stderr)
