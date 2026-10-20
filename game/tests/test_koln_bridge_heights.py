@@ -1,11 +1,69 @@
 """No deck evidence must never turn the original DGM alarms green."""
 from copy import deepcopy
 from unittest import TestCase
+from unittest.mock import patch
+import json
+from pathlib import Path
 
 from shapely.geometry import box
 
 from scripts.koln_bridge_heights import UNRESOLVED, bridge_records, bridge_report, is_bridge
-from scripts.check_koln_height_profiles import evaluate, profiles_for, summarize
+from scripts.check_koln_height_profiles import evaluate, profiles_for, renderer_samples, spaced, summarize
+from game.tests.koln_ground_fixture import load_ground, replay_ground
+
+
+class RealBridgeGroundTests(TestCase):
+    def test_two_complete_real_profiles_keep_ground_alarms_and_unresolved_decks_separate(self):
+        with patch("socket.socket.connect", side_effect=AssertionError("Offline only")), \
+                patch("requests.sessions.Session.request", side_effect=AssertionError("Offline only")):
+            fixture, native = load_ground()
+            actual = replay_ground(fixture, native)
+        evidence = json.loads(Path("docs/stadium/koln-bridge-height-evidence.json").read_text())
+        cases = [case for case in fixture["cases"]
+                 if case["role"] == "complete_bridge_ground_profile"]
+        profiles = [case["profile"] for case in cases]
+        rows = [[], [], []]
+        for case in cases:
+            result = actual[case["id"]]
+            for target, key in zip(rows, ("samples", "roadSlopes", "roadGradeChanges")):
+                target.extend(result[key])
+        report = bridge_report(profiles, *rows)
+        self.assertEqual(report["unresolvedCount"], 2)
+        self.assertEqual(report["deckHeightsApplied"], 0)
+        for case, profile, declared in zip(cases, report["profiles"], evidence["criticalBridges"]):
+            with self.subTest(osm=declared["osm"]):
+                samples = actual[case["id"]]["samples"]
+                registered = {**fixture["presentation"], "surroundings": {
+                    "roads": [{"p": case["editorPoints"]}],
+                    "groundElevation": case["groundElevation"]}}
+                road = renderer_samples(registered, [])["roads"][0]
+                self.assertEqual(spaced(road), case["profile"]["points"])
+                self.assertEqual(case["sourceFeature"]["osm"], declared["osm"])
+                self.assertTrue(is_bridge(case["sourceFeature"]["tags"]))
+                self.assertEqual(profile["osm"], declared["osm"])
+                self.assertEqual(profile["heightStatus"], UNRESOLVED)
+                self.assertIsNone(profile["deckSource"])
+                self.assertEqual(profile["deckValidation"], "not_evaluable_without_spatial_deck_evidence")
+                self.assertEqual(samples[0]["xz"], declared["modelXZStart"])
+                self.assertEqual(samples[-1]["xz"], declared["modelXZEnd"])
+                self.assertEqual([min(r["nativeNHN"] for r in samples),
+                                  max(r["nativeNHN"] for r in samples)], declared["nativeGroundRangeNHN"])
+                if "worstGroundGradeErrorPP" in declared:
+                    self.assertAlmostEqual(profile["worstGroundSlope"]["gradeErrorPP"],
+                                           declared["worstGroundGradeErrorPP"], delta=1e-9)
+                if "worstGroundGradeChangeErrorPP" in declared:
+                    self.assertAlmostEqual(profile["worstGroundGradeChange"]["gradeChangeErrorPP"],
+                                           declared["worstGroundGradeChangeErrorPP"], delta=1e-9)
+        # Re-evaluate the actual same surfaces without the bridge label. The
+        # additive declaration must not alter/filter a single ground result.
+        baseline = deepcopy(fixture)
+        for case in baseline["cases"]:
+            case["profile"].pop("heightStatus", None)
+        plain = replay_ground(baseline, native)
+        for case in fixture["cases"]:
+            for key, records in actual[case["id"]].items():
+                self.assertEqual([{k: v for k, v in row.items() if k != "heightStatus"}
+                                  for row in records], plain[case["id"]][key])
 
 
 class BridgeHeightTests(TestCase):

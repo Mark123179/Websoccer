@@ -5,6 +5,18 @@
   "label": "Brücken: ungeklärte Geländeableitung – keine gemessene Fahrbahn.",
   "deckHeightsApplied": 0,
   "deckValidation": "not_evaluable_without_spatial_deck_evidence",
+  "offlineGroundWitnesses": {
+    "directory": "game/tests/fixtures/koln-ground",
+    "manifest": "game/tests/fixtures/koln-ground/manifest.json",
+    "generator": "scripts/build_koln_ground_fixture.py",
+    "surface": "bare_earth_not_bridge_deck",
+    "license": "Geobasis NRW, Datenlizenz Deutschland – Zero 2.0; OSM geometry © OpenStreetMap contributors / ODbL 1.0",
+    "scope": "Two complete critical bridge ground profiles, eight worst-alarm witnesses and two percentile rank witnesses from the unchanged nine-alarm native run",
+    "percentileLimit": "Replays the historical linear percentile value from its two ranked real samples; does not revalidate the full population ordering offline",
+    "deckHeightsApplied": 0,
+    "networkRequiredForTests": false,
+    "largeSourceFilesTracked": false
+  },
   "groundParity": {
     "ok": true,
     "method": "Original ground checker and bridge-labelled checker on identical presentation, OSM evidence and native rasters; only additive heightStatus removed for comparison",

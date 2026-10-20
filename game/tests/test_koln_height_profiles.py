@@ -4,6 +4,7 @@ import hashlib
 import json
 from pathlib import Path
 import tempfile
+import shutil
 from unittest import TestCase
 from unittest.mock import patch
 
@@ -17,6 +18,103 @@ from scripts.check_koln_height_profiles import (
     LIMITS, evaluate, main, profiles_for, renderer_samples, run, spaced, summarize,
 )
 from scripts.koln_profile_sources import NativeDGM, model_projection
+from game.tests.koln_ground_fixture import DIRECTORY, assert_ground_equal, load_ground, replay_ground
+
+
+class RealGroundWitnessTests(TestCase):
+    """Actual source pixels; no downloader, DB, live app or ignored files."""
+
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        for target in ("socket.socket.connect", "requests.sessions.Session.request"):
+            blocker = patch(target, side_effect=AssertionError("Offline regression attempted network"))
+            blocker.start()
+            cls.addClassCleanup(blocker.stop)
+        cls.fixture, cls.native = load_ground()
+        cls.actual = replay_ground(cls.fixture, cls.native)
+
+    def test_all_native_pixels_and_sample_georeferences_are_hash_bound(self):
+        self.assertEqual(self.fixture["surface"], "bare_earth_not_bridge_deck")
+        self.assertEqual(self.fixture["license"], "Datenlizenz Deutschland – Zero 2.0")
+        self.assertEqual(self.fixture["verticalDatum"], "DHHN2016 / NHN (EPSG:7837)")
+        source_evidence = json.loads(Path("docs/stadium/koln-height-evidence.json").read_text())
+        originals = [s for s in source_evidence["sources"]["sources"] if s["file"].endswith(".tif")]
+        self.assertEqual(self.fixture["sourceRasters"], originals)
+        self.assertLess(sum(p.stat().st_size for p in DIRECTORY.iterdir()), 150_000)
+        for case in self.fixture["cases"]:
+            with self.subTest(case=case["id"]):
+                for point, expected in zip(case["profile"]["points"], case["utmCoordinates"]):
+                    np.testing.assert_allclose(self.native.project(*point), expected, rtol=0, atol=1e-8)
+                for kind, rows in self.actual[case["id"]].items():
+                    expected = case["expected"][kind]
+                    # Local witness station starts at zero. Original station is
+                    # retained in the evidence to locate it in the full run.
+                    if case["role"] != "complete_bridge_ground_profile":
+                        rows = [{k: v for k, v in r.items() if k != "station"} for r in rows]
+                        expected = [{k: v for k, v in r.items() if k != "station"} for r in expected]
+                    assert_ground_equal(self, rows, expected)
+
+    def test_real_alarm_values_and_locations_survive_without_bridge_exemptions(self):
+        evidence = json.loads(Path("docs/stadium/koln-bridge-height-evidence.json").read_text())
+        full = self.fixture["fullRun"]
+        self.assertFalse(full["ok"])
+        self.assertEqual(full["limits"], {"height": LIMITS, "roads": {
+            "maxGradeErrorPP": 20., "maxGradeChangeErrorPP": 20.}})
+        self.assertEqual(len(full["violations"]), evidence["nativeGroundRun"]["violationCount"])
+        self.assertEqual(full["counts"], {"profiles": 975, "samples": 107928,
+                                         "roadSlopes": 35191, "roadGradeChanges": 34276})
+        witnessed = []
+        quantile = []
+        for case in self.fixture["cases"]:
+            if case["role"] == "complete_bridge_ground_profile":
+                continue
+            rows = self.actual[case["id"]]
+            alarm = case["alarm"]
+            if case["role"] == "percentile_rank_witness":
+                quantile.append((case, abs(rows["samples"][0]["errorMeters"])))
+                continue
+            kind, key = {
+                "maxAbsMeters": ("samples", "errorMeters"),
+                "maxGradeErrorPP": ("roadSlopes", "gradeErrorPP"),
+                "maxGradeChangeErrorPP": ("roadGradeChanges", "gradeChangeErrorPP"),
+            }[alarm["metric"]]
+            value = max(abs(row[key]) for row in rows[kind])
+            self.assertAlmostEqual(value, alarm["value"], places=10)
+            self.assertGreater(value, alarm["limit"])
+            witnessed.append(alarm)
+        # Rank witnesses certify the historical linear percentile calculation;
+        # they do NOT stand in for a new percentile over the entire population.
+        self.assertEqual(len(quantile), 2)
+        (low, a), (high, b) = sorted(quantile, key=lambda item: item[0]["rank"])
+        rank = .95 * (low["population"] - 1)
+        self.assertEqual(low["fractionalRank"], rank)
+        self.assertEqual(low["population"], high["population"])
+        self.assertEqual((low["rank"], high["rank"]), (int(np.floor(rank)), int(np.ceil(rank))))
+        value = a + (b-a) * (rank-low["rank"])
+        self.assertAlmostEqual(value, low["alarm"]["value"], places=10)
+        self.assertGreater(value, low["alarm"]["limit"])
+        witnessed.append(low["alarm"])
+        self.assertCountEqual(witnessed, full["violations"])
+
+    def test_corrupt_missing_or_changed_ground_fails_explicitly(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            directory = Path(tmp) / "fixture"
+            shutil.copytree(DIRECTORY, directory)
+            path = directory / "ground.json"
+            path.write_bytes(path.read_bytes() + b" ")
+            with self.assertRaisesRegex(ValueError, "fixture hash"):
+                load_ground(directory)
+            shutil.copyfile(DIRECTORY / path.name, path)
+            raster = directory / self.fixture["sources"][0]["file"]
+            raster.write_bytes(raster.read_bytes() + b"changed")
+            with self.assertRaisesRegex(ValueError, "Source hash"):
+                load_ground(directory)
+            raster.unlink()
+            with self.assertRaises(FileNotFoundError):
+                load_ground(directory)
+        with self.assertRaisesRegex(ValueError, "nodata|coverage"):
+            self.native(1100, 1100)  # no full terrain hidden in the little crops
 
 
 class NativeProfileTests(TestCase):

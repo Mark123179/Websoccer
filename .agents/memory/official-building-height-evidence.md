@@ -67,6 +67,19 @@ Der Nutzer verlangt räumliche Belege statt stiller Brücken-Ausnahmen.
 **How to apply:** Erst mit räumlich belegter Deckquelle eigene Bauwerkshöhen
 freigeben. Ohne diese Belege keine Layer-Aufschläge oder Endpunktglättung als
 Messung ausgeben; Deckstatus und Bodenfehler getrennt berichten.
+
+Kleine Offline-Bodenbelege nicht als vollständige Flächen- oder
+Quantilprüfung ausgeben. Rangproben können den dokumentierten Quantilwert
+nachrechnen, aber nicht die Rangfolge einer nicht mitgelieferten Population
+erneut beweisen.
+
+**Why:** Die realen Kölner Brückenalarme lassen sich mit wenigen nativen
+Pixeln erhalten; ein knapp überschrittener Gesamtflächen-Quantilgrenzwert
+hängt dagegen von der gesamten Stichprobenverteilung ab.
+
+**How to apply:** Vollständige Objektprofile, lokale Alarmbelege und
+historische Populationsstatistik in Offline-Tests ausdrücklich unterscheiden.
+Für eine neue Gesamtflächen-Abnahme den vollständigen nativen Lauf verlangen.
 ## Teilkörper: Quellkonflikte und Projektion
 
 Für ausdrücklich dargestellte LoD2-Teilkörper keine Quellüberlappung durch

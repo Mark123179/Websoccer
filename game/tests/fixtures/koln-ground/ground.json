@@ -1,0 +1,3985 @@
+{
+  "schema": 1,
+  "surface": "bare_earth_not_bridge_deck",
+  "provider": "Geobasis NRW",
+  "license": "Datenlizenz Deutschland – Zero 2.0",
+  "licenseUrl": "https://www.govdata.de/dl-de/zero-2-0",
+  "osmAttribution": "© OpenStreetMap contributors, ODbL 1.0",
+  "osmLicenseUrl": "https://www.openstreetmap.org/copyright",
+  "crs": "EPSG:25832",
+  "verticalDatum": "DHHN2016 / NHN (EPSG:7837)",
+  "sourceRasters": [
+    {
+      "file": "dgm-349-5643.tif",
+      "url": "https://www.wcs.nrw.de/geobasis/wcs_nw_dgm?SERVICE=WCS&VERSION=2.0.1&REQUEST=GetCoverage&COVERAGEID=nw_dgm&FORMAT=image%2Ftiff&SUBSETTINGCRS=http%3A%2F%2Fwww.opengis.net%2Fdef%2Fcrs%2FEPSG%2F0%2F25832&SUBSET=x%28349000%2C350000%29&SUBSET=y%285643000%2C5644000%29",
+      "retrieved": "Tue, 20 Oct 2026 10:19:23 GMT",
+      "lastModified": null,
+      "bytes": 1723492,
+      "sha256": "5358887c3c172d9bf89122e553aed462c61cd08d251be5026c3c55c9d8dfd74d"
+    },
+    {
+      "file": "dgm-349-5644.tif",
+      "url": "https://www.wcs.nrw.de/geobasis/wcs_nw_dgm?SERVICE=WCS&VERSION=2.0.1&REQUEST=GetCoverage&COVERAGEID=nw_dgm&FORMAT=image%2Ftiff&SUBSETTINGCRS=http%3A%2F%2Fwww.opengis.net%2Fdef%2Fcrs%2FEPSG%2F0%2F25832&SUBSET=x%28349000%2C350000%29&SUBSET=y%285644000%2C5645000%29",
+      "retrieved": "Tue, 20 Oct 2026 10:19:23 GMT",
+      "lastModified": null,
+      "bytes": 1719387,
+      "sha256": "58d92cf651521d6021b5e33c1ff3a1986229ff13c3f7dcf3c7c4168441bc2883"
+    },
+    {
+      "file": "dgm-349-5645.tif",
+      "url": "https://www.wcs.nrw.de/geobasis/wcs_nw_dgm?SERVICE=WCS&VERSION=2.0.1&REQUEST=GetCoverage&COVERAGEID=nw_dgm&FORMAT=image%2Ftiff&SUBSETTINGCRS=http%3A%2F%2Fwww.opengis.net%2Fdef%2Fcrs%2FEPSG%2F0%2F25832&SUBSET=x%28349000%2C350000%29&SUBSET=y%285645000%2C5646000%29",
+      "retrieved": "Tue, 20 Oct 2026 10:19:23 GMT",
+      "lastModified": null,
+      "bytes": 1676042,
+      "sha256": "1c6f02f77f815d9b111ab5b1b826f920273edcf2ce904ed51f875682c576555e"
+    },
+    {
+      "file": "dgm-350-5643.tif",
+      "url": "https://www.wcs.nrw.de/geobasis/wcs_nw_dgm?SERVICE=WCS&VERSION=2.0.1&REQUEST=GetCoverage&COVERAGEID=nw_dgm&FORMAT=image%2Ftiff&SUBSETTINGCRS=http%3A%2F%2Fwww.opengis.net%2Fdef%2Fcrs%2FEPSG%2F0%2F25832&SUBSET=x%28350000%2C351000%29&SUBSET=y%285643000%2C5644000%29",
+      "retrieved": "Tue, 20 Oct 2026 10:19:23 GMT",
+      "lastModified": null,
+      "bytes": 1773180,
+      "sha256": "e6c4ffce7cb5288444cdeee018c459836d2cb5623bfe6318678577016d63ac49"
+    },
+    {
+      "file": "dgm-350-5644.tif",
+      "url": "https://www.wcs.nrw.de/geobasis/wcs_nw_dgm?SERVICE=WCS&VERSION=2.0.1&REQUEST=GetCoverage&COVERAGEID=nw_dgm&FORMAT=image%2Ftiff&SUBSETTINGCRS=http%3A%2F%2Fwww.opengis.net%2Fdef%2Fcrs%2FEPSG%2F0%2F25832&SUBSET=x%28350000%2C351000%29&SUBSET=y%285644000%2C5645000%29",
+      "retrieved": "Tue, 20 Oct 2026 10:19:24 GMT",
+      "lastModified": null,
+      "bytes": 1759740,
+      "sha256": "35e4f3457904dc6c9d86623964e2a858efd23154feadf2b9b52b81a85f325252"
+    },
+    {
+      "file": "dgm-350-5645.tif",
+      "url": "https://www.wcs.nrw.de/geobasis/wcs_nw_dgm?SERVICE=WCS&VERSION=2.0.1&REQUEST=GetCoverage&COVERAGEID=nw_dgm&FORMAT=image%2Ftiff&SUBSETTINGCRS=http%3A%2F%2Fwww.opengis.net%2Fdef%2Fcrs%2FEPSG%2F0%2F25832&SUBSET=x%28350000%2C351000%29&SUBSET=y%285645000%2C5646000%29",
+      "retrieved": "Tue, 20 Oct 2026 10:19:24 GMT",
+      "lastModified": null,
+      "bytes": 1940429,
+      "sha256": "5527045b4fc88d18167b23285c8c307e3a96516bda31f9dcddf2ff5614b60080"
+    },
+    {
+      "file": "dgm-351-5643.tif",
+      "url": "https://www.wcs.nrw.de/geobasis/wcs_nw_dgm?SERVICE=WCS&VERSION=2.0.1&REQUEST=GetCoverage&COVERAGEID=nw_dgm&FORMAT=image%2Ftiff&SUBSETTINGCRS=http%3A%2F%2Fwww.opengis.net%2Fdef%2Fcrs%2FEPSG%2F0%2F25832&SUBSET=x%28351000%2C352000%29&SUBSET=y%285643000%2C5644000%29",
+      "retrieved": "Tue, 20 Oct 2026 10:19:24 GMT",
+      "lastModified": null,
+      "bytes": 1970459,
+      "sha256": "f8d301ae20ac247ab2d5126987911647dec2ea5c0e8a82669787d85707a5f002"
+    },
+    {
+      "file": "dgm-351-5644.tif",
+      "url": "https://www.wcs.nrw.de/geobasis/wcs_nw_dgm?SERVICE=WCS&VERSION=2.0.1&REQUEST=GetCoverage&COVERAGEID=nw_dgm&FORMAT=image%2Ftiff&SUBSETTINGCRS=http%3A%2F%2Fwww.opengis.net%2Fdef%2Fcrs%2FEPSG%2F0%2F25832&SUBSET=x%28351000%2C352000%29&SUBSET=y%285644000%2C5645000%29",
+      "retrieved": "Tue, 20 Oct 2026 10:19:25 GMT",
+      "lastModified": null,
+      "bytes": 2184467,
+      "sha256": "97ad01ed28d0c166b669c2be1d75827cb175f280adb5c862c38d12c9da4ee541"
+    },
+    {
+      "file": "dgm-351-5645.tif",
+      "url": "https://www.wcs.nrw.de/geobasis/wcs_nw_dgm?SERVICE=WCS&VERSION=2.0.1&REQUEST=GetCoverage&COVERAGEID=nw_dgm&FORMAT=image%2Ftiff&SUBSETTINGCRS=http%3A%2F%2Fwww.opengis.net%2Fdef%2Fcrs%2FEPSG%2F0%2F25832&SUBSET=x%28351000%2C352000%29&SUBSET=y%285645000%2C5646000%29",
+      "retrieved": "Tue, 20 Oct 2026 10:19:25 GMT",
+      "lastModified": null,
+      "bytes": 1860496,
+      "sha256": "c6efbfa4b665aa77ccb10f9a416ec190bccb9943b4b74e5c18f21f235af5e9fb"
+    },
+    {
+      "file": "dgm-352-5643.tif",
+      "url": "https://www.wcs.nrw.de/geobasis/wcs_nw_dgm?SERVICE=WCS&VERSION=2.0.1&REQUEST=GetCoverage&COVERAGEID=nw_dgm&FORMAT=image%2Ftiff&SUBSETTINGCRS=http%3A%2F%2Fwww.opengis.net%2Fdef%2Fcrs%2FEPSG%2F0%2F25832&SUBSET=x%28352000%2C353000%29&SUBSET=y%285643000%2C5644000%29",
+      "retrieved": "Tue, 20 Oct 2026 10:19:25 GMT",
+      "lastModified": null,
+      "bytes": 1875480,
+      "sha256": "41d082b65ee5d4e704c081aee5ebad2a15db2d0356ccd7cb4f9cc077dd1b3cac"
+    },
+    {
+      "file": "dgm-352-5644.tif",
+      "url": "https://www.wcs.nrw.de/geobasis/wcs_nw_dgm?SERVICE=WCS&VERSION=2.0.1&REQUEST=GetCoverage&COVERAGEID=nw_dgm&FORMAT=image%2Ftiff&SUBSETTINGCRS=http%3A%2F%2Fwww.opengis.net%2Fdef%2Fcrs%2FEPSG%2F0%2F25832&SUBSET=x%28352000%2C353000%29&SUBSET=y%285644000%2C5645000%29",
+      "retrieved": "Tue, 20 Oct 2026 10:19:26 GMT",
+      "lastModified": null,
+      "bytes": 1683538,
+      "sha256": "800e9e8fe972c0c7e477c8709f0a6da2e71f61d6d717daa1fe7e86ae7d9d6256"
+    },
+    {
+      "file": "dgm-352-5645.tif",
+      "url": "https://www.wcs.nrw.de/geobasis/wcs_nw_dgm?SERVICE=WCS&VERSION=2.0.1&REQUEST=GetCoverage&COVERAGEID=nw_dgm&FORMAT=image%2Ftiff&SUBSETTINGCRS=http%3A%2F%2Fwww.opengis.net%2Fdef%2Fcrs%2FEPSG%2F0%2F25832&SUBSET=x%28352000%2C353000%29&SUBSET=y%285645000%2C5646000%29",
+      "retrieved": "Tue, 20 Oct 2026 10:19:26 GMT",
+      "lastModified": null,
+      "bytes": 1745661,
+      "sha256": "9307d40c273bfc0a8c948ab8b69a7396f8386d03269a96db788ca940234d8504"
+    }
+  ],
+  "sourceInputs": {
+    "generated-artifacts/koln-study/heights/ground-fixture-presentation.json": "3348802bf4c0efa74ae434cfbbef87d6e81202feea47ad87752113eb76ca1bd2",
+    "generated-artifacts/koln-study/osm-fresh/evidence.json": "09b418aa9f951a24eee1ed248f29da793257c247f2903c534d9d56735f3a2b6f",
+    "generated-artifacts/koln-study/heights/sources.json": "c783418db28716aedc5e6cfcd9b6deeb22c89c6e40737a8da9b4eea36fd8907f"
+  },
+  "osmRawSha256": "61202c1aca4fd41c7b996e74847bf6d426f57c56ee036b83cddf1e1dd99caa3d",
+  "presentation": {
+    "frame": {
+      "fieldC": [
+        0,
+        0
+      ],
+      "axisTheta": 1.445003643111292,
+      "maxR": 170
+    },
+    "calibration": {
+      "roofMinHeight": -1,
+      "roofMeshPrefixes": [
+        "DACH_"
+      ],
+      "skipMeshPrefixes": [
+        "center2_26",
+        "center2_28",
+        "center2_29",
+        "center2_37",
+        "center2_38"
+      ],
+      "crowdPrefix": "C_",
+      "pitchPrefix": "st081_pitch_",
+      "tickerRotationY": -90,
+      "tickerFrontCut": {
+        "normal": [
+          1,
+          0,
+          0
+        ],
+        "constant": 32
+      },
+      "standAxes": {
+        "+x": "OST",
+        "-x": "WEST",
+        "+z": "NORD",
+        "-z": "SUED"
+      },
+      "surroundingsAxes": {
+        "NORD": "+z",
+        "WEST": "-x"
+      },
+      "orbitDefault": {
+        "azimuth": 0.95,
+        "elevation": 0.65,
+        "distance": 360
+      }
+    }
+  },
+  "registration": {
+    "centerLonLat": [
+      6.87513215,
+      50.933501225
+    ],
+    "axisThetaDegrees": 82.79261013130528
+  },
+  "centerUTM": [
+    350692.8566425736,
+    5644580.040500714
+  ],
+  "sources": [
+    {
+      "file": "way-5229974.tif",
+      "sha256": "238d1b7ec4162b312495c46044a7e213c39209c8430ee9179574fe0b3acf0aff",
+      "bytes": 641,
+      "mosaicWindow": [
+        2267,
+        960,
+        26,
+        4
+      ],
+      "transform": [
+        1.0,
+        0.0,
+        351267.0,
+        0.0,
+        -1.0,
+        5645040.0
+      ]
+    },
+    {
+      "file": "way-362049118.tif",
+      "sha256": "ba3eb0d51c3a9ddb10c77d1a07e49c1bc07ceab5fe3116cf44e4e9ed68d8e890",
+      "bytes": 597,
+      "mosaicWindow": [
+        2267,
+        954,
+        26,
+        3
+      ],
+      "transform": [
+        1.0,
+        0.0,
+        351267.0,
+        0.0,
+        -1.0,
+        5645046.0
+      ]
+    },
+    {
+      "file": "measured-maxAbsMeters.tif",
+      "sha256": "27073b9ec992bb3b796e312556dcdfe5e9cbf882a1f5aaecad40f49571d12724",
+      "bytes": 417,
+      "mosaicWindow": [
+        1784,
+        353,
+        2,
+        2
+      ],
+      "transform": [
+        1.0,
+        0.0,
+        350784.0,
+        0.0,
+        -1.0,
+        5645647.0
+      ]
+    },
+    {
+      "file": "measured-p95-rank-100541.tif",
+      "sha256": "dd691377cb56e7d9ce6dc1f482f4963b9a05136318d1094924f2fcb5c88f9672",
+      "bytes": 417,
+      "mosaicWindow": [
+        2069,
+        742,
+        2,
+        2
+      ],
+      "transform": [
+        1.0,
+        0.0,
+        351069.0,
+        0.0,
+        -1.0,
+        5645258.0
+      ]
+    },
+    {
+      "file": "measured-p95-rank-100542.tif",
+      "sha256": "a1ea293fbd134bc22f6b505040d31ba529715ce0203b135fdc1fd270a095524b",
+      "bytes": 417,
+      "mosaicWindow": [
+        2203,
+        924,
+        2,
+        2
+      ],
+      "transform": [
+        1.0,
+        0.0,
+        351203.0,
+        0.0,
+        -1.0,
+        5645076.0
+      ]
+    },
+    {
+      "file": "measured-maxGradeErrorPP.tif",
+      "sha256": "e730642f38af92c809de79aee19d7bfdcd5951f74f194cec97de80829f84afd5",
+      "bytes": 429,
+      "mosaicWindow": [
+        2269,
+        961,
+        4,
+        2
+      ],
+      "transform": [
+        1.0,
+        0.0,
+        351269.0,
+        0.0,
+        -1.0,
+        5645039.0
+      ]
+    },
+    {
+      "file": "measured-maxGradeChangeErrorPP.tif",
+      "sha256": "6a1ae69225ddbbdca888e5c32cf12bf81c05faa24065899b2adff692473a2886",
+      "bytes": 450,
+      "mosaicWindow": [
+        2267,
+        954,
+        6,
+        3
+      ],
+      "transform": [
+        1.0,
+        0.0,
+        351267.0,
+        0.0,
+        -1.0,
+        5645046.0
+      ]
+    },
+    {
+      "file": "modelApron-maxAbsMeters.tif",
+      "sha256": "a68244e7542ed159d6746b694b2ccfc94f86469bb09be2fe3f005f6b42739b8a",
+      "bytes": 417,
+      "mosaicWindow": [
+        1599,
+        1526,
+        2,
+        2
+      ],
+      "transform": [
+        1.0,
+        0.0,
+        350599.0,
+        0.0,
+        -1.0,
+        5644474.0
+      ]
+    },
+    {
+      "file": "modelApron-maxGradeChangeErrorPP.tif",
+      "sha256": "f74f2758ceb465a0bd6cb4dbe412aadcf0cf797679a2d0bc25d9b12515768998",
+      "bytes": 433,
+      "mosaicWindow": [
+        1703,
+        1288,
+        2,
+        5
+      ],
+      "transform": [
+        1.0,
+        0.0,
+        350703.0,
+        0.0,
+        -1.0,
+        5644712.0
+      ]
+    },
+    {
+      "file": "transition-maxAbsMeters.tif",
+      "sha256": "8cbb1d92e937088ca06aaecbb6b6a2ee475caa51a6abe7766bcf9c4bbf150965",
+      "bytes": 417,
+      "mosaicWindow": [
+        1597,
+        1533,
+        2,
+        2
+      ],
+      "transform": [
+        1.0,
+        0.0,
+        350597.0,
+        0.0,
+        -1.0,
+        5644467.0
+      ]
+    },
+    {
+      "file": "transition-maxGradeErrorPP.tif",
+      "sha256": "a1867bdb9f751cd0d5eadc847e63208d588fa40e206518e5cd7e74d0ebcf58f7",
+      "bytes": 425,
+      "mosaicWindow": [
+        1703,
+        1288,
+        2,
+        3
+      ],
+      "transform": [
+        1.0,
+        0.0,
+        350703.0,
+        0.0,
+        -1.0,
+        5644712.0
+      ]
+    },
+    {
+      "file": "transition-maxGradeChangeErrorPP.tif",
+      "sha256": "f74f2758ceb465a0bd6cb4dbe412aadcf0cf797679a2d0bc25d9b12515768998",
+      "bytes": 433,
+      "mosaicWindow": [
+        1703,
+        1288,
+        2,
+        5
+      ],
+      "transform": [
+        1.0,
+        0.0,
+        350703.0,
+        0.0,
+        -1.0,
+        5644712.0
+      ]
+    }
+  ],
+  "referenceNHN": 59.863243103027344,
+  "groundLevel": 2.1,
+  "apronBoundary": [
+    [
+      -64.1549285229286,
+      109.36694825557413
+    ],
+    [
+      -60.89131308334745,
+      109.36496847036175
+    ],
+    [
+      -5.868845157682062,
+      109.6095090643154
+    ],
+    [
+      -1.7819902942422348,
+      109.52109958240136
+    ],
+    [
+      4.389297255108954,
+      109.42729505939107
+    ],
+    [
+      25.086137348943257,
+      109.59006251862866
+    ],
+    [
+      55.865869478200594,
+      109.67174231766812
+    ],
+    [
+      60.70358102658799,
+      109.67828648485605
+    ],
+    [
+      62.64478098388517,
+      109.68840233118367
+    ],
+    [
+      62.66390828754609,
+      103.72813709892904
+    ],
+    [
+      62.674412781483554,
+      98.45047264143034
+    ],
+    [
+      77.99127889060634,
+      98.48208093617312
+    ],
+    [
+      78.03516437647741,
+      82.9981017703424
+    ],
+    [
+      81.92591173241354,
+      83.00818103179084
+    ],
+    [
+      88.91757973401283,
+      83.01812216165482
+    ],
+    [
+      88.92922687162944,
+      78.34583705422249
+    ],
+    [
+      88.94778521570262,
+      70.37925842296885
+    ],
+    [
+      89.06411890801263,
+      23.99263151727689
+    ],
+    [
+      89.10933061673153,
+      8.665732804517136
+    ],
+    [
+      89.27049063695785,
+      -55.50240510838472
+    ],
+    [
+      89.3369867017107,
+      -82.05708107892278
+    ],
+    [
+      89.33927671383267,
+      -84.25356982828156
+    ],
+    [
+      84.00657430129314,
+      -84.36754295715954
+    ],
+    [
+      78.13981920990223,
+      -84.28005934432873
+    ],
+    [
+      78.1794506592934,
+      -99.56283152735963
+    ],
+    [
+      62.89178912187073,
+      -99.60195465271373
+    ],
+    [
+      62.900623182532826,
+      -104.1961391342389
+    ],
+    [
+      62.91709804088162,
+      -110.4705652741797
+    ],
+    [
+      59.58395883416083,
+      -110.47737749351568
+    ],
+    [
+      -60.35201558153181,
+      -110.78265278257918
+    ],
+    [
+      -63.92572079103551,
+      -110.78626292008448
+    ],
+    [
+      -63.80843005856214,
+      -105.17861194747766
+    ],
+    [
+      -63.9511673941381,
+      -99.58142812762779
+    ],
+    [
+      -79.32365251693554,
+      -99.62007002600457
+    ],
+    [
+      -79.36337575589887,
+      -84.11314839407623
+    ],
+    [
+      -83.75471718254376,
+      -84.13049272643532
+    ],
+    [
+      -91.17606042271935,
+      -84.14993855586985
+    ],
+    [
+      -91.18885020421337,
+      -80.0830327969362
+    ],
+    [
+      -91.36994068597939,
+      -7.993321982974535
+    ],
+    [
+      -91.5040984067523,
+      44.56668797142947
+    ],
+    [
+      -91.58951997343304,
+      79.98454036488387
+    ],
+    [
+      -91.60050163748522,
+      83.03174197526997
+    ],
+    [
+      -84.56851444060732,
+      83.05798994106965
+    ],
+    [
+      -79.53334621454036,
+      83.06708845613169
+    ],
+    [
+      -79.56746624678618,
+      98.47384619650461
+    ],
+    [
+      -64.12406229201714,
+      98.51024846699752
+    ],
+    [
+      -64.13731102080152,
+      103.69790146491584
+    ],
+    [
+      -64.1549285229286,
+      109.36694825557413
+    ]
+  ],
+  "cutout": [
+    [
+      -48.30525207519531,
+      -73.92028045654297
+    ],
+    [
+      -53.33639907836914,
+      -68.88811492919922
+    ],
+    [
+      -53.337066650390625,
+      68.88854217529297
+    ],
+    [
+      -48.30527114868164,
+      73.9202880859375
+    ],
+    [
+      48.68605422973633,
+      73.9665298461914
+    ],
+    [
+      53.557735443115234,
+      69.09602355957031
+    ],
+    [
+      53.7183837890625,
+      68.93524169921875
+    ],
+    [
+      53.71841049194336,
+      -68.77564239501953
+    ],
+    [
+      53.55111312866211,
+      -68.94302368164062
+    ],
+    [
+      48.983009338378906,
+      -73.51112365722656
+    ]
+  ],
+  "fullRun": {
+    "counts": {
+      "profiles": 975,
+      "samples": 107928,
+      "roadSlopes": 35191,
+      "roadGradeChanges": 34276
+    },
+    "limits": {
+      "height": {
+        "measured": {
+          "maxAbsMeters": 2.0,
+          "p95AbsMeters": 0.75
+        },
+        "modelApron": {
+          "maxAbsMeters": 3.0,
+          "p95AbsMeters": 2.0
+        },
+        "transition": {
+          "maxAbsMeters": 3.0,
+          "p95AbsMeters": 2.0
+        }
+      },
+      "roads": {
+        "maxGradeErrorPP": 20.0,
+        "maxGradeChangeErrorPP": 20.0
+      }
+    },
+    "violations": [
+      {
+        "zone": "measured",
+        "metric": "maxAbsMeters",
+        "value": 7.007827482910109,
+        "limit": 2.0
+      },
+      {
+        "zone": "measured",
+        "metric": "p95AbsMeters",
+        "value": 0.7527273424682339,
+        "limit": 0.75
+      },
+      {
+        "zone": "measured",
+        "metric": "maxGradeErrorPP",
+        "value": 179.6955509296473,
+        "limit": 20.0
+      },
+      {
+        "zone": "measured",
+        "metric": "maxGradeChangeErrorPP",
+        "value": 185.1185402952368,
+        "limit": 20.0
+      },
+      {
+        "zone": "modelApron",
+        "metric": "maxAbsMeters",
+        "value": 5.214021301269533,
+        "limit": 3.0
+      },
+      {
+        "zone": "modelApron",
+        "metric": "maxGradeChangeErrorPP",
+        "value": 46.18328115304505,
+        "limit": 20.0
+      },
+      {
+        "zone": "transition",
+        "metric": "maxAbsMeters",
+        "value": 4.502855206009748,
+        "limit": 3.0
+      },
+      {
+        "zone": "transition",
+        "metric": "maxGradeErrorPP",
+        "value": 49.97463687821642,
+        "limit": 20.0
+      },
+      {
+        "zone": "transition",
+        "metric": "maxGradeChangeErrorPP",
+        "value": 46.18328115304505,
+        "limit": 20.0
+      }
+    ],
+    "ok": false
+  },
+  "cases": [
+    {
+      "id": "way-5229974",
+      "profile": {
+        "id": "road-3",
+        "kind": "road",
+        "osm": "way/5229974",
+        "name": "Aachener Straße",
+        "highway": "primary",
+        "sourceTags": {
+          "bridge": "yes",
+          "layer": "1"
+        },
+        "heightStatus": "unresolved_terrain_derivation",
+        "points": [
+          [
+            519.9171021567485,
+            542.9738106235721
+          ],
+          [
+            517.9279847265339,
+            542.8259404931422
+          ],
+          [
+            515.9388672963191,
+            542.6780703627122
+          ],
+          [
+            513.9497498661045,
+            542.5302002322824
+          ],
+          [
+            511.96063243588986,
+            542.3823301018524
+          ],
+          [
+            509.97151500567526,
+            542.2344599714224
+          ],
+          [
+            507.9823975754606,
+            542.0865898409925
+          ],
+          [
+            505.99328014524593,
+            541.9387197105625
+          ],
+          [
+            504.0041627150313,
+            541.7908495801325
+          ],
+          [
+            502.01504528481667,
+            541.6429794497026
+          ],
+          [
+            500.025927854602,
+            541.4951093192727
+          ],
+          [
+            498.0368104243874,
+            541.3472391888428
+          ],
+          [
+            496.04769299417273,
+            541.1993690584128
+          ]
+        ]
+      },
+      "role": "complete_bridge_ground_profile",
+      "editorPoints": [
+        [
+          583.9311337423597,
+          473.45409828674616
+        ],
+        [
+          560.0277044948199,
+          474.6883619727029
+        ]
+      ],
+      "sourceFeature": {
+        "osm": "way/5229974",
+        "tags": {
+          "bicycle": "use_sidepath",
+          "bridge": "yes",
+          "highway": "primary",
+          "lanes": "3",
+          "layer": "1",
+          "lit": "yes",
+          "maxspeed": "50",
+          "maxweight:signed": "no",
+          "name": "Aachener Straße",
+          "name:etymology:wikidata": "Q1017",
+          "oneway": "yes",
+          "placement": "right_of:1",
+          "ref": "B 55",
+          "sidewalk:left": "no",
+          "sidewalk:right": "separate",
+          "surface": "asphalt"
+        },
+        "widthKind": "schematic",
+        "displayWidthMeters": 8,
+        "rendererWidthMultiplier": 2.5
+      },
+      "utmCoordinates": [
+        [
+          351291.8933952739,
+          5645036.6285983035
+        ],
+        [
+          351289.89938791207,
+          5645036.788751397
+        ],
+        [
+          351287.90538063704,
+          5645036.94890526
+        ],
+        [
+          351285.911373449,
+          5645037.109059893
+        ],
+        [
+          351283.91736634786,
+          5645037.269215296
+        ],
+        [
+          351281.92335933354,
+          5645037.429371467
+        ],
+        [
+          351279.92935240606,
+          5645037.589528407
+        ],
+        [
+          351277.93534556555,
+          5645037.749686116
+        ],
+        [
+          351275.9413388119,
+          5645037.909844597
+        ],
+        [
+          351273.9473321451,
+          5645038.070003845
+        ],
+        [
+          351271.9533255652,
+          5645038.230163863
+        ],
+        [
+          351269.9593190721,
+          5645038.390324649
+        ],
+        [
+          351267.965312666,
+          5645038.550486207
+        ]
+      ],
+      "groundElevation": {
+        "origin": [
+          480,
+          540
+        ],
+        "step": 20,
+        "cols": 3,
+        "rows": 2,
+        "values": [
+          -9.0959,
+          -14.3624,
+          -14.2594,
+          -10.3773,
+          -16.6884,
+          -12.9346
+        ],
+        "source": "Geobasis NRW WCS DGM1; EPSG:25832 / DHHN2016; 1 m source, 20 m display grid"
+      },
+      "expected": {
+        "samples": [
+          {
+            "osm": "way/5229974",
+            "name": "Aachener Straße",
+            "highway": "primary",
+            "sourceTags": {
+              "bridge": "yes",
+              "layer": "1"
+            },
+            "heightStatus": "unresolved_terrain_derivation",
+            "profile": "road-3",
+            "kind": "road",
+            "station": 0,
+            "xz": [
+              519.9171021567485,
+              542.9738106235721
+            ],
+            "zone": "measured",
+            "nativeNHN": 47.794288635253906,
+            "displayNHN": 47.90040139484003,
+            "errorMeters": 0.1061127595861251
+          },
+          {
+            "osm": "way/5229974",
+            "name": "Aachener Straße",
+            "highway": "primary",
+            "sourceTags": {
+              "bridge": "yes",
+              "layer": "1"
+            },
+            "heightStatus": "unresolved_terrain_derivation",
+            "profile": "road-3",
+            "kind": "road",
+            "station": 1,
+            "xz": [
+              517.9279847265339,
+              542.8259404931422
+            ],
+            "zone": "measured",
+            "nativeNHN": 46.70003128051758,
+            "displayNHN": 47.88036252263475,
+            "errorMeters": 1.1803312421171697
+          },
+          {
+            "osm": "way/5229974",
+            "name": "Aachener Straße",
+            "highway": "primary",
+            "sourceTags": {
+              "bridge": "yes",
+              "layer": "1"
+            },
+            "heightStatus": "unresolved_terrain_derivation",
+            "profile": "road-3",
+            "kind": "road",
+            "station": 2,
+            "xz": [
+              515.9388672963191,
+              542.6780703627122
+            ],
+            "zone": "measured",
+            "nativeNHN": 45.748558044433594,
+            "displayNHN": 47.86032365042945,
+            "errorMeters": 2.1117656059958563
+          },
+          {
+            "osm": "way/5229974",
+            "name": "Aachener Straße",
+            "highway": "primary",
+            "sourceTags": {
+              "bridge": "yes",
+              "layer": "1"
+            },
+            "heightStatus": "unresolved_terrain_derivation",
+            "profile": "road-3",
+            "kind": "road",
+            "station": 3,
+            "xz": [
+              513.9497498661045,
+              542.5302002322824
+            ],
+            "zone": "measured",
+            "nativeNHN": 45.643497467041016,
+            "displayNHN": 47.84028477822416,
+            "errorMeters": 2.1967873111831437
+          },
+          {
+            "osm": "way/5229974",
+            "name": "Aachener Straße",
+            "highway": "primary",
+            "sourceTags": {
+              "bridge": "yes",
+              "layer": "1"
+            },
+            "heightStatus": "unresolved_terrain_derivation",
+            "profile": "road-3",
+            "kind": "road",
+            "station": 4,
+            "xz": [
+              511.96063243588986,
+              542.3823301018524
+            ],
+            "zone": "measured",
+            "nativeNHN": 45.672752380371094,
+            "displayNHN": 47.82024590601888,
+            "errorMeters": 2.147493525647789
+          },
+          {
+            "osm": "way/5229974",
+            "name": "Aachener Straße",
+            "highway": "primary",
+            "sourceTags": {
+              "bridge": "yes",
+              "layer": "1"
+            },
+            "heightStatus": "unresolved_terrain_derivation",
+            "profile": "road-3",
+            "kind": "road",
+            "station": 5,
+            "xz": [
+              509.97151500567526,
+              542.2344599714224
+            ],
+            "zone": "measured",
+            "nativeNHN": 45.70364761352539,
+            "displayNHN": 47.8002070338136,
+            "errorMeters": 2.0965594202882087
+          },
+          {
+            "osm": "way/5229974",
+            "name": "Aachener Straße",
+            "highway": "primary",
+            "sourceTags": {
+              "bridge": "yes",
+              "layer": "1"
+            },
+            "heightStatus": "unresolved_terrain_derivation",
+            "profile": "road-3",
+            "kind": "road",
+            "station": 6,
+            "xz": [
+              507.9823975754606,
+              542.0865898409925
+            ],
+            "zone": "measured",
+            "nativeNHN": 45.72911071777344,
+            "displayNHN": 47.780168161608316,
+            "errorMeters": 2.0510574438348783
+          },
+          {
+            "osm": "way/5229974",
+            "name": "Aachener Straße",
+            "highway": "primary",
+            "sourceTags": {
+              "bridge": "yes",
+              "layer": "1"
+            },
+            "heightStatus": "unresolved_terrain_derivation",
+            "profile": "road-3",
+            "kind": "road",
+            "station": 7,
+            "xz": [
+              505.99328014524593,
+              541.9387197105625
+            ],
+            "zone": "measured",
+            "nativeNHN": 45.75956344604492,
+            "displayNHN": 47.76012928940301,
+            "errorMeters": 2.000565843358089
+          },
+          {
+            "osm": "way/5229974",
+            "name": "Aachener Straße",
+            "highway": "primary",
+            "sourceTags": {
+              "bridge": "yes",
+              "layer": "1"
+            },
+            "heightStatus": "unresolved_terrain_derivation",
+            "profile": "road-3",
+            "kind": "road",
+            "station": 8,
+            "xz": [
+              504.0041627150313,
+              541.7908495801325
+            ],
+            "zone": "measured",
+            "nativeNHN": 45.785579681396484,
+            "displayNHN": 47.740090417197734,
+            "errorMeters": 1.9545107358012501
+          },
+          {
+            "osm": "way/5229974",
+            "name": "Aachener Straße",
+            "highway": "primary",
+            "sourceTags": {
+              "bridge": "yes",
+              "layer": "1"
+            },
+            "heightStatus": "unresolved_terrain_derivation",
+            "profile": "road-3",
+            "kind": "road",
+            "station": 9,
+            "xz": [
+              502.01504528481667,
+              541.6429794497026
+            ],
+            "zone": "measured",
+            "nativeNHN": 45.81395721435547,
+            "displayNHN": 47.72005154499245,
+            "errorMeters": 1.9060943306369822
+          },
+          {
+            "osm": "way/5229974",
+            "name": "Aachener Straße",
+            "highway": "primary",
+            "sourceTags": {
+              "bridge": "yes",
+              "layer": "1"
+            },
+            "heightStatus": "unresolved_terrain_derivation",
+            "profile": "road-3",
+            "kind": "road",
+            "station": 10,
+            "xz": [
+              500.025927854602,
+              541.4951093192727
+            ],
+            "zone": "measured",
+            "nativeNHN": 47.239410400390625,
+            "displayNHN": 47.43182828822617,
+            "errorMeters": 0.19241788783554625
+          },
+          {
+            "osm": "way/5229974",
+            "name": "Aachener Straße",
+            "highway": "primary",
+            "sourceTags": {
+              "bridge": "yes",
+              "layer": "1"
+            },
+            "heightStatus": "unresolved_terrain_derivation",
+            "profile": "road-3",
+            "kind": "road",
+            "station": 11,
+            "xz": [
+              498.0368104243874,
+              541.3472391888428
+            ],
+            "zone": "measured",
+            "nativeNHN": 51.3529167175293,
+            "displayNHN": 47.96111608036313,
+            "errorMeters": -3.3918006371661704
+          },
+          {
+            "osm": "way/5229974",
+            "name": "Aachener Straße",
+            "highway": "primary",
+            "sourceTags": {
+              "bridge": "yes",
+              "layer": "1"
+            },
+            "heightStatus": "unresolved_terrain_derivation",
+            "profile": "road-3",
+            "kind": "road",
+            "station": 12,
+            "xz": [
+              496.04769299417273,
+              541.1993690584128
+            ],
+            "zone": "measured",
+            "nativeNHN": 52.67890930175781,
+            "displayNHN": 48.5020977238434,
+            "errorMeters": -4.176811577914414
+          }
+        ],
+        "roadSlopes": [
+          {
+            "osm": "way/5229974",
+            "name": "Aachener Straße",
+            "highway": "primary",
+            "sourceTags": {
+              "bridge": "yes",
+              "layer": "1"
+            },
+            "heightStatus": "unresolved_terrain_derivation",
+            "profile": "road-3",
+            "xz": [
+              517.9279847265339,
+              542.8259404931422
+            ],
+            "fromXZ": [
+              519.9171021567485,
+              542.9738106235721
+            ],
+            "lengthMeters": 1.9946061582821133,
+            "zones": [
+              "measured"
+            ],
+            "displayGradePct": -1.0046530801119333,
+            "nativeGradePct": -54.860823034797754,
+            "gradeErrorPP": 53.85616995468582
+          },
+          {
+            "osm": "way/5229974",
+            "name": "Aachener Straße",
+            "highway": "primary",
+            "sourceTags": {
+              "bridge": "yes",
+              "layer": "1"
+            },
+            "heightStatus": "unresolved_terrain_derivation",
+            "profile": "road-3",
+            "xz": [
+              515.9388672963191,
+              542.6780703627122
+            ],
+            "fromXZ": [
+              517.9279847265339,
+              542.8259404931422
+            ],
+            "lengthMeters": 1.9946061582822268,
+            "zones": [
+              "measured"
+            ],
+            "displayGradePct": -1.0046530801125886,
+            "nativeGradePct": -47.70231116218963,
+            "gradeErrorPP": 46.69765808207704
+          },
+          {
+            "osm": "way/5229974",
+            "name": "Aachener Straße",
+            "highway": "primary",
+            "sourceTags": {
+              "bridge": "yes",
+              "layer": "1"
+            },
+            "heightStatus": "unresolved_terrain_derivation",
+            "profile": "road-3",
+            "xz": [
+              513.9497498661045,
+              542.5302002322824
+            ],
+            "fromXZ": [
+              515.9388672963191,
+              542.6780703627122
+            ],
+            "lengthMeters": 1.9946061582821049,
+            "zones": [
+              "measured"
+            ],
+            "displayGradePct": -1.0046530801122937,
+            "nativeGradePct": -5.26723418336699,
+            "gradeErrorPP": 4.262581103254696
+          },
+          {
+            "osm": "way/5229974",
+            "name": "Aachener Straße",
+            "highway": "primary",
+            "sourceTags": {
+              "bridge": "yes",
+              "layer": "1"
+            },
+            "heightStatus": "unresolved_terrain_derivation",
+            "profile": "road-3",
+            "xz": [
+              511.96063243588986,
+              542.3823301018524
+            ],
+            "fromXZ": [
+              513.9497498661045,
+              542.5302002322824
+            ],
+            "lengthMeters": 1.99460615828217,
+            "zones": [
+              "measured"
+            ],
+            "displayGradePct": -1.0046530801115485,
+            "nativeGradePct": 1.4667012436817883,
+            "gradeErrorPP": -2.471354323793337
+          },
+          {
+            "osm": "way/5229974",
+            "name": "Aachener Straße",
+            "highway": "primary",
+            "sourceTags": {
+              "bridge": "yes",
+              "layer": "1"
+            },
+            "heightStatus": "unresolved_terrain_derivation",
+            "profile": "road-3",
+            "xz": [
+              509.97151500567526,
+              542.2344599714224
+            ],
+            "fromXZ": [
+              511.96063243588986,
+              542.3823301018524
+            ],
+            "lengthMeters": 1.9946061582821133,
+            "zones": [
+              "measured"
+            ],
+            "displayGradePct": -1.0046530801119333,
+            "nativeGradePct": 1.5489390236770297,
+            "gradeErrorPP": -2.5535921037889633
+          },
+          {
+            "osm": "way/5229974",
+            "name": "Aachener Straße",
+            "highway": "primary",
+            "sourceTags": {
+              "bridge": "yes",
+              "layer": "1"
+            },
+            "heightStatus": "unresolved_terrain_derivation",
+            "profile": "road-3",
+            "xz": [
+              507.9823975754606,
+              542.0865898409925
+            ],
+            "fromXZ": [
+              509.97151500567526,
+              542.2344599714224
+            ],
+            "lengthMeters": 1.99460615828217,
+            "zones": [
+              "measured"
+            ],
+            "displayGradePct": -1.0046530801119047,
+            "nativeGradePct": 1.2765980964370762,
+            "gradeErrorPP": -2.281251176548981
+          },
+          {
+            "osm": "way/5229974",
+            "name": "Aachener Straße",
+            "highway": "primary",
+            "sourceTags": {
+              "bridge": "yes",
+              "layer": "1"
+            },
+            "heightStatus": "unresolved_terrain_derivation",
+            "profile": "road-3",
+            "xz": [
+              505.99328014524593,
+              541.9387197105625
+            ],
+            "fromXZ": [
+              507.9823975754606,
+              542.0865898409925
+            ],
+            "lengthMeters": 1.99460615828217,
+            "zones": [
+              "measured"
+            ],
+            "displayGradePct": -1.0046530801129734,
+            "nativeGradePct": 1.5267539481433976,
+            "gradeErrorPP": -2.531407028256371
+          },
+          {
+            "osm": "way/5229974",
+            "name": "Aachener Straße",
+            "highway": "primary",
+            "sourceTags": {
+              "bridge": "yes",
+              "layer": "1"
+            },
+            "heightStatus": "unresolved_terrain_derivation",
+            "profile": "road-3",
+            "xz": [
+              504.0041627150313,
+              541.7908495801325
+            ],
+            "fromXZ": [
+              505.99328014524593,
+              541.9387197105625
+            ],
+            "lengthMeters": 1.9946061582821133,
+            "zones": [
+              "measured"
+            ],
+            "displayGradePct": -1.004653080111577,
+            "nativeGradePct": 1.3043294408540984,
+            "gradeErrorPP": -2.3089825209656754
+          },
+          {
+            "osm": "way/5229974",
+            "name": "Aachener Straße",
+            "highway": "primary",
+            "sourceTags": {
+              "bridge": "yes",
+              "layer": "1"
+            },
+            "heightStatus": "unresolved_terrain_derivation",
+            "profile": "road-3",
+            "xz": [
+              502.01504528481667,
+              541.6429794497026
+            ],
+            "fromXZ": [
+              504.0041627150313,
+              541.7908495801325
+            ],
+            "lengthMeters": 1.99460615828217,
+            "zones": [
+              "measured"
+            ],
+            "displayGradePct": -1.0046530801119047,
+            "nativeGradePct": 1.4227135939169153,
+            "gradeErrorPP": -2.42736667402882
+          },
+          {
+            "osm": "way/5229974",
+            "name": "Aachener Straße",
+            "highway": "primary",
+            "sourceTags": {
+              "bridge": "yes",
+              "layer": "1"
+            },
+            "heightStatus": "unresolved_terrain_derivation",
+            "profile": "road-3",
+            "xz": [
+              500.025927854602,
+              541.4951093192727
+            ],
+            "fromXZ": [
+              502.01504528481667,
+              541.6429794497026
+            ],
+            "lengthMeters": 1.9946061582821615,
+            "zones": [
+              "measured"
+            ],
+            "displayGradePct": -14.450133705318029,
+            "nativeGradePct": 71.46539581843146,
+            "gradeErrorPP": -85.91552952374948
+          },
+          {
+            "osm": "way/5229974",
+            "name": "Aachener Straße",
+            "highway": "primary",
+            "sourceTags": {
+              "bridge": "yes",
+              "layer": "1"
+            },
+            "heightStatus": "unresolved_terrain_derivation",
+            "profile": "road-3",
+            "xz": [
+              498.0368104243874,
+              541.3472391888428
+            ],
+            "fromXZ": [
+              500.025927854602,
+              541.4951093192727
+            ],
+            "lengthMeters": 1.9946061582821133,
+            "zones": [
+              "measured"
+            ],
+            "displayGradePct": 26.535954977338125,
+            "nativeGradePct": 206.23150590698543,
+            "gradeErrorPP": -179.6955509296473
+          },
+          {
+            "osm": "way/5229974",
+            "name": "Aachener Straße",
+            "highway": "primary",
+            "sourceTags": {
+              "bridge": "yes",
+              "layer": "1"
+            },
+            "heightStatus": "unresolved_terrain_derivation",
+            "profile": "road-3",
+            "xz": [
+              496.04769299417273,
+              541.1993690584128
+            ],
+            "fromXZ": [
+              498.0368104243874,
+              541.3472391888428
+            ],
+            "lengthMeters": 1.99460615828217,
+            "zones": [
+              "measured"
+            ],
+            "displayGradePct": 27.12222867827631,
+            "nativeGradePct": 66.47891759095492,
+            "gradeErrorPP": -39.35668891267861
+          }
+        ],
+        "roadGradeChanges": [
+          {
+            "osm": "way/5229974",
+            "name": "Aachener Straße",
+            "highway": "primary",
+            "sourceTags": {
+              "bridge": "yes",
+              "layer": "1"
+            },
+            "heightStatus": "unresolved_terrain_derivation",
+            "profile": "road-3",
+            "xz": [
+              517.9279847265339,
+              542.8259404931422
+            ],
+            "zones": [
+              "measured"
+            ],
+            "displayGradeChangePP": -6.552536291337674e-13,
+            "nativeGradeChangePP": 7.158511872608123,
+            "gradeChangeErrorPP": -7.158511872608779
+          },
+          {
+            "osm": "way/5229974",
+            "name": "Aachener Straße",
+            "highway": "primary",
+            "sourceTags": {
+              "bridge": "yes",
+              "layer": "1"
+            },
+            "heightStatus": "unresolved_terrain_derivation",
+            "profile": "road-3",
+            "xz": [
+              515.9388672963191,
+              542.6780703627122
+            ],
+            "zones": [
+              "measured"
+            ],
+            "displayGradeChangePP": 2.948752353404416e-13,
+            "nativeGradeChangePP": 42.43507697882264,
+            "gradeChangeErrorPP": -42.43507697882235
+          },
+          {
+            "osm": "way/5229974",
+            "name": "Aachener Straße",
+            "highway": "primary",
+            "sourceTags": {
+              "bridge": "yes",
+              "layer": "1"
+            },
+            "heightStatus": "unresolved_terrain_derivation",
+            "profile": "road-3",
+            "xz": [
+              513.9497498661045,
+              542.5302002322824
+            ],
+            "zones": [
+              "measured"
+            ],
+            "displayGradeChangePP": 7.451816941284051e-13,
+            "nativeGradeChangePP": 6.733935427048778,
+            "gradeChangeErrorPP": -6.733935427048033
+          },
+          {
+            "osm": "way/5229974",
+            "name": "Aachener Straße",
+            "highway": "primary",
+            "sourceTags": {
+              "bridge": "yes",
+              "layer": "1"
+            },
+            "heightStatus": "unresolved_terrain_derivation",
+            "profile": "road-3",
+            "xz": [
+              511.96063243588986,
+              542.3823301018524
+            ],
+            "zones": [
+              "measured"
+            ],
+            "displayGradeChangePP": -3.8480330033507926e-13,
+            "nativeGradeChangePP": 0.0822377799952414,
+            "gradeChangeErrorPP": -0.0822377799956262
+          },
+          {
+            "osm": "way/5229974",
+            "name": "Aachener Straße",
+            "highway": "primary",
+            "sourceTags": {
+              "bridge": "yes",
+              "layer": "1"
+            },
+            "heightStatus": "unresolved_terrain_derivation",
+            "profile": "road-3",
+            "xz": [
+              509.97151500567526,
+              542.2344599714224
+            ],
+            "zones": [
+              "measured"
+            ],
+            "displayGradeChangePP": 2.864375403532904e-14,
+            "nativeGradeChangePP": -0.2723409272399535,
+            "gradeChangeErrorPP": 0.27234092723998216
+          },
+          {
+            "osm": "way/5229974",
+            "name": "Aachener Straße",
+            "highway": "primary",
+            "sourceTags": {
+              "bridge": "yes",
+              "layer": "1"
+            },
+            "heightStatus": "unresolved_terrain_derivation",
+            "profile": "road-3",
+            "xz": [
+              507.9823975754606,
+              542.0865898409925
+            ],
+            "zones": [
+              "measured"
+            ],
+            "displayGradeChangePP": -1.0687006835041757e-12,
+            "nativeGradeChangePP": 0.2501558517063214,
+            "gradeChangeErrorPP": -0.2501558517073901
+          },
+          {
+            "osm": "way/5229974",
+            "name": "Aachener Straße",
+            "highway": "primary",
+            "sourceTags": {
+              "bridge": "yes",
+              "layer": "1"
+            },
+            "heightStatus": "unresolved_terrain_derivation",
+            "profile": "road-3",
+            "xz": [
+              505.99328014524593,
+              541.9387197105625
+            ],
+            "zones": [
+              "measured"
+            ],
+            "displayGradeChangePP": 1.3964385203735219e-12,
+            "nativeGradeChangePP": -0.2224245072892992,
+            "gradeChangeErrorPP": 0.22242450729069563
+          },
+          {
+            "osm": "way/5229974",
+            "name": "Aachener Straße",
+            "highway": "primary",
+            "sourceTags": {
+              "bridge": "yes",
+              "layer": "1"
+            },
+            "heightStatus": "unresolved_terrain_derivation",
+            "profile": "road-3",
+            "xz": [
+              504.0041627150313,
+              541.7908495801325
+            ],
+            "zones": [
+              "measured"
+            ],
+            "displayGradeChangePP": -3.277378368693462e-13,
+            "nativeGradeChangePP": 0.11838415306281691,
+            "gradeChangeErrorPP": -0.11838415306314465
+          },
+          {
+            "osm": "way/5229974",
+            "name": "Aachener Straße",
+            "highway": "primary",
+            "sourceTags": {
+              "bridge": "yes",
+              "layer": "1"
+            },
+            "heightStatus": "unresolved_terrain_derivation",
+            "profile": "road-3",
+            "xz": [
+              502.01504528481667,
+              541.6429794497026
+            ],
+            "zones": [
+              "measured"
+            ],
+            "displayGradeChangePP": -13.445480625206125,
+            "nativeGradeChangePP": 70.04268222451455,
+            "gradeChangeErrorPP": -83.48816284972068
+          },
+          {
+            "osm": "way/5229974",
+            "name": "Aachener Straße",
+            "highway": "primary",
+            "sourceTags": {
+              "bridge": "yes",
+              "layer": "1"
+            },
+            "heightStatus": "unresolved_terrain_derivation",
+            "profile": "road-3",
+            "xz": [
+              500.025927854602,
+              541.4951093192727
+            ],
+            "zones": [
+              "measured"
+            ],
+            "displayGradeChangePP": 40.98608868265615,
+            "nativeGradeChangePP": 134.76611008855397,
+            "gradeChangeErrorPP": -93.78002140589783
+          },
+          {
+            "osm": "way/5229974",
+            "name": "Aachener Straße",
+            "highway": "primary",
+            "sourceTags": {
+              "bridge": "yes",
+              "layer": "1"
+            },
+            "heightStatus": "unresolved_terrain_derivation",
+            "profile": "road-3",
+            "xz": [
+              498.0368104243874,
+              541.3472391888428
+            ],
+            "zones": [
+              "measured"
+            ],
+            "displayGradeChangePP": 0.586273700938186,
+            "nativeGradeChangePP": -139.7525883160305,
+            "gradeChangeErrorPP": 140.3388620169687
+          }
+        ]
+      }
+    },
+    {
+      "id": "way-362049118",
+      "profile": {
+        "id": "road-468",
+        "kind": "road",
+        "osm": "way/362049118",
+        "name": null,
+        "highway": "path",
+        "sourceTags": {
+          "bridge": "yes",
+          "layer": "1"
+        },
+        "heightStatus": "unresolved_terrain_derivation",
+        "points": [
+          [
+            519.1755195818621,
+            550.7929150457026
+          ],
+          [
+            517.701761052045,
+            550.2516212566567
+          ],
+          [
+            516.2280025222277,
+            549.7103274676107
+          ],
+          [
+            514.7542439924106,
+            549.1690336785648
+          ],
+          [
+            512.7645903362712,
+            548.9723407071718
+          ],
+          [
+            510.77493668013176,
+            548.7756477357789
+          ],
+          [
+            508.7852830239924,
+            548.5789547643859
+          ],
+          [
+            506.795629367853,
+            548.382261792993
+          ],
+          [
+            504.8059757117136,
+            548.1855688216
+          ],
+          [
+            502.8163220555742,
+            547.988875850207
+          ],
+          [
+            500.82666839943477,
+            547.7921828788141
+          ],
+          [
+            498.8370147432954,
+            547.5954899074211
+          ],
+          [
+            496.847361087156,
+            547.3987969360281
+          ],
+          [
+            494.8577074310166,
+            547.2021039646352
+          ]
+        ]
+      },
+      "role": "complete_bridge_ground_profile",
+      "editorPoints": [
+        [
+          584.1764049307722,
+          481.30446010794196
+        ],
+        [
+          579.5863298334111,
+          480.24810830432534
+        ],
+        [
+          559.6002318522098,
+          480.7929634449302
+        ]
+      ],
+      "sourceFeature": {
+        "osm": "way/362049118",
+        "tags": {
+          "bicycle": "designated",
+          "bridge": "yes",
+          "cycleway:surface": "paving_stones",
+          "foot": "designated",
+          "footway:surface": "paving_stones",
+          "highway": "path",
+          "layer": "1",
+          "lit": "yes",
+          "oneway": "yes",
+          "segregated": "yes",
+          "surface": "asphalt",
+          "traffic_sign": "DE:241"
+        },
+        "widthKind": "schematic",
+        "displayWidthMeters": 1.4,
+        "rendererWidthMultiplier": 2.5
+      },
+      "utmCoordinates": [
+        [
+          351292.36454054236,
+          5645044.471346359
+        ],
+        [
+          351290.82056875294,
+          5645044.163270172
+        ],
+        [
+          351289.2765967599,
+          5645043.855194441
+        ],
+        [
+          351287.73262456316,
+          5645043.547119167
+        ],
+        [
+          351285.73055786185,
+          5645043.659099087
+        ],
+        [
+          351283.72849121044,
+          5645043.771079782
+        ],
+        [
+          351281.72642460867,
+          5645043.883061252
+        ],
+        [
+          351279.72435805656,
+          5645043.995043496
+        ],
+        [
+          351277.72229155427,
+          5645044.107026515
+        ],
+        [
+          351275.72022510174,
+          5645044.219010309
+        ],
+        [
+          351273.7181586989,
+          5645044.330994878
+        ],
+        [
+          351271.7160923459,
+          5645044.4429802215
+        ],
+        [
+          351269.71402604255,
+          5645044.554966342
+        ],
+        [
+          351267.711959789,
+          5645044.666953235
+        ]
+      ],
+      "groundElevation": {
+        "origin": [
+          480,
+          540
+        ],
+        "step": 20,
+        "cols": 3,
+        "rows": 2,
+        "values": [
+          -9.0959,
+          -14.3624,
+          -14.2594,
+          -10.3773,
+          -16.6884,
+          -12.9346
+        ],
+        "source": "Geobasis NRW WCS DGM1; EPSG:25832 / DHHN2016; 1 m source, 20 m display grid"
+      },
+      "expected": {
+        "samples": [
+          {
+            "osm": "way/362049118",
+            "name": null,
+            "highway": "path",
+            "sourceTags": {
+              "bridge": "yes",
+              "layer": "1"
+            },
+            "heightStatus": "unresolved_terrain_derivation",
+            "profile": "road-468",
+            "kind": "road",
+            "station": 0,
+            "xz": [
+              519.1755195818621,
+              550.7929150457026
+            ],
+            "zone": "measured",
+            "nativeNHN": 47.75611114501953,
+            "displayNHN": 48.414519721501264,
+            "errorMeters": 0.6584085764817331
+          },
+          {
+            "osm": "way/362049118",
+            "name": null,
+            "highway": "path",
+            "sourceTags": {
+              "bridge": "yes",
+              "layer": "1"
+            },
+            "heightStatus": "unresolved_terrain_derivation",
+            "profile": "road-468",
+            "kind": "road",
+            "station": 1,
+            "xz": [
+              517.701761052045,
+              550.2516212566567
+            ],
+            "zone": "measured",
+            "nativeNHN": 46.92321014404297,
+            "displayNHN": 48.3710745644863,
+            "errorMeters": 1.4478644204433309
+          },
+          {
+            "osm": "way/362049118",
+            "name": null,
+            "highway": "path",
+            "sourceTags": {
+              "bridge": "yes",
+              "layer": "1"
+            },
+            "heightStatus": "unresolved_terrain_derivation",
+            "profile": "road-468",
+            "kind": "road",
+            "station": 2,
+            "xz": [
+              516.2280025222277,
+              549.7103274676107
+            ],
+            "zone": "measured",
+            "nativeNHN": 46.08345031738281,
+            "displayNHN": 48.32762940747135,
+            "errorMeters": 2.2441790900885366
+          },
+          {
+            "osm": "way/362049118",
+            "name": null,
+            "highway": "path",
+            "sourceTags": {
+              "bridge": "yes",
+              "layer": "1"
+            },
+            "heightStatus": "unresolved_terrain_derivation",
+            "profile": "road-468",
+            "kind": "road",
+            "station": 3,
+            "xz": [
+              514.7542439924106,
+              549.1690336785648
+            ],
+            "zone": "measured",
+            "nativeNHN": 45.474666595458984,
+            "displayNHN": 48.2841842504564,
+            "errorMeters": 2.809517654997414
+          },
+          {
+            "osm": "way/362049118",
+            "name": null,
+            "highway": "path",
+            "sourceTags": {
+              "bridge": "yes",
+              "layer": "1"
+            },
+            "heightStatus": "unresolved_terrain_derivation",
+            "profile": "road-468",
+            "kind": "road",
+            "station": 4,
+            "xz": [
+              512.7645903362712,
+              548.9723407071718
+            ],
+            "zone": "measured",
+            "nativeNHN": 45.359962463378906,
+            "displayNHN": 48.26090859170221,
+            "errorMeters": 2.900946128323305
+          },
+          {
+            "osm": "way/362049118",
+            "name": null,
+            "highway": "path",
+            "sourceTags": {
+              "bridge": "yes",
+              "layer": "1"
+            },
+            "heightStatus": "unresolved_terrain_derivation",
+            "profile": "road-468",
+            "kind": "road",
+            "station": 5,
+            "xz": [
+              510.77493668013176,
+              548.7756477357789
+            ],
+            "zone": "measured",
+            "nativeNHN": 45.38355255126953,
+            "displayNHN": 48.23763293294802,
+            "errorMeters": 2.854080381678486
+          },
+          {
+            "osm": "way/362049118",
+            "name": null,
+            "highway": "path",
+            "sourceTags": {
+              "bridge": "yes",
+              "layer": "1"
+            },
+            "heightStatus": "unresolved_terrain_derivation",
+            "profile": "road-468",
+            "kind": "road",
+            "station": 6,
+            "xz": [
+              508.7852830239924,
+              548.5789547643859
+            ],
+            "zone": "measured",
+            "nativeNHN": 45.40771484375,
+            "displayNHN": 48.21435727419382,
+            "errorMeters": 2.806642430443823
+          },
+          {
+            "osm": "way/362049118",
+            "name": null,
+            "highway": "path",
+            "sourceTags": {
+              "bridge": "yes",
+              "layer": "1"
+            },
+            "heightStatus": "unresolved_terrain_derivation",
+            "profile": "road-468",
+            "kind": "road",
+            "station": 7,
+            "xz": [
+              506.795629367853,
+              548.382261792993
+            ],
+            "zone": "measured",
+            "nativeNHN": 45.43189239501953,
+            "displayNHN": 47.90145773255464,
+            "errorMeters": 2.4695653375351085
+          },
+          {
+            "osm": "way/362049118",
+            "name": null,
+            "highway": "path",
+            "sourceTags": {
+              "bridge": "yes",
+              "layer": "1"
+            },
+            "heightStatus": "unresolved_terrain_derivation",
+            "profile": "road-468",
+            "kind": "road",
+            "station": 8,
+            "xz": [
+              504.8059757117136,
+              548.1855688216
+            ],
+            "zone": "measured",
+            "nativeNHN": 45.46080017089844,
+            "displayNHN": 47.55089503040678,
+            "errorMeters": 2.0900948595083406
+          },
+          {
+            "osm": "way/362049118",
+            "name": null,
+            "highway": "path",
+            "sourceTags": {
+              "bridge": "yes",
+              "layer": "1"
+            },
+            "heightStatus": "unresolved_terrain_derivation",
+            "profile": "road-468",
+            "kind": "road",
+            "station": 9,
+            "xz": [
+              502.8163220555742,
+              547.988875850207
+            ],
+            "zone": "measured",
+            "nativeNHN": 45.5130500793457,
+            "displayNHN": 47.200332328258945,
+            "errorMeters": 1.6872822489132417
+          },
+          {
+            "osm": "way/362049118",
+            "name": null,
+            "highway": "path",
+            "sourceTags": {
+              "bridge": "yes",
+              "layer": "1"
+            },
+            "heightStatus": "unresolved_terrain_derivation",
+            "profile": "road-468",
+            "kind": "road",
+            "station": 10,
+            "xz": [
+              500.82666839943477,
+              547.7921828788141
+            ],
+            "zone": "measured",
+            "nativeNHN": 45.59452819824219,
+            "displayNHN": 46.84976962611117,
+            "errorMeters": 1.255241427868981
+          },
+          {
+            "osm": "way/362049118",
+            "name": null,
+            "highway": "path",
+            "sourceTags": {
+              "bridge": "yes",
+              "layer": "1"
+            },
+            "heightStatus": "unresolved_terrain_derivation",
+            "profile": "road-468",
+            "kind": "road",
+            "station": 11,
+            "xz": [
+              498.8370147432954,
+              547.5954899074211
+            ],
+            "zone": "measured",
+            "nativeNHN": 48.934814453125,
+            "displayNHN": 47.02373071951601,
+            "errorMeters": -1.91108373360899
+          },
+          {
+            "osm": "way/362049118",
+            "name": null,
+            "highway": "path",
+            "sourceTags": {
+              "bridge": "yes",
+              "layer": "1"
+            },
+            "heightStatus": "unresolved_terrain_derivation",
+            "profile": "road-468",
+            "kind": "road",
+            "station": 12,
+            "xz": [
+              496.847361087156,
+              547.3987969360281
+            ],
+            "zone": "measured",
+            "nativeNHN": 52.645145416259766,
+            "displayNHN": 47.57053166109187,
+            "errorMeters": -5.074613755167896
+          },
+          {
+            "osm": "way/362049118",
+            "name": null,
+            "highway": "path",
+            "sourceTags": {
+              "bridge": "yes",
+              "layer": "1"
+            },
+            "heightStatus": "unresolved_terrain_derivation",
+            "profile": "road-468",
+            "kind": "road",
+            "station": 13,
+            "xz": [
+              494.8577074310166,
+              547.2021039646352
+            ],
+            "zone": "measured",
+            "nativeNHN": 52.65430450439453,
+            "displayNHN": 48.11733260266783,
+            "errorMeters": -4.536971901726702
+          }
+        ],
+        "roadSlopes": [
+          {
+            "osm": "way/362049118",
+            "name": null,
+            "highway": "path",
+            "sourceTags": {
+              "bridge": "yes",
+              "layer": "1"
+            },
+            "heightStatus": "unresolved_terrain_derivation",
+            "profile": "road-468",
+            "xz": [
+              517.701761052045,
+              550.2516212566567
+            ],
+            "fromXZ": [
+              519.1755195818621,
+              550.7929150457026
+            ],
+            "lengthMeters": 1.5700201177909798,
+            "zones": [
+              "measured"
+            ],
+            "displayGradePct": -2.7671719949736793,
+            "nativeGradePct": -53.05033938981974,
+            "gradeErrorPP": 50.28316739484606
+          },
+          {
+            "osm": "way/362049118",
+            "name": null,
+            "highway": "path",
+            "sourceTags": {
+              "bridge": "yes",
+              "layer": "1"
+            },
+            "heightStatus": "unresolved_terrain_derivation",
+            "profile": "road-468",
+            "xz": [
+              516.2280025222277,
+              549.7103274676107
+            ],
+            "fromXZ": [
+              517.701761052045,
+              550.2516212566567
+            ],
+            "lengthMeters": 1.5700201177911257,
+            "zones": [
+              "measured"
+            ],
+            "displayGradePct": -2.767171994972517,
+            "nativeGradePct": -53.48720166985002,
+            "gradeErrorPP": 50.72002967487751
+          },
+          {
+            "osm": "way/362049118",
+            "name": null,
+            "highway": "path",
+            "sourceTags": {
+              "bridge": "yes",
+              "layer": "1"
+            },
+            "heightStatus": "unresolved_terrain_derivation",
+            "profile": "road-468",
+            "xz": [
+              514.7542439924106,
+              549.1690336785648
+            ],
+            "fromXZ": [
+              516.2280025222277,
+              549.7103274676107
+            ],
+            "lengthMeters": 1.5700201177909798,
+            "zones": [
+              "measured"
+            ],
+            "displayGradePct": -2.767171994972774,
+            "nativeGradePct": -38.77553637850116,
+            "gradeErrorPP": 36.00836438352838
+          },
+          {
+            "osm": "way/362049118",
+            "name": null,
+            "highway": "path",
+            "sourceTags": {
+              "bridge": "yes",
+              "layer": "1"
+            },
+            "heightStatus": "unresolved_terrain_derivation",
+            "profile": "road-468",
+            "xz": [
+              512.7645903362712,
+              548.9723407071718
+            ],
+            "fromXZ": [
+              514.7542439924106,
+              549.1690336785648
+            ],
+            "lengthMeters": 1.9993523442315235,
+            "zones": [
+              "measured"
+            ],
+            "displayGradePct": -1.1641599251548345,
+            "nativeGradePct": -5.737064425438534,
+            "gradeErrorPP": 4.5729045002837
+          },
+          {
+            "osm": "way/362049118",
+            "name": null,
+            "highway": "path",
+            "sourceTags": {
+              "bridge": "yes",
+              "layer": "1"
+            },
+            "heightStatus": "unresolved_terrain_derivation",
+            "profile": "road-468",
+            "xz": [
+              510.77493668013176,
+              548.7756477357789
+            ],
+            "fromXZ": [
+              512.7645903362712,
+              548.9723407071718
+            ],
+            "lengthMeters": 1.9993523442316365,
+            "zones": [
+              "measured"
+            ],
+            "displayGradePct": -1.164159925155124,
+            "nativeGradePct": 1.1798864746719175,
+            "gradeErrorPP": -2.3440463998270413
+          },
+          {
+            "osm": "way/362049118",
+            "name": null,
+            "highway": "path",
+            "sourceTags": {
+              "bridge": "yes",
+              "layer": "1"
+            },
+            "heightStatus": "unresolved_terrain_derivation",
+            "profile": "road-468",
+            "xz": [
+              508.7852830239924,
+              548.5789547643859
+            ],
+            "fromXZ": [
+              510.77493668013176,
+              548.7756477357789
+            ],
+            "lengthMeters": 1.9993523442315235,
+            "zones": [
+              "measured"
+            ],
+            "displayGradePct": -1.16415992515519,
+            "nativeGradePct": 1.2085059719554252,
+            "gradeErrorPP": -2.372665897110615
+          },
+          {
+            "osm": "way/362049118",
+            "name": null,
+            "highway": "path",
+            "sourceTags": {
+              "bridge": "yes",
+              "layer": "1"
+            },
+            "heightStatus": "unresolved_terrain_derivation",
+            "profile": "road-468",
+            "xz": [
+              506.795629367853,
+              548.382261792993
+            ],
+            "fromXZ": [
+              508.7852830239924,
+              548.5789547643859
+            ],
+            "lengthMeters": 1.9993523442315801,
+            "zones": [
+              "measured"
+            ],
+            "displayGradePct": -15.65004500292024,
+            "nativeGradePct": 1.209269158549616,
+            "gradeErrorPP": -16.859314161469857
+          },
+          {
+            "osm": "way/362049118",
+            "name": null,
+            "highway": "path",
+            "sourceTags": {
+              "bridge": "yes",
+              "layer": "1"
+            },
+            "heightStatus": "unresolved_terrain_derivation",
+            "profile": "road-468",
+            "xz": [
+              504.8059757117136,
+              548.1855688216
+            ],
+            "fromXZ": [
+              506.795629367853,
+              548.382261792993
+            ],
+            "lengthMeters": 1.9993523442315801,
+            "zones": [
+              "measured"
+            ],
+            "displayGradePct": -17.53381304497357,
+            "nativeGradePct": 1.4458570027593862,
+            "gradeErrorPP": -18.979670047732956
+          },
+          {
+            "osm": "way/362049118",
+            "name": null,
+            "highway": "path",
+            "sourceTags": {
+              "bridge": "yes",
+              "layer": "1"
+            },
+            "heightStatus": "unresolved_terrain_derivation",
+            "profile": "road-468",
+            "xz": [
+              502.8163220555742,
+              547.988875850207
+            ],
+            "fromXZ": [
+              504.8059757117136,
+              548.1855688216
+            ],
+            "lengthMeters": 1.9993523442315801,
+            "zones": [
+              "measured"
+            ],
+            "displayGradePct": -17.53381304497215,
+            "nativeGradePct": 2.61334169527518,
+            "gradeErrorPP": -20.14715474024733
+          },
+          {
+            "osm": "way/362049118",
+            "name": null,
+            "highway": "path",
+            "sourceTags": {
+              "bridge": "yes",
+              "layer": "1"
+            },
+            "heightStatus": "unresolved_terrain_derivation",
+            "profile": "road-468",
+            "xz": [
+              500.82666839943477,
+              547.7921828788141
+            ],
+            "fromXZ": [
+              502.8163220555742,
+              547.988875850207
+            ],
+            "lengthMeters": 1.9993523442315801,
+            "zones": [
+              "measured"
+            ],
+            "displayGradePct": -17.533813044969307,
+            "nativeGradePct": 4.0752256165132925,
+            "gradeErrorPP": -21.6090386614826
+          },
+          {
+            "osm": "way/362049118",
+            "name": null,
+            "highway": "path",
+            "sourceTags": {
+              "bridge": "yes",
+              "layer": "1"
+            },
+            "heightStatus": "unresolved_terrain_derivation",
+            "profile": "road-468",
+            "xz": [
+              498.8370147432954,
+              547.5954899074211
+            ],
+            "fromXZ": [
+              500.82666839943477,
+              547.7921828788141
+            ],
+            "lengthMeters": 1.9993523442315235,
+            "zones": [
+              "measured"
+            ],
+            "displayGradePct": 8.700872255295533,
+            "nativeGradePct": 167.06841415521956,
+            "gradeErrorPP": -158.36754189992402
+          },
+          {
+            "osm": "way/362049118",
+            "name": null,
+            "highway": "path",
+            "sourceTags": {
+              "bridge": "yes",
+              "layer": "1"
+            },
+            "heightStatus": "unresolved_terrain_derivation",
+            "profile": "road-468",
+            "xz": [
+              496.847361087156,
+              547.3987969360281
+            ],
+            "fromXZ": [
+              498.8370147432954,
+              547.5954899074211
+            ],
+            "lengthMeters": 1.9993523442315801,
+            "zones": [
+              "measured"
+            ],
+            "displayGradePct": 27.348903416321775,
+            "nativeGradePct": 185.57664304841543,
+            "gradeErrorPP": -158.22773963209366
+          },
+          {
+            "osm": "way/362049118",
+            "name": null,
+            "highway": "path",
+            "sourceTags": {
+              "bridge": "yes",
+              "layer": "1"
+            },
+            "heightStatus": "unresolved_terrain_derivation",
+            "profile": "road-468",
+            "xz": [
+              494.8577074310166,
+              547.2021039646352
+            ],
+            "fromXZ": [
+              496.847361087156,
+              547.3987969360281
+            ],
+            "lengthMeters": 1.9993523442315801,
+            "zones": [
+              "measured"
+            ],
+            "displayGradePct": 27.34890341632675,
+            "nativeGradePct": 0.45810275318359545,
+            "gradeErrorPP": 26.890800663143153
+          }
+        ],
+        "roadGradeChanges": [
+          {
+            "osm": "way/362049118",
+            "name": null,
+            "highway": "path",
+            "sourceTags": {
+              "bridge": "yes",
+              "layer": "1"
+            },
+            "heightStatus": "unresolved_terrain_derivation",
+            "profile": "road-468",
+            "xz": [
+              517.701761052045,
+              550.2516212566567
+            ],
+            "zones": [
+              "measured"
+            ],
+            "displayGradeChangePP": 1.1621814621776139e-12,
+            "nativeGradeChangePP": -0.43686228003028305,
+            "gradeChangeErrorPP": 0.4368622800314452
+          },
+          {
+            "osm": "way/362049118",
+            "name": null,
+            "highway": "path",
+            "sourceTags": {
+              "bridge": "yes",
+              "layer": "1"
+            },
+            "heightStatus": "unresolved_terrain_derivation",
+            "profile": "road-468",
+            "xz": [
+              516.2280025222277,
+              549.7103274676107
+            ],
+            "zones": [
+              "measured"
+            ],
+            "displayGradeChangePP": -2.5712765250318625e-13,
+            "nativeGradeChangePP": 14.711665291348865,
+            "gradeChangeErrorPP": -14.711665291349123
+          },
+          {
+            "osm": "way/362049118",
+            "name": null,
+            "highway": "path",
+            "sourceTags": {
+              "bridge": "yes",
+              "layer": "1"
+            },
+            "heightStatus": "unresolved_terrain_derivation",
+            "profile": "road-468",
+            "xz": [
+              514.7542439924106,
+              549.1690336785648
+            ],
+            "zones": [
+              "measured"
+            ],
+            "displayGradeChangePP": 1.6030120698179398,
+            "nativeGradeChangePP": 33.038471953062626,
+            "gradeChangeErrorPP": -31.435459883244686
+          },
+          {
+            "osm": "way/362049118",
+            "name": null,
+            "highway": "path",
+            "sourceTags": {
+              "bridge": "yes",
+              "layer": "1"
+            },
+            "heightStatus": "unresolved_terrain_derivation",
+            "profile": "road-468",
+            "xz": [
+              512.7645903362712,
+              548.9723407071718
+            ],
+            "zones": [
+              "measured"
+            ],
+            "displayGradeChangePP": -2.8954616482224083e-13,
+            "nativeGradeChangePP": 6.916950900110452,
+            "gradeChangeErrorPP": -6.916950900110741
+          },
+          {
+            "osm": "way/362049118",
+            "name": null,
+            "highway": "path",
+            "sourceTags": {
+              "bridge": "yes",
+              "layer": "1"
+            },
+            "heightStatus": "unresolved_terrain_derivation",
+            "profile": "road-468",
+            "xz": [
+              510.77493668013176,
+              548.7756477357789
+            ],
+            "zones": [
+              "measured"
+            ],
+            "displayGradeChangePP": -6.59472476627343e-14,
+            "nativeGradeChangePP": 0.028619497283507656,
+            "gradeChangeErrorPP": -0.028619497283573603
+          },
+          {
+            "osm": "way/362049118",
+            "name": null,
+            "highway": "path",
+            "sourceTags": {
+              "bridge": "yes",
+              "layer": "1"
+            },
+            "heightStatus": "unresolved_terrain_derivation",
+            "profile": "road-468",
+            "xz": [
+              508.7852830239924,
+              548.5789547643859
+            ],
+            "zones": [
+              "measured"
+            ],
+            "displayGradeChangePP": -14.485885077765051,
+            "nativeGradeChangePP": 0.0007631865941908345,
+            "gradeChangeErrorPP": -14.486648264359243
+          },
+          {
+            "osm": "way/362049118",
+            "name": null,
+            "highway": "path",
+            "sourceTags": {
+              "bridge": "yes",
+              "layer": "1"
+            },
+            "heightStatus": "unresolved_terrain_derivation",
+            "profile": "road-468",
+            "xz": [
+              506.795629367853,
+              548.382261792993
+            ],
+            "zones": [
+              "measured"
+            ],
+            "displayGradeChangePP": -1.8837680420533296,
+            "nativeGradeChangePP": 0.2365878442097702,
+            "gradeChangeErrorPP": -2.1203558862631
+          },
+          {
+            "osm": "way/362049118",
+            "name": null,
+            "highway": "path",
+            "sourceTags": {
+              "bridge": "yes",
+              "layer": "1"
+            },
+            "heightStatus": "unresolved_terrain_derivation",
+            "profile": "road-468",
+            "xz": [
+              504.8059757117136,
+              548.1855688216
+            ],
+            "zones": [
+              "measured"
+            ],
+            "displayGradeChangePP": 1.4210854715202004e-12,
+            "nativeGradeChangePP": 1.1674846925157936,
+            "gradeChangeErrorPP": -1.1674846925143725
+          },
+          {
+            "osm": "way/362049118",
+            "name": null,
+            "highway": "path",
+            "sourceTags": {
+              "bridge": "yes",
+              "layer": "1"
+            },
+            "heightStatus": "unresolved_terrain_derivation",
+            "profile": "road-468",
+            "xz": [
+              502.8163220555742,
+              547.988875850207
+            ],
+            "zones": [
+              "measured"
+            ],
+            "displayGradeChangePP": 2.8421709430404007e-12,
+            "nativeGradeChangePP": 1.4618839212381127,
+            "gradeChangeErrorPP": -1.4618839212352706
+          },
+          {
+            "osm": "way/362049118",
+            "name": null,
+            "highway": "path",
+            "sourceTags": {
+              "bridge": "yes",
+              "layer": "1"
+            },
+            "heightStatus": "unresolved_terrain_derivation",
+            "profile": "road-468",
+            "xz": [
+              500.82666839943477,
+              547.7921828788141
+            ],
+            "zones": [
+              "measured"
+            ],
+            "displayGradeChangePP": 26.23468530026484,
+            "nativeGradeChangePP": 162.99318853870628,
+            "gradeChangeErrorPP": -136.75850323844145
+          },
+          {
+            "osm": "way/362049118",
+            "name": null,
+            "highway": "path",
+            "sourceTags": {
+              "bridge": "yes",
+              "layer": "1"
+            },
+            "heightStatus": "unresolved_terrain_derivation",
+            "profile": "road-468",
+            "xz": [
+              498.8370147432954,
+              547.5954899074211
+            ],
+            "zones": [
+              "measured"
+            ],
+            "displayGradeChangePP": 18.648031161026243,
+            "nativeGradeChangePP": 18.508228893195877,
+            "gradeChangeErrorPP": 0.13980226783036542
+          },
+          {
+            "osm": "way/362049118",
+            "name": null,
+            "highway": "path",
+            "sourceTags": {
+              "bridge": "yes",
+              "layer": "1"
+            },
+            "heightStatus": "unresolved_terrain_derivation",
+            "profile": "road-468",
+            "xz": [
+              496.847361087156,
+              547.3987969360281
+            ],
+            "zones": [
+              "measured"
+            ],
+            "displayGradeChangePP": 4.973799150320701e-12,
+            "nativeGradeChangePP": -185.11854029523184,
+            "gradeChangeErrorPP": 185.1185402952368
+          }
+        ]
+      }
+    },
+    {
+      "id": "measured-maxAbsMeters",
+      "role": "worst_alarm_witness",
+      "alarm": {
+        "zone": "measured",
+        "metric": "maxAbsMeters",
+        "value": 7.007827482910109,
+        "limit": 2.0
+      },
+      "profile": {
+        "id": "cross-z--73",
+        "kind": "cross",
+        "points": [
+          [
+            -73.0,
+            1067.0
+          ]
+        ]
+      },
+      "utmCoordinates": [
+        [
+          350785.2060976629,
+          5645645.917179363
+        ]
+      ],
+      "groundElevation": {
+        "origin": [
+          -80,
+          1060
+        ],
+        "step": 20,
+        "cols": 2,
+        "rows": 2,
+        "values": [
+          -8.0344,
+          -16.7604,
+          -15.9291,
+          -10.7062
+        ],
+        "source": "Geobasis NRW WCS DGM1; EPSG:25832 / DHHN2016; 1 m source, 20 m display grid"
+      },
+      "expected": {
+        "samples": [
+          {
+            "profile": "cross-z--73",
+            "kind": "cross",
+            "station": 1133,
+            "xz": [
+              -73.0,
+              1067.0
+            ],
+            "zone": "measured",
+            "nativeNHN": 45.98588562011719,
+            "displayNHN": 52.9937131030273,
+            "errorMeters": 7.007827482910109
+          }
+        ],
+        "roadSlopes": [],
+        "roadGradeChanges": []
+      }
+    },
+    {
+      "id": "measured-p95-rank-100541",
+      "profile": {
+        "id": "cross-x-727",
+        "kind": "cross",
+        "points": [
+          [
+            267.0,
+            727.0
+          ]
+        ]
+      },
+      "role": "percentile_rank_witness",
+      "alarm": {
+        "zone": "measured",
+        "metric": "p95AbsMeters",
+        "value": 0.7527273424682339,
+        "limit": 0.75
+      },
+      "population": 105834,
+      "rank": 100541,
+      "fractionalRank": 100541.34999999999,
+      "utmCoordinates": [
+        [
+          351069.6490556258,
+          5645257.475993232
+        ]
+      ],
+      "groundElevation": {
+        "origin": [
+          260,
+          720
+        ],
+        "step": 20,
+        "cols": 2,
+        "rows": 2,
+        "values": [
+          -4.1488,
+          -6.4474,
+          -6.004,
+          -9.9197
+        ],
+        "source": "Geobasis NRW WCS DGM1; EPSG:25832 / DHHN2016; 1 m source, 20 m display grid"
+      },
+      "expected": {
+        "samples": [
+          {
+            "profile": "cross-x-727",
+            "kind": "cross",
+            "station": 733,
+            "xz": [
+              267.0,
+              727.0
+            ],
+            "zone": "measured",
+            "nativeNHN": 56.54730224609375,
+            "displayNHN": 55.79462810302738,
+            "errorMeters": -0.7526741430663719
+          }
+        ],
+        "roadSlopes": [],
+        "roadGradeChanges": []
+      }
+    },
+    {
+      "id": "measured-p95-rank-100542",
+      "profile": {
+        "id": "cross-x-567",
+        "kind": "cross",
+        "points": [
+          [
+            427.0,
+            567.0
+          ]
+        ]
+      },
+      "role": "percentile_rank_witness",
+      "alarm": {
+        "zone": "measured",
+        "metric": "p95AbsMeters",
+        "value": 0.7527273424682339,
+        "limit": 0.75
+      },
+      "population": 105834,
+      "rank": 100542,
+      "fractionalRank": 100541.34999999999,
+      "utmCoordinates": [
+        [
+          351203.51980667247,
+          5645074.685891514
+        ]
+      ],
+      "groundElevation": {
+        "origin": [
+          420,
+          560
+        ],
+        "step": 20,
+        "cols": 2,
+        "rows": 2,
+        "values": [
+          -8.9168,
+          -9.8729,
+          -9.0178,
+          -11.1338
+        ],
+        "source": "Geobasis NRW WCS DGM1; EPSG:25832 / DHHN2016; 1 m source, 20 m display grid"
+      },
+      "expected": {
+        "samples": [
+          {
+            "profile": "cross-x-567",
+            "kind": "cross",
+            "station": 813,
+            "xz": [
+              427.0,
+              567.0
+            ],
+            "zone": "measured",
+            "nativeNHN": 53.023319244384766,
+            "displayNHN": 52.270493103027356,
+            "errorMeters": -0.75282614135741
+          }
+        ],
+        "roadSlopes": [],
+        "roadGradeChanges": []
+      }
+    },
+    {
+      "id": "measured-maxGradeErrorPP",
+      "role": "worst_alarm_witness",
+      "alarm": {
+        "zone": "measured",
+        "metric": "maxGradeErrorPP",
+        "value": 179.6955509296473,
+        "limit": 20.0
+      },
+      "profile": {
+        "id": "road-3",
+        "kind": "road",
+        "osm": "way/5229974",
+        "name": "Aachener Straße",
+        "highway": "primary",
+        "sourceTags": {
+          "bridge": "yes",
+          "layer": "1"
+        },
+        "heightStatus": "unresolved_terrain_derivation",
+        "points": [
+          [
+            500.025927854602,
+            541.4951093192727
+          ],
+          [
+            498.0368104243874,
+            541.3472391888428
+          ]
+        ]
+      },
+      "utmCoordinates": [
+        [
+          351271.9533255652,
+          5645038.230163863
+        ],
+        [
+          351269.9593190721,
+          5645038.390324649
+        ]
+      ],
+      "groundElevation": {
+        "origin": [
+          480,
+          540
+        ],
+        "step": 20,
+        "cols": 3,
+        "rows": 2,
+        "values": [
+          -9.0959,
+          -14.3624,
+          -14.2594,
+          -10.3773,
+          -16.6884,
+          -12.9346
+        ],
+        "source": "Geobasis NRW WCS DGM1; EPSG:25832 / DHHN2016; 1 m source, 20 m display grid"
+      },
+      "expected": {
+        "samples": [
+          {
+            "osm": "way/5229974",
+            "name": "Aachener Straße",
+            "highway": "primary",
+            "sourceTags": {
+              "bridge": "yes",
+              "layer": "1"
+            },
+            "heightStatus": "unresolved_terrain_derivation",
+            "profile": "road-3",
+            "kind": "road",
+            "station": 10,
+            "xz": [
+              500.025927854602,
+              541.4951093192727
+            ],
+            "zone": "measured",
+            "nativeNHN": 47.239410400390625,
+            "displayNHN": 47.43182828822617,
+            "errorMeters": 0.19241788783554625
+          },
+          {
+            "osm": "way/5229974",
+            "name": "Aachener Straße",
+            "highway": "primary",
+            "sourceTags": {
+              "bridge": "yes",
+              "layer": "1"
+            },
+            "heightStatus": "unresolved_terrain_derivation",
+            "profile": "road-3",
+            "kind": "road",
+            "station": 11,
+            "xz": [
+              498.0368104243874,
+              541.3472391888428
+            ],
+            "zone": "measured",
+            "nativeNHN": 51.3529167175293,
+            "displayNHN": 47.96111608036313,
+            "errorMeters": -3.3918006371661704
+          }
+        ],
+        "roadSlopes": [
+          {
+            "osm": "way/5229974",
+            "name": "Aachener Straße",
+            "highway": "primary",
+            "sourceTags": {
+              "bridge": "yes",
+              "layer": "1"
+            },
+            "heightStatus": "unresolved_terrain_derivation",
+            "profile": "road-3",
+            "xz": [
+              498.0368104243874,
+              541.3472391888428
+            ],
+            "fromXZ": [
+              500.025927854602,
+              541.4951093192727
+            ],
+            "lengthMeters": 1.9946061582821133,
+            "zones": [
+              "measured"
+            ],
+            "displayGradePct": 26.535954977338125,
+            "nativeGradePct": 206.23150590698543,
+            "gradeErrorPP": -179.6955509296473
+          }
+        ],
+        "roadGradeChanges": []
+      }
+    },
+    {
+      "id": "measured-maxGradeChangeErrorPP",
+      "role": "worst_alarm_witness",
+      "alarm": {
+        "zone": "measured",
+        "metric": "maxGradeChangeErrorPP",
+        "value": 185.1185402952368,
+        "limit": 20.0
+      },
+      "profile": {
+        "id": "road-468",
+        "kind": "road",
+        "osm": "way/362049118",
+        "name": null,
+        "highway": "path",
+        "sourceTags": {
+          "bridge": "yes",
+          "layer": "1"
+        },
+        "heightStatus": "unresolved_terrain_derivation",
+        "points": [
+          [
+            498.8370147432954,
+            547.5954899074211
+          ],
+          [
+            496.847361087156,
+            547.3987969360281
+          ],
+          [
+            494.8577074310166,
+            547.2021039646352
+          ]
+        ]
+      },
+      "utmCoordinates": [
+        [
+          351271.7160923459,
+          5645044.4429802215
+        ],
+        [
+          351269.71402604255,
+          5645044.554966342
+        ],
+        [
+          351267.711959789,
+          5645044.666953235
+        ]
+      ],
+      "groundElevation": {
+        "origin": [
+          480,
+          540
+        ],
+        "step": 20,
+        "cols": 2,
+        "rows": 2,
+        "values": [
+          -9.0959,
+          -14.3624,
+          -10.3773,
+          -16.6884
+        ],
+        "source": "Geobasis NRW WCS DGM1; EPSG:25832 / DHHN2016; 1 m source, 20 m display grid"
+      },
+      "expected": {
+        "samples": [
+          {
+            "osm": "way/362049118",
+            "name": null,
+            "highway": "path",
+            "sourceTags": {
+              "bridge": "yes",
+              "layer": "1"
+            },
+            "heightStatus": "unresolved_terrain_derivation",
+            "profile": "road-468",
+            "kind": "road",
+            "station": 11,
+            "xz": [
+              498.8370147432954,
+              547.5954899074211
+            ],
+            "zone": "measured",
+            "nativeNHN": 48.934814453125,
+            "displayNHN": 47.02373071951601,
+            "errorMeters": -1.91108373360899
+          },
+          {
+            "osm": "way/362049118",
+            "name": null,
+            "highway": "path",
+            "sourceTags": {
+              "bridge": "yes",
+              "layer": "1"
+            },
+            "heightStatus": "unresolved_terrain_derivation",
+            "profile": "road-468",
+            "kind": "road",
+            "station": 12,
+            "xz": [
+              496.847361087156,
+              547.3987969360281
+            ],
+            "zone": "measured",
+            "nativeNHN": 52.645145416259766,
+            "displayNHN": 47.57053166109187,
+            "errorMeters": -5.074613755167896
+          },
+          {
+            "osm": "way/362049118",
+            "name": null,
+            "highway": "path",
+            "sourceTags": {
+              "bridge": "yes",
+              "layer": "1"
+            },
+            "heightStatus": "unresolved_terrain_derivation",
+            "profile": "road-468",
+            "kind": "road",
+            "station": 13,
+            "xz": [
+              494.8577074310166,
+              547.2021039646352
+            ],
+            "zone": "measured",
+            "nativeNHN": 52.65430450439453,
+            "displayNHN": 48.11733260266783,
+            "errorMeters": -4.536971901726702
+          }
+        ],
+        "roadSlopes": [
+          {
+            "osm": "way/362049118",
+            "name": null,
+            "highway": "path",
+            "sourceTags": {
+              "bridge": "yes",
+              "layer": "1"
+            },
+            "heightStatus": "unresolved_terrain_derivation",
+            "profile": "road-468",
+            "xz": [
+              496.847361087156,
+              547.3987969360281
+            ],
+            "fromXZ": [
+              498.8370147432954,
+              547.5954899074211
+            ],
+            "lengthMeters": 1.9993523442315801,
+            "zones": [
+              "measured"
+            ],
+            "displayGradePct": 27.348903416321775,
+            "nativeGradePct": 185.57664304841543,
+            "gradeErrorPP": -158.22773963209366
+          },
+          {
+            "osm": "way/362049118",
+            "name": null,
+            "highway": "path",
+            "sourceTags": {
+              "bridge": "yes",
+              "layer": "1"
+            },
+            "heightStatus": "unresolved_terrain_derivation",
+            "profile": "road-468",
+            "xz": [
+              494.8577074310166,
+              547.2021039646352
+            ],
+            "fromXZ": [
+              496.847361087156,
+              547.3987969360281
+            ],
+            "lengthMeters": 1.9993523442315801,
+            "zones": [
+              "measured"
+            ],
+            "displayGradePct": 27.34890341632675,
+            "nativeGradePct": 0.45810275318359545,
+            "gradeErrorPP": 26.890800663143153
+          }
+        ],
+        "roadGradeChanges": [
+          {
+            "osm": "way/362049118",
+            "name": null,
+            "highway": "path",
+            "sourceTags": {
+              "bridge": "yes",
+              "layer": "1"
+            },
+            "heightStatus": "unresolved_terrain_derivation",
+            "profile": "road-468",
+            "xz": [
+              496.847361087156,
+              547.3987969360281
+            ],
+            "zones": [
+              "measured"
+            ],
+            "displayGradeChangePP": 4.973799150320701e-12,
+            "nativeGradeChangePP": -185.11854029523184,
+            "gradeChangeErrorPP": 185.1185402952368
+          }
+        ]
+      }
+    },
+    {
+      "id": "modelApron-maxAbsMeters",
+      "role": "worst_alarm_witness",
+      "alarm": {
+        "zone": "modelApron",
+        "metric": "maxAbsMeters",
+        "value": 5.214021301269533,
+        "limit": 3.0
+      },
+      "profile": {
+        "id": "road-322",
+        "kind": "road",
+        "osm": "way/155676742",
+        "name": null,
+        "highway": "service",
+        "sourceTags": {},
+        "heightStatus": "terrain_derivation",
+        "points": [
+          [
+            -75.27508269397985,
+            -119.81852991094694
+          ]
+        ]
+      },
+      "utmCoordinates": [
+        [
+          350599.7562131804,
+          5644473.212706658
+        ]
+      ],
+      "groundElevation": {
+        "origin": [
+          -80,
+          -120
+        ],
+        "step": 20,
+        "cols": 2,
+        "rows": 2,
+        "values": [
+          -0.0,
+          -0.0,
+          -0.0,
+          -0.0
+        ],
+        "source": "Geobasis NRW WCS DGM1; EPSG:25832 / DHHN2016; 1 m source, 20 m display grid"
+      },
+      "expected": {
+        "samples": [
+          {
+            "osm": "way/155676742",
+            "name": null,
+            "highway": "service",
+            "sourceTags": {},
+            "heightStatus": "terrain_derivation",
+            "profile": "road-322",
+            "kind": "road",
+            "station": 25,
+            "xz": [
+              -75.27508269397985,
+              -119.81852991094694
+            ],
+            "zone": "modelApron",
+            "nativeNHN": 56.74922180175781,
+            "displayNHN": 61.963243103027345,
+            "errorMeters": 5.214021301269533
+          }
+        ],
+        "roadSlopes": [],
+        "roadGradeChanges": []
+      }
+    },
+    {
+      "id": "modelApron-maxGradeChangeErrorPP",
+      "role": "worst_alarm_witness",
+      "alarm": {
+        "zone": "modelApron",
+        "metric": "maxGradeChangeErrorPP",
+        "value": 46.18328115304505,
+        "limit": 20.0
+      },
+      "profile": {
+        "id": "road-677",
+        "kind": "road",
+        "osm": "way/795340249",
+        "name": null,
+        "highway": "footway",
+        "sourceTags": {},
+        "heightStatus": "terrain_derivation",
+        "points": [
+          [
+            -9.10525312129873,
+            131.45942438869406
+          ],
+          [
+            -9.10616075708386,
+            129.6010144575655
+          ],
+          [
+            -9.107068392868989,
+            127.74260452643692
+          ]
+        ]
+      },
+      "utmCoordinates": [
+        [
+          350704.12536118337,
+          5644711.378544561
+        ],
+        [
+          350703.8375949198,
+          5644709.541826312
+        ],
+        [
+          350703.5498285019,
+          5644707.705108079
+        ]
+      ],
+      "groundElevation": {
+        "origin": [
+          -20,
+          120
+        ],
+        "step": 20,
+        "cols": 2,
+        "rows": 2,
+        "values": [
+          -0.0,
+          -0.0,
+          -0.1884,
+          0.0692
+        ],
+        "source": "Geobasis NRW WCS DGM1; EPSG:25832 / DHHN2016; 1 m source, 20 m display grid"
+      },
+      "expected": {
+        "samples": [
+          {
+            "osm": "way/795340249",
+            "name": null,
+            "highway": "footway",
+            "sourceTags": {},
+            "heightStatus": "terrain_derivation",
+            "profile": "road-677",
+            "kind": "road",
+            "station": 0,
+            "xz": [
+              -9.10525312129873,
+              131.45942438869406
+            ],
+            "zone": "transition",
+            "nativeNHN": 63.11808776855469,
+            "displayNHN": 61.99561966508352,
+            "errorMeters": -1.1224681034711708
+          },
+          {
+            "osm": "way/795340249",
+            "name": null,
+            "highway": "footway",
+            "sourceTags": {},
+            "heightStatus": "terrain_derivation",
+            "profile": "road-677",
+            "kind": "road",
+            "station": 1,
+            "xz": [
+              -9.10616075708386,
+              129.6010144575655
+            ],
+            "zone": "transition",
+            "nativeNHN": 62.1901969909668,
+            "displayNHN": 61.996462613050525,
+            "errorMeters": -0.19373437791627168
+          },
+          {
+            "osm": "way/795340249",
+            "name": null,
+            "highway": "footway",
+            "sourceTags": {},
+            "heightStatus": "terrain_derivation",
+            "profile": "road-677",
+            "kind": "road",
+            "station": 2,
+            "xz": [
+              -9.107068392868989,
+              127.74260452643692
+            ],
+            "zone": "modelApron",
+            "nativeNHN": 62.11330795288086,
+            "displayNHN": 61.990032514688814,
+            "errorMeters": -0.12327543819204578
+          }
+        ],
+        "roadSlopes": [
+          {
+            "osm": "way/795340249",
+            "name": null,
+            "highway": "footway",
+            "sourceTags": {},
+            "heightStatus": "terrain_derivation",
+            "profile": "road-677",
+            "xz": [
+              -9.10616075708386,
+              129.6010144575655
+            ],
+            "fromXZ": [
+              -9.10525312129873,
+              131.45942438869406
+            ],
+            "lengthMeters": 1.8584101527703694,
+            "zones": [
+              "transition"
+            ],
+            "displayGradePct": 0.045358553694503694,
+            "nativeGradePct": -49.92927832452192,
+            "gradeErrorPP": 49.97463687821642
+          },
+          {
+            "osm": "way/795340249",
+            "name": null,
+            "highway": "footway",
+            "sourceTags": {},
+            "heightStatus": "terrain_derivation",
+            "profile": "road-677",
+            "xz": [
+              -9.107068392868989,
+              127.74260452643692
+            ],
+            "fromXZ": [
+              -9.10616075708386,
+              129.6010144575655
+            ],
+            "lengthMeters": 1.8584101527703836,
+            "zones": [
+              "modelApron",
+              "transition"
+            ],
+            "displayGradePct": -0.34599995873494743,
+            "nativeGradePct": -4.137355683906315,
+            "gradeErrorPP": 3.7913557251713677
+          }
+        ],
+        "roadGradeChanges": [
+          {
+            "osm": "way/795340249",
+            "name": null,
+            "highway": "footway",
+            "sourceTags": {},
+            "heightStatus": "terrain_derivation",
+            "profile": "road-677",
+            "xz": [
+              -9.10616075708386,
+              129.6010144575655
+            ],
+            "zones": [
+              "modelApron",
+              "transition"
+            ],
+            "displayGradeChangePP": -0.39135851242945113,
+            "nativeGradeChangePP": 45.7919226406156,
+            "gradeChangeErrorPP": -46.18328115304505
+          }
+        ]
+      }
+    },
+    {
+      "id": "transition-maxAbsMeters",
+      "role": "worst_alarm_witness",
+      "alarm": {
+        "zone": "transition",
+        "metric": "maxAbsMeters",
+        "value": 4.502855206009748,
+        "limit": 3.0
+      },
+      "profile": {
+        "id": "road-322",
+        "kind": "road",
+        "osm": "way/155676742",
+        "name": null,
+        "highway": "service",
+        "sourceTags": {},
+        "heightStatus": "terrain_derivation",
+        "points": [
+          [
+            -75.40792388631367,
+            -127.58315027677509
+          ]
+        ]
+      },
+      "utmCoordinates": [
+        [
+          350598.4258139121,
+          5644465.558628715
+        ]
+      ],
+      "groundElevation": {
+        "origin": [
+          -80,
+          -140
+        ],
+        "step": 20,
+        "cols": 2,
+        "rows": 2,
+        "values": [
+          -0.2014,
+          -0.0573,
+          -0.0,
+          -0.0
+        ],
+        "source": "Geobasis NRW WCS DGM1; EPSG:25832 / DHHN2016; 1 m source, 20 m display grid"
+      },
+      "expected": {
+        "samples": [
+          {
+            "osm": "way/155676742",
+            "name": null,
+            "highway": "service",
+            "sourceTags": {},
+            "heightStatus": "terrain_derivation",
+            "profile": "road-322",
+            "kind": "road",
+            "station": 21,
+            "xz": [
+              -75.40792388631367,
+              -127.58315027677509
+            ],
+            "zone": "transition",
+            "nativeNHN": 57.38402557373047,
+            "displayNHN": 61.88688077974022,
+            "errorMeters": 4.502855206009748
+          }
+        ],
+        "roadSlopes": [],
+        "roadGradeChanges": []
+      }
+    },
+    {
+      "id": "transition-maxGradeErrorPP",
+      "role": "worst_alarm_witness",
+      "alarm": {
+        "zone": "transition",
+        "metric": "maxGradeErrorPP",
+        "value": 49.97463687821642,
+        "limit": 20.0
+      },
+      "profile": {
+        "id": "road-677",
+        "kind": "road",
+        "osm": "way/795340249",
+        "name": null,
+        "highway": "footway",
+        "sourceTags": {},
+        "heightStatus": "terrain_derivation",
+        "points": [
+          [
+            -9.10525312129873,
+            131.45942438869406
+          ],
+          [
+            -9.10616075708386,
+            129.6010144575655
+          ]
+        ]
+      },
+      "utmCoordinates": [
+        [
+          350704.12536118337,
+          5644711.378544561
+        ],
+        [
+          350703.8375949198,
+          5644709.541826312
+        ]
+      ],
+      "groundElevation": {
+        "origin": [
+          -20,
+          120
+        ],
+        "step": 20,
+        "cols": 2,
+        "rows": 2,
+        "values": [
+          -0.0,
+          -0.0,
+          -0.1884,
+          0.0692
+        ],
+        "source": "Geobasis NRW WCS DGM1; EPSG:25832 / DHHN2016; 1 m source, 20 m display grid"
+      },
+      "expected": {
+        "samples": [
+          {
+            "osm": "way/795340249",
+            "name": null,
+            "highway": "footway",
+            "sourceTags": {},
+            "heightStatus": "terrain_derivation",
+            "profile": "road-677",
+            "kind": "road",
+            "station": 0,
+            "xz": [
+              -9.10525312129873,
+              131.45942438869406
+            ],
+            "zone": "transition",
+            "nativeNHN": 63.11808776855469,
+            "displayNHN": 61.99561966508352,
+            "errorMeters": -1.1224681034711708
+          },
+          {
+            "osm": "way/795340249",
+            "name": null,
+            "highway": "footway",
+            "sourceTags": {},
+            "heightStatus": "terrain_derivation",
+            "profile": "road-677",
+            "kind": "road",
+            "station": 1,
+            "xz": [
+              -9.10616075708386,
+              129.6010144575655
+            ],
+            "zone": "transition",
+            "nativeNHN": 62.1901969909668,
+            "displayNHN": 61.996462613050525,
+            "errorMeters": -0.19373437791627168
+          }
+        ],
+        "roadSlopes": [
+          {
+            "osm": "way/795340249",
+            "name": null,
+            "highway": "footway",
+            "sourceTags": {},
+            "heightStatus": "terrain_derivation",
+            "profile": "road-677",
+            "xz": [
+              -9.10616075708386,
+              129.6010144575655
+            ],
+            "fromXZ": [
+              -9.10525312129873,
+              131.45942438869406
+            ],
+            "lengthMeters": 1.8584101527703694,
+            "zones": [
+              "transition"
+            ],
+            "displayGradePct": 0.045358553694503694,
+            "nativeGradePct": -49.92927832452192,
+            "gradeErrorPP": 49.97463687821642
+          }
+        ],
+        "roadGradeChanges": []
+      }
+    },
+    {
+      "id": "transition-maxGradeChangeErrorPP",
+      "role": "worst_alarm_witness",
+      "alarm": {
+        "zone": "transition",
+        "metric": "maxGradeChangeErrorPP",
+        "value": 46.18328115304505,
+        "limit": 20.0
+      },
+      "profile": {
+        "id": "road-677",
+        "kind": "road",
+        "osm": "way/795340249",
+        "name": null,
+        "highway": "footway",
+        "sourceTags": {},
+        "heightStatus": "terrain_derivation",
+        "points": [
+          [
+            -9.10525312129873,
+            131.45942438869406
+          ],
+          [
+            -9.10616075708386,
+            129.6010144575655
+          ],
+          [
+            -9.107068392868989,
+            127.74260452643692
+          ]
+        ]
+      },
+      "utmCoordinates": [
+        [
+          350704.12536118337,
+          5644711.378544561
+        ],
+        [
+          350703.8375949198,
+          5644709.541826312
+        ],
+        [
+          350703.5498285019,
+          5644707.705108079
+        ]
+      ],
+      "groundElevation": {
+        "origin": [
+          -20,
+          120
+        ],
+        "step": 20,
+        "cols": 2,
+        "rows": 2,
+        "values": [
+          -0.0,
+          -0.0,
+          -0.1884,
+          0.0692
+        ],
+        "source": "Geobasis NRW WCS DGM1; EPSG:25832 / DHHN2016; 1 m source, 20 m display grid"
+      },
+      "expected": {
+        "samples": [
+          {
+            "osm": "way/795340249",
+            "name": null,
+            "highway": "footway",
+            "sourceTags": {},
+            "heightStatus": "terrain_derivation",
+            "profile": "road-677",
+            "kind": "road",
+            "station": 0,
+            "xz": [
+              -9.10525312129873,
+              131.45942438869406
+            ],
+            "zone": "transition",
+            "nativeNHN": 63.11808776855469,
+            "displayNHN": 61.99561966508352,
+            "errorMeters": -1.1224681034711708
+          },
+          {
+            "osm": "way/795340249",
+            "name": null,
+            "highway": "footway",
+            "sourceTags": {},
+            "heightStatus": "terrain_derivation",
+            "profile": "road-677",
+            "kind": "road",
+            "station": 1,
+            "xz": [
+              -9.10616075708386,
+              129.6010144575655
+            ],
+            "zone": "transition",
+            "nativeNHN": 62.1901969909668,
+            "displayNHN": 61.996462613050525,
+            "errorMeters": -0.19373437791627168
+          },
+          {
+            "osm": "way/795340249",
+            "name": null,
+            "highway": "footway",
+            "sourceTags": {},
+            "heightStatus": "terrain_derivation",
+            "profile": "road-677",
+            "kind": "road",
+            "station": 2,
+            "xz": [
+              -9.107068392868989,
+              127.74260452643692
+            ],
+            "zone": "modelApron",
+            "nativeNHN": 62.11330795288086,
+            "displayNHN": 61.990032514688814,
+            "errorMeters": -0.12327543819204578
+          }
+        ],
+        "roadSlopes": [
+          {
+            "osm": "way/795340249",
+            "name": null,
+            "highway": "footway",
+            "sourceTags": {},
+            "heightStatus": "terrain_derivation",
+            "profile": "road-677",
+            "xz": [
+              -9.10616075708386,
+              129.6010144575655
+            ],
+            "fromXZ": [
+              -9.10525312129873,
+              131.45942438869406
+            ],
+            "lengthMeters": 1.8584101527703694,
+            "zones": [
+              "transition"
+            ],
+            "displayGradePct": 0.045358553694503694,
+            "nativeGradePct": -49.92927832452192,
+            "gradeErrorPP": 49.97463687821642
+          },
+          {
+            "osm": "way/795340249",
+            "name": null,
+            "highway": "footway",
+            "sourceTags": {},
+            "heightStatus": "terrain_derivation",
+            "profile": "road-677",
+            "xz": [
+              -9.107068392868989,
+              127.74260452643692
+            ],
+            "fromXZ": [
+              -9.10616075708386,
+              129.6010144575655
+            ],
+            "lengthMeters": 1.8584101527703836,
+            "zones": [
+              "modelApron",
+              "transition"
+            ],
+            "displayGradePct": -0.34599995873494743,
+            "nativeGradePct": -4.137355683906315,
+            "gradeErrorPP": 3.7913557251713677
+          }
+        ],
+        "roadGradeChanges": [
+          {
+            "osm": "way/795340249",
+            "name": null,
+            "highway": "footway",
+            "sourceTags": {},
+            "heightStatus": "terrain_derivation",
+            "profile": "road-677",
+            "xz": [
+              -9.10616075708386,
+              129.6010144575655
+            ],
+            "zones": [
+              "modelApron",
+              "transition"
+            ],
+            "displayGradeChangePP": -0.39135851242945113,
+            "nativeGradeChangePP": 45.7919226406156,
+            "gradeChangeErrorPP": -46.18328115304505
+          }
+        ]
+      }
+    }
+  ]
+}

@@ -1,0 +1,235 @@
+{
+  "schema": 1,
+  "file": "ground.json",
+  "sha256": "727b07bb9edb616e43a4c37504059e80015ecea9c81ab6c0dc2871f9c71404b1",
+  "sources": [
+    {
+      "file": "way-5229974.tif",
+      "sha256": "238d1b7ec4162b312495c46044a7e213c39209c8430ee9179574fe0b3acf0aff",
+      "bytes": 641,
+      "mosaicWindow": [
+        2267,
+        960,
+        26,
+        4
+      ],
+      "transform": [
+        1.0,
+        0.0,
+        351267.0,
+        0.0,
+        -1.0,
+        5645040.0
+      ]
+    },
+    {
+      "file": "way-362049118.tif",
+      "sha256": "ba3eb0d51c3a9ddb10c77d1a07e49c1bc07ceab5fe3116cf44e4e9ed68d8e890",
+      "bytes": 597,
+      "mosaicWindow": [
+        2267,
+        954,
+        26,
+        3
+      ],
+      "transform": [
+        1.0,
+        0.0,
+        351267.0,
+        0.0,
+        -1.0,
+        5645046.0
+      ]
+    },
+    {
+      "file": "measured-maxAbsMeters.tif",
+      "sha256": "27073b9ec992bb3b796e312556dcdfe5e9cbf882a1f5aaecad40f49571d12724",
+      "bytes": 417,
+      "mosaicWindow": [
+        1784,
+        353,
+        2,
+        2
+      ],
+      "transform": [
+        1.0,
+        0.0,
+        350784.0,
+        0.0,
+        -1.0,
+        5645647.0
+      ]
+    },
+    {
+      "file": "measured-p95-rank-100541.tif",
+      "sha256": "dd691377cb56e7d9ce6dc1f482f4963b9a05136318d1094924f2fcb5c88f9672",
+      "bytes": 417,
+      "mosaicWindow": [
+        2069,
+        742,
+        2,
+        2
+      ],
+      "transform": [
+        1.0,
+        0.0,
+        351069.0,
+        0.0,
+        -1.0,
+        5645258.0
+      ]
+    },
+    {
+      "file": "measured-p95-rank-100542.tif",
+      "sha256": "a1ea293fbd134bc22f6b505040d31ba529715ce0203b135fdc1fd270a095524b",
+      "bytes": 417,
+      "mosaicWindow": [
+        2203,
+        924,
+        2,
+        2
+      ],
+      "transform": [
+        1.0,
+        0.0,
+        351203.0,
+        0.0,
+        -1.0,
+        5645076.0
+      ]
+    },
+    {
+      "file": "measured-maxGradeErrorPP.tif",
+      "sha256": "e730642f38af92c809de79aee19d7bfdcd5951f74f194cec97de80829f84afd5",
+      "bytes": 429,
+      "mosaicWindow": [
+        2269,
+        961,
+        4,
+        2
+      ],
+      "transform": [
+        1.0,
+        0.0,
+        351269.0,
+        0.0,
+        -1.0,
+        5645039.0
+      ]
+    },
+    {
+      "file": "measured-maxGradeChangeErrorPP.tif",
+      "sha256": "6a1ae69225ddbbdca888e5c32cf12bf81c05faa24065899b2adff692473a2886",
+      "bytes": 450,
+      "mosaicWindow": [
+        2267,
+        954,
+        6,
+        3
+      ],
+      "transform": [
+        1.0,
+        0.0,
+        351267.0,
+        0.0,
+        -1.0,
+        5645046.0
+      ]
+    },
+    {
+      "file": "modelApron-maxAbsMeters.tif",
+      "sha256": "a68244e7542ed159d6746b694b2ccfc94f86469bb09be2fe3f005f6b42739b8a",
+      "bytes": 417,
+      "mosaicWindow": [
+        1599,
+        1526,
+        2,
+        2
+      ],
+      "transform": [
+        1.0,
+        0.0,
+        350599.0,
+        0.0,
+        -1.0,
+        5644474.0
+      ]
+    },
+    {
+      "file": "modelApron-maxGradeChangeErrorPP.tif",
+      "sha256": "f74f2758ceb465a0bd6cb4dbe412aadcf0cf797679a2d0bc25d9b12515768998",
+      "bytes": 433,
+      "mosaicWindow": [
+        1703,
+        1288,
+        2,
+        5
+      ],
+      "transform": [
+        1.0,
+        0.0,
+        350703.0,
+        0.0,
+        -1.0,
+        5644712.0
+      ]
+    },
+    {
+      "file": "transition-maxAbsMeters.tif",
+      "sha256": "8cbb1d92e937088ca06aaecbb6b6a2ee475caa51a6abe7766bcf9c4bbf150965",
+      "bytes": 417,
+      "mosaicWindow": [
+        1597,
+        1533,
+        2,
+        2
+      ],
+      "transform": [
+        1.0,
+        0.0,
+        350597.0,
+        0.0,
+        -1.0,
+        5644467.0
+      ]
+    },
+    {
+      "file": "transition-maxGradeErrorPP.tif",
+      "sha256": "a1867bdb9f751cd0d5eadc847e63208d588fa40e206518e5cd7e74d0ebcf58f7",
+      "bytes": 425,
+      "mosaicWindow": [
+        1703,
+        1288,
+        2,
+        3
+      ],
+      "transform": [
+        1.0,
+        0.0,
+        350703.0,
+        0.0,
+        -1.0,
+        5644712.0
+      ]
+    },
+    {
+      "file": "transition-maxGradeChangeErrorPP.tif",
+      "sha256": "f74f2758ceb465a0bd6cb4dbe412aadcf0cf797679a2d0bc25d9b12515768998",
+      "bytes": 433,
+      "mosaicWindow": [
+        1703,
+        1288,
+        2,
+        5
+      ],
+      "transform": [
+        1.0,
+        0.0,
+        350703.0,
+        0.0,
+        -1.0,
+        5644712.0
+      ]
+    }
+  ]
+}
