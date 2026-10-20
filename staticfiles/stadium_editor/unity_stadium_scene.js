@@ -1,7 +1,8 @@
 import * as THREE from './stage/vendor/three.module.js';
 import {applyStudyCamera} from './study_camera.js?v=3';
-import {buildDortmundSurroundings} from './dortmund_surroundings.js?v=57';
+import {buildDortmundSurroundings} from './dortmund_surroundings.js?v=58';
 import {validateCalibration, standForCenter, tickerQuaternion} from './unity_calibration.js?v=2';
+import {mountBridgeHeightNotice} from './bridge_height_evidence.js?v=1';
 
 /** Original source geometry, with its own club-scoped runtime presentation. */
 export async function mountUnityStadium({element, presentation, tickerPreview = false, onOrbitChange}) {
@@ -34,6 +35,8 @@ export async function mountUnityStadium({element, presentation, tickerPreview = 
   const environment = buildDortmundSurroundings(THREE, presentation.surroundings,
     presentation.frame, calibration.surroundingsAxes);
   scene.add(environment.group);
+  const removeBridgeNotice = mountBridgeHeightNotice(element,
+    environment.group.userData.bridgeHeightEvidence || [], environment.group.userData.bridgeHeightNotice);
   const hemisphere = new THREE.HemisphereLight(0xe7f1f2, 0x344045, 1.35);
   const sun = new THREE.DirectionalLight(0xfff3d4, 1.5);
   sun.position.set(-135, 210, 100);
@@ -233,12 +236,14 @@ export async function mountUnityStadium({element, presentation, tickerPreview = 
         controls.removeEventListener('wheel',wheel);
         geometries.forEach(g=>g.dispose());materials.forEach(m=>m.dispose());
         textures.forEach(p=>p.then(t=>t.dispose()));environment.dispose();renderer.dispose();
+        removeBridgeNotice();
         renderer.domElement.remove();
       },
     };
   } catch(error) {
     geometries.forEach(g=>g.dispose());materials.forEach(m=>m.dispose());
     textures.forEach(p=>p.then(t=>t.dispose()));environment.dispose();renderer.dispose();
+    removeBridgeNotice();
     renderer.domElement.remove(); throw error;
   }
 }

@@ -5,6 +5,7 @@
 import {validateSurroundingsGround, createGroundCutoutChecks} from './surroundings_ground.js?v=3';
 import {elevationSampler, drapeTriangles, drapeLines} from './measured_ground.js?v=1';
 import {validateBuildingParts} from './building_parts.js?v=1';
+import {bridgeHeightEvidence, bridgeHeightLabel} from './bridge_height_evidence.js?v=1';
 const UNIT = Object.freeze({
   '+x': Object.freeze({index:0, sign:1}), '-x': Object.freeze({index:0, sign:-1}),
   '+z': Object.freeze({index:1, sign:1}), '-z': Object.freeze({index:1, sign:-1}),
@@ -145,6 +146,10 @@ export function buildDortmundSurroundings(THREE, data = {}, frame = {},
   group.name = 'EDITOR_SURROUNDINGS_3D';
   group.userData.source = data.source || '';
   group.userData.treeSource = data.treeSource || '';
+  const bridges = bridgeHeightEvidence(data);
+  if (bridges.length) group.userData.bridgeHeightEvidence = bridges;
+  const heightNotice = bridgeHeightLabel(data, bridges);
+  if (heightNotice) group.userData.bridgeHeightNotice = heightNotice;
   if (checks.buildingParts.size) {
     group.userData.buildingParts = {
       referenceNHN: data.buildingParts.referenceNHN,
