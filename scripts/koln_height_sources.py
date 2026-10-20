@@ -67,6 +67,11 @@ def fetch():
     (OUT / "sources.json").write_text(json.dumps({
         "provider": "Geobasis NRW", "license": "Datenlizenz Deutschland – Zero 2.0",
         "crs": "EPSG:25832", "verticalDatum": "DHHN2016 / NHN (EPSG:7837)",
+        "dgmSurface": "bare_earth_not_bridge_deck",
+        "bridgeDeckEvidence": {
+            "status": "none_spatially_verified",
+            "policy": "No DGM, OSM layer, generic building height or unclassified DOM value may supply a deck height",
+        },
         "centerUTM": [east, north], "requestedDgmBounds": bounds, "sources": sources,
     }, indent=2))
     print(json.dumps({"files": len(sources), "bytes": sum(s["bytes"] for s in sources)}))

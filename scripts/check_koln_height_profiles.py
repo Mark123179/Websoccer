@@ -14,6 +14,7 @@ import numpy as np
 from shapely.geometry import LineString, Point, Polygon
 
 from scripts.koln_profile_sources import NativeDGM, model_projection
+from scripts.koln_bridge_heights import UNRESOLVED, bridge_records, bridge_report, is_bridge
 
 STUDY = Path("generated-artifacts/koln-study")
 ZONES = ("measured", "modelApron", "transition")
@@ -70,6 +71,7 @@ def profiles_for(presentation, roads, evidence):
         profiles.append({"id": f"road-{i}", "kind": "road", "osm": features[i]["osm"],
                          "name": tags.get("name"), "highway": tags.get("highway"),
                          "sourceTags": {k: tags[k] for k in ("bridge", "tunnel", "layer") if k in tags},
+                         "heightStatus": UNRESOLVED if is_bridge(tags) else "terrain_derivation",
                          "points": spaced(points)})
     return profiles
 
@@ -90,7 +92,7 @@ def evaluate(profiles, offsets, native, reference, ground_level, apron, cutout, 
     samples, slopes, changes = [], [], []
     cursor = 0
     for profile in profiles:
-        identity = {k: profile[k] for k in ("osm", "name", "highway", "sourceTags") if k in profile}
+        identity = {k: profile[k] for k in ("osm", "name", "highway", "sourceTags", "heightStatus") if k in profile}
         previous = previous_slope = None
         for station, (x, z) in enumerate(profile["points"]):
             offset = offsets[cursor]
@@ -176,6 +178,10 @@ def run(presentation_path, evidence_path, source_path):
     p = json.loads(presentation_path.read_text())["presentation"]
     ev = json.loads(evidence_path.read_text())
     sources = json.loads(source_path.read_text())
+    expected_bridges = bridge_records(p["surroundings"], ev)
+    declared_bridges = p["surroundings"].get("heightEvidence", {}).get("bridges")
+    if "bridges" in p["surroundings"].get("heightEvidence", {}) and declared_bridges != expected_bridges:
+        raise ValueError("Bridge evidence differs from OSM identity/geometry or claims an unverified deck")
     if hashlib.sha256((evidence_path.parent / "raw.json").read_bytes()).hexdigest() != ev["rawSha256"]:
         raise ValueError("OSM evidence raw hash mismatch")
     if p["surroundings"]["groundElevation"]["step"] != 20:
@@ -197,7 +203,9 @@ def run(presentation_path, evidence_path, source_path):
     samples, slopes, changes = evaluate(profiles, offsets, native, reference,
                                        p["surroundings"]["groundLevel"], apron, cutout)
     report = summarize(samples, slopes, changes)
-    report.update(schema=1, limits={"height": LIMITS, "roads": ROAD_LIMITS},
+    report.update(schema=2, limits={"height": LIMITS, "roads": ROAD_LIMITS},
+                  bridgeTreatment={**bridge_report(profiles, samples, slopes, changes),
+                                   "rendererDeclaration": "bound" if declared_bridges is not None else "missing_legacy"},
                   inputs={str(path): hashlib.sha256(path.read_bytes()).hexdigest()
                           for path in (presentation_path, evidence_path, source_path)},
                   nativeSources=native.sources, referenceNHN=reference,
@@ -206,7 +214,7 @@ def run(presentation_path, evidence_path, source_path):
                           "crossProfilePhaseMeters": 7, "transitionWidthMeters": 40,
                           "surface": "groundLevel + renderer elevationSampler (no decorative surface offsets)",
                           "limitsMeaning": "Acceptance alarms, not DGM or display accuracy guarantees",
-                          "bridges": "DGM describes ground, not bridge decks; sourceTags disclosed, no correction"},
+                          "bridges": "Unresolved terrain derivation, no measured carriageway; separate bridgeTreatment, unchanged DGM alarms"},
                   profiles=[{k: v for k, v in profile.items() if k != "points"} for profile in profiles],
                   samples=samples, roadSlopes=slopes, roadGradeChanges=changes)
     return report

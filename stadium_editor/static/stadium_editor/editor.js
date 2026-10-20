@@ -196,6 +196,7 @@ function editorBackground(){
     style: isBlueprint ? live.style : '',
     source: live.source || legacy.source || '',
     treeSource: legacy.treeSource || live.treeSource || '',
+    heightEvidence: (legacy.roads ? legacy : live).heightEvidence,
     green: legacy.green || live.green || [],
     water: legacy.water || live.water || [],
     roads: legacy.roads || live.roads || [],

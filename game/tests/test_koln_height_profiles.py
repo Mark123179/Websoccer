@@ -181,6 +181,12 @@ class DisplayProfileTests(TestCase):
             self.assertTrue(report["ok"])
             self.assertTrue(all(report["zones"][zone]["count"] > 0 for zone in LIMITS))
             self.assertEqual([path.read_bytes() for path in paths]+[tif.read_bytes()], before)
+            for invalid in (None, [{"index": 0, "osm": "way/1", "deckSource": "DGM1"}]):
+                p["surroundings"]["heightEvidence"]["bridges"] = invalid
+                paths[0].write_text(json.dumps({"presentation": p}))
+                with self.assertRaisesRegex(ValueError, "Bridge evidence differs"):
+                    run(*paths)
+            del p["surroundings"]["heightEvidence"]["bridges"]
             p["surroundings"]["heightEvidence"]["terrainReferenceNHN"] = 99
             paths[0].write_text(json.dumps({"presentation": p}))
             with self.assertRaisesRegex(ValueError, "reference differs"):

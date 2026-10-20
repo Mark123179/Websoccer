@@ -361,3 +361,106 @@ Hashfehler, Modellregistrierung, echte Renderer-Dreieckinterpolation,
 Ausreißer **zwischen** Stützpunkten, getrenntes Scheitern aller Zonen,
 Steigungs-/Wechselalarme, Bowl-Lücken, Exit-Codes sowie eine vollständige
 synthetische GeoTIFF→Renderer-Prüfung ohne Änderungen der Eingaben.
+
+
+## Brücken: eigener Höhenstatus, kein Fahrbahnnachweis
+
+
+### Quellenentscheidung
+
+Die amtlichen Produktbeschreibungen wurden erneut gelesen:
+
+- [DGM1](https://www.bezreg-koeln.nrw.de/geobasis-nrw/produkte-und-dienste/hoehenmodelle/digitale-gelaendemodelle/digitales-gelaendemodell)
+  schließt Bauwerke einschließlich Brücken ausdrücklich aus. Seine Werte
+  bleiben ausschließlich **native Bodenreferenz**, auch unter einer OSM-Brücke.
+- [DOM1](https://www.bezreg-koeln.nrw.de/geobasis-nrw/produkte-und-dienste/hoehenmodelle/digitale-oberflaechenmodelle/digitales)
+  enthält Bauwerke, aber ebenso Vegetation und temporäre Objekte und kann
+  Höhensprünge verschiedener Erfassungszeitpunkte enthalten. Lage EPSG:25832,
+  Höhe DHHN2016 / EPSG:7837, Rasterweite 1 m. Ein DOM-Wert auf einer
+  OSM-Mittellinie wäre **noch keine räumlich verifizierte Fahrbahnoberfläche**.
+  DOM1 wurde deshalb nicht als Deckhöhenquelle übernommen; es wurden keine
+  DOM-Deckmessungen oder Brückenobjektzuordnungen behauptet.
+- Die vorhandenen LoD2-Zuordnungen betreffen Gebäude, nicht Brückendecks.
+  OSM `bridge=yes` und `layer=1` belegen die Bauwerksart/Topologie, keine
+  Meterhöhe. Weder ein pauschaler Layer-Aufschlag noch eine geglättete
+  Verbindung der Brückenenden ist als Messung zulässig.
+
+**Ergebnis: Keine räumlich freigegebene amtliche Deckhöhe vorhanden.**
+Das ist keine Behauptung, dass solche Daten generell nicht existieren.
+Eine spätere Freigabe benötigt eine gehashte Quelle mit Bauwerksidentität,
+Deckgeometrie/-proben, räumlicher Überdeckung zum konkreten OSM-Verlauf,
+Lage-/Höhenbezug und nachvollziehbaren Ausschlüssen (z. B. Vegetation,
+Geländer, benachbarte Fahrbahn). Erst danach darf ein eigener Decksampler
+ergänzt werden; der Bodenvergleich bleibt davon unabhängig.
+
+
+### Darstellung und Datenbindung
+
+Der Höhenaufbau erzeugt für **alle neun** OSM-Brücken einen eigenen
+`heightEvidence.bridges`-Datensatz: OSM-ID, Straßenindex, ursprüngliche
+Editor-Punktfolge, Brücken-/Tunnel-/Layer-Tags, Status
+`unresolved_terrain_derivation`, `deckSource=null`.
+Die produktive Darstellung validiert Index und unveränderte Punktfolge;
+veraltete Zuordnungen, doppelte Indizes und unbelegte Deckquellen werden
+abgewiesen. Deckhöhen werden derzeit überhaupt nicht angewendet.
+Die Kennzeichnung ist damit keine versteckte Brückenkorrektur.
+
+Beide 3D-Viewer zeigen sichtbar:
+**„Brücken: ungeklärte Geländeableitung – keine gemessene Fahrbahn.“**
+Alte DGM-Kataloge ohne Brückeneinzelzuordnung erhalten einen ausdrücklich
+als unzugeordnet bezeichneten Wege-/Brückenhinweis statt erfundener IDs.
+Unveränderte ebene Altstadien erhalten keinen neuen Hinweis.
+Höhenraster, Vorplatz, Übergang, dekorative Oberflächenabstände und alle
+Straßenvertices bleiben identisch. Die Einzelzuordnung wird beim nächsten
+expliziten Höhenaufbau erzeugt; es gibt keinen automatischen Datenbankeinbau.
+
+
+### Separater Nachweis gegen das native Bodenprofil
+
+Der erneute Quellenlauf reproduziert **59,863243103 m NHN**, dieselben
+975 Profile, 107.928 Bodenproben, 35.191 Segmente und 34.276 Wechsel.
+**FAIL / Exit 1, weiterhin neun unveränderte Grenzwertalarme.**
+Die neue Sektion `bridgeTreatment` ergänzt den Bericht, filtert aber keine
+Probe aus dem bisherigen Kontrollsatz und ändert keine Alarmgrenze.
+Alle neun Brücken umfassen 95 native Bodenproben; Deckprüfung jeweils
+`not_evaluable_without_spatial_deck_evidence`, angewandte Deckhöhen: **0**.
+Zusätzlich wurde der bisherige Prüfer gegen den erweiterten Prüfer mit
+**identischen Eingaben** ausgeführt: alle 107.928 Einzelproben, 35.191
+Segmente, 34.276 Wechsel, Zonenstatistiken, schlechtesten Kontrollorte und
+Alarmbefunde sind nach Entfernung des rein ergänzenden Statusfelds gleich.
+`heights/bridge-ground-parity.json` hält diesen Vergleich fest.
+
+| OSM-ID | Bodenproben | max. Betrag Anzeige−DGM (m) | stärkste Steigungsdifferenz (PP) |
+|---|---:|---:|---:|
+| way/5229974 · Aachener Straße | 13 | 4,177 | −179,696 |
+| way/5229976 · Aachener Straße | 13 | 2,387 | +70,025 |
+| way/23006811 | 19 | 2,175 | −41,304 |
+| way/75738560 | 5 | 1,424 | −68,682 |
+| way/173536874 | 5 | 0,249 | −12,326 |
+| way/173536875 | 7 | 0,785 | −53,258 |
+| way/362049116 | 13 | 2,125 | +57,400 |
+| way/362049118 | 14 | 5,075 | −158,368 |
+| way/854978364 | 6 | 1,485 | +37,330 |
+
+Das Wechselmaximum für `way/362049118` bleibt **185,119 PP**.
+Diese Werte sind **keine Deckfehler oder gemessenen Fahrbahnneigungen**.
+Ein kompakter, versionierter Ergebnisbeleg steht in
+[`koln-bridge-height-evidence.json`](koln-bridge-height-evidence.json);
+die vollständigen Einzelproben bleiben im ignorierten `profile-check.json`.
+Die frühere Presentation-Prüfsumme oben gehört bewusst zum vorherigen Lauf.
+Die neue Quellenabfrage änderte keine Bodenwerte; die neue Presentation
+ergänzt ausschließlich die Brückenmetadaten.
+
+Zusätzliche Regressionen:
+
+```sh
+python manage.py test game.tests.test_koln_heights game.tests.test_koln_height_profiles game.tests.test_koln_bridge_heights
+node --test stadium_editor/tests_js/test_bridge_height_evidence.mjs stadium_editor/tests_js/test_dortmund_surroundings.mjs stadium_editor/tests_js/test_measured_ground.mjs
+```
+
+Sie prüfen unter anderem Einzelidentität/Geometrie, unveränderte Boden- und
+Straßenvertices mit/ohne Brückenkennzeichnung, unveränderte Alarmbefunde,
+native Boden-Ausreißer zwischen Stützpunkten, Klartexthinweis ohne
+HTML-Auswertung, Entfernen des Hinweises beim Schließen und die Kennzeichnung
+alter DGM-Kataloge ohne vollständigen Brückenbestand.
+Es wurden keine Stadion-, Entwurfs- oder Produktionsdaten geändert.

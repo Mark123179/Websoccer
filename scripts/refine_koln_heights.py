@@ -30,6 +30,7 @@ NS = {"b": "http://www.opengis.net/citygml/building/1.0",
       "g": "http://www.opengis.net/gml",
       "gen": "http://www.opengis.net/citygml/generics/1.0"}
 GID = "{" + NS["g"] + "}id"
+from scripts.koln_bridge_heights import bridge_records
 
 
 def write(path, data):
@@ -229,6 +230,7 @@ def refine():
     data["heightQuality"] = "NRW DGM1 terrain; verified LoD2 laser heights only; unmatched envelopes explicitly unmeasured"
     data["source"] = "© OpenStreetMap contributors (ODbL); Geobasis NRW DGM1 + LoD2 (dl-de/zero-2-0)"
     data["heightEvidence"] = {
+        "bridges": bridge_records(data, ev),
         "buildingCounts": stats,
         "buildings": [{k:v for k,v in row.items() if k in
                       ("index","osm","status","lodId","height","reason")} for row in matches],

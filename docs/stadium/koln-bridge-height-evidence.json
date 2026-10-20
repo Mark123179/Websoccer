@@ -1,0 +1,71 @@
+{
+  "schema": 1,
+  "scope": "Offline Cologne study, no installation or production changes",
+  "decision": "unresolved_terrain_derivation",
+  "label": "Brücken: ungeklärte Geländeableitung – keine gemessene Fahrbahn.",
+  "deckHeightsApplied": 0,
+  "deckValidation": "not_evaluable_without_spatial_deck_evidence",
+  "groundParity": {
+    "ok": true,
+    "method": "Original ground checker and bridge-labelled checker on identical presentation, OSM evidence and native rasters; only additive heightStatus removed for comparison",
+    "nativeSamplesCompared": 107928,
+    "roadSegmentsCompared": 35191,
+    "gradeChangesCompared": 34276,
+    "limitsZonesViolationsAndWorstLocationsEqual": true,
+    "baselineCheckerSha256": "a32a8a7c1c24604950025986e1805be310547a9dd3631fef96f7cf53edde8f05",
+    "fullParityReport": "generated-artifacts/koln-study/heights/bridge-ground-parity.json"
+  },
+  "sourceAssessment": {
+    "dgm": {
+      "url": "https://www.bezreg-koeln.nrw.de/geobasis-nrw/produkte-und-dienste/hoehenmodelle/digitale-gelaendemodelle/digitales-gelaendemodell",
+      "decision": "Native ground only; product explicitly excludes bridges"
+    },
+    "dom": {
+      "url": "https://www.bezreg-koeln.nrw.de/geobasis-nrw/produkte-und-dienste/hoehenmodelle/digitale-oberflaechenmodelle/digitales",
+      "decision": "Candidate only; no object-specific deck attribution or heights accepted",
+      "reason": "Includes vegetation, structures and temporary objects; raster position alone does not establish a bridge carriageway"
+    },
+    "osm": "bridge/layer describe topology, not measured metric deck heights"
+  },
+  "nativeGroundRun": {
+    "ok": false,
+    "exit": 1,
+    "violationCount": 9,
+    "profileCount": 975,
+    "sampleCount": 107928,
+    "roadSegmentCount": 35191,
+    "roadGradeChangeCount": 34276,
+    "bridgeCount": 9,
+    "bridgeGroundSampleCount": 95,
+    "referenceNHN": 59.863243103027344,
+    "allOriginalAlarmsRetained": true,
+    "report": "generated-artifacts/koln-study/heights/profile-check.json",
+    "reportSha256": "6dc647ae7d790a6921287ccdeb8ba1b10e1529c4737aa5cabad87c42283d03b1",
+    "inputs": {
+      "presentationSha256": "3d8b8a70b60f8e1b8884e8ac54d86cb79f0be0c4f6d7c5fc656675e276f96491",
+      "osmEvidenceSha256": "09b418aa9f951a24eee1ed248f29da793257c247f2903c534d9d56735f3a2b6f",
+      "sourcesManifestSha256": "4a1de9472d9527d572ac2179b2046fd84bc9d34b610263d252c767fe62813b2d"
+    }
+  },
+  "criticalBridges": [
+    {
+      "osm": "way/5229974",
+      "name": "Aachener Straße",
+      "sourceTags": {"bridge": "yes", "layer": "1"},
+      "modelXZStart": [519.9171021567485, 542.9738106235721],
+      "modelXZEnd": [496.04769299417273, 541.1993690584128],
+      "nativeGroundRangeNHN": [45.643497467041016, 52.67890930175781],
+      "worstGroundGradeErrorPP": -179.6955509296473,
+      "deckSource": null
+    },
+    {
+      "osm": "way/362049118",
+      "sourceTags": {"bridge": "yes", "layer": "1"},
+      "modelXZStart": [519.1755195818621, 550.7929150457026],
+      "modelXZEnd": [494.8577074310166, 547.2021039646352],
+      "nativeGroundRangeNHN": [45.359962463378906, 52.65430450439453],
+      "worstGroundGradeChangeErrorPP": 185.1185402952368,
+      "deckSource": null
+    }
+  ]
+}

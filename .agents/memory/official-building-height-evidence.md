@@ -52,6 +52,21 @@ Teilausschnitten erreichbar, obwohl die Gesamtanfrage abgewiesen wurde.
 **How to apply:** Dienstgrenzen von räumlicher Datenabdeckung unterscheiden;
 Auflösung und Höhenbezug bei einer Aufteilung unverändert lassen.
 
+
+## Brücken: Bodenvergleich ist kein Decknachweis
+
+Ungeklärte Brückenhöhen ausdrücklich als Geländeableitung statt gemessener
+Fahrbahn behandeln. Den nativen Bodenvergleich einschließlich seiner
+Kontrollalarme unabhängig davon erhalten.
+
+**Why:** DGM1 enthält unter Brücken den Boden und keine Bauwerke. DOM1
+enthält zwar Bauwerke, aber auch Vegetation und temporäre Objekte. Eine
+OSM-Brückenlinie oder ein Layer-Wert macht daraus keine zugeordnete Deckmessung.
+Der Nutzer verlangt räumliche Belege statt stiller Brücken-Ausnahmen.
+
+**How to apply:** Erst mit räumlich belegter Deckquelle eigene Bauwerkshöhen
+freigeben. Ohne diese Belege keine Layer-Aufschläge oder Endpunktglättung als
+Messung ausgeben; Deckstatus und Bodenfehler getrennt berichten.
 ## Teilkörper: Quellkonflikte und Projektion
 
 Für ausdrücklich dargestellte LoD2-Teilkörper keine Quellüberlappung durch
