@@ -164,7 +164,7 @@ class CreatorClub3DAssetsTests(TestCase):
         self.assertEqual(finder.find('game/images/3dkits/907_home.png', find_all=True), [expected])
         self.assertEqual(list(finder.list([])), [])
         for path in ('game/images/3dkits/../secret.png', 'game/images/3dkits/907_unknown.png'):
-            self.assertIsNone(finder.find(path))
+            self.assertEqual(finder.find(path), [])
 
     def test_creator_renders_real_textures_both_model_states_and_cmt(self):
         self.records()

@@ -154,3 +154,4 @@
 - [Native Geodaten-Importe](native-geodata-imports.md) — Größere Aufbereitungsläufe können fehlende native Bibliotheken durch Importreihenfolge verdecken; Offline-Prüfer eigenständig starten.
 - [Amtliche Dachdeckung](official-roof-coverage.md) — Kleine echte Quelllücken nicht als Rundung verstecken; unvollständige Dächer behalten ihre ausdrücklich schematische Hülle.
 - [Sitzquellen und Fangruppen](stadium-seat-source-semantics.md) — Sitz-JSON und Unity können Fangruppen unterschiedlich aufteilen; Editor-Hüllen bei Widersprüchen aus dem Originalmodell ableiten.
+- [Django Static-Finder-Misses](django-static-finder-misses.md) — Django 6.1 sammelt None als Treffer; Signatur-Kompatibilität allein verhindert keine Static-500er.

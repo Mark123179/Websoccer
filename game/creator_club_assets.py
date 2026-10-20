@@ -40,14 +40,18 @@ class ThreeDKitFinder(BaseFinder):
     Production nginx aliases the same URL directly to ASSETS_ROOT/3dkits.
     Do not collect these mutable uploads into the build's static snapshot.
     """
-    def find(self, path, find_all=False, **kwargs):
+    def find(self, path, find_all=False):
         match = TEXTURE_PATTERN.fullmatch(path)
         result = None
         if match:
             candidate = Path(assets_root()) / '3dkits' / match[1]
             if candidate.is_file():
                 result = str(candidate)
-        return ([result] if result else []) if find_all or kwargs.get('all') else result
+        # Like Django's built-in finders, return [] on a miss in either mode.
+        # Returning None makes Django 6.1 aggregate [None] and serve() crashes.
+        if result is None:
+            return []
+        return [result] if find_all else result
 
     def list(self, ignore_patterns):
         return iter(())
