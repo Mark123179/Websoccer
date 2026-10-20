@@ -1,0 +1,5431 @@
+{
+  "format": "unity-mesh-binary-v1",
+  "clubFmiId": 947,
+  "stadiumName": "Volksparkstadion",
+  "calibration": {
+    "roofMinHeight": -1,
+    "roofMeshPrefixes": [
+      "DACH_"
+    ],
+    "skipMeshPrefixes": [
+      "center2_0"
+    ],
+    "crowdPrefix": "C_",
+    "pitchPrefix": "st081_pitch_",
+    "tickerRotationY": 90,
+    "tickerFrontCut": {
+      "normal": [
+        -1,
+        0,
+        0
+      ],
+      "constant": 32
+    },
+    "standAxes": {
+      "+x": "WEST",
+      "-x": "OST",
+      "+z": "SUED",
+      "-z": "NORD"
+    },
+    "surroundingsAxes": {
+      "NORD": "-z",
+      "WEST": "+x"
+    },
+    "orbitDefault": {
+      "azimuth": 0.95,
+      "elevation": 0.65,
+      "distance": 390
+    }
+  },
+  "source": "volksparkstadion_1792496395204.bundle",
+  "sourceSha256": "9e5fa69aeee5057f4ed1b654bbd167c045f73d22c2373b95cf9163e4e78e2065",
+  "geometrySha256": "479d2dd7b0408fcc9798e3a2a885b6ef5c45d4032f53b174407f1b31c3540d2b",
+  "meshes": [
+    {
+      "name": "front1_9",
+      "pathId": "2426009806861231046",
+      "hierarchy": [
+        "front1_9",
+        "MESH_center1",
+        "center1",
+        "MAIN",
+        "volksparkstadion"
+      ],
+      "positionOffset": 0,
+      "uvOffset": 2664,
+      "vertexCount": 222,
+      "parts": [
+        {
+          "material": "30",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "texture": "texture-1432735328663286654.webp",
+          "indexOffset": 4440,
+          "indexCount": 396
+        }
+      ],
+      "bounds": [
+        [
+          -45.45542001724243,
+          0.039150999509729445,
+          -14.523743093013763
+        ],
+        [
+          -44.07353103160858,
+          0.7335050031542778,
+          16.19117259979248
+        ]
+      ]
+    },
+    {
+      "name": "DACH_center3_11",
+      "pathId": "4004631834732140175",
+      "hierarchy": [
+        "center3_11",
+        "MESH_center1",
+        "center1",
+        "MAIN",
+        "volksparkstadion"
+      ],
+      "positionOffset": 6024,
+      "uvOffset": 247932,
+      "vertexCount": 20159,
+      "parts": [
+        {
+          "material": "57",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "texture": "texture--6525476436255670185.webp",
+          "indexOffset": 409204,
+          "indexCount": 23955,
+          "transparent": true,
+          "alphaTest": 0.02
+        }
+      ],
+      "bounds": [
+        [
+          45.27686834335327,
+          35.2070152759552,
+          -64.18123245239258
+        ],
+        [
+          102.74930000305176,
+          47.732824087142944,
+          67.97285079956055
+        ]
+      ],
+      "sourceMeshName": "center3_11"
+    },
+    {
+      "name": "DACH_center3_4",
+      "pathId": "7120218948180700748",
+      "hierarchy": [
+        "center3_4",
+        "MESH_center1",
+        "center1",
+        "MAIN",
+        "volksparkstadion"
+      ],
+      "positionOffset": 505024,
+      "uvOffset": 537256,
+      "vertexCount": 2686,
+      "parts": [
+        {
+          "material": "53",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "texture": "texture--3327877469743463349.webp",
+          "indexOffset": 558744,
+          "indexCount": 6720,
+          "transparent": true,
+          "alphaTest": 0.02
+        }
+      ],
+      "bounds": [
+        [
+          -98.07459115982056,
+          35.84322929382324,
+          -112.35613822937012
+        ],
+        [
+          95.71199417114258,
+          44.891104102134705,
+          112.34312057495117
+        ]
+      ],
+      "sourceMeshName": "center3_4"
+    },
+    {
+      "name": "center1_11",
+      "pathId": "6114399884617115731",
+      "hierarchy": [
+        "center1_11",
+        "MESH_center1",
+        "center1",
+        "MAIN",
+        "volksparkstadion"
+      ],
+      "positionOffset": 585624,
+      "uvOffset": 594900,
+      "vertexCount": 773,
+      "parts": [
+        {
+          "material": "10",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "texture": "texture-7737871090897150384.webp",
+          "indexOffset": 601084,
+          "indexCount": 1440,
+          "transparent": true,
+          "alphaTest": 0.02
+        }
+      ],
+      "bounds": [
+        [
+          -89.12864327430725,
+          21.61729782819748,
+          -103.76564264297485
+        ],
+        [
+          87.72796988487244,
+          24.256597459316254,
+          103.77432107925415
+        ]
+      ]
+    },
+    {
+      "name": "back1_4",
+      "pathId": "4854153111991245028",
+      "hierarchy": [
+        "back1_4",
+        "MESH_center1",
+        "center1",
+        "MAIN",
+        "volksparkstadion"
+      ],
+      "positionOffset": 606844,
+      "uvOffset": 607840,
+      "vertexCount": 83,
+      "parts": [
+        {
+          "material": "21",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "texture": "texture--1642971116332160948.webp",
+          "indexOffset": 608504,
+          "indexCount": 132
+        }
+      ],
+      "bounds": [
+        [
+          55.679087853306235,
+          13.06267750327092,
+          -104.86829280853274
+        ],
+        [
+          102.47765272483231,
+          34.83940905839605,
+          2.0387338474392895
+        ]
+      ]
+    },
+    {
+      "name": "front1_14",
+      "pathId": "-6723756507465568873",
+      "hierarchy": [
+        "front1_14",
+        "MESH_center1",
+        "center1",
+        "MAIN",
+        "volksparkstadion"
+      ],
+      "positionOffset": 609032,
+      "uvOffset": 609800,
+      "vertexCount": 64,
+      "parts": [
+        {
+          "material": "32",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "texture": "texture--8832601257843885719.webp",
+          "indexOffset": 610312,
+          "indexCount": 132,
+          "transparent": true,
+          "alphaTest": 0.02
+        }
+      ],
+      "bounds": [
+        [
+          -40.22848633627009,
+          0.00247432527203608,
+          -8.352188020944597
+        ],
+        [
+          -34.911600361905975,
+          0.004352140629769852,
+          8.33915024995804
+        ]
+      ]
+    },
+    {
+      "name": "front2_11",
+      "pathId": "3779143467487979701",
+      "hierarchy": [
+        "front2_11",
+        "MESH_center1",
+        "center1",
+        "MAIN",
+        "volksparkstadion"
+      ],
+      "positionOffset": 610840,
+      "uvOffset": 644668,
+      "vertexCount": 2819,
+      "parts": [
+        {
+          "material": "40",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "texture": "texture--966822992072655297.webp",
+          "indexOffset": 667220,
+          "indexCount": 6744,
+          "transparent": true,
+          "alphaTest": 0.02
+        }
+      ],
+      "bounds": [
+        [
+          -49.771901965141296,
+          -0.021748000290244818,
+          64.16561603546143
+        ],
+        [
+          -46.56992256641388,
+          2.307840995490551,
+          68.71768236160278
+        ]
+      ]
+    },
+    {
+      "name": "back1_2",
+      "pathId": "1010308958770091730",
+      "hierarchy": [
+        "back1_2",
+        "MESH_center1",
+        "center1",
+        "MAIN",
+        "volksparkstadion"
+      ],
+      "positionOffset": 694196,
+      "uvOffset": 694628,
+      "vertexCount": 36,
+      "parts": [
+        {
+          "material": "21",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "texture": "texture--1642971116332160948.webp",
+          "indexOffset": 694916,
+          "indexCount": 54
+        }
+      ],
+      "bounds": [
+        [
+          38.0767883129539,
+          1.663381561143565,
+          -85.20720601081851
+        ],
+        [
+          70.02010884140702,
+          9.49070519032373,
+          67.67480969429018
+        ]
+      ]
+    },
+    {
+      "name": "DACH_center3_7",
+      "pathId": "-9075171075162578195",
+      "hierarchy": [
+        "center3_7",
+        "MESH_center1",
+        "center1",
+        "MAIN",
+        "volksparkstadion"
+      ],
+      "positionOffset": 695132,
+      "uvOffset": 707780,
+      "vertexCount": 1054,
+      "parts": [
+        {
+          "material": "55",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "texture": "texture-1030170565945525730.webp",
+          "indexOffset": 716212,
+          "indexCount": 2028
+        }
+      ],
+      "bounds": [
+        [
+          -51.16685628890991,
+          45.65012753009796,
+          -65.66866040229797
+        ],
+        [
+          48.88339042663574,
+          46.27096354961395,
+          65.6556487083435
+        ]
+      ],
+      "sourceMeshName": "center3_7"
+    },
+    {
+      "name": "center1_5",
+      "pathId": "1040056962106673076",
+      "hierarchy": [
+        "center1_5",
+        "MESH_center1",
+        "center1",
+        "MAIN",
+        "volksparkstadion"
+      ],
+      "positionOffset": 724324,
+      "uvOffset": 738136,
+      "vertexCount": 1151,
+      "parts": [
+        {
+          "material": "4",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "texture": "texture-1240414987992286845.webp",
+          "indexOffset": 747344,
+          "indexCount": 2220
+        }
+      ],
+      "bounds": [
+        [
+          -91.55695692107868,
+          1.5216019189712071,
+          -101.14601850509646
+        ],
+        [
+          85.08178171152102,
+          22.370074959360675,
+          101.16533041000369
+        ]
+      ]
+    },
+    {
+      "name": "DACH_center3_13",
+      "pathId": "-552057168845057627",
+      "hierarchy": [
+        "center3_13",
+        "MESH_center1",
+        "center1",
+        "MAIN",
+        "volksparkstadion"
+      ],
+      "positionOffset": 756224,
+      "uvOffset": 898784,
+      "vertexCount": 11880,
+      "parts": [
+        {
+          "material": "55",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "texture": "texture-1030170565945525730.webp",
+          "indexOffset": 993824,
+          "indexCount": 18603
+        }
+      ],
+      "bounds": [
+        [
+          -92.41151213645935,
+          35.96036732196808,
+          67.764413356781
+        ],
+        [
+          90.04855155944824,
+          47.668078541755676,
+          112.53142356872559
+        ]
+      ],
+      "sourceMeshName": "center3_13"
+    },
+    {
+      "name": "left1_0",
+      "pathId": "5249720423973848870",
+      "hierarchy": [
+        "left1_0",
+        "MESH_center1",
+        "center1",
+        "MAIN",
+        "volksparkstadion"
+      ],
+      "positionOffset": 1068236,
+      "uvOffset": 1068548,
+      "vertexCount": 26,
+      "parts": [
+        {
+          "material": "21.002",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "texture": "texture--1642971116332160948.webp",
+          "indexOffset": 1068756,
+          "indexCount": 42
+        }
+      ],
+      "bounds": [
+        [
+          -49.76009726524353,
+          1.6502339392900467,
+          63.434040546417236
+        ],
+        [
+          40.004852414131165,
+          9.46652740240097,
+          87.32312321662903
+        ]
+      ]
+    },
+    {
+      "name": "C_front1_C1-HardcoreHome",
+      "pathId": "1803667928312268230",
+      "hierarchy": [
+        "C_front1_C1-HardcoreHome",
+        "MESH_CROWD",
+        "AUDIAREA",
+        "volksparkstadion"
+      ],
+      "positionOffset": 1068924,
+      "uvOffset": 1070292,
+      "vertexCount": 114,
+      "parts": [
+        {
+          "material": "audi_seat_mat",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "texture": "texture--8009233366261755537.webp",
+          "indexOffset": 1071204,
+          "indexCount": 198
+        }
+      ],
+      "bounds": [
+        [
+          -101.74213508144021,
+          2.1202790725510567,
+          -101.32858753204346
+        ],
+        [
+          -47.32066849246621,
+          34.85837459447794,
+          84.68141555786133
+        ]
+      ]
+    },
+    {
+      "name": "front2_8",
+      "pathId": "8131926944657705952",
+      "hierarchy": [
+        "front2_8",
+        "MESH_center1",
+        "center1",
+        "MAIN",
+        "volksparkstadion"
+      ],
+      "positionOffset": 1071996,
+      "uvOffset": 1076796,
+      "vertexCount": 400,
+      "parts": [
+        {
+          "material": "38",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "texture": "texture--905443001973885938.webp",
+          "indexOffset": 1079996,
+          "indexCount": 840,
+          "transparent": true,
+          "alphaTest": 0.02
+        }
+      ],
+      "bounds": [
+        [
+          -25.252648915716115,
+          0.31087563772922766,
+          60.80459356307985
+        ],
+        [
+          22.023971805108136,
+          10.923879856190707,
+          61.152237653732314
+        ]
+      ]
+    },
+    {
+      "name": "back2_df_1",
+      "pathId": "1018629652290398156",
+      "hierarchy": [
+        "back2_df_1",
+        "MESH_center1",
+        "center1",
+        "MAIN",
+        "volksparkstadion"
+      ],
+      "positionOffset": 1083356,
+      "uvOffset": 1084940,
+      "vertexCount": 132,
+      "parts": [
+        {
+          "material": "df",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "texture": "texture-3676625253913950382.webp",
+          "indexOffset": 1085996,
+          "indexCount": 198
+        }
+      ],
+      "bounds": [
+        [
+          -77.68406305960241,
+          9.441206240868505,
+          -94.67130899429324
+        ],
+        [
+          -50.27128393987108,
+          16.90694052845268,
+          72.22595214843751
+        ]
+      ]
+    },
+    {
+      "name": "front1_2",
+      "pathId": "607577891466825166",
+      "hierarchy": [
+        "front1_2",
+        "MESH_center1",
+        "center1",
+        "MAIN",
+        "volksparkstadion"
+      ],
+      "positionOffset": 1086788,
+      "uvOffset": 1087280,
+      "vertexCount": 41,
+      "parts": [
+        {
+          "material": "22.001",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "texture": "texture-5156661005305352342.webp",
+          "indexOffset": 1087608,
+          "indexCount": 69
+        }
+      ],
+      "bounds": [
+        [
+          -73.29475283622742,
+          1.792134903371334,
+          -63.666343688964844
+        ],
+        [
+          -46.03741765022278,
+          9.46652740240097,
+          62.87819743156433
+        ]
+      ]
+    },
+    {
+      "name": "front1_4",
+      "pathId": "-3511696897524149606",
+      "hierarchy": [
+        "front1_4",
+        "MESH_center1",
+        "center1",
+        "MAIN",
+        "volksparkstadion"
+      ],
+      "positionOffset": 1087884,
+      "uvOffset": 1089156,
+      "vertexCount": 106,
+      "parts": [
+        {
+          "material": "21.001",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "texture": "texture--1642971116332160948.webp",
+          "indexOffset": 1090004,
+          "indexCount": 165
+        }
+      ],
+      "bounds": [
+        [
+          -104.78871193927289,
+          13.015225543348832,
+          -104.86829280853274
+        ],
+        [
+          -49.643546020846806,
+          34.78024805238623,
+          8.46962705254555
+        ]
+      ]
+    },
+    {
+      "name": "C_right1_C1-HeavyHome",
+      "pathId": "6597396850443781389",
+      "hierarchy": [
+        "C_right1_C1-HeavyHome",
+        "MESH_CROWD",
+        "AUDIAREA",
+        "volksparkstadion"
+      ],
+      "positionOffset": 1090664,
+      "uvOffset": 1091672,
+      "vertexCount": 84,
+      "parts": [
+        {
+          "material": "audi_seat_mat",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "texture": "texture--8009233366261755537.webp",
+          "indexOffset": 1092344,
+          "indexCount": 156
+        }
+      ],
+      "bounds": [
+        [
+          -61.89567903056741,
+          1.984174331300892,
+          -118.6126708984375
+        ],
+        [
+          65.40464302524924,
+          34.847418186836876,
+          -64.16990756988525
+        ]
+      ]
+    },
+    {
+      "name": "front1_10",
+      "pathId": "2221249284894908729",
+      "hierarchy": [
+        "front1_10",
+        "MESH_center1",
+        "center1",
+        "MAIN",
+        "volksparkstadion"
+      ],
+      "positionOffset": 1092968,
+      "uvOffset": 1093352,
+      "vertexCount": 32,
+      "parts": [
+        {
+          "material": "31",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "texture": "texture-7714117729764172253.webp",
+          "indexOffset": 1093608,
+          "indexCount": 48
+        }
+      ],
+      "bounds": [
+        [
+          -91.03911519050598,
+          21.732571721076965,
+          -10.335622727870941
+        ],
+        [
+          -89.5539939403534,
+          24.225762486457825,
+          9.338925033807755
+        ]
+      ]
+    },
+    {
+      "name": "front2_7",
+      "pathId": "4767263124685001233",
+      "hierarchy": [
+        "front2_7",
+        "MESH_center1",
+        "center1",
+        "MAIN",
+        "volksparkstadion"
+      ],
+      "positionOffset": 1093800,
+      "uvOffset": 1097400,
+      "vertexCount": 300,
+      "parts": [
+        {
+          "material": "38",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "texture": "texture--905443001973885938.webp",
+          "indexOffset": 1099800,
+          "indexCount": 450,
+          "transparent": true,
+          "alphaTest": 0.02
+        }
+      ],
+      "bounds": [
+        [
+          -57.11883788518586,
+          1.563367609375587,
+          -72.27987647056581
+        ],
+        [
+          -38.93011042356205,
+          6.1487518135391115,
+          72.21665978431703
+        ]
+      ]
+    },
+    {
+      "name": "center1_3",
+      "pathId": "-3839549522846845863",
+      "hierarchy": [
+        "center1_3",
+        "MESH_center1",
+        "center1",
+        "MAIN",
+        "volksparkstadion"
+      ],
+      "positionOffset": 1101600,
+      "uvOffset": 1120416,
+      "vertexCount": 1568,
+      "parts": [
+        {
+          "material": "4",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "texture": "texture-1240414987992286845.webp",
+          "indexOffset": 1132960,
+          "indexCount": 2352
+        }
+      ],
+      "bounds": [
+        [
+          -38.95317316055298,
+          2.247980050742626,
+          -62.36799955368042
+        ],
+        [
+          48.187875747680664,
+          2.5913218036293983,
+          64.68840837478638
+        ]
+      ]
+    },
+    {
+      "name": "front2_9",
+      "pathId": "-701474195702554997",
+      "hierarchy": [
+        "front2_9",
+        "MESH_center1",
+        "center1",
+        "MAIN",
+        "volksparkstadion"
+      ],
+      "positionOffset": 1142368,
+      "uvOffset": 1142752,
+      "vertexCount": 32,
+      "parts": [
+        {
+          "material": "39",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "texture": "texture-8111151280402651944.webp",
+          "indexOffset": 1143008,
+          "indexCount": 48
+        }
+      ],
+      "bounds": [
+        [
+          -70.146244764328,
+          13.042597472667694,
+          -51.10985040664673
+        ],
+        [
+          -66.61867499351501,
+          13.551697134971619,
+          51.236772537231445
+        ]
+      ]
+    },
+    {
+      "name": "front1_3",
+      "pathId": "-8463631361638155270",
+      "hierarchy": [
+        "front1_3",
+        "MESH_center1",
+        "center1",
+        "MAIN",
+        "volksparkstadion"
+      ],
+      "positionOffset": 1143200,
+      "uvOffset": 1153040,
+      "vertexCount": 820,
+      "parts": [
+        {
+          "material": "27",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "texture": "texture--4442874166120274747.webp",
+          "indexOffset": 1159600,
+          "indexCount": 2088
+        }
+      ],
+      "bounds": [
+        [
+          -42.19420552253723,
+          -0.000520999992659199,
+          -6.973385810852051
+        ],
+        [
+          -40.65600037574768,
+          0.30053299851715565,
+          5.724529922008514
+        ]
+      ]
+    },
+    {
+      "name": "C_back1_C1-HeavyHome",
+      "pathId": "-4920919622998487444",
+      "hierarchy": [
+        "C_back1_C1-HeavyHome",
+        "MESH_CROWD",
+        "AUDIAREA",
+        "volksparkstadion"
+      ],
+      "positionOffset": 1167952,
+      "uvOffset": 1169272,
+      "vertexCount": 110,
+      "parts": [
+        {
+          "material": "audi_seat_mat",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "texture": "texture--8009233366261755537.webp",
+          "indexOffset": 1170152,
+          "indexCount": 204
+        }
+      ],
+      "bounds": [
+        [
+          44.78222569450736,
+          1.9310037780087441,
+          -84.69443321228027
+        ],
+        [
+          102.48967548832297,
+          34.846993087558076,
+          76.01549625396729
+        ]
+      ]
+    },
+    {
+      "name": "front1_1",
+      "pathId": "4624846526132421091",
+      "hierarchy": [
+        "front1_1",
+        "MESH_center1",
+        "center1",
+        "MAIN",
+        "volksparkstadion"
+      ],
+      "positionOffset": 1170968,
+      "uvOffset": 1171544,
+      "vertexCount": 48,
+      "parts": [
+        {
+          "material": "20",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "texture": "texture--1964227282587711583.webp",
+          "indexOffset": 1171928,
+          "indexCount": 72,
+          "transparent": true,
+          "alphaTest": 0.02
+        }
+      ],
+      "bounds": [
+        [
+          -91.55111312866211,
+          9.452340751886368,
+          -98.81826043128967
+        ],
+        [
+          -52.811843156814575,
+          17.173004150390625,
+          74.86238479614258
+        ]
+      ]
+    },
+    {
+      "name": "right2_0",
+      "pathId": "7912233479250415427",
+      "hierarchy": [
+        "right2_0",
+        "MESH_center1",
+        "center1",
+        "MAIN",
+        "volksparkstadion"
+      ],
+      "positionOffset": 1172216,
+      "uvOffset": 1173656,
+      "vertexCount": 120,
+      "parts": [
+        {
+          "material": "42",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "texture": "texture-4316505399137570133.webp",
+          "indexOffset": 1174616,
+          "indexCount": 180
+        }
+      ],
+      "bounds": [
+        [
+          -25.457365002961378,
+          -0.014626395303358686,
+          -60.467016696929946
+        ],
+        [
+          22.145206429779574,
+          11.090626121324226,
+          -60.269987583160415
+        ]
+      ]
+    },
+    {
+      "name": "back1_0",
+      "pathId": "4984943337532703687",
+      "hierarchy": [
+        "back1_0",
+        "MESH_center1",
+        "center1",
+        "MAIN",
+        "volksparkstadion"
+      ],
+      "positionOffset": 1175336,
+      "uvOffset": 1176200,
+      "vertexCount": 72,
+      "parts": [
+        {
+          "material": "44",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "texture": "texture-4011103548483594767.webp",
+          "indexOffset": 1176776,
+          "indexCount": 108
+        }
+      ],
+      "bounds": [
+        [
+          37.71798455658962,
+          0.01848698794701727,
+          -63.12773823738098
+        ],
+        [
+          48.455311106988674,
+          2.377456095049459,
+          63.22892904281616
+        ]
+      ]
+    },
+    {
+      "name": "DACH_center3_3",
+      "pathId": "-703871483920579802",
+      "hierarchy": [
+        "center3_3",
+        "MESH_center1",
+        "center1",
+        "MAIN",
+        "volksparkstadion"
+      ],
+      "positionOffset": 1177208,
+      "uvOffset": 1179512,
+      "vertexCount": 192,
+      "parts": [
+        {
+          "material": "54",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "texture": "texture-4658984267873756969.webp",
+          "indexOffset": 1181048,
+          "indexCount": 288
+        }
+      ],
+      "bounds": [
+        [
+          -104.80616092681885,
+          34.50179696083069,
+          -118.61296892166138
+        ],
+        [
+          102.49001979827881,
+          36.24114394187927,
+          118.56143474578857
+        ]
+      ],
+      "sourceMeshName": "center3_3"
+    },
+    {
+      "name": "left2_5",
+      "pathId": "-7429740857200275326",
+      "hierarchy": [
+        "left2_5",
+        "MESH_center1",
+        "center1",
+        "MAIN",
+        "volksparkstadion"
+      ],
+      "positionOffset": 1182200,
+      "uvOffset": 1184216,
+      "vertexCount": 168,
+      "parts": [
+        {
+          "material": "46.001",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "texture": "texture--5281470577147239973.webp",
+          "indexOffset": 1185560,
+          "indexCount": 252,
+          "transparent": true,
+          "alphaTest": 0.02
+        }
+      ],
+      "bounds": [
+        [
+          -42.89195239543915,
+          13.141076266765594,
+          76.20250582695007
+        ],
+        [
+          65.43468236923218,
+          22.558651864528656,
+          99.7411847114563
+        ]
+      ]
+    },
+    {
+      "name": "left2_4",
+      "pathId": "-5675519311355422710",
+      "hierarchy": [
+        "left2_4",
+        "MESH_center1",
+        "center1",
+        "MAIN",
+        "volksparkstadion"
+      ],
+      "positionOffset": 1186568,
+      "uvOffset": 1243604,
+      "vertexCount": 4753,
+      "parts": [
+        {
+          "material": "45",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "texture": "texture-1427356308152585301.webp",
+          "indexOffset": 1281628,
+          "indexCount": 16740
+        }
+      ],
+      "bounds": [
+        [
+          -48.47318232059479,
+          0.3542739897966385,
+          58.85043144226074
+        ],
+        [
+          59.76932644844055,
+          14.441056549549103,
+          85.5995774269104
+        ]
+      ]
+    },
+    {
+      "name": "center1_1",
+      "pathId": "-7554894623507660819",
+      "hierarchy": [
+        "center1_1",
+        "MESH_center1",
+        "center1",
+        "MAIN",
+        "volksparkstadion"
+      ],
+      "positionOffset": 1348588,
+      "uvOffset": 1350796,
+      "vertexCount": 184,
+      "parts": [
+        {
+          "material": "1",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "texture": "texture-5638422218042547893.webp",
+          "indexOffset": 1352268,
+          "indexCount": 240
+        }
+      ],
+      "bounds": [
+        [
+          -38.976444998056365,
+          0.019371532943474257,
+          -50.10794401168823
+        ],
+        [
+          40.210378466951525,
+          0.3974416043504094,
+          49.90913271903992
+        ]
+      ]
+    },
+    {
+      "name": "DACH_center3_5",
+      "pathId": "1968190135463219155",
+      "hierarchy": [
+        "center3_5",
+        "MESH_center1",
+        "center1",
+        "MAIN",
+        "volksparkstadion"
+      ],
+      "positionOffset": 1353228,
+      "uvOffset": 1367592,
+      "vertexCount": 1197,
+      "parts": [
+        {
+          "material": "55",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "texture": "texture-1030170565945525730.webp",
+          "indexOffset": 1377168,
+          "indexCount": 2286
+        }
+      ],
+      "bounds": [
+        [
+          -104.71012592315674,
+          35.053953528404236,
+          -118.92130374908447
+        ],
+        [
+          102.34706401824951,
+          45.962926745414734,
+          118.90828609466553
+        ]
+      ],
+      "sourceMeshName": "center3_5"
+    },
+    {
+      "name": "front2_5",
+      "pathId": "3618648367659681496",
+      "hierarchy": [
+        "front2_5",
+        "MESH_center1",
+        "center1",
+        "MAIN",
+        "volksparkstadion"
+      ],
+      "positionOffset": 1386312,
+      "uvOffset": 1389720,
+      "vertexCount": 284,
+      "parts": [
+        {
+          "material": "36",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "texture": "texture-2191766817378294465.webp",
+          "indexOffset": 1391992,
+          "indexCount": 480
+        }
+      ],
+      "bounds": [
+        [
+          -41.86176955699921,
+          -0.00023999998575163772,
+          -5.521120876073837
+        ],
+        [
+          -41.22750759124756,
+          0.43889996595680714,
+          6.2081340700387955
+        ]
+      ]
+    },
+    {
+      "name": "right2_1",
+      "pathId": "-32612512906823822",
+      "hierarchy": [
+        "right2_1",
+        "MESH_center1",
+        "center1",
+        "MAIN",
+        "volksparkstadion"
+      ],
+      "positionOffset": 1393912,
+      "uvOffset": 1394392,
+      "vertexCount": 40,
+      "parts": [
+        {
+          "material": "44.002",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "texture": "texture-4011103548483594767.webp",
+          "indexOffset": 1394712,
+          "indexCount": 60
+        }
+      ],
+      "bounds": [
+        [
+          -38.95324766635895,
+          2.2999999771400326e-05,
+          -64.58853483200073
+        ],
+        [
+          37.926504015922546,
+          2.353798970580101,
+          -62.80324459075928
+        ]
+      ]
+    },
+    {
+      "name": "front1_13",
+      "pathId": "2745323866063280407",
+      "hierarchy": [
+        "front1_13",
+        "MESH_center1",
+        "center1",
+        "MAIN",
+        "volksparkstadion"
+      ],
+      "positionOffset": 1394952,
+      "uvOffset": 1428564,
+      "vertexCount": 2801,
+      "parts": [
+        {
+          "material": "31",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "texture": "texture-7714117729764172253.webp",
+          "indexOffset": 1450972,
+          "indexCount": 6468
+        }
+      ],
+      "bounds": [
+        [
+          -45.45649290084839,
+          0.039150999509729445,
+          -14.545245468616486
+        ],
+        [
+          -43.82586479187012,
+          1.993751898407936,
+          16.2119522690773
+        ]
+      ]
+    },
+    {
+      "name": "center1_10",
+      "pathId": "6370564229590452707",
+      "hierarchy": [
+        "center1_10",
+        "MESH_center1",
+        "center1",
+        "MAIN",
+        "volksparkstadion"
+      ],
+      "positionOffset": 1476844,
+      "uvOffset": 1495444,
+      "vertexCount": 1550,
+      "parts": [
+        {
+          "material": "9",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "texture": "texture--1837709989440901200.webp",
+          "indexOffset": 1507844,
+          "indexCount": 3240
+        }
+      ],
+      "bounds": [
+        [
+          -37.3065322637558,
+          0.0,
+          -57.91304111480713
+        ],
+        [
+          37.24689483642578,
+          0.3823659848421812,
+          57.968246936798096
+        ]
+      ]
+    },
+    {
+      "name": "center1_6",
+      "pathId": "-7779488278344962431",
+      "hierarchy": [
+        "center1_6",
+        "MESH_center1",
+        "center1",
+        "MAIN",
+        "volksparkstadion"
+      ],
+      "positionOffset": 1520804,
+      "uvOffset": 1525484,
+      "vertexCount": 390,
+      "parts": [
+        {
+          "material": "5",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "texture": "texture-7711062999123670243.webp",
+          "indexOffset": 1528604,
+          "indexCount": 720
+        }
+      ],
+      "bounds": [
+        [
+          -44.8920875787735,
+          0.0014530000044032931,
+          -62.30235695838928
+        ],
+        [
+          41.6950523853302,
+          0.5200239829719067,
+          61.485397815704346
+        ]
+      ]
+    },
+    {
+      "name": "left2_6",
+      "pathId": "5464719054922694661",
+      "hierarchy": [
+        "left2_6",
+        "MESH_center1",
+        "center1",
+        "MAIN",
+        "volksparkstadion"
+      ],
+      "positionOffset": 1531484,
+      "uvOffset": 1532636,
+      "vertexCount": 96,
+      "parts": [
+        {
+          "material": "20.002",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "texture": "texture--1964227282587711583.webp",
+          "indexOffset": 1533404,
+          "indexCount": 144,
+          "transparent": true,
+          "alphaTest": 0.02
+        }
+      ],
+      "bounds": [
+        [
+          -57.064980268478394,
+          1.355126965790987,
+          -3.0015097931027412
+        ],
+        [
+          -50.26390552520752,
+          4.91369292140007,
+          2.0771488547325134
+        ]
+      ]
+    },
+    {
+      "name": "DACH_center3_1",
+      "pathId": "-5164957007232936719",
+      "hierarchy": [
+        "center3_1",
+        "MESH_center1",
+        "center1",
+        "MAIN",
+        "volksparkstadion"
+      ],
+      "positionOffset": 1533980,
+      "uvOffset": 1541276,
+      "vertexCount": 608,
+      "parts": [
+        {
+          "material": "52",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "texture": "texture-2386069053478784543.webp",
+          "indexOffset": 1546140,
+          "indexCount": 912,
+          "transparent": true,
+          "alphaTest": 0.02
+        }
+      ],
+      "bounds": [
+        [
+          -66.11594154704802,
+          35.05185713718789,
+          -84.34972763061526
+        ],
+        [
+          63.96365453341401,
+          36.58321648954937,
+          83.17817449569705
+        ]
+      ],
+      "sourceMeshName": "center3_1"
+    },
+    {
+      "name": "left1_2",
+      "pathId": "-4188810565982220886",
+      "hierarchy": [
+        "left1_2",
+        "MESH_center1",
+        "center1",
+        "MAIN",
+        "volksparkstadion"
+      ],
+      "positionOffset": 1549788,
+      "uvOffset": 1550844,
+      "vertexCount": 88,
+      "parts": [
+        {
+          "material": "22.002",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "texture": "texture-5156661005305352342.webp",
+          "indexOffset": 1551548,
+          "indexCount": 132
+        }
+      ],
+      "bounds": [
+        [
+          -88.10870051383972,
+          13.043451309204102,
+          -115.9923791885376
+        ],
+        [
+          74.05139803886414,
+          34.81013476848602,
+          118.56108903884888
+        ]
+      ]
+    },
+    {
+      "name": "right1_3",
+      "pathId": "1691089287603982575",
+      "hierarchy": [
+        "right1_3",
+        "MESH_center1",
+        "center1",
+        "MAIN",
+        "volksparkstadion"
+      ],
+      "positionOffset": 1552076,
+      "uvOffset": 1552748,
+      "vertexCount": 56,
+      "parts": [
+        {
+          "material": "22.003",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "texture": "texture-5156661005305352342.webp",
+          "indexOffset": 1553196,
+          "indexCount": 84
+        }
+      ],
+      "bounds": [
+        [
+          -43.91818940639496,
+          13.043451309204102,
+          -118.6126708984375
+        ],
+        [
+          74.0548312664032,
+          34.81012582778931,
+          -74.92520213127136
+        ]
+      ]
+    },
+    {
+      "name": "center1_17",
+      "pathId": "-3514804389702507427",
+      "hierarchy": [
+        "center1_17",
+        "MESH_center1",
+        "center1",
+        "MAIN",
+        "volksparkstadion"
+      ],
+      "positionOffset": 1553532,
+      "uvOffset": 1670748,
+      "vertexCount": 9768,
+      "parts": [
+        {
+          "material": "14",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "texture": "texture--6723360670033313339.webp",
+          "indexOffset": 1748892,
+          "indexCount": 16944
+        }
+      ],
+      "bounds": [
+        [
+          -52.46875286102295,
+          -0.007314999675145373,
+          -69.41201090812683
+        ],
+        [
+          38.59081268310547,
+          1.8690649420022964,
+          67.35691428184509
+        ]
+      ]
+    },
+    {
+      "name": "center1_0",
+      "pathId": "-8512584221845470428",
+      "hierarchy": [
+        "center1_0",
+        "MESH_center1",
+        "center1",
+        "MAIN",
+        "volksparkstadion"
+      ],
+      "positionOffset": 1816668,
+      "uvOffset": 1818072,
+      "vertexCount": 117,
+      "parts": [
+        {
+          "material": "st063_turf001",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "texture": "texture--899434469732255093.webp",
+          "indexOffset": 1819008,
+          "indexCount": 576
+        }
+      ],
+      "bounds": [
+        [
+          -74.62401390075684,
+          -0.03995022998424247,
+          -104.59551811218262
+        ],
+        [
+          74.62401390075684,
+          -0.03995022998424247,
+          104.59551811218262
+        ]
+      ]
+    },
+    {
+      "name": "front2_0",
+      "pathId": "-675859331871115148",
+      "hierarchy": [
+        "front2_0",
+        "MESH_center1",
+        "center1",
+        "MAIN",
+        "volksparkstadion"
+      ],
+      "positionOffset": 1821312,
+      "uvOffset": 1829376,
+      "vertexCount": 672,
+      "parts": [
+        {
+          "material": "20.001",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "texture": "texture--1964227282587711583.webp",
+          "indexOffset": 1834752,
+          "indexCount": 1008,
+          "transparent": true,
+          "alphaTest": 0.02
+        }
+      ],
+      "bounds": [
+        [
+          -68.2205855846405,
+          2.1730879321694374,
+          -42.92751848697662
+        ],
+        [
+          -51.31887197494507,
+          9.449415653944016,
+          42.05457866191864
+        ]
+      ]
+    },
+    {
+      "name": "right2_8",
+      "pathId": "-5346952797847546084",
+      "hierarchy": [
+        "right2_8",
+        "MESH_center1",
+        "center1",
+        "MAIN",
+        "volksparkstadion"
+      ],
+      "positionOffset": 1838784,
+      "uvOffset": 1845312,
+      "vertexCount": 544,
+      "parts": [
+        {
+          "material": "4.001",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "texture": "texture-1240414987992286845.webp",
+          "indexOffset": 1849664,
+          "indexCount": 816
+        }
+      ],
+      "bounds": [
+        [
+          -37.26903200149536,
+          2.2752059623599052,
+          -64.41978216171265
+        ],
+        [
+          37.74395287036896,
+          2.5915559381246567,
+          -62.86694407463074
+        ]
+      ]
+    },
+    {
+      "name": "front2_4",
+      "pathId": "1077985290710353696",
+      "hierarchy": [
+        "front2_4",
+        "MESH_center1",
+        "center1",
+        "MAIN",
+        "volksparkstadion"
+      ],
+      "positionOffset": 1852928,
+      "uvOffset": 1855760,
+      "vertexCount": 236,
+      "parts": [
+        {
+          "material": "35",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "texture": "texture--995330172692179899.webp",
+          "indexOffset": 1857648,
+          "indexCount": 744
+        }
+      ],
+      "bounds": [
+        [
+          -41.69819951057434,
+          0.0004600000011123484,
+          -7.201474905014038
+        ],
+        [
+          -40.84610342979431,
+          0.21445800084620714,
+          4.521403834223747
+        ]
+      ]
+    },
+    {
+      "name": "C_left1_C1-HeavyHome",
+      "pathId": "-2549166745419353761",
+      "hierarchy": [
+        "C_left1_C1-HeavyHome",
+        "MESH_CROWD",
+        "AUDIAREA",
+        "volksparkstadion"
+      ],
+      "positionOffset": 1860624,
+      "uvOffset": 1861704,
+      "vertexCount": 90,
+      "parts": [
+        {
+          "material": "audi_seat_mat",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "texture": "texture--8009233366261755537.webp",
+          "indexOffset": 1862424,
+          "indexCount": 168
+        }
+      ],
+      "bounds": [
+        [
+          -79.78839734569192,
+          2.110449006431736,
+          64.5587146282196
+        ],
+        [
+          31.527049746364355,
+          34.858367560082115,
+          118.56108903884888
+        ]
+      ]
+    },
+    {
+      "name": "front1_16",
+      "pathId": "383480848472903743",
+      "hierarchy": [
+        "front1_16",
+        "MESH_center1",
+        "center1",
+        "MAIN",
+        "volksparkstadion"
+      ],
+      "positionOffset": 1863096,
+      "uvOffset": 1863192,
+      "vertexCount": 8,
+      "parts": [
+        {
+          "material": "23",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "texture": "texture-6491244580180371818.webp",
+          "indexOffset": 1863256,
+          "indexCount": 12,
+          "transparent": true,
+          "alphaTest": 0.02
+        }
+      ],
+      "bounds": [
+        [
+          -91.03911519050598,
+          21.732571721076965,
+          -10.324659943580627
+        ],
+        [
+          -90.99951982498169,
+          24.20548051595688,
+          9.338925033807755
+        ]
+      ]
+    },
+    {
+      "name": "C_right1_C1-HardcoreHome",
+      "pathId": "7259085158190815827",
+      "hierarchy": [
+        "C_right1_C1-HardcoreHome",
+        "MESH_CROWD",
+        "AUDIAREA",
+        "volksparkstadion"
+      ],
+      "positionOffset": 1863304,
+      "uvOffset": 1864720,
+      "vertexCount": 118,
+      "parts": [
+        {
+          "material": "audi_seat_mat",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "texture": "texture--8009233366261755537.webp",
+          "indexOffset": 1865664,
+          "indexCount": 198
+        }
+      ],
+      "bounds": [
+        [
+          -79.20369366183877,
+          1.956847935798578,
+          -117.98304319381714
+        ],
+        [
+          77.1868004463613,
+          34.858363747480325,
+          -61.480289697647095
+        ]
+      ]
+    },
+    {
+      "name": "left2_0",
+      "pathId": "1283055839331152251",
+      "hierarchy": [
+        "left2_0",
+        "MESH_center1",
+        "center1",
+        "MAIN",
+        "volksparkstadion"
+      ],
+      "positionOffset": 1866456,
+      "uvOffset": 1873116,
+      "vertexCount": 555,
+      "parts": [
+        {
+          "material": "43.001",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "texture": "texture--2135363216272306758.webp",
+          "indexOffset": 1877556,
+          "indexCount": 831
+        }
+      ],
+      "bounds": [
+        [
+          -69.93256211280823,
+          9.254653006792068,
+          71.5835452079773
+        ],
+        [
+          54.74010109901428,
+          13.275760412216187,
+          97.996586561203
+        ]
+      ]
+    },
+    {
+      "name": "center2_3",
+      "pathId": "-3067481122321675130",
+      "hierarchy": [
+        "center2_3",
+        "MESH_center1",
+        "center1",
+        "MAIN",
+        "volksparkstadion"
+      ],
+      "positionOffset": 1880880,
+      "uvOffset": 1890180,
+      "vertexCount": 775,
+      "parts": [
+        {
+          "material": "18",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "texture": "texture--7588957060219779589.webp",
+          "indexOffset": 1896380,
+          "indexCount": 2013
+        }
+      ],
+      "bounds": [
+        [
+          -4.898468032479286,
+          7.300000106624793e-05,
+          -56.797146797180176
+        ],
+        [
+          5.388948693871498,
+          0.294183986261487,
+          56.5177321434021
+        ]
+      ]
+    },
+    {
+      "name": "right2_3",
+      "pathId": "-1560483711839485820",
+      "hierarchy": [
+        "right2_3",
+        "MESH_center1",
+        "center1",
+        "MAIN",
+        "volksparkstadion"
+      ],
+      "positionOffset": 1904432,
+      "uvOffset": 1946444,
+      "vertexCount": 3501,
+      "parts": [
+        {
+          "material": "45.001",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "texture": "texture-1427356308152585301.webp",
+          "indexOffset": 1974452,
+          "indexCount": 12408
+        }
+      ],
+      "bounds": [
+        [
+          -38.924142718315125,
+          0.14710599789395928,
+          -64.37066793441772
+        ],
+        [
+          37.57762014865875,
+          2.814766764640808,
+          -62.67930865287781
+        ]
+      ]
+    },
+    {
+      "name": "center1_12",
+      "pathId": "6265869133951031573",
+      "hierarchy": [
+        "center1_12",
+        "MESH_center1",
+        "center1",
+        "MAIN",
+        "volksparkstadion"
+      ],
+      "positionOffset": 2024084,
+      "uvOffset": 2026292,
+      "vertexCount": 184,
+      "parts": [
+        {
+          "material": "10",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "texture": "texture-7737871090897150384.webp",
+          "indexOffset": 2027764,
+          "indexCount": 276,
+          "transparent": true,
+          "alphaTest": 0.02
+        }
+      ],
+      "bounds": [
+        [
+          -64.55899223498308,
+          13.769312551021779,
+          -85.19520163536075
+        ],
+        [
+          67.9052917782854,
+          14.309347737472986,
+          85.58970689773562
+        ]
+      ]
+    },
+    {
+      "name": "front1_12",
+      "pathId": "9152676226843883462",
+      "hierarchy": [
+        "front1_12",
+        "MESH_center1",
+        "center1",
+        "MAIN",
+        "volksparkstadion"
+      ],
+      "positionOffset": 2028868,
+      "uvOffset": 2037364,
+      "vertexCount": 708,
+      "parts": [
+        {
+          "material": "31",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "texture": "texture-7714117729764172253.webp",
+          "indexOffset": 2043028,
+          "indexCount": 1062
+        }
+      ],
+      "bounds": [
+        [
+          -54.90882992744446,
+          1.4160419814288616,
+          -72.24562764167786
+        ],
+        [
+          -38.999706506729126,
+          6.140370666980743,
+          -4.565399140119553
+        ]
+      ]
+    },
+    {
+      "name": "right1_5",
+      "pathId": "-7447873607193366233",
+      "hierarchy": [
+        "right1_5",
+        "MESH_center1",
+        "center1",
+        "MAIN",
+        "volksparkstadion"
+      ],
+      "positionOffset": 2047276,
+      "uvOffset": 2049004,
+      "vertexCount": 144,
+      "parts": [
+        {
+          "material": "46.002",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "texture": "texture--5281470577147239973.webp",
+          "indexOffset": 2050156,
+          "indexCount": 216,
+          "transparent": true,
+          "alphaTest": 0.02
+        }
+      ],
+      "bounds": [
+        [
+          -42.873671650886536,
+          13.453295826911926,
+          -99.3825614452362
+        ],
+        [
+          41.6218638420105,
+          21.9955176115036,
+          -83.35956335067749
+        ]
+      ]
+    },
+    {
+      "name": "center3_17",
+      "pathId": "4153513934796023761",
+      "hierarchy": [
+        "center3_17",
+        "MESH_center1",
+        "center1",
+        "MAIN",
+        "volksparkstadion"
+      ],
+      "positionOffset": 2051020,
+      "uvOffset": 2058700,
+      "vertexCount": 640,
+      "parts": [
+        {
+          "material": "55",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "texture": "texture-1030170565945525730.webp",
+          "indexOffset": 2063820,
+          "indexCount": 960
+        }
+      ],
+      "bounds": [
+        [
+          -104.9534797668457,
+          35.20691692829132,
+          -119.40796375274658
+        ],
+        [
+          102.59041786193848,
+          65.58737754821777,
+          118.90807151794434
+        ]
+      ]
+    },
+    {
+      "name": "left2_3",
+      "pathId": "-2205573945493343906",
+      "hierarchy": [
+        "left2_3",
+        "MESH_center1",
+        "center1",
+        "MAIN",
+        "volksparkstadion"
+      ],
+      "positionOffset": 2067660,
+      "uvOffset": 2068140,
+      "vertexCount": 40,
+      "parts": [
+        {
+          "material": "44.001",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "texture": "texture-4011103548483594767.webp",
+          "indexOffset": 2068460,
+          "indexCount": 60
+        }
+      ],
+      "bounds": [
+        [
+          -38.95866274833679,
+          -2.399999914359796e-05,
+          62.9065215587616
+        ],
+        [
+          37.923070788383484,
+          2.353798970580101,
+          64.75972533226013
+        ]
+      ]
+    },
+    {
+      "name": "center2_0",
+      "pathId": "812297210128153509",
+      "hierarchy": [
+        "center2_0",
+        "MESH_center1",
+        "center1",
+        "MAIN",
+        "volksparkstadion"
+      ],
+      "positionOffset": 2068700,
+      "uvOffset": 2069180,
+      "vertexCount": 40,
+      "parts": [
+        {
+          "material": "16",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "texture": "texture-7676437796972527255.webp",
+          "indexOffset": 2069500,
+          "indexCount": 72,
+          "transparent": true,
+          "alphaTest": 0.02
+        }
+      ],
+      "bounds": [
+        [
+          -146.36363020832357,
+          6.6676523246376656,
+          -172.52486944198614
+        ],
+        [
+          146.38362614579805,
+          32.242607271003656,
+          172.4766612052918
+        ]
+      ]
+    },
+    {
+      "name": "back1_3",
+      "pathId": "3201845112937818224",
+      "hierarchy": [
+        "back1_3",
+        "MESH_center1",
+        "center1",
+        "MAIN",
+        "volksparkstadion"
+      ],
+      "positionOffset": 2069788,
+      "uvOffset": 2069932,
+      "vertexCount": 12,
+      "parts": [
+        {
+          "material": "50",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "texture": "texture-1304487546176785944.webp",
+          "indexOffset": 2070028,
+          "indexCount": 18
+        }
+      ],
+      "bounds": [
+        [
+          65.09772539138794,
+          12.68317997455597,
+          -37.40518391132355
+        ],
+        [
+          67.36191511154175,
+          13.673512637615204,
+          37.39457130432129
+        ]
+      ]
+    },
+    {
+      "name": "back1_6",
+      "pathId": "-6393299110541921366",
+      "hierarchy": [
+        "back1_6",
+        "MESH_center1",
+        "center1",
+        "MAIN",
+        "volksparkstadion"
+      ],
+      "positionOffset": 2070100,
+      "uvOffset": 2070820,
+      "vertexCount": 60,
+      "parts": [
+        {
+          "material": "21",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "texture": "texture--1642971116332160948.webp",
+          "indexOffset": 2071300,
+          "indexCount": 108
+        }
+      ],
+      "bounds": [
+        [
+          62.31354090161501,
+          13.066973212754329,
+          -6.794384121894838
+        ],
+        [
+          102.42084372922643,
+          34.83284452482315,
+          84.6814572811127
+        ]
+      ]
+    },
+    {
+      "name": "right1_1",
+      "pathId": "6593792066287269089",
+      "hierarchy": [
+        "right1_1",
+        "MESH_center1",
+        "center1",
+        "MAIN",
+        "volksparkstadion"
+      ],
+      "positionOffset": 2071732,
+      "uvOffset": 2072068,
+      "vertexCount": 28,
+      "parts": [
+        {
+          "material": "22.003",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "texture": "texture-5156661005305352342.webp",
+          "indexOffset": 2072292,
+          "indexCount": 48
+        }
+      ],
+      "bounds": [
+        [
+          -43.90302443743747,
+          1.5906804659154596,
+          -87.04401254653934
+        ],
+        [
+          41.941075921981565,
+          9.4810172892141,
+          -62.82310485839846
+        ]
+      ]
+    },
+    {
+      "name": "DACH_center3_15",
+      "pathId": "1107241161676851510",
+      "hierarchy": [
+        "center3_15",
+        "MESH_center1",
+        "center1",
+        "MAIN",
+        "volksparkstadion"
+      ],
+      "positionOffset": 2072484,
+      "uvOffset": 2227968,
+      "vertexCount": 12957,
+      "parts": [
+        {
+          "material": "55",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "texture": "texture-1030170565945525730.webp",
+          "indexOffset": 2331624,
+          "indexCount": 20283
+        }
+      ],
+      "bounds": [
+        [
+          -92.85802245140076,
+          35.96036732196808,
+          -112.54444122314453
+        ],
+        [
+          90.49544334411621,
+          47.668081521987915,
+          -64.19003009796143
+        ]
+      ],
+      "sourceMeshName": "center3_15"
+    },
+    {
+      "name": "left1_4",
+      "pathId": "5781561489743941899",
+      "hierarchy": [
+        "left1_4",
+        "MESH_center1",
+        "center1",
+        "MAIN",
+        "volksparkstadion"
+      ],
+      "positionOffset": 2412756,
+      "uvOffset": 2414916,
+      "vertexCount": 180,
+      "parts": [
+        {
+          "material": "41",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "texture": "texture-2052002386420188367.webp",
+          "indexOffset": 2416356,
+          "indexCount": 360,
+          "transparent": true,
+          "alphaTest": 0.02
+        }
+      ],
+      "bounds": [
+        [
+          -25.04511399960776,
+          0.8130180456313615,
+          60.811674594879165
+        ],
+        [
+          21.846119507429812,
+          10.469140379383973,
+          60.98093390464784
+        ]
+      ]
+    },
+    {
+      "name": "right2_10",
+      "pathId": "-7735270068716041217",
+      "hierarchy": [
+        "right2_10",
+        "MESH_center1",
+        "center1",
+        "MAIN",
+        "volksparkstadion"
+      ],
+      "positionOffset": 2417796,
+      "uvOffset": 2417844,
+      "vertexCount": 4,
+      "parts": [
+        {
+          "material": "39.001",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "texture": "texture-8111151280402651944.webp",
+          "indexOffset": 2417876,
+          "indexCount": 6
+        }
+      ],
+      "bounds": [
+        [
+          -7.498683035373688,
+          0.00722699987818487,
+          -64.24242854118347
+        ],
+        [
+          6.87967911362648,
+          2.340316027402878,
+          -64.23675417900085
+        ]
+      ]
+    },
+    {
+      "name": "DACH_center3_8",
+      "pathId": "-935536775219633541",
+      "hierarchy": [
+        "center3_8",
+        "MESH_center1",
+        "center1",
+        "MAIN",
+        "volksparkstadion"
+      ],
+      "positionOffset": 2417900,
+      "uvOffset": 2827544,
+      "vertexCount": 34137,
+      "parts": [
+        {
+          "material": "57",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "texture": "texture--6525476436255670185.webp",
+          "indexOffset": 3100640,
+          "indexCount": 40470,
+          "transparent": true,
+          "alphaTest": 0.02
+        }
+      ],
+      "bounds": [
+        [
+          -99.62001442909241,
+          35.20691692829132,
+          -119.32106018066406
+        ],
+        [
+          97.25742936134338,
+          47.72282540798187,
+          -61.398762464523315
+        ]
+      ],
+      "sourceMeshName": "center3_8"
+    },
+    {
+      "name": "C_left1_C1-HeavyAway",
+      "pathId": "-610437215276211135",
+      "hierarchy": [
+        "C_left1_C1-HeavyAway",
+        "MESH_CROWD",
+        "AUDIAREA",
+        "volksparkstadion"
+      ],
+      "positionOffset": 3262520,
+      "uvOffset": 3263288,
+      "vertexCount": 64,
+      "parts": [
+        {
+          "material": "audi_seat_mat",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "texture": "texture--8009233366261755537.webp",
+          "indexOffset": 3263800,
+          "indexCount": 120
+        }
+      ],
+      "bounds": [
+        [
+          25.432132091373205,
+          2.1754987217718735,
+          59.89229679107666
+        ],
+        [
+          93.79900237545371,
+          34.858367560082115,
+          117.31523275375366
+        ]
+      ]
+    },
+    {
+      "name": "center1_4",
+      "pathId": "-7673525377887856334",
+      "hierarchy": [
+        "center1_4",
+        "MESH_center1",
+        "center1",
+        "MAIN",
+        "volksparkstadion"
+      ],
+      "positionOffset": 3264280,
+      "uvOffset": 3269248,
+      "vertexCount": 414,
+      "parts": [
+        {
+          "material": "3",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "texture": "texture-8371762516831273614.webp",
+          "indexOffset": 3272560,
+          "indexCount": 672
+        }
+      ],
+      "bounds": [
+        [
+          -76.35967675540512,
+          12.493841898083868,
+          -88.02521824836734
+        ],
+        [
+          68.27927648149998,
+          17.366290989784847,
+          86.21037602424624
+        ]
+      ]
+    },
+    {
+      "name": "right1_0",
+      "pathId": "-6543437349403794649",
+      "hierarchy": [
+        "right1_0",
+        "MESH_center1",
+        "center1",
+        "MAIN",
+        "volksparkstadion"
+      ],
+      "positionOffset": 3275248,
+      "uvOffset": 3275560,
+      "vertexCount": 26,
+      "parts": [
+        {
+          "material": "21.003",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "texture": "texture--1642971116332160948.webp",
+          "indexOffset": 3275768,
+          "indexCount": 42
+        }
+      ],
+      "bounds": [
+        [
+          -50.20671592528308,
+          1.6412152499223966,
+          -87.03750371932986
+        ],
+        [
+          39.95106470631474,
+          9.4803298029619,
+          -63.10408115386965
+        ]
+      ]
+    },
+    {
+      "name": "right2_7",
+      "pathId": "555604520622914373",
+      "hierarchy": [
+        "right2_7",
+        "MESH_center1",
+        "center1",
+        "MAIN",
+        "volksparkstadion"
+      ],
+      "positionOffset": 3275936,
+      "uvOffset": 3280736,
+      "vertexCount": 400,
+      "parts": [
+        {
+          "material": "woodpainted_arch_scrclockblck_b_color.001",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "texture": "texture--7250804163460646021.webp",
+          "indexOffset": 3283936,
+          "indexCount": 840,
+          "transparent": true,
+          "alphaTest": 0.02
+        }
+      ],
+      "bounds": [
+        [
+          -25.307608404965116,
+          0.3097287453463258,
+          -60.69964170455934
+        ],
+        [
+          21.968922092188134,
+          10.923856940479144,
+          -60.353767871856704
+        ]
+      ]
+    },
+    {
+      "name": "C_left1_C1-HardcoreHome",
+      "pathId": "2757974547137073732",
+      "hierarchy": [
+        "C_left1_C1-HardcoreHome",
+        "MESH_CROWD",
+        "AUDIAREA",
+        "volksparkstadion"
+      ],
+      "positionOffset": 3287296,
+      "uvOffset": 3287944,
+      "vertexCount": 54,
+      "parts": [
+        {
+          "material": "audi_seat_mat",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "texture": "texture--8009233366261755537.webp",
+          "indexOffset": 3288376,
+          "indexCount": 84
+        }
+      ],
+      "bounds": [
+        [
+          -70.4827950336039,
+          5.721234125667252,
+          74.4594931602478
+        ],
+        [
+          31.527028884738684,
+          34.847418186836876,
+          118.4180498123169
+        ]
+      ]
+    },
+    {
+      "name": "right2_6",
+      "pathId": "8882337721396933796",
+      "hierarchy": [
+        "right2_6",
+        "MESH_center1",
+        "center1",
+        "MAIN",
+        "volksparkstadion"
+      ],
+      "positionOffset": 3288712,
+      "uvOffset": 3293464,
+      "vertexCount": 396,
+      "parts": [
+        {
+          "material": "43.002",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "texture": "texture--2135363216272306758.webp",
+          "indexOffset": 3296632,
+          "indexCount": 594
+        }
+      ],
+      "bounds": [
+        [
+          -47.50567376613617,
+          9.254653006792068,
+          -97.56284356117249
+        ],
+        [
+          45.49265205860138,
+          13.275760412216187,
+          -82.69761204719543
+        ]
+      ]
+    },
+    {
+      "name": "C_front1_C1-HeavyHome",
+      "pathId": "-5478682109471220664",
+      "hierarchy": [
+        "C_front1_C1-HeavyHome",
+        "MESH_CROWD",
+        "AUDIAREA",
+        "volksparkstadion"
+      ],
+      "positionOffset": 3299008,
+      "uvOffset": 3300616,
+      "vertexCount": 134,
+      "parts": [
+        {
+          "material": "audi_seat_mat",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "texture": "texture--8009233366261755537.webp",
+          "indexOffset": 3301688,
+          "indexCount": 246
+        }
+      ],
+      "bounds": [
+        [
+          -104.80556348338723,
+          2.1877304825466126,
+          -84.69446301460266
+        ],
+        [
+          -49.337507877498865,
+          34.85837459447794,
+          100.72298049926758
+        ]
+      ]
+    },
+    {
+      "name": "left1_3.001",
+      "pathId": "-7074434955198891537",
+      "hierarchy": [
+        "left1_3.001",
+        "MESH_center1",
+        "center1",
+        "MAIN",
+        "volksparkstadion"
+      ],
+      "positionOffset": 3302672,
+      "uvOffset": 3302768,
+      "vertexCount": 8,
+      "parts": [
+        {
+          "material": "21.002",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "texture": "texture--1642971116332160948.webp",
+          "indexOffset": 3302832,
+          "indexCount": 12
+        }
+      ],
+      "bounds": [
+        [
+          47.52897024154663,
+          13.051122426986694,
+          76.36887431144714
+        ],
+        [
+          72.44731783866882,
+          34.81012582778931,
+          114.70491886138916
+        ]
+      ]
+    },
+    {
+      "name": "back1_1",
+      "pathId": "-4786489162915010260",
+      "hierarchy": [
+        "back1_1",
+        "MESH_center1",
+        "center1",
+        "MAIN",
+        "volksparkstadion"
+      ],
+      "positionOffset": 3302880,
+      "uvOffset": 3302976,
+      "vertexCount": 8,
+      "parts": [
+        {
+          "material": "50",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "texture": "texture-1304487546176785944.webp",
+          "indexOffset": 3303040,
+          "indexCount": 12
+        }
+      ],
+      "bounds": [
+        [
+          46.93050409759489,
+          0.012549213623088789,
+          -25.077095627784736
+        ],
+        [
+          47.79742201950835,
+          2.3713007769834458,
+          24.63257163763047
+        ]
+      ]
+    },
+    {
+      "name": "DACH_center3_6",
+      "pathId": "-3439041506061313772",
+      "hierarchy": [
+        "center3_6",
+        "MESH_center1",
+        "center1",
+        "MAIN",
+        "volksparkstadion"
+      ],
+      "positionOffset": 3303088,
+      "uvOffset": 3310768,
+      "vertexCount": 640,
+      "parts": [
+        {
+          "material": "56",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "texture": "texture-4884088018260668653.webp",
+          "indexOffset": 3315888,
+          "indexCount": 1080
+        }
+      ],
+      "bounds": [
+        [
+          -65.04934700919219,
+          33.352271362558255,
+          -83.18638205528262
+        ],
+        [
+          63.23032534226401,
+          35.756117255299536,
+          82.18427896499637
+        ]
+      ],
+      "sourceMeshName": "center3_6"
+    },
+    {
+      "name": "back2_df_0",
+      "pathId": "-3861208254932917811",
+      "hierarchy": [
+        "back2_df_0",
+        "MESH_center1",
+        "center1",
+        "MAIN",
+        "volksparkstadion"
+      ],
+      "positionOffset": 3320208,
+      "uvOffset": 3325344,
+      "vertexCount": 428,
+      "parts": [
+        {
+          "material": "df",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "texture": "texture-3676625253913950382.webp",
+          "indexOffset": 3328768,
+          "indexCount": 1128
+        }
+      ],
+      "bounds": [
+        [
+          -45.45567057682402,
+          0.7133968687836838,
+          -14.51177000999451
+        ],
+        [
+          -43.878057883750635,
+          1.964278335068975,
+          16.183519363403324
+        ]
+      ]
+    },
+    {
+      "name": "back1_9",
+      "pathId": "-6060750310864985576",
+      "hierarchy": [
+        "back1_9",
+        "MESH_center1",
+        "center1",
+        "MAIN",
+        "volksparkstadion"
+      ],
+      "positionOffset": 3333280,
+      "uvOffset": 3335872,
+      "vertexCount": 216,
+      "parts": [
+        {
+          "material": "46",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "texture": "texture--5281470577147239973.webp",
+          "indexOffset": 3337600,
+          "indexCount": 324,
+          "transparent": true,
+          "alphaTest": 0.02
+        }
+      ],
+      "bounds": [
+        [
+          55.807092553431865,
+          13.233992367021584,
+          -85.89976429939273
+        ],
+        [
+          83.61874095186165,
+          22.413730597976283,
+          62.119060754776015
+        ]
+      ]
+    },
+    {
+      "name": "DACH_center3_16",
+      "pathId": "1879259358412041387",
+      "hierarchy": [
+        "center3_16",
+        "MESH_center1",
+        "center1",
+        "MAIN",
+        "volksparkstadion"
+      ],
+      "positionOffset": 3338896,
+      "uvOffset": 3446560,
+      "vertexCount": 8972,
+      "parts": [
+        {
+          "material": "55",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "texture": "texture-1030170565945525730.webp",
+          "indexOffset": 3518336,
+          "indexCount": 14067
+        }
+      ],
+      "bounds": [
+        [
+          46.46163880825043,
+          35.979706048965454,
+          -68.79134178161621
+        ],
+        [
+          95.8746075630188,
+          47.6988285779953,
+          71.38344645500183
+        ]
+      ],
+      "sourceMeshName": "center3_16"
+    },
+    {
+      "name": "C_back1_C1-HardcoreHome",
+      "pathId": "2214479489724663409",
+      "hierarchy": [
+        "C_back1_C1-HardcoreHome",
+        "MESH_CROWD",
+        "AUDIAREA",
+        "volksparkstadion"
+      ],
+      "positionOffset": 3574604,
+      "uvOffset": 3575852,
+      "vertexCount": 104,
+      "parts": [
+        {
+          "material": "audi_seat_mat",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "texture": "texture--8009233366261755537.webp",
+          "indexOffset": 3576684,
+          "indexCount": 180
+        }
+      ],
+      "bounds": [
+        [
+          41.4291693829,
+          1.9450323306955397,
+          -101.66224241256714
+        ],
+        [
+          102.43287226185203,
+          34.85836755717173,
+          84.68145728111267
+        ]
+      ]
+    },
+    {
+      "name": "right2_9",
+      "pathId": "2160828287542926372",
+      "hierarchy": [
+        "right2_9",
+        "MESH_center1",
+        "center1",
+        "MAIN",
+        "volksparkstadion"
+      ],
+      "positionOffset": 3577404,
+      "uvOffset": 3577500,
+      "vertexCount": 8,
+      "parts": [
+        {
+          "material": "50.001",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "texture": "texture-1304487546176785944.webp",
+          "indexOffset": 3577564,
+          "indexCount": 12
+        }
+      ],
+      "bounds": [
+        [
+          -20.111458003520966,
+          12.65847235918045,
+          -84.36099290847778
+        ],
+        [
+          19.889648258686066,
+          13.510730862617493,
+          -84.05154347419739
+        ]
+      ]
+    },
+    {
+      "name": "center1_9",
+      "pathId": "-6911351976937674201",
+      "hierarchy": [
+        "center1_9",
+        "MESH_center1",
+        "center1",
+        "MAIN",
+        "volksparkstadion"
+      ],
+      "positionOffset": 3577612,
+      "uvOffset": 3599620,
+      "vertexCount": 1834,
+      "parts": [
+        {
+          "material": "8",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "texture": "texture--8465308136723045804.webp",
+          "indexOffset": 3614292,
+          "indexCount": 4767,
+          "transparent": true,
+          "alphaTest": 0.02
+        }
+      ],
+      "bounds": [
+        [
+          -29.8170268535614,
+          -7.699999287069659e-05,
+          -57.51832723617554
+        ],
+        [
+          36.89483106136322,
+          0.5310090258717537,
+          55.98980784416199
+        ]
+      ]
+    },
+    {
+      "name": "center1_14",
+      "pathId": "1911714159958226647",
+      "hierarchy": [
+        "center1_14",
+        "MESH_center1",
+        "center1",
+        "MAIN",
+        "volksparkstadion"
+      ],
+      "positionOffset": 3633360,
+      "uvOffset": 3634752,
+      "vertexCount": 116,
+      "parts": [
+        {
+          "material": "11",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "texture": "texture--6148653535760904458.webp",
+          "indexOffset": 3635680,
+          "indexCount": 186,
+          "transparent": true,
+          "alphaTest": 0.02
+        }
+      ],
+      "bounds": [
+        [
+          -87.1690208958881,
+          9.42223130341975,
+          -97.60680198669436
+        ],
+        [
+          81.55588807839432,
+          13.036065886211793,
+          97.95394539833072
+        ]
+      ]
+    },
+    {
+      "name": "st081_pitch_0",
+      "pathId": "8873356887796193205",
+      "hierarchy": [
+        "st081_pitch_0",
+        "MESH_Pitch",
+        "Pitch",
+        "PITCH2021",
+        "volksparkstadion"
+      ],
+      "positionOffset": 3636424,
+      "uvOffset": 3636472,
+      "vertexCount": 4,
+      "parts": [
+        {
+          "material": "0002-hsv 1",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "texture": "texture-7741725615414109625.webp",
+          "indexOffset": 3636504,
+          "indexCount": 6,
+          "transparent": true,
+          "alphaTest": 0.02
+        }
+      ],
+      "bounds": [
+        [
+          -37.90000081062317,
+          -0.010006228939829498,
+          -57.19999670982361
+        ],
+        [
+          37.90000081062317,
+          -0.009994228940257699,
+          57.19999670982361
+        ]
+      ]
+    },
+    {
+      "name": "front2_1",
+      "pathId": "5687318209256514007",
+      "hierarchy": [
+        "front2_1",
+        "MESH_center1",
+        "center1",
+        "MAIN",
+        "volksparkstadion"
+      ],
+      "positionOffset": 3636528,
+      "uvOffset": 3639684,
+      "vertexCount": 263,
+      "parts": [
+        {
+          "material": "3.001",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "texture": "texture-8371762516831273614.webp",
+          "indexOffset": 3641788,
+          "indexCount": 456
+        }
+      ],
+      "bounds": [
+        [
+          -75.2260388703824,
+          -0.019252738261140847,
+          -77.01476216316226
+        ],
+        [
+          -38.94592574686468,
+          5.471752664016291,
+          80.26388287544253
+        ]
+      ]
+    },
+    {
+      "name": "left2_1",
+      "pathId": "-3561100507995933565",
+      "hierarchy": [
+        "left2_1",
+        "MESH_center1",
+        "center1",
+        "MAIN",
+        "volksparkstadion"
+      ],
+      "positionOffset": 3643612,
+      "uvOffset": 3643732,
+      "vertexCount": 10,
+      "parts": [
+        {
+          "material": "48.001",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "texture": "texture--9169856766620055562.webp",
+          "indexOffset": 3643812,
+          "indexCount": 18
+        }
+      ],
+      "bounds": [
+        [
+          -36.94368004798889,
+          0.005945999873802066,
+          62.92456388473511
+        ],
+        [
+          37.07665503025055,
+          2.3463288322091103,
+          63.880687952041626
+        ]
+      ]
+    },
+    {
+      "name": "right1_4",
+      "pathId": "-8462269970769639727",
+      "hierarchy": [
+        "right1_4",
+        "MESH_center1",
+        "center1",
+        "MAIN",
+        "volksparkstadion"
+      ],
+      "positionOffset": 3643884,
+      "uvOffset": 3646044,
+      "vertexCount": 180,
+      "parts": [
+        {
+          "material": "41.001",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "texture": "texture-2052002386420188367.webp",
+          "indexOffset": 3647484,
+          "indexCount": 360,
+          "transparent": true,
+          "alphaTest": 0.02
+        }
+      ],
+      "bounds": [
+        [
+          -25.12977047153044,
+          0.8119445578047864,
+          -60.52834987640382
+        ],
+        [
+          21.763111712613163,
+          10.46912136465235,
+          -60.36084890365602
+        ]
+      ]
+    },
+    {
+      "name": "center1_2",
+      "pathId": "-9073655753736327739",
+      "hierarchy": [
+        "center1_2",
+        "MESH_center1",
+        "center1",
+        "MAIN",
+        "volksparkstadion"
+      ],
+      "positionOffset": 3648924,
+      "uvOffset": 3652284,
+      "vertexCount": 280,
+      "parts": [
+        {
+          "material": "4",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "texture": "texture-1240414987992286845.webp",
+          "indexOffset": 3654524,
+          "indexCount": 456
+        }
+      ],
+      "bounds": [
+        [
+          -39.01867701237832,
+          2.4983821451037094,
+          -64.4807279109955
+        ],
+        [
+          48.27265772028644,
+          2.7017246405237456,
+          64.75919485092165
+        ]
+      ]
+    },
+    {
+      "name": "st081_pitch_1",
+      "pathId": "-5214003739066533397",
+      "hierarchy": [
+        "st081_pitch_1",
+        "MESH_Pitch",
+        "Pitch",
+        "PITCH2021",
+        "volksparkstadion"
+      ],
+      "positionOffset": 3656348,
+      "uvOffset": 3747260,
+      "vertexCount": 7576,
+      "parts": [
+        {
+          "material": "000STADIUMLINE",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "texture": null,
+          "indexOffset": 3807868,
+          "indexCount": 13848,
+          "transparent": false
+        }
+      ],
+      "bounds": [
+        [
+          -34.0800017118454,
+          0.008340999920619652,
+          -52.95000076293945
+        ],
+        [
+          34.0800017118454,
+          0.008352000440936536,
+          52.95000076293945
+        ]
+      ]
+    },
+    {
+      "name": "front1_6",
+      "pathId": "4925995422180910256",
+      "hierarchy": [
+        "front1_6",
+        "MESH_center1",
+        "center1",
+        "MAIN",
+        "volksparkstadion"
+      ],
+      "positionOffset": 3863260,
+      "uvOffset": 3864076,
+      "vertexCount": 68,
+      "parts": [
+        {
+          "material": "22.001",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "texture": "texture-5156661005305352342.webp",
+          "indexOffset": 3864620,
+          "indexCount": 102
+        }
+      ],
+      "bounds": [
+        [
+          -104.81758442747915,
+          16.9045409614252,
+          -74.40662384033205
+        ],
+        [
+          -72.5178159274789,
+          34.776361687723394,
+          72.77093529701234
+        ]
+      ]
+    },
+    {
+      "name": "center2_4",
+      "pathId": "-7763045692103955478",
+      "hierarchy": [
+        "center2_4",
+        "MESH_center1",
+        "center1",
+        "MAIN",
+        "volksparkstadion"
+      ],
+      "positionOffset": 3865028,
+      "uvOffset": 3906788,
+      "vertexCount": 3480,
+      "parts": [
+        {
+          "material": "19",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "texture": "texture-678550191309501598.webp",
+          "indexOffset": 3934628,
+          "indexCount": 6744
+        }
+      ],
+      "bounds": [
+        [
+          -4.000340029597282,
+          -0.0004159999662078917,
+          -57.64312744140625
+        ],
+        [
+          4.277921095490456,
+          0.5952379666268826,
+          57.850855588912964
+        ]
+      ]
+    },
+    {
+      "name": "front1_5",
+      "pathId": "9216168174543801414",
+      "hierarchy": [
+        "front1_5",
+        "MESH_center1",
+        "center1",
+        "MAIN",
+        "volksparkstadion"
+      ],
+      "positionOffset": 3961604,
+      "uvOffset": 3962324,
+      "vertexCount": 60,
+      "parts": [
+        {
+          "material": "28",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "texture": "texture-4379425574210483064.webp",
+          "indexOffset": 3962804,
+          "indexCount": 108
+        }
+      ],
+      "bounds": [
+        [
+          -89.7779921219196,
+          21.701087653482837,
+          -24.724444746971137
+        ],
+        [
+          -86.29077514486431,
+          24.19481631923055,
+          23.66073578596116
+        ]
+      ]
+    },
+    {
+      "name": "front1_15",
+      "pathId": "2464524283638627034",
+      "hierarchy": [
+        "front1_15",
+        "MESH_center1",
+        "center1",
+        "MAIN",
+        "volksparkstadion"
+      ],
+      "positionOffset": 3963236,
+      "uvOffset": 3963524,
+      "vertexCount": 24,
+      "parts": [
+        {
+          "material": "23",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "texture": "texture-6491244580180371818.webp",
+          "indexOffset": 3963716,
+          "indexCount": 54,
+          "transparent": true,
+          "alphaTest": 0.02
+        }
+      ],
+      "bounds": [
+        [
+          -91.55113101005554,
+          13.72346431016922,
+          -98.81826043128967
+        ],
+        [
+          -62.51615881919861,
+          17.173004150390625,
+          72.26479053497314
+        ]
+      ]
+    },
+    {
+      "name": "DACH_center3_12",
+      "pathId": "1176939088485722167",
+      "hierarchy": [
+        "center3_12",
+        "MESH_center1",
+        "center1",
+        "MAIN",
+        "volksparkstadion"
+      ],
+      "positionOffset": 3963932,
+      "uvOffset": 3965276,
+      "vertexCount": 112,
+      "parts": [
+        {
+          "material": "56",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "texture": "texture-4884088018260668653.webp",
+          "indexOffset": 3966172,
+          "indexCount": 228
+        }
+      ],
+      "bounds": [
+        [
+          -66.10332131385803,
+          35.07468402385712,
+          -84.34972763061523
+        ],
+        [
+          63.97576928138733,
+          35.08308827877045,
+          83.17817449569702
+        ]
+      ],
+      "sourceMeshName": "center3_12"
+    },
+    {
+      "name": "right2_5",
+      "pathId": "5283833877831819296",
+      "hierarchy": [
+        "right2_5",
+        "MESH_center1",
+        "center1",
+        "MAIN",
+        "volksparkstadion"
+      ],
+      "positionOffset": 3967084,
+      "uvOffset": 3967156,
+      "vertexCount": 6,
+      "parts": [
+        {
+          "material": "50.001",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "texture": "texture-1304487546176785944.webp",
+          "indexOffset": 3967204,
+          "indexCount": 12
+        }
+      ],
+      "bounds": [
+        [
+          -11.349841207265854,
+          12.510891258716583,
+          -84.48412418365479
+        ],
+        [
+          8.231200277805328,
+          13.791616261005402,
+          -84.2915952205658
+        ]
+      ]
+    },
+    {
+      "name": "back1_8",
+      "pathId": "4295327451149791059",
+      "hierarchy": [
+        "back1_8",
+        "MESH_center1",
+        "center1",
+        "MAIN",
+        "volksparkstadion"
+      ],
+      "positionOffset": 3967252,
+      "uvOffset": 3967348,
+      "vertexCount": 8,
+      "parts": [
+        {
+          "material": "58",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "texture": "texture-4581905311403013006.webp",
+          "indexOffset": 3967412,
+          "indexCount": 12,
+          "transparent": true,
+          "alphaTest": 0.02
+        }
+      ],
+      "bounds": [
+        [
+          47.71539626178986,
+          0.016509462178280317,
+          -7.944524288177493
+        ],
+        [
+          48.448688321231025,
+          2.370535490657986,
+          9.028807282447817
+        ]
+      ]
+    },
+    {
+      "name": "front2_3",
+      "pathId": "-61463604390980848",
+      "hierarchy": [
+        "front2_3",
+        "MESH_center1",
+        "center1",
+        "MAIN",
+        "volksparkstadion"
+      ],
+      "positionOffset": 3967460,
+      "uvOffset": 3975716,
+      "vertexCount": 688,
+      "parts": [
+        {
+          "material": "34",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "texture": "texture--3701738494777960331.webp",
+          "indexOffset": 3981220,
+          "indexCount": 1416
+        }
+      ],
+      "bounds": [
+        [
+          -46.40955626964569,
+          0.00372099966625683,
+          52.5357186794281
+        ],
+        [
+          -45.45196890830994,
+          1.0612809099256992,
+          54.739028215408325
+        ]
+      ]
+    },
+    {
+      "name": "front1_7",
+      "pathId": "-6253225612399219504",
+      "hierarchy": [
+        "front1_7",
+        "MESH_center1",
+        "center1",
+        "MAIN",
+        "volksparkstadion"
+      ],
+      "positionOffset": 3986884,
+      "uvOffset": 4069516,
+      "vertexCount": 6886,
+      "parts": [
+        {
+          "material": "29",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "texture": "texture-8001762015205713720.webp",
+          "indexOffset": 4124604,
+          "indexCount": 24246
+        }
+      ],
+      "bounds": [
+        [
+          -45.125949341319014,
+          0.37290160308721326,
+          -14.446514844894413
+        ],
+        [
+          -43.79697139525767,
+          2.01393769097279,
+          16.112205386161808
+        ]
+      ]
+    },
+    {
+      "name": "center1_15",
+      "pathId": "-6241888128617870680",
+      "hierarchy": [
+        "center1_15",
+        "MESH_center1",
+        "center1",
+        "MAIN",
+        "volksparkstadion"
+      ],
+      "positionOffset": 4221588,
+      "uvOffset": 4223364,
+      "vertexCount": 148,
+      "parts": [
+        {
+          "material": "12",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "texture": "texture-2982611074409826508.webp",
+          "indexOffset": 4224548,
+          "indexCount": 222,
+          "transparent": true,
+          "alphaTest": 0.02
+        }
+      ],
+      "bounds": [
+        [
+          -84.50023508117184,
+          21.361527326020887,
+          -99.98731613159183
+        ],
+        [
+          83.65304086463196,
+          23.502594165014333,
+          100.10668039321902
+        ]
+      ]
+    },
+    {
+      "name": "center1_8",
+      "pathId": "-5899210973897522930",
+      "hierarchy": [
+        "center1_8",
+        "MESH_center1",
+        "center1",
+        "MAIN",
+        "volksparkstadion"
+      ],
+      "positionOffset": 4225436,
+      "uvOffset": 4252700,
+      "vertexCount": 2272,
+      "parts": [
+        {
+          "material": "7",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "texture": "texture-6992280303917968899.webp",
+          "indexOffset": 4270876,
+          "indexCount": 6996
+        }
+      ],
+      "bounds": [
+        [
+          -46.050456166267395,
+          0.0014349999219120946,
+          -61.637985706329346
+        ],
+        [
+          43.08338165283203,
+          0.5688239820301533,
+          60.207051038742065
+        ]
+      ]
+    },
+    {
+      "name": "front1_0",
+      "pathId": "8014054368580974886",
+      "hierarchy": [
+        "front1_0",
+        "MESH_center1",
+        "center1",
+        "MAIN",
+        "volksparkstadion"
+      ],
+      "positionOffset": 4298860,
+      "uvOffset": 4299628,
+      "vertexCount": 64,
+      "parts": [
+        {
+          "material": "21.001",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "texture": "texture--1642971116332160948.webp",
+          "indexOffset": 4300140,
+          "indexCount": 114
+        }
+      ],
+      "bounds": [
+        [
+          -73.23344914171041,
+          1.7761452124955999,
+          -84.61861014366153
+        ],
+        [
+          -43.807188371864726,
+          9.449336290793068,
+          84.81761217117312
+        ]
+      ]
+    },
+    {
+      "name": "DACH_center3_14",
+      "pathId": "2011175535570571838",
+      "hierarchy": [
+        "center3_14",
+        "MESH_center1",
+        "center1",
+        "MAIN",
+        "volksparkstadion"
+      ],
+      "positionOffset": 4300596,
+      "uvOffset": 4409820,
+      "vertexCount": 9102,
+      "parts": [
+        {
+          "material": "55",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "texture": "texture-1030170565945525730.webp",
+          "indexOffset": 4482636,
+          "indexCount": 14247
+        }
+      ],
+      "bounds": [
+        [
+          -98.23756217956543,
+          35.97967326641083,
+          -67.2562301158905
+        ],
+        [
+          -47.34742343425751,
+          47.69880473613739,
+          73.64504933357239
+        ]
+      ],
+      "sourceMeshName": "center3_14"
+    },
+    {
+      "name": "left1_3",
+      "pathId": "3832754644809224397",
+      "hierarchy": [
+        "left1_3",
+        "MESH_center1",
+        "center1",
+        "MAIN",
+        "volksparkstadion"
+      ],
+      "positionOffset": 4539624,
+      "uvOffset": 4540836,
+      "vertexCount": 101,
+      "parts": [
+        {
+          "material": "21.002",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "texture": "texture--1642971116332160948.webp",
+          "indexOffset": 4541644,
+          "indexCount": 171
+        }
+      ],
+      "bounds": [
+        [
+          -74.14510250091553,
+          13.043452799320221,
+          83.0370306968689
+        ],
+        [
+          64.34531211853027,
+          34.81013476848602,
+          118.56108903884888
+        ]
+      ]
+    },
+    {
+      "name": "DACH_center3_2",
+      "pathId": "-5177123117484051059",
+      "hierarchy": [
+        "center3_2",
+        "MESH_center1",
+        "center1",
+        "MAIN",
+        "volksparkstadion"
+      ],
+      "positionOffset": 4542328,
+      "uvOffset": 4550296,
+      "vertexCount": 664,
+      "parts": [
+        {
+          "material": "53",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "texture": "texture--3327877469743463349.webp",
+          "indexOffset": 4555608,
+          "indexCount": 1680,
+          "transparent": true,
+          "alphaTest": 0.02
+        }
+      ],
+      "bounds": [
+        [
+          -98.07459115982056,
+          35.84322929382324,
+          -112.35613822937012
+        ],
+        [
+          7.224468886852264,
+          44.89108324050903,
+          -8.49294662475586
+        ]
+      ],
+      "sourceMeshName": "center3_2"
+    },
+    {
+      "name": "DACH_center3_0",
+      "pathId": "-2386192520213070952",
+      "hierarchy": [
+        "center3_0",
+        "MESH_center1",
+        "center1",
+        "MAIN",
+        "volksparkstadion"
+      ],
+      "positionOffset": 4562328,
+      "uvOffset": 4563000,
+      "vertexCount": 56,
+      "parts": [
+        {
+          "material": "51",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "texture": "texture-7671024439212578734.webp",
+          "indexOffset": 4563448,
+          "indexCount": 108
+        }
+      ],
+      "bounds": [
+        [
+          -6.142752288783474,
+          29.802639442750056,
+          -81.89771771430969
+        ],
+        [
+          5.044152901965574,
+          37.58773599564341,
+          80.70663213729858
+        ]
+      ],
+      "sourceMeshName": "center3_0"
+    },
+    {
+      "name": "DACH_center3_9",
+      "pathId": "-9043395366953643202",
+      "hierarchy": [
+        "center3_9",
+        "MESH_center1",
+        "center1",
+        "MAIN",
+        "volksparkstadion"
+      ],
+      "positionOffset": 4563880,
+      "uvOffset": 4807660,
+      "vertexCount": 20315,
+      "parts": [
+        {
+          "material": "57",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "texture": "texture--6525476436255670185.webp",
+          "indexOffset": 4970180,
+          "indexCount": 24291,
+          "transparent": true,
+          "alphaTest": 0.02
+        }
+      ],
+      "bounds": [
+        [
+          -105.13049415159936,
+          35.156179105633605,
+          -64.18129801750183
+        ],
+        [
+          -47.29711631101291,
+          47.706896643892335,
+          72.00426459312439
+        ]
+      ],
+      "sourceMeshName": "center3_9"
+    },
+    {
+      "name": "back1_7",
+      "pathId": "514973087228686513",
+      "hierarchy": [
+        "back1_7",
+        "MESH_center1",
+        "center1",
+        "MAIN",
+        "volksparkstadion"
+      ],
+      "positionOffset": 5067344,
+      "uvOffset": 5068256,
+      "vertexCount": 76,
+      "parts": [
+        {
+          "material": "22",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "texture": "texture-5156661005305352342.webp",
+          "indexOffset": 5068864,
+          "indexCount": 114
+        }
+      ],
+      "bounds": [
+        [
+          62.87378668785095,
+          13.045132160186768,
+          -93.85491609573364
+        ],
+        [
+          102.48967409133911,
+          34.81012582778931,
+          93.841952085495
+        ]
+      ]
+    },
+    {
+      "name": "front2_10",
+      "pathId": "3921039368798774768",
+      "hierarchy": [
+        "front2_10",
+        "MESH_center1",
+        "center1",
+        "MAIN",
+        "volksparkstadion"
+      ],
+      "positionOffset": 5069320,
+      "uvOffset": 5077672,
+      "vertexCount": 696,
+      "parts": [
+        {
+          "material": "31.001",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "texture": "texture-7714117729764172253.webp",
+          "indexOffset": 5083240,
+          "indexCount": 1044
+        }
+      ],
+      "bounds": [
+        [
+          -57.02754259109497,
+          1.4179329387843609,
+          -2.899077907204628
+        ],
+        [
+          -38.96464705467224,
+          6.11962303519249,
+          72.15985655784607
+        ]
+      ]
+    },
+    {
+      "name": "center1_16",
+      "pathId": "-3905860642222563358",
+      "hierarchy": [
+        "center1_16",
+        "MESH_center1",
+        "center1",
+        "MAIN",
+        "volksparkstadion"
+      ],
+      "positionOffset": 5087416,
+      "uvOffset": 5088040,
+      "vertexCount": 52,
+      "parts": [
+        {
+          "material": "13",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "texture": "texture-859764065096342455.webp",
+          "indexOffset": 5088456,
+          "indexCount": 72,
+          "transparent": true,
+          "alphaTest": 0.02
+        }
+      ],
+      "bounds": [
+        [
+          -28.268959469561942,
+          -0.008230204944148504,
+          -56.520432233810425
+        ],
+        [
+          26.03503480780329,
+          0.34565157513127215,
+          56.73224329948425
+        ]
+      ]
+    },
+    {
+      "name": "front1_8",
+      "pathId": "-4304394205862615053",
+      "hierarchy": [
+        "front1_8",
+        "MESH_center1",
+        "center1",
+        "MAIN",
+        "volksparkstadion"
+      ],
+      "positionOffset": 5088744,
+      "uvOffset": 5089896,
+      "vertexCount": 96,
+      "parts": [
+        {
+          "material": "21.001",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "texture": "texture--1642971116332160948.webp",
+          "indexOffset": 5090664,
+          "indexCount": 153
+        }
+      ],
+      "bounds": [
+        [
+          -104.8055648803711,
+          13.043248653411865,
+          2.0353930070996284
+        ],
+        [
+          -48.956042528152466,
+          34.8101407289505,
+          105.13453483581543
+        ]
+      ]
+    },
+    {
+      "name": "center1_13",
+      "pathId": "1135651061988695479",
+      "hierarchy": [
+        "center1_13",
+        "MESH_center1",
+        "center1",
+        "MAIN",
+        "volksparkstadion"
+      ],
+      "positionOffset": 5091276,
+      "uvOffset": 5092716,
+      "vertexCount": 120,
+      "parts": [
+        {
+          "material": "10",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "texture": "texture-7737871090897150384.webp",
+          "indexOffset": 5093676,
+          "indexCount": 180,
+          "transparent": true,
+          "alphaTest": 0.02
+        }
+      ],
+      "bounds": [
+        [
+          -89.13610613933976,
+          21.58676020838018,
+          -103.76564264297488
+        ],
+        [
+          87.72048463107397,
+          24.174163670339468,
+          103.77432107925418
+        ]
+      ]
+    },
+    {
+      "name": "back1_2.001",
+      "pathId": "3353601363867472260",
+      "hierarchy": [
+        "back1_2.001",
+        "MESH_center1",
+        "center1",
+        "MAIN",
+        "volksparkstadion"
+      ],
+      "positionOffset": 5094396,
+      "uvOffset": 5094492,
+      "vertexCount": 8,
+      "parts": [
+        {
+          "material": "21",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "texture": "texture--1642971116332160948.webp",
+          "indexOffset": 5094556,
+          "indexCount": 12
+        }
+      ],
+      "bounds": [
+        [
+          38.073885440826416,
+          1.6502339392900467,
+          59.25450921058655
+        ],
+        [
+          63.46598267555237,
+          9.46652740240097,
+          85.43415665626526
+        ]
+      ]
+    },
+    {
+      "name": "DACH_center3_10",
+      "pathId": "-2557344650150189116",
+      "hierarchy": [
+        "center3_10",
+        "MESH_center1",
+        "center1",
+        "MAIN",
+        "volksparkstadion"
+      ],
+      "positionOffset": 5094604,
+      "uvOffset": 5480488,
+      "vertexCount": 32157,
+      "parts": [
+        {
+          "material": "57",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "texture": "texture--6525476436255670185.webp",
+          "indexOffset": 5737744,
+          "indexCount": 38076,
+          "transparent": true,
+          "alphaTest": 0.02
+        }
+      ],
+      "bounds": [
+        [
+          -99.3923367695657,
+          35.17323983454683,
+          63.95867466926577
+        ],
+        [
+          97.00377230145158,
+          47.73074239732015,
+          119.3080544471741
+        ]
+      ],
+      "sourceMeshName": "center3_10"
+    },
+    {
+      "name": "right2_4",
+      "pathId": "-7707890844612956257",
+      "hierarchy": [
+        "right2_4",
+        "MESH_center1",
+        "center1",
+        "MAIN",
+        "volksparkstadion"
+      ],
+      "positionOffset": 5890048,
+      "uvOffset": 5890816,
+      "vertexCount": 64,
+      "parts": [
+        {
+          "material": "31.002",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "texture": "texture-7714117729764172253.webp",
+          "indexOffset": 5891328,
+          "indexCount": 96
+        }
+      ],
+      "bounds": [
+        [
+          -44.0950870513916,
+          1.2802300043404102,
+          -72.19631671905518
+        ],
+        [
+          -38.92866373062134,
+          5.824128910899162,
+          -62.84724473953247
+        ]
+      ]
+    },
+    {
+      "name": "center2_2",
+      "pathId": "5608065107001768620",
+      "hierarchy": [
+        "center2_2",
+        "MESH_center1",
+        "center1",
+        "MAIN",
+        "volksparkstadion"
+      ],
+      "positionOffset": 5891712,
+      "uvOffset": 5894868,
+      "vertexCount": 263,
+      "parts": [
+        {
+          "material": "17",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "texture": "texture--3796265063233571282.webp",
+          "indexOffset": 5896972,
+          "indexCount": 672
+        }
+      ],
+      "bounds": [
+        [
+          -4.765927791595459,
+          7.300000106624793e-05,
+          56.30003809928894
+        ],
+        [
+          -4.656775668263435,
+          0.294183986261487,
+          56.40919208526611
+        ]
+      ]
+    },
+    {
+      "name": "left2_2",
+      "pathId": "6528755184610171339",
+      "hierarchy": [
+        "left2_2",
+        "MESH_center1",
+        "center1",
+        "MAIN",
+        "volksparkstadion"
+      ],
+      "positionOffset": 5899660,
+      "uvOffset": 5901100,
+      "vertexCount": 120,
+      "parts": [
+        {
+          "material": "42",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "texture": "texture-4316505399137570133.webp",
+          "indexOffset": 5902060,
+          "indexCount": 180
+        }
+      ],
+      "bounds": [
+        [
+          -25.424745678901672,
+          -0.005832999886479229,
+          60.72080731391907
+        ],
+        [
+          22.173994779586792,
+          11.082976311445236,
+          60.9178364276886
+        ]
+      ]
+    },
+    {
+      "name": "left1_1",
+      "pathId": "-2429626539705970450",
+      "hierarchy": [
+        "left1_1",
+        "MESH_center1",
+        "center1",
+        "MAIN",
+        "volksparkstadion"
+      ],
+      "positionOffset": 5902780,
+      "uvOffset": 5903128,
+      "vertexCount": 29,
+      "parts": [
+        {
+          "material": "22.002",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "texture": "texture-5156661005305352342.webp",
+          "indexOffset": 5903360,
+          "indexCount": 51
+        }
+      ],
+      "bounds": [
+        [
+          -43.90107989311218,
+          1.6502339392900467,
+          62.94887661933899
+        ],
+        [
+          41.994884610176086,
+          9.46652740240097,
+          87.31662034988403
+        ]
+      ]
+    },
+    {
+      "name": "front1_11",
+      "pathId": "-9114032805264722857",
+      "hierarchy": [
+        "front1_11",
+        "MESH_center1",
+        "center1",
+        "MAIN",
+        "volksparkstadion"
+      ],
+      "positionOffset": 5903564,
+      "uvOffset": 5903852,
+      "vertexCount": 24,
+      "parts": [
+        {
+          "material": "31",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "texture": "texture-7714117729764172253.webp",
+          "indexOffset": 5904044,
+          "indexCount": 54
+        }
+      ],
+      "bounds": [
+        [
+          -91.55584869019671,
+          13.691835464516222,
+          -98.8182604312897
+        ],
+        [
+          -52.81661526401584,
+          13.80431286856511,
+          72.26479053497316
+        ]
+      ]
+    },
+    {
+      "name": "back2_df_2",
+      "pathId": "-8175603329263493500",
+      "hierarchy": [
+        "back2_df_2",
+        "MESH_center1",
+        "center1",
+        "MAIN",
+        "volksparkstadion"
+      ],
+      "positionOffset": 5904260,
+      "uvOffset": 5909540,
+      "vertexCount": 440,
+      "parts": [
+        {
+          "material": "df",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "texture": "texture-3676625253913950382.webp",
+          "indexOffset": 5913060,
+          "indexCount": 1080
+        }
+      ],
+      "bounds": [
+        [
+          -56.27084415640436,
+          0.23091729353859633,
+          -1.8212359398603444
+        ],
+        [
+          -51.304250938336985,
+          3.6487936903947764,
+          0.8725150488317015
+        ]
+      ]
+    },
+    {
+      "name": "back1_10",
+      "pathId": "-3642537225845827682",
+      "hierarchy": [
+        "back1_10",
+        "MESH_center1",
+        "center1",
+        "MAIN",
+        "volksparkstadion"
+      ],
+      "positionOffset": 5917380,
+      "uvOffset": 5930280,
+      "vertexCount": 1075,
+      "parts": [
+        {
+          "material": "43",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "texture": "texture--2135363216272306758.webp",
+          "indexOffset": 5938880,
+          "indexCount": 1611
+        }
+      ],
+      "bounds": [
+        [
+          51.453005819682026,
+          9.27538995985491,
+          -88.17551732063296
+        ],
+        [
+          80.78744153935916,
+          13.302179279189822,
+          88.03960084915164
+        ]
+      ]
+    },
+    {
+      "name": "front2_6",
+      "pathId": "-7230364833471883526",
+      "hierarchy": [
+        "front2_6",
+        "MESH_center1",
+        "center1",
+        "MAIN",
+        "volksparkstadion"
+      ],
+      "positionOffset": 5945324,
+      "uvOffset": 5976656,
+      "vertexCount": 2611,
+      "parts": [
+        {
+          "material": "48",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "texture": "texture--9169856766620055562.webp",
+          "indexOffset": 5997544,
+          "indexCount": 6408
+        }
+      ],
+      "bounds": [
+        [
+          -56.40236735343933,
+          0.011976999667240307,
+          -1.893828995525837
+        ],
+        [
+          -51.23687982559204,
+          3.6665260791778564,
+          0.9320840239524841
+        ]
+      ]
+    },
+    {
+      "name": "back1_6.001",
+      "pathId": "-6791539305327900653",
+      "hierarchy": [
+        "back1_6.001",
+        "MESH_center1",
+        "center1",
+        "MAIN",
+        "volksparkstadion"
+      ],
+      "positionOffset": 6023176,
+      "uvOffset": 6023380,
+      "vertexCount": 17,
+      "parts": [
+        {
+          "material": "21",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "texture": "texture--1642971116332160948.webp",
+          "indexOffset": 6023516,
+          "indexCount": 30
+        }
+      ],
+      "bounds": [
+        [
+          55.797016620635986,
+          13.043451309204102,
+          68.75761151313782
+        ],
+        [
+          93.79900097846985,
+          34.81012582778931,
+          104.85528707504272
+        ]
+      ]
+    },
+    {
+      "name": "front2_2",
+      "pathId": "1498376824061911892",
+      "hierarchy": [
+        "front2_2",
+        "MESH_center1",
+        "center1",
+        "MAIN",
+        "volksparkstadion"
+      ],
+      "positionOffset": 6023636,
+      "uvOffset": 6071684,
+      "vertexCount": 4004,
+      "parts": [
+        {
+          "material": "33",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "texture": "texture--2543954829318561986.webp",
+          "indexOffset": 6103716,
+          "indexCount": 14244
+        }
+      ],
+      "bounds": [
+        [
+          -64.74951762508704,
+          0.22089092835750332,
+          -59.33634042739868
+        ],
+        [
+          -45.545924194540625,
+          13.763689207934007,
+          79.54300045967102
+        ]
+      ]
+    },
+    {
+      "name": "back1_5",
+      "pathId": "-1807038451451445788",
+      "hierarchy": [
+        "back1_5",
+        "MESH_center1",
+        "center1",
+        "MAIN",
+        "volksparkstadion"
+      ],
+      "positionOffset": 6160692,
+      "uvOffset": 6161076,
+      "vertexCount": 32,
+      "parts": [
+        {
+          "material": "22",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "texture": "texture-5156661005305352342.webp",
+          "indexOffset": 6161332,
+          "indexCount": 48
+        }
+      ],
+      "bounds": [
+        [
+          43.616560101509094,
+          1.650341972708702,
+          -69.68822479248047
+        ],
+        [
+          69.95881199836731,
+          9.46652740240097,
+          69.69844102859497
+        ]
+      ]
+    },
+    {
+      "name": "center1_7",
+      "pathId": "569247229691849798",
+      "hierarchy": [
+        "center1_7",
+        "MESH_center1",
+        "center1",
+        "MAIN",
+        "volksparkstadion"
+      ],
+      "positionOffset": 6161524,
+      "uvOffset": 6194584,
+      "vertexCount": 2755,
+      "parts": [
+        {
+          "material": "6",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "texture": "texture-3508850149189689804.webp",
+          "indexOffset": 6216624,
+          "indexCount": 8760
+        }
+      ],
+      "bounds": [
+        [
+          -33.66361856460571,
+          0.0011919999451492913,
+          -63.99722099304199
+        ],
+        [
+          28.740695118904114,
+          0.2878190018236637,
+          64.28918838500977
+        ]
+      ]
+    },
+    {
+      "name": "right1_2",
+      "pathId": "5398189459063016227",
+      "hierarchy": [
+        "right1_2",
+        "MESH_center1",
+        "center1",
+        "MAIN",
+        "volksparkstadion"
+      ],
+      "positionOffset": 6251664,
+      "uvOffset": 6252984,
+      "vertexCount": 110,
+      "parts": [
+        {
+          "material": "21.003",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "texture": "texture--1642971116332160948.webp",
+          "indexOffset": 6253864,
+          "indexCount": 186
+        }
+      ],
+      "bounds": [
+        [
+          -74.14169311523438,
+          12.969723343849182,
+          -118.6126708984375
+        ],
+        [
+          72.45075106620789,
+          34.81013476848602,
+          -76.38716697692871
+        ]
+      ]
+    },
+    {
+      "name": "right2_2",
+      "pathId": "6777590917713377172",
+      "hierarchy": [
+        "right2_2",
+        "MESH_center1",
+        "center1",
+        "MAIN",
+        "volksparkstadion"
+      ],
+      "positionOffset": 6254608,
+      "uvOffset": 6296104,
+      "vertexCount": 3458,
+      "parts": [
+        {
+          "material": "45.001",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "texture": "texture-1427356308152585301.webp",
+          "indexOffset": 6323768,
+          "indexCount": 12168
+        }
+      ],
+      "bounds": [
+        [
+          -48.94057810306549,
+          0.9643489494919777,
+          -84.10882353782654
+        ],
+        [
+          61.99005842208862,
+          13.863646984100342,
+          -51.409196853637695
+        ]
+      ]
+    }
+  ],
+  "textures": [
+    "texture-1432735328663286654.webp",
+    "texture--6525476436255670185.webp",
+    "texture--3327877469743463349.webp",
+    "texture-7737871090897150384.webp",
+    "texture--1642971116332160948.webp",
+    "texture--8832601257843885719.webp",
+    "texture--966822992072655297.webp",
+    "texture-1030170565945525730.webp",
+    "texture-1240414987992286845.webp",
+    "texture--8009233366261755537.webp",
+    "texture--905443001973885938.webp",
+    "texture-3676625253913950382.webp",
+    "texture-5156661005305352342.webp",
+    "texture-7714117729764172253.webp",
+    "texture-8111151280402651944.webp",
+    "texture--4442874166120274747.webp",
+    "texture--1964227282587711583.webp",
+    "texture-4316505399137570133.webp",
+    "texture-4011103548483594767.webp",
+    "texture-4658984267873756969.webp",
+    "texture--5281470577147239973.webp",
+    "texture-1427356308152585301.webp",
+    "texture-5638422218042547893.webp",
+    "texture-2191766817378294465.webp",
+    "texture--1837709989440901200.webp",
+    "texture-7711062999123670243.webp",
+    "texture-2386069053478784543.webp",
+    "texture--6723360670033313339.webp",
+    "texture--899434469732255093.webp",
+    "texture--995330172692179899.webp",
+    "texture-6491244580180371818.webp",
+    "texture--2135363216272306758.webp",
+    "texture--7588957060219779589.webp",
+    "texture-7676437796972527255.webp",
+    "texture-1304487546176785944.webp",
+    "texture-2052002386420188367.webp",
+    "texture-8371762516831273614.webp",
+    "texture--7250804163460646021.webp",
+    "texture-4884088018260668653.webp",
+    "texture--8465308136723045804.webp",
+    "texture--6148653535760904458.webp",
+    "texture-7741725615414109625.webp",
+    "texture--9169856766620055562.webp",
+    "texture--7554497896290103511.webp",
+    "texture-678550191309501598.webp",
+    "texture-4379425574210483064.webp",
+    "texture-4581905311403013006.webp",
+    "texture--3701738494777960331.webp",
+    "texture-8001762015205713720.webp",
+    "texture-2982611074409826508.webp",
+    "texture-6992280303917968899.webp",
+    "texture-7671024439212578734.webp",
+    "texture-859764065096342455.webp",
+    "texture--3796265063233571282.webp",
+    "texture--2543954829318561986.webp",
+    "texture-3508850149189689804.webp"
+  ],
+  "fixtures": [
+    {
+      "id": "-1196462871897906952",
+      "name": "L_Point.002 (8)",
+      "position": [
+        60.790061950683594,
+        36.83919012546539,
+        18.300002813339233
+      ],
+      "direction": [
+        -0.7661563852686885,
+        -0.6174487676112789,
+        0.1782173187076108
+      ],
+      "color": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "range": 180.0,
+      "angle": 146.77899169921875,
+      "intensity": 60.0,
+      "meshDistance": 1.9741383123133698,
+      "representedIds": [
+        "-7151543116560618356",
+        "-1196462871897906952"
+      ]
+    },
+    {
+      "id": "-5434685575524504447",
+      "name": "L_Point.013 (4)",
+      "position": [
+        60.790061950683594,
+        36.83919012546539,
+        -54.29999828338623
+      ],
+      "direction": [
+        -0.7661563852686885,
+        -0.6174487676112789,
+        0.1782173187076108
+      ],
+      "color": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "range": 180.0,
+      "angle": 146.77899169921875,
+      "intensity": 60.0,
+      "meshDistance": 1.5812901280400489,
+      "representedIds": [
+        "-5434685575524504447",
+        "-1933184533913117122",
+        "4743770535613791745"
+      ]
+    },
+    {
+      "id": "-8761602017341008638",
+      "name": "L_Point.017 (1)",
+      "position": [
+        60.790061950683594,
+        36.83919012546539,
+        15.000000596046448
+      ],
+      "direction": [
+        -0.7661563852686885,
+        -0.6174487676112789,
+        0.1782173187076108
+      ],
+      "color": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "range": 180.0,
+      "angle": 146.77899169921875,
+      "intensity": 60.0,
+      "meshDistance": 1.4329394541099307,
+      "representedIds": [
+        "-8761602017341008638",
+        "2418803661202730259",
+        "6291431592742624311"
+      ]
+    },
+    {
+      "id": "-7470535055708346293",
+      "name": "L_Point.017 (4)",
+      "position": [
+        60.790061950683594,
+        36.83919012546539,
+        -51.299989223480225
+      ],
+      "direction": [
+        -0.7661563852686885,
+        -0.6174487676112789,
+        0.1782173187076108
+      ],
+      "color": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "range": 180.0,
+      "angle": 146.77899169921875,
+      "intensity": 60.0,
+      "meshDistance": 1.5700051190848012,
+      "representedIds": [
+        "-7470535055708346293",
+        "-6269220235930138276",
+        "8344054775525325000"
+      ]
+    },
+    {
+      "id": "-8688579572344012248",
+      "name": "L_Point.011 (4)",
+      "position": [
+        60.790061950683594,
+        36.83919012546539,
+        -52.299994230270386
+      ],
+      "direction": [
+        -0.7661563852686885,
+        -0.6174487676112789,
+        0.1782173187076108
+      ],
+      "color": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "range": 180.0,
+      "angle": 146.77899169921875,
+      "intensity": 60.0,
+      "meshDistance": 1.0917160320082888,
+      "representedIds": [
+        "-8688579572344012248",
+        "7607351082940366524"
+      ]
+    },
+    {
+      "id": "3635942426248128651",
+      "name": "L_Point (49)",
+      "position": [
+        60.790061950683594,
+        36.83919012546539,
+        17.30000078678131
+      ],
+      "direction": [
+        -0.7661564486463982,
+        -0.6174487469203371,
+        0.1782171179321567
+      ],
+      "color": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "range": 180.0,
+      "angle": 146.77899169921875,
+      "intensity": 60.0,
+      "meshDistance": 1.2634473914394988,
+      "representedIds": [
+        "3635942426248128651"
+      ]
+    },
+    {
+      "id": "-3796411454991512609",
+      "name": "L_Point.019 (1)",
+      "position": [
+        60.790061950683594,
+        36.83919012546539,
+        15.999999642372131
+      ],
+      "direction": [
+        -0.7661563554917071,
+        -0.617448888075404,
+        0.17821702936058628
+      ],
+      "color": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "range": 180.0,
+      "angle": 146.77899169921875,
+      "intensity": 60.0,
+      "meshDistance": 1.084909991185805,
+      "representedIds": [
+        "-3796411454991512609"
+      ]
+    },
+    {
+      "id": "-3549803563783181928",
+      "name": "L_Point.008 (4)",
+      "position": [
+        60.790061950683594,
+        36.83919012546539,
+        -53.29999923706055
+      ],
+      "direction": [
+        -0.7661563852686885,
+        -0.6174487676112789,
+        0.1782173187076108
+      ],
+      "color": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "range": 180.0,
+      "angle": 146.77899169921875,
+      "intensity": 60.0,
+      "meshDistance": 1.0937687530211315,
+      "representedIds": [
+        "-3549803563783181928",
+        "-604519441276240449",
+        "6770716616764366328"
+      ]
+    },
+    {
+      "id": "-3548012929884607602",
+      "name": "L_Point.003 (8)",
+      "position": [
+        60.790061950683594,
+        36.83919012546539,
+        18.299999833106995
+      ],
+      "direction": [
+        -0.7661565647913785,
+        -0.6174485506496795,
+        0.17821729862076874
+      ],
+      "color": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "range": 180.0,
+      "angle": 146.77899169921875,
+      "intensity": 60.0,
+      "meshDistance": 1.9741358207184674,
+      "representedIds": [
+        "-3548012929884607602"
+      ]
+    }
+  ],
+  "verifiedFixtureCount": 19,
+  "limits": [
+    "Source meshes and UVs; simplified browser materials, not original Unity shaders.",
+    "Provided lightmap indices and probes retained as evidence; no full baked-lighting reconstruction.",
+    "17 reviewed roof meshes including hanging scoreboards; permanent masts retained.",
+    "Source seat points and fan section labels do not define economic capacity or official blocks.",
+    "Source billboard trees center2_0 replaced by actual OSM context.",
+    "Fresh OSM surroundings; mapped footprints and tree positions, mostly schematic heights.",
+    "Terrain is flat at the source apron level, not a measured DEM.",
+    "Source bowl opening protects lower seats and pitch; underground foundations remain buried.",
+    "OSM pitch polygon includes runoff; original painted lines remain 105x68m."
+  ],
+  "assetSha256": {
+    "geometry.bin": "479d2dd7b0408fcc9798e3a2a885b6ef5c45d4032f53b174407f1b31c3540d2b",
+    "texture-1432735328663286654.webp": "e4ed2d4eed0ef2847fab281336b8d5a1987b81408e020315f6410371494afeb9",
+    "texture--6525476436255670185.webp": "3e3783d06e5b56b1b8aa3782120836807e5a069345f3038c4b9c66234d374ff4",
+    "texture--3327877469743463349.webp": "a8c6c227bdf5b1817bf1834bd1117bcf941ed9a967da26e478c88106d4de15f4",
+    "texture-7737871090897150384.webp": "14cc68c62089ab068a3655d486d326127362d1c90e003a8921c810d51f64ec00",
+    "texture--1642971116332160948.webp": "8fcf5708ced8df221cf6af14deaa194679519191952ca7684b883f2a277af80c",
+    "texture--8832601257843885719.webp": "17d6ead20776b69ee9486848607ff86041f5a45664c88a2a023282a1f3c48bb1",
+    "texture--966822992072655297.webp": "75472be84be95617fd0106d25d5417991f4ffebc354ae89175c03262e93231dd",
+    "texture-1030170565945525730.webp": "cd488981693d1373bc6fcdab52074d3ee207edb0a621a222a4aefea7bc97f974",
+    "texture-1240414987992286845.webp": "668a8cdbba37708bf8ba8c23309b71561ac6b91775e5ba3c9fcdd7f6cd0ff63c",
+    "texture--8009233366261755537.webp": "9c3e9bbc5b483fe367fa9d3f1f166df098cc11d5ab98917ee86fa9eb8a6be0b8",
+    "texture--905443001973885938.webp": "c930297435cd384845086e0f60dd8e54e5d5d4872ee1e875279985e72c47f802",
+    "texture-3676625253913950382.webp": "371a51f8f078d141138433493fcbae723f5f8ecb6aaf8f1e79f770ea78dc15ea",
+    "texture-5156661005305352342.webp": "e22f76a857c730fbe7e5ba09b294564ce3a093c16b6a55dbe5d42e670297cf58",
+    "texture-7714117729764172253.webp": "c79348ff12e7063701c254f83e057266a5adeb93e0eff5a695ba3b96624422d7",
+    "texture-8111151280402651944.webp": "c7923190f0e0ef82ad19254deb30219b65b274a2244dd38ba27f467c1fabf4a3",
+    "texture--4442874166120274747.webp": "1ab87b872044e88a5746549955992255da07dea6f36d5ab1c77826bdb34085a9",
+    "texture--1964227282587711583.webp": "acaed9249d93b9a71df3c984783129cee6a13e58cda038b94c92db0b7a5d1754",
+    "texture-4316505399137570133.webp": "4be03fa055dae10ea5d79d7184f93dbe64e50f53225b16722630f1dada193acf",
+    "texture-4011103548483594767.webp": "cfdefbb8bc563e6e6cf75bfee219e6c24508316678f1dd229bd06dba3abd49b9",
+    "texture-4658984267873756969.webp": "1463d32f2b9263dca1d06b522f5996cd49f3129488df0186f8048d36785cb6f1",
+    "texture--5281470577147239973.webp": "b08bb4e18cb9c2d6a6375d915b1daa053f738b4f670c898fe2859c78a837bbea",
+    "texture-1427356308152585301.webp": "5b471d8b263927458d36b1990c4b730e53917cea10a3a45d2d337590f67c3fc3",
+    "texture-5638422218042547893.webp": "c39a97fbc1c9ad21f562a9cee8db74229c610ac047be0ec8db7c2cb5b482eada",
+    "texture-2191766817378294465.webp": "fc5f83338d74cd071bd88d1ee0ac8c2ef2270a3e4659066c442c5503272ad455",
+    "texture--1837709989440901200.webp": "1ee5f37af52e3e7d8b3fbcac9522a2ce977e6a6e54b872ed814947f2e7df54ec",
+    "texture-7711062999123670243.webp": "357c81c9c76e3c42da021e19e84b7f8f8dfa3a6c977ef797fc972ba6406cf31a",
+    "texture-2386069053478784543.webp": "2a753da6adc90e200a485a2dee8e4d9feda2418aa6cbb7e81e6b28f32e116cad",
+    "texture--6723360670033313339.webp": "00b79401e006db261e4f20df4405e769f1f52b4d42d700a2d1ef2c446e525c60",
+    "texture--899434469732255093.webp": "2f60e3479a66922821092aa264ef3f883f6cfcf25b3f7ea26ec6b3d4298a111b",
+    "texture--995330172692179899.webp": "c29d88e0bc48f241dcd0fa25c50a4514a93adf966bc497352271cc25cb1c295e",
+    "texture-6491244580180371818.webp": "bc1e649d37f3338fb22b5add85e03196208fb3191c4dc21c8fc90fce20e4d246",
+    "texture--2135363216272306758.webp": "18afc50a69bf532c4a9df4bf5713b568aeeae67d18508107eb08ba8935f11ef3",
+    "texture--7588957060219779589.webp": "1b1d94800882f16dfa8fbd597f59576eb894291ecd7189462e2d70ec7b6dc39f",
+    "texture-7676437796972527255.webp": "0b65913ae93cba978635f2b9167bb278cc12f86744cd85e108d5d0474f0e6b99",
+    "texture-1304487546176785944.webp": "29dd8b92c8f30ae92439e7af64017e19e23e749541b53b75fc6afb6a20bd4e37",
+    "texture-2052002386420188367.webp": "2f3d5af73093525f1d7f2c0a101fe3a20c168c53a30c786b003eb4ba2bc5c26b",
+    "texture-8371762516831273614.webp": "608b07b896d809a067371991deb5c28cc005defce5c754a122be5e48adafe676",
+    "texture--7250804163460646021.webp": "a403444e35efc2528cc5a3ba823f142b5e2506424992289b35fe6d6ce58d6ae6",
+    "texture-4884088018260668653.webp": "7473560963b5a2c3f7bcdc42695f31361cc8eed28f0de76bb3867b2770cb9f45",
+    "texture--8465308136723045804.webp": "c8b2f425df0140c064cf564fe408743913f581ea752f75b035274179214bde4d",
+    "texture--6148653535760904458.webp": "9dd2a2b91a01920f51d06f7287a5410e6ffdf3c6167d7816b143ac728fe2ec7c",
+    "texture-7741725615414109625.webp": "0d842ddd6cc3412de8a607fe9632878fd535fb99d9d92007e0846a5aebf58408",
+    "texture--9169856766620055562.webp": "5a9c20da5716195ccd0b68c50a5a3beb6f2ff00c4af14f235727307a72b75f8c",
+    "texture--7554497896290103511.webp": "8cd974f4bba6d9b79d74264a81b2996ccf496681d969d01711f841881ed79773",
+    "texture-678550191309501598.webp": "85d669b569a4cb520ffe09f5dcb2a12fc338f6e79412b35a96f5817d7545f945",
+    "texture-4379425574210483064.webp": "1992c5304c5968fd59780c65d3354519fd62f7d3f64c0292e1f3d625979e6731",
+    "texture-4581905311403013006.webp": "731b780bea23ce1798818f557569f3357903c28685abf8d3c83ef777fa2cfb7e",
+    "texture--3701738494777960331.webp": "82fe30450168c9ed99812c2f054022564f569865da6d5095492566c20c726afe",
+    "texture-8001762015205713720.webp": "268358148aa98f4a9be41d835a1b6014a4d43f89e09ea1ffac534dada74231f4",
+    "texture-2982611074409826508.webp": "67fe66341cd57d9a056669320b2df91b462e4bab9b5d783b6b412ce365969abf",
+    "texture-6992280303917968899.webp": "8d03180c6be4fc483fc72943a78e0b58b49aca3d7bdbe2ea63c9d28545bd9c7a",
+    "texture-7671024439212578734.webp": "ad2f97d16cf9bd77e2aa522c507d67c66e2d9ff5c19f9a953a74d19faaf51556",
+    "texture-859764065096342455.webp": "b4a8255402d754df2228c8b2870f4cdebeda025b027775f3eb925a33807d72a3",
+    "texture--3796265063233571282.webp": "7a3ea8d1109976c2158caef2de71e882460953427b916b58e31008b45ce7f108",
+    "texture--2543954829318561986.webp": "8fb3a691d4ba36480ac3b645b0e13af298080550a71c24100d7083db86839c36",
+    "texture-3508850149189689804.webp": "6ef78c416f1a611f6f98ec5a88a3e36b9edcef8460791182862510d17e4e694e"
+  },
+  "sourceEvidence": {
+    "volksparkstadion_1792496395203.json": {
+      "sha256": "cf92dbdd94b58eac06a37a2797f914976815834dda0a0711a6a4b684dd10fe34",
+      "count": 75266
+    },
+    "volksparkstadion_lightmaps_1792496395204.json": {
+      "sha256": "d7fc79bf5d3c9542bf93ed6cbb3f2a624b3412519eec3b96e436fe30151b64d4",
+      "count": 93
+    },
+    "volksparkstadion_lightprobes_1792496395204.json": {
+      "sha256": "9b0eacfd39098633f9cc62462a38a553444763a764d45e5f45e57ca4d19bbd34",
+      "count": 140
+    }
+  },
+  "seatView": {
+    "position": [
+      5.6522,
+      13.9458,
+      -86.6238
+    ],
+    "sourceIndex": 67995,
+    "sourceFrameRotationY": 90
+  },
+  "assetVersion": "51bbcc74241c6795"
+}

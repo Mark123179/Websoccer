@@ -21,12 +21,13 @@ STADIUM_ID = 91231800
 STADIUM_BUILDING_ID = 1338495
 
 
-def bowl_opening():
+def bowl_opening(manifest=None, geometry=None, level=5.8494):
     """Protect the below-grade seating, not a buried foundation footprint."""
-    manifest = json.loads((STUDY / "manifest.json").read_text())
-    geometry = (STUDY / "source-export/geometry.bin").read_bytes()
+    if manifest is None:
+        manifest = json.loads((STUDY / "manifest.json").read_text())
+    if geometry is None:
+        geometry = (STUDY / "source-export/geometry.bin").read_bytes()
     assert hashlib.sha256(geometry).hexdigest() == manifest["geometrySha256"]
-    level = 5.8494
     points, source_meshes = [], []
     for mesh in manifest["meshes"]:
         if not mesh["name"].startswith(("C_", "st081_pitch_", "field_")):

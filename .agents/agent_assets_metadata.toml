@@ -2706,3 +2706,31 @@ mtime_ms = 1792494103110
 storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:6e4eaecc-e6c5-4f64-8de5-e8845034f33b/198de533-63ff-4a80-9568-081a2088490e/a820ec2f-a5a2-481f-b8af-bb1025fd4a74"
 storage_version_token = "1792494171350018"
 content_type = "text/html"
+
+[[outputs]]
+id = "ci1yngl85ZWQ2iLXcbKuE"
+uri = "file://generated-artifacts/hsv-study/osm-fresh/installed-views/editor-dach-an.png"
+type = "image"
+title = "HSV – Volksparkstadion eingebaut"
+description = "Aufnahme über die registrierten Modellassets der laufenden App. Originalmodell mit frischem OSM-Umfeld."
+logical_id = "0c80cb93-ba83-49bb-9182-5372b91c67f0"
+content_hash = "sha256:31a2730a5f7040948a899f8a3a0a189ef8f95ab978c48c32684feda66ae6ad92"
+size = 693189
+mtime_ms = 1792497748283
+storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:6e4eaecc-e6c5-4f64-8de5-e8845034f33b/0c80cb93-ba83-49bb-9182-5372b91c67f0/a67d312f-5c73-4bb1-bbcd-a59c2d5638b8"
+storage_version_token = "1792497850397824"
+content_type = "image/png"
+
+[[outputs]]
+id = "Lxb_REQYoN6Lztav4E4Yl"
+uri = "file://generated-artifacts/hsv-study/osm-fresh/installed-views/ticker-tag.png"
+type = "image"
+title = "HSV – Tickeransicht"
+description = "Geprüfte gemeinsame Tickerkamera; Spielfeldlinien 105 × 68 Meter. Wirtschaftliche Kapazität unverändert: 57.000."
+logical_id = "e10c4e65-aebb-4ee4-8282-98644453ca61"
+content_hash = "sha256:2a0bb22dabae79a5134791d392ee7a726523687314e58b3f6cb4e5ccc252eb1c"
+size = 1196791
+mtime_ms = 1792497755695
+storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:6e4eaecc-e6c5-4f64-8de5-e8845034f33b/e10c4e65-aebb-4ee4-8282-98644453ca61/34fda82b-0470-47df-9773-64b79fdd87c2"
+storage_version_token = "1792497851124560"
+content_type = "image/png"

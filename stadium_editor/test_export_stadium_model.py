@@ -147,6 +147,18 @@ class OfflineExportTests(TestCase):
                          hashlib.sha256((self.out / "geometry.bin").read_bytes()).hexdigest())
         self.assertEqual(manifest["verifiedFixtureCount"], 1)
 
+    def test_coincident_source_spotlights_share_one_runtime_position(self):
+        fixture = self.unity_source()
+        env = fixture[0]
+        source_light = env.objects[-1].read()
+        env.objects.extend(pointer(source_light, "Light", identity) for identity in range(3, 22))
+        self.export(fixture)
+        manifest = json.loads((self.out / "manifest.json").read_text())
+        self.assertEqual(manifest["verifiedFixtureCount"], 20)
+        self.assertEqual(len(manifest["fixtures"]), 1)
+        self.assertEqual(set(manifest["fixtures"][0]["representedIds"]),
+                         {str(identity) for identity in range(2, 22)})
+
     def test_valid_export_is_byte_identical_to_ungated_export(self):
         fixture = self.unity_source()
         with patch.object(command, "validate_pitch_geometry"):

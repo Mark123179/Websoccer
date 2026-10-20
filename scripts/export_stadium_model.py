@@ -133,8 +133,15 @@ def export_model(SOURCE, seats_path, fmi, name, DEST, calibration, *,
     selected = [min(lights, key=lambda f: f["id"])]
     while len(selected) < min(12, len(lights)):
         candidates = [f for f in lights if f not in selected]
-        selected.append(max(candidates, key=lambda f: min(np.linalg.norm(
-            np.array(f["position"]) - np.array(s["position"])) for s in selected)))
+        candidate = max(candidates, key=lambda f: min(np.linalg.norm(
+            np.array(f["position"]) - np.array(s["position"])) for s in selected))
+        # Several Unity spotlights can share one physical fixture. Once all
+        # positions are covered, another coincident light would receive an empty
+        # representedIds group because nearest-site ties select the first site.
+        if min(np.linalg.norm(np.array(candidate["position"]) - np.array(s["position"]))
+               for s in selected) < 1e-6:
+            break
+        selected.append(candidate)
     for fixture in selected:
         fixture["representedIds"] = [f["id"] for f in lights if min(selected, key=lambda s:
             np.linalg.norm(np.array(f["position"]) - np.array(s["position"]))) is fixture]
