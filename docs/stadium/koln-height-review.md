@@ -106,6 +106,10 @@ Amtliche Bodenhöhen sind separat im Beleg gespeichert.
 
 ## Prüfung und unveränderte Spieldaten
 
+Die folgenden geometrischen und visuellen Prüfungen dokumentieren den
+ursprünglichen Einbau. Sie sind **kein** Nachweis räumlicher DGM-Treue.
+Der ergänzende native Profilvergleich unten meldet derzeit **FAIL**.
+
 - `inspect_package`: `ok=true`, `terrainDeclared=true`, **keine Befunde**,
   sowohl an der Presentation als auch an der installierten Editor-Geometrie.
 - Fünf Quell-WebGL-Ansichten: Dach an/aus, Draufsicht, Spielansicht Tag und
@@ -140,6 +144,9 @@ python -m scripts.build_koln_review
 # Expliziter Netzabruf; lokale Quellen danach ausschließlich mit Hashprüfung:
 python -m scripts.koln_height_sources
 python -m scripts.refine_koln_heights
+# Räumlicher Vergleich; derzeit Exit 1. Nicht mit "|| true" übergehen!
+python -m scripts.check_koln_height_profiles
+# Nur nach fachlicher Klärung der Befunde mit einer neuen Übernahme fortfahren:
 node scripts/capture_koln_study.mjs editor-dach-an editor-dach-aus draufsicht ticker-tag ticker-nacht-flutlicht
 # Bilder prüfen; nur Umgebung installieren, keine Registry-/Modelländerung:
 python -m scripts.install_koln_heights
@@ -160,3 +167,156 @@ Ausgaben: `heights/sources.json`, `height-evidence.json`,
 Die beiden letzten Dateien sowie die installierten PNGs sind die aktuelle
 Höhenübergabe; der ältere Erst-Einbaubericht dokumentiert bewusst den damaligen
 ebenen Stand.
+
+## Ergänzung: native Kontrollprofile statt Genauigkeitsannahme
+
+Der eigenständige Offline-Prüfer `scripts/check_koln_height_profiles.py`
+vergleicht die **tatsächlich interpolierte 20-m-Anzeige** mit den nativen,
+SHA-256-geprüften GeoTIFFs aus `scripts/koln_height_sources.py`.
+Er importiert kein Django, liest/schreibt keine Datenbank und ändert weder
+Raster, Vorplatz, Übergang noch wirtschaftliche Stadiondaten.
+Insbesondere wird kein Fehler durch neue Glättung oder höhere Grenzwerte
+verdeckt. Eine bestandene Prüfung wäre lediglich ein bestandener Kontrollsatz,
+keine flächendeckende Genauigkeitsgarantie.
+
+### Verfahren und feste Alarmgrenzen
+
+- 60 Querprofile über das gesamte deklarierte Raster: in beiden Achsen alle
+  80 m, um 7 m gegenüber Rasterzeilen/-spalten versetzt. Längsabtastung maximal
+  2 m; somit werden **Innenpunkte zwischen Stützpunkten** geprüft, nicht nur
+  erneut die 20-m-Knoten. Ergänzend alle 915 kartierten Straßen-/Wegezüge
+  einschließlich ihrer ursprünglichen Knicke mit maximal 2 m Segmentlänge.
+  Der Abstand bezieht sich auf Modellmeter; keine Behauptung einer vollständigen
+  Erfassung jeder kleinräumigen DGM-Struktur zwischen den Kontrollprofilen.
+- Modell-X/Z wird mit derselben unveränderten Registrierung wie bei der
+  Verfeinerung nach EPSG:25832 zurückgerechnet. GeoTIFF-Abtastung ist bilinear
+  zwischen **1-m-Pixelzentren**. Keine NoData-Füllung oder Extrapolation.
+  Fehlende/falsche Raster, Prüfsummen, Registrierung, Quellbezüge oder leere
+  Kontrollzonen sind Fehler, kein grüner Ersatzdatensatz.
+- Die Anzeige wird über den produktiven JavaScript-`elevationSampler`
+  aus `measured_ground.js` ausgewertet: zwei ebene Dreiecke pro Zelle,
+  **nicht** bilineare 20-m-Interpolation. Auch die Wegprojektion verwendet
+  die produktive Funktion `editorPointToDortmund`.
+- Gemeinsamer NHN-Bezug: Median der 25 nativen Spielfeldproben, geprüft gegen
+  `heightEvidence.terrainReferenceNHN`. Anzeige-NHN =
+  Referenz + `groundLevel` + interpolierter Rasteroffset.
+  Dekorative Render-Layer-Abstände (Boden −0,35 m, Straße −0,12 m) werden
+  nicht als Geländefehler gerechnet.
+- Modellvorplatz = OSM-Stadionpolygon mit 20-m-Puffer; Übergang = weitere
+  40 m außerhalb dieses Puffers; Rest = Außenbereich (`measured`).
+  Die Bowl-Aussparung ist ausgeschlossen; Wegsteigungen werden nicht über
+  diese Lücke hinweg berechnet. Ein Segment, das mehrere Zonen berührt,
+  wird in jeder betroffenen Zone ausgewertet, nicht versteckt zugeordnet.
+- Höhenfehler ist **Anzeige minus natives DGM**. Bericht je Zone:
+  Anzahl, Bias, RMSE, 95. Perzentil des Absolutfehlers, Maximalfehler samt
+  Profil, Station und X/Z. Quer- und Wegprofile werden zusätzlich getrennt
+  zusammengefasst.
+- Wegsteigung = 100 × Höhendifferenz / tatsächliche Segmentlänge.
+  Steigungswechsel = nachfolgende minus vorherige Segmentsteigung.
+  Bericht enthält jeweils Anzeige, DGM und deren Differenz in
+  **Prozentpunkten (PP)**, einschließlich OSM-ID, Wegtyp, Namen (falls
+  vorhanden), Brücken-/Tunnel-/Layer-Tags und Ort. Das ist kein
+  Barrierefreiheits- oder Fahrbahnneigungsnachweis.
+
+| Zone | maximaler Absolutfehler | P95 Absolutfehler |
+|---|---:|---:|
+| Außenbereich | 2,00 m | 0,75 m |
+| Modellvorplatz | 3,00 m | 2,00 m |
+| 40-m-Übergang | 3,00 m | 2,00 m |
+
+Für Wege in **allen** Zonen: maximal **20 PP Steigungsabweichung** und
+**20 PP Abweichung des Steigungswechsels**. Gleichheit ist zulässig;
+jede Überschreitung lässt den Gesamtlauf scheitern. Die Konstanten stehen
+fest im Prüfer, es gibt keinen Kommandozeilenschalter zum Aufweichen.
+Dies sind bewusst grobe **Prüfalarmgrenzen**, keine aus der
+DGM1-Quellengenauigkeit abgeleiteten Toleranzen: 2 m erkennt mehrmetrige
+Geländefehler, P95 verhindert ihre Verdünnung durch viele ebene Proben.
+Vorplatz/Übergang erhalten wegen ihrer deklarierten Modellanpassung eigene,
+aber nicht unbegrenzte Fehlerbudgets. 20 PP signalisiert große lokale
+Steigungsunterschiede auf der kurzen Kontrollstrecke.
+
+### Ergebnis des nativen Vergleichs
+
+**FAIL / Exit 1, neun Grenzwertüberschreitungen.**
+Erneuter Quellenabruf und Neuaufbau der unveränderten Höhenmethode im
+Workspace; **kein Einbau in die Datenbank und keine Produktionsprüfung**.
+Die historischen ignorierten Höhendateien lagen in diesem Aufgaben-Workspace
+nicht vor. Der neu erzeugte Rasterstand reproduziert den dokumentierten
+Nullbezug von **59,863243103 m NHN**.
+
+975 Profile, 107.928 ausgewertete Punkte außerhalb der Bowl
+(71.822 Querprofilpunkte, 36.106 Wegpunkte); 35.191 Wegsegmente und
+34.276 Steigungswechsel.
+
+| Zone | Punkte | Bias | RMSE | P95 absolut | Maximum absolut |
+|---|---:|---:|---:|---:|---:|
+| Außenbereich | 105.834 | +0,017 m | 0,381 m | **0,753 m** | **7,008 m** |
+| Modellvorplatz | 964 | +0,400 m | 0,797 m | 1,293 m | **5,214 m** |
+| Übergang | 1.130 | −0,027 m | 0,644 m | 1,170 m | **4,503 m** |
+
+| Zone | max. Steigungsabweichung | max. Wechselabweichung | max. angezeigte Steigung (absolut) | max. angezeigter Wechsel (absolut) |
+|---|---:|---:|---:|---:|
+| Außenbereich | **179,696 PP** | **185,119 PP** | 42,298 % | 51,174 PP |
+| Modellvorplatz | 15,269 PP | **46,183 PP** | 2,893 % | 1,901 PP |
+| Übergang | **49,975 PP** | **46,183 PP** | 9,036 % | 10,471 PP |
+
+Konkrete Kontrollstellen (X/Z in Modellmetern):
+
+- Außenbereich, Querprofil `cross-z--73`, Station 1133, **(−73; 1067)**:
+  Anzeige 52,994 m NHN, DGM 45,986 m NHN, Fehler **+7,008 m**.
+- Vorplatz, `way/155676742` (`service`, `road-322`), **(−75,275; −119,819)**:
+  Anzeige 61,963 m NHN, DGM 56,749 m NHN, Fehler **+5,214 m**.
+  Derselbe Weg im Übergang bei **(−75,408; −127,583)**:
+  Anzeige 61,887 m NHN, DGM 57,384 m NHN, Fehler **+4,503 m**.
+- Aachener Straße `way/5229974` (`primary`, `bridge=yes`, `layer=1`),
+  von **(500,026; 541,495)** nach **(498,037; 541,347)**:
+  Anzeige **26,536 %**, DGM **206,232 %**, Differenz **−179,696 PP**.
+- `way/362049118` (`path`, `bridge=yes`, `layer=1`), bei
+  **(496,847; 547,399)**: angezeigter Steigungswechsel ca. **0 PP**,
+  nativer Wechsel **−185,119 PP**. **Das DGM beschreibt unter Brücken
+  den Boden, nicht deren Deck.** Diese starke Differenz wird nicht als
+  bewiesener Fahrbahnfehler ausgegeben, aber auch nicht aus dem Prüfer entfernt.
+- `way/795340249` (`footway`, ohne Brückentag), bei
+  **(−9,106; 129,601)**: Anzeige **0,045 %**, DGM **−49,929 %**,
+  Differenz **+49,975 PP** im Übergang. Am Anschluss zum Vorplatz:
+  angezeigter Wechsel **−0,391 PP**, nativer Wechsel **+45,792 PP**,
+  Differenz **−46,183 PP** (beiden berührten Zonen zugeordnet).
+
+Die Ergebnisse begründen eine fachliche Prüfung der Ausreißer, **keine**
+automatische Gelände- oder Brückenkorrektur. Insbesondere ersetzt
+eine erneute geometrische `inspect_package`-Freigabe diesen fehlgeschlagenen
+Quellenvergleich nicht.
+
+### Belege und Wiederholung
+
+```sh
+# Quellen und verfeinerte Anzeige zunächst wie oben reproduzieren.
+python -m scripts.check_koln_height_profiles
+# Exit 0: alle Grenzen eingehalten; 1: räumliche Grenzwertverletzung;
+# 2: fehlende/ungültige Belege (ebenfalls FAIL).
+
+# Kleine, vollständig offline reproduzierbare Regressionen:
+python manage.py test game.tests.test_koln_heights game.tests.test_koln_height_profiles
+node --test stadium_editor/tests_js/test_measured_ground.mjs
+```
+
+Vollständiger maschinenlesbarer Bericht:
+`generated-artifacts/koln-study/heights/profile-check.json`.
+Er enthält jede Probe, jedes Wegsegment und jeden Steigungswechsel, feste
+Grenzen, Prüffehler, Quell-URLs und native GeoTIFF-Prüfsummen sowie
+SHA-256-Bindungen an Presentation, OSM-Beleg und Quellenmanifest.
+Große Berichte bleiben wie die GeoTIFFs ignoriert.
+Pfadoptionen `--presentation`, `--evidence`, `--sources`, `--output` erlauben
+explizite andere lokale Eingaben; es gibt keinen automatischen Netzabruf.
+
+Eingangsbindungen dieses Laufs:
+
+- Presentation: `c45bd1e72b933b302f6e54f815f38ea125397522487a583587995aae740a0b55`
+- OSM-Beleg: `09b418aa9f951a24eee1ed248f29da793257c247f2903c534d9d56735f3a2b6f`
+- Quellenmanifest: `299c13e3279b98d6f0c1befca0c4ee8299a3ff1eca1047a6f2ee150b516f6201`
+
+Regressionen prüfen unter anderem native Pixelzentren, NoData/NaN und
+Hashfehler, Modellregistrierung, echte Renderer-Dreieckinterpolation,
+Ausreißer **zwischen** Stützpunkten, getrenntes Scheitern aller Zonen,
+Steigungs-/Wechselalarme, Bowl-Lücken, Exit-Codes sowie eine vollständige
+synthetische GeoTIFF→Renderer-Prüfung ohne Änderungen der Eingaben.
