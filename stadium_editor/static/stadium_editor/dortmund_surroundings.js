@@ -4,7 +4,7 @@
 // The default reproduces the existing transformation exactly.
 import {validateSurroundingsGround, createGroundCutoutChecks} from './surroundings_ground.js?v=3';
 import {elevationSampler, drapeTriangles, drapeLines} from './measured_ground.js?v=1';
-import {validateBuildingParts} from './building_parts.js?v=1';
+import {validateBuildingParts} from './building_parts.js?v=2';
 import {bridgeHeightEvidence, bridgeHeightLabel} from './bridge_height_evidence.js?v=1';
 const UNIT = Object.freeze({
   '+x': Object.freeze({index:0, sign:1}), '-x': Object.freeze({index:0, sign:-1}),
@@ -156,7 +156,8 @@ export function buildDortmundSurroundings(THREE, data = {}, frame = {},
       verticalDatum: data.buildingParts.verticalDatum,
       groups: data.buildingParts.groups.map(g => ({
         osm:g.osm, components:g.parts.length, residualPolygons:g.residualPolygons.length,
-        heights:g.parts.map(p=>({lodId:p.lodId,baseNHN:p.baseNHN,roofNHN:p.roofNHN})),
+        heights:g.parts.map(p=>({lodId:p.lodId,baseNHN:p.baseNHN,roofNHN:p.roofNHN,
+          roofSurfaces:p.roofSurfaces?.length||0})),
       })),
     };
   }
@@ -257,6 +258,23 @@ export function buildDortmundSurroundings(THREE, data = {}, frame = {},
       }
       const top = entry.top ?? base + height;
       includeBounds(points);
+      if(entry.surveyedRoof){
+        for(const raw of entry.roofGeometry?.surfaces||[]){
+          const pts=raw.map(([x,z,h])=>{const p=checks.point([x,z]);return [p[0],h,p[1]];});
+          const faces=THREE.ShapeUtils.triangulateShape(pts.map(p=>new THREE.Vector2(p[0],p[2])),[]);
+          for(const f of faces)triangle(roofs,...f.map(i=>pts[i]));
+          for(let i=0;i<pts.length;i++){
+            const a=pts[i],b=pts[(i+1)%pts.length];
+            buildingContours.push(a[0],a[1]+.025,a[2],b[0],b[1]+.025,b[2]);
+          }
+        }
+        for(const raw of entry.roofGeometry?.walls||[]){
+          const [d,c]=raw.map(([x,z,h])=>{const p=checks.point([x,z]);return [p[0],h,p[1]];});
+          const a=[d[0],entry.base,d[2]],b=[c[0],entry.base,c[2]];
+          triangle(walls,a,b,c);triangle(walls,a,c,d);
+        }
+        return;
+      }
       lineLoop(buildingContours, points, top + .025);
       surface(roofs, points, top, faces);
       for (let i = 0; i < points.length; i++) {

@@ -12,9 +12,18 @@ const staticDir = path.resolve('stadium_editor/static/stadium_editor');
 const manifest = JSON.parse(await readFile(path.join(review,'manifest.json'),'utf8'));
 const base = `/models/916/${manifest.assetVersion}/`;
 const installed = process.argv.includes('--installed');
+const flatRoofs = process.argv.includes('--flat-roofs');
+const roofStudy = process.argv.includes('--roof-study');
 const presentationFile = installed ? path.join(review,'installed-presentation.json') :
   path.join(review,'presentation.json');
-const presentationSha256=createHash('sha256').update(await readFile(presentationFile)).digest('hex');
+let presentationBytes=await readFile(presentationFile);
+if(flatRoofs){
+  const data=JSON.parse(presentationBytes);
+  for(const g of data.presentation.surroundings.buildingParts.groups)for(const p of g.parts)
+    for(const key of ['roofSurfaces','roofStatus','roofRejection','rejectedRoofEvidence'])delete p[key];
+  presentationBytes=Buffer.from(JSON.stringify(data));
+}
+const presentationSha256=createHash('sha256').update(presentationBytes).digest('hex');
 const html = `<!doctype html><meta charset="utf-8"><style>
 html,body{margin:0;background:#060b10;color:white}
 #stage{width:1200px;height:675px;position:relative}
@@ -62,7 +71,10 @@ const server = createServer(async(req,res)=>{
     const name=decodeURIComponent(new URL(req.url,'http://127.0.0.1').pathname);
     if(name==='/'){res.writeHead(200,{'Content-Type':'text/html'});res.end(html);return;}
     let file,root;
-    if(name==='/presentation.json'){file=presentationFile;root=review;}
+    if(name==='/presentation.json'){
+      res.writeHead(200,{'Content-Type':'application/json','Cache-Control':'no-store'});
+      res.end(presentationBytes);return;
+    }
     else if(name.startsWith('/static/')){file=path.join(staticDir,name.slice(8));root=staticDir;}
     else if(name.startsWith(base)){
       file=name===base+'manifest.json'?path.join(review,'manifest.json'):path.join(assets,name.slice(base.length));
@@ -79,13 +91,14 @@ const server = createServer(async(req,res)=>{
   }catch(e){res.writeHead(404);res.end('Not found');}
 });
 await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
-const output=path.join(review,installed?'installed-views':'ansichten');
+const output=path.join(review,roofStudy?(flatRoofs?'roof-baseline-views':'roof-views'):
+  installed?'installed-views':'ansichten');
 await mkdir(output,{recursive:true});
 const browser=await chromium.launch({executablePath:'/repl/tools/bin/chromium',args:[
   '--no-sandbox','--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader',
   '--disable-gpu-sandbox','--disable-accelerated-2d-canvas']});
 const captures=[];
-const selected=new Set(process.argv.slice(2).filter(x=>x!=='--installed'));
+const selected=new Set(process.argv.slice(2).filter(x=>!x.startsWith('--')));
 try {
   for(const [name,query] of [
     ['editor-dach-an',''],['editor-dach-aus','roof=0'],['draufsicht','az=0&el=80'],
@@ -118,7 +131,7 @@ try {
     await writeFile(path.join(output,name+'.png'),imageBytes);
     captures.push({name,query,evidence:await page.evaluate(()=>window.evidence),errors,
       imageSha256:createHash('sha256').update(imageBytes).digest('hex'),
-      assetVersion:manifest.assetVersion,installed,
+      assetVersion:manifest.assetVersion,installed,flatRoofs,
       presentationSha256});
     await writeFile(path.join(output,'render-evidence.json'),JSON.stringify(captures,null,2));
     console.log('Captured',name,JSON.stringify(evidence));

@@ -3,6 +3,11 @@
 Stand: 20.10.2026. Ergänzung zum [Quellbericht](koln-source-review.md).
 **Workspace-Einbau, keine Veröffentlichung in Produktion.**
 
+Separate Dach-Erweiterung: [Dachflächenvertrag](building-parts-contract.md#optionale-amtliche-dachflächen)
+und [quellgebundenes Dachpaket](koln-roof-evidence.json).
+Die nachfolgenden Höhen-/Geländebelege bleiben die unveränderte Basis;
+der Dachvergleich ersetzt weder deren Einzelhöhenfreigabe noch ihren Einbaubeleg.
+
 ## Quellen und Aussagegrenzen
 
 1. [Geobasis NRW DGM1](https://www.bezreg-koeln.nrw.de/geobasis-nrw/produkte-und-dienste/hoehenmodelle/digitale-gelaendemodelle/digitales-gelaendemodell):

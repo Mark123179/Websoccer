@@ -83,6 +83,22 @@ def lod_buildings(files):
                     for v in ring.text.split()[2::3]]
                 if roof_zs:
                     entry.update(roofNHN=max(roof_zs), roofMinNHN=min(roof_zs))
+                entry["roofSurfaces"] = []
+                for si, surface in enumerate(obj.findall("b:boundedBy/b:RoofSurface", NS)):
+                    for pi, polygon in enumerate(surface.findall(".//g:Polygon", NS)):
+                        rings = []
+                        for path in ("g:exterior/g:LinearRing/g:posList",
+                                     "g:interior/g:LinearRing/g:posList"):
+                            for ring in polygon.findall(path, NS):
+                                values = list(map(float, ring.text.split()))
+                                if len(values) % 3:
+                                    raise ValueError(f"Invalid RoofSurface coordinates: {identity}")
+                                rings.append([values[i:i+3] for i in range(0, len(values), 3)])
+                        entry["roofSurfaces"].append({
+                            "surfaceId": surface.get(GID) or f"{identity}/RoofSurface/{si}",
+                            "polygonId": polygon.get(GID) or f"{identity}/RoofSurface/{si}/Polygon/{pi}",
+                            "ringsUTM": rings,
+                        })
                 if not footprint.is_valid or footprint.area <= 0:
                     rejected.append({"id": identity, "file": file.name,
                                      "reason": "invalid_or_zero_area_footprint"})
@@ -91,7 +107,7 @@ def lod_buildings(files):
                     old = result[identity]
                     if (any(old.get(k) != entry.get(k) for k in
                             ("height", "heightUnit", "baseNHN", "baseMaxNHN",
-                             "roofNHN", "roofMinNHN", "srsName", "attributes"))
+                             "roofNHN", "roofMinNHN", "srsName", "attributes", "roofSurfaces"))
                             or not old["footprint"].equals(footprint)):
                         raise ValueError(f"Conflicting tile duplicate: {identity}")
                 else:

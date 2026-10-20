@@ -29,6 +29,84 @@ function fixture() {
   };
 }
 
+function slopedFixture() {
+  const data=fixture(),part=data.buildingParts.groups[0].parts[0];
+  const ring=part.polygons[0].map(([x,y])=>[x,y,68+(-y-100)/5]);
+  ring.push([...ring[0]]);
+  part.roofMinNHN=68;
+  part.roofSurfaces=[{lodId:part.lodId,file:part.file,surfaceId:'roof-a',polygonId:'polygon-a',
+    sourceRingsUTM:[ring.map(([x,y,z])=>[350000+x,5640000+y,z])],polygons:[ring]}];
+  return data;
+}
+
+test('surveyed slopes and eaves replace only the declared component envelope',()=>{
+  const data=slopedFixture(),before=JSON.stringify(data);
+  assert.equal(inspectSurroundings(data).ok,true);
+  const env=buildDortmundSurroundings(THREE,data);
+  try {
+    const roof=env.group.getObjectByName('ENV_BUILDING_ROOFS').geometry.getAttribute('position');
+    const wall=env.group.getObjectByName('ENV_BUILDINGS').geometry.getAttribute('position');
+    let count=0;
+    for(let i=0;i<roof.count;i+=3){
+      const x=(roof.getX(i)+roof.getX(i+1)+roof.getX(i+2))/3;
+      if(x<=100||x>=110)continue;
+      for(let j=i;j<i+3;j++)assert.ok(Math.abs(roof.getY(j)+2.1-(8+(roof.getX(j)-100)/5))<1e-5);
+      count++;
+    }
+    assert.equal(count,2);
+    for(let i=0;i<wall.count;i+=3){
+      const x=(wall.getX(i)+wall.getX(i+1)+wall.getX(i+2))/3;
+      if(x<=100||x>=110)continue;
+      for(let j=i;j<i+3;j++){
+        const y=wall.getY(j)+2.1;
+        assert.ok(Math.abs(y-2)<1e-5||Math.abs(y-(8+(wall.getX(j)-100)/5))<1e-5);
+      }
+    }
+    assert.equal(JSON.stringify(data),before);
+  }finally{env.dispose();}
+});
+
+test('invalid surveyed roof packages fail in both renderer and package preflight',()=>{
+  const changes=[
+    p=>p.roofSurfaces=[],
+    p=>p.roofSurfaces[0].lodId='wrong',
+    p=>p.roofSurfaces[0].file='wrong.gml',
+    p=>p.roofSurfaces[0].surfaceId='',
+    p=>p.roofSurfaces.push(structuredClone(p.roofSurfaces[0])),
+    p=>p.roofSurfaces[0].polygons=[],
+    p=>p.roofSurfaces[0].polygons[0][1][2]=NaN,
+    p=>p.roofSurfaces[0].polygons[0][1][2]-=.5,
+    p=>p.roofSurfaces[0].polygons[0][1][0]+=1,
+    p=>p.roofSurfaces[0].polygons[0][0][0]+=1,
+    p=>p.roofSurfaces[0].sourceRingsUTM[0][1][2]-=.5,
+    p=>p.roofSurfaces[0].polygons.push(structuredClone(p.roofSurfaces[0].polygons[0])),
+    p=>p.roofMinNHN=71,
+  ];
+  for(const change of changes){
+    const data=slopedFixture();change(data.buildingParts.groups[0].parts[0]);
+    assert.equal(inspectSurroundings(data).ok,false,String(change));
+    assert.throws(()=>buildDortmundSurroundings(THREE,data),/buildingParts/);
+  }
+});
+
+test('gable ridge is not extended to the ground as an invented internal wall',()=>{
+  const data=slopedFixture(),part=data.buildingParts.groups[0].parts[0];
+  part.roofSurfaces=[100,105].map((x,i)=>{
+    const ring=rect(x,100,5,20).map(([a,b])=>[a,b,70-Math.abs(-b-105)*.4]);
+    ring.push([...ring[0]]);
+    return {lodId:part.lodId,file:part.file,surfaceId:`roof-${i}`,polygonId:`poly-${i}`,
+      sourceRingsUTM:[ring.map(([a,b,c])=>[350000+a,5640000+b,c])],polygons:[ring]};
+  });
+  assert.equal(inspectSurroundings(data).ok,true);
+  const env=buildDortmundSurroundings(THREE,data);
+  try{
+    const walls=env.group.getObjectByName('ENV_BUILDINGS').geometry.getAttribute('position');
+    for(let i=0;i<walls.count;i+=3){
+      const xs=[0,1,2].map(j=>walls.getX(i+j));
+      assert.ok(!xs.every(x=>Math.abs(x-105)<1e-5),'no wall under the ridge');
+    }
+  }finally{env.dispose();}
+});
 test('real renderer uses independent NHN bases/roofs and retains residual + other OSM buildings',()=>{
   const data=fixture(),before=JSON.stringify(data);
   assert.equal(inspectSurroundings(data).ok,true);

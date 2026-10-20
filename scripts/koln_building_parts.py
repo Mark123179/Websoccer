@@ -80,6 +80,17 @@ def component_group(index, osm, polygon, candidates, to_editor, editor_polygon=N
             "officialGroundUTM": mapping(c["footprint"]),
             "srsName": c["srsName"],
         })
+        if "roofSurfaces" in c:
+            from scripts.koln_roof_surfaces import clipped_roofs
+            try:
+                parts[-1]["roofSurfaces"] = clipped_roofs(c, intersection, to_editor)
+                parts[-1]["roofStatus"] = "official_surfaces"
+            except ValueError as error:
+                # Reject this roof, not the independently approved component
+                # height/partition. Never fill missing surveyed roof patches.
+                parts[-1]["roofStatus"] = "rejected_retained_envelope"
+                parts[-1]["roofRejection"] = str(error)
+                parts[-1]["rejectedRoofEvidence"] = c["roofSurfaces"]
     if len(parts) < 2:
         raise ValueError(f"Missing multipart evidence for {osm}")
     union = unary_union(covered)

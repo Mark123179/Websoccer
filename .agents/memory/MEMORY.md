@@ -121,12 +121,7 @@
 - [Sitzansicht-Himmel für 16:9-Fotos](stadium-seat-sky.md) — normale Himmelsfotos als überdeckende kamerafeste Fernfläche zeigen, nicht als 360°-Panorama.
 - [Stadion-Flutlicht-Laufzeitvertrag](stadium-floodlight-runtime.md) — Leuchten aus Modellen prüfen und deklarieren, keine erfundenen Lichtorte; Zustand unabhängig von Tag/Nacht, höchstens 12 Quellen.
 - [Stadion-Umgebungslichtvertrag](stadium-ambient-lighting.md) — Tag/Nacht wechselt Lichtsets in-place; Exposure bleibt Multiplikator, ACES-Schatten brauchen mehrere Lichtlagen.
-- [Dortmund Unity seat/mesh frame](dortmund-unity-frame.md) — Sitz-JSON ist ungedreht, Mesh-Export hat 90° Parent-Rotation gebacken; Standzuordnung immer gegen Crowd-Bounds prüfen.
-- [Borussia-Park Sitzrahmen](gladbach-source-frame.md) — Sitz-JSON erst um +90° an World-Meshes anbinden; bei neuen Bundles Bereichs-Bounds erneut vergleichen.
-- [Dortmund roof layers](dortmund-roof-layers.md) — Dachhaut, Decke und Träger überlagern sich in mehreren Unity-Meshes; einzelne Dachmeshes ausblenden reicht für Innenansichten nicht.
-- [Dortmund OSM context](dortmund-osm-context.md) — Umgebung aus realen OSM-Lagen und grobem DEM, nicht aus erfundenen Bergen; Modell-Nord und Kartennord müssen getrennt kalibriert werden.
-- [Dortmund single-side expansion edges](dortmund-single-side-expansion-edges.md) — Endkappen allein schließen Einzel-Ausbau nicht: Rangbreite am freien Ende auf Bestandskante begrenzen; Rundum darf verbreitern.
-- [Dortmund Bestand source attribution](dortmund-bestand-facade-attribution.md) — Gegenseite darf als beschriftete Rekonstruktion geschlossen sein; niemals als Unity-Quelle ausgeben.
+- [Stadion-Quellrahmen](stadium-source-frames.md) — Dortmund/Borussia-Park: Sitzachsen, Dachlagen, OSM-Ausrichtung, Ausbaukanten und Kennzeichnung von Rekonstruktionen.
 - [WebGL-Screenshot-Falle](software-webgl-screenshots.md) — Leere Preview-Aufnahme ist kein Beweis für defekte Three.js-Szene; Software-WebGL kann separat geprüft werden.
 - [Stadion-Kachel](club-stadium-presentation.md) — Automatische statt manueller Drehung; transparentes Modell über dem ursprünglichen Kachelhintergrund.
 - [Kleiderstangen-Vorlage](manager-kit-rack-handoff.md) — Managerprofil-Trikots strikt 1:1 übernehmen; Unklarheiten direkt melden, übriges Profil nicht ändern.
@@ -157,3 +152,4 @@
 - [Zweite Bundesliga](second-league-import-scope.md) — Weitere Vereinspakete in zusätzlicher, zunächst nicht spielbarer Liga; bestehende 18er-Bundesliga nicht erweitern.
 - [Kölner Planregistrierung](koln-plan-registration.md) — Offizielle Namen und Fanbereiche belegen; schematische Innenaufteilung niemals als vermessene Unity-Gänge ausgeben.
 - [Native Geodaten-Importe](native-geodata-imports.md) — Größere Aufbereitungsläufe können fehlende native Bibliotheken durch Importreihenfolge verdecken; Offline-Prüfer eigenständig starten.
+- [Amtliche Dachdeckung](official-roof-coverage.md) — Kleine echte Quelllücken nicht als Rundung verstecken; unvollständige Dächer behalten ihre ausdrücklich schematische Hülle.
