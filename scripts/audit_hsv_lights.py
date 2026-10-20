@@ -36,15 +36,20 @@ def digest(data):
     return hashlib.sha256(data).hexdigest()
 
 
-def audit(out, browser_scale=1):
+def audit(out, browser_scale=1, *, baseline_path=None, expected_baseline_sha=None,
+          assets_dir=None):
     if out.exists():
         raise ValueError("Output exists; choose a new directory, never overwrite a reviewed package")
-    baseline_raw = REGISTRY.read_bytes()
+    baseline_raw = (baseline_path or REGISTRY).read_bytes()
+    if baseline_path is not None and expected_baseline_sha is None:
+        raise ValueError("Explicit baseline requires its expected SHA256")
+    if expected_baseline_sha is not None and digest(baseline_raw) != expected_baseline_sha:
+        raise ValueError("Explicit baseline hash differs; registry remains untouched")
     baseline = json.loads(baseline_raw)
     source = ROOT / "attached_assets" / baseline["source"]
     if digest(source.read_bytes()) != baseline["sourceSha256"]:
         raise ValueError("Original HSV bundle hash differs from the registry")
-    assets = STUDY / "source-export"
+    assets = assets_dir or STUDY / "source-export"
     binary = (assets / "geometry.bin").read_bytes()
     if digest(binary) != baseline["geometrySha256"]:
         raise ValueError("Reprepare missing/changed source-export from the original bundle")
@@ -148,6 +153,7 @@ def audit(out, browser_scale=1):
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(json.dumps(document, indent=2, ensure_ascii=False) + "\n")
     write(out / "baseline-manifest.json", baseline)
+    (out / "baseline-registry.json").write_bytes(baseline_raw)
     write(out / "manifest.json", candidate)
     write(out / "light-audit.json", {"summary": summary, "candidates": rows})
     write(out / "pitch-check.json", pitch)
@@ -169,5 +175,9 @@ if __name__ == "__main__":
     parser.add_argument("--out", type=Path, required=True)
     parser.add_argument("--browser-scale", type=float, default=1,
                         help="HSV-only export multiplier; original Unity intensity is retained")
+    parser.add_argument("--baseline", type=Path)
+    parser.add_argument("--expected-baseline-sha256")
+    parser.add_argument("--assets", type=Path)
     args = parser.parse_args()
-    audit(args.out.resolve(), args.browser_scale)
+    audit(args.out.resolve(), args.browser_scale, baseline_path=args.baseline,
+          expected_baseline_sha=args.expected_baseline_sha256, assets_dir=args.assets)

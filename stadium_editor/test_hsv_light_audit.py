@@ -12,6 +12,25 @@ from scripts.stadium_light_surfaces import (
 
 
 class LampSurfaceTests(TestCase):
+    def test_explicit_baseline_requires_expected_hash_without_writes(self):
+        with TemporaryDirectory() as directory:
+            root = Path(directory)
+            baseline = root / "baseline.json"
+            baseline.write_bytes(b"{}")
+            with self.assertRaisesRegex(ValueError, "expected SHA256"):
+                audit(root / "output", baseline_path=baseline)
+            self.assertFalse((root / "output").exists())
+
+    def test_changed_explicit_baseline_aborts_before_source_access(self):
+        with TemporaryDirectory() as directory:
+            root = Path(directory)
+            baseline = root / "baseline.json"
+            baseline.write_bytes(b"{}")
+            with self.assertRaisesRegex(ValueError, "baseline hash differs"):
+                audit(root / "output", baseline_path=baseline,
+                      expected_baseline_sha="0" * 64)
+            self.assertFalse((root / "output").exists())
+
     def test_interior_is_near_even_when_all_vertices_are_far(self):
         face = [[[0, 20, 0], [20, 20, 0], [0, 20, 20]]]
         distance, point, index = closest_surface([5, 21, 5], face)

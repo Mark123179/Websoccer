@@ -118,10 +118,10 @@ def verify(study):
     return audit, baseline, candidate, images, measurements
 
 
-def report(study):
+def report(study, *, baseline_path=None):
     audit, baseline, candidate, images, measurements = verify(study)
     summary = audit["summary"]
-    registry = Path(__file__).resolve().parents[1] / "stadium_editor/blueprints/v2/models/947.json"
+    registry = baseline_path or Path(__file__).resolve().parents[1] / "stadium_editor/blueprints/v2/models/947.json"
     if sha(registry.read_bytes()) != summary["baselineManifestSha256"]:
         raise ValueError("The approved HSV registry changed during the study")
     ratio = (measurements["candidate-night-on"]["sampleMeanSRGBLuma"] /
@@ -231,4 +231,7 @@ Ausgangsmanifest-SHA256: <code>{summary['baselineManifestSha256']}</code></p>
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("study", type=Path)
-    report(parser.parse_args().study)
+    parser.add_argument("--baseline", type=Path,
+                        help="Read-only pinned baseline used by the source audit.")
+    args = parser.parse_args()
+    report(args.study, baseline_path=args.baseline)

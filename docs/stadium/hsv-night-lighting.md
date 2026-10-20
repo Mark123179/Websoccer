@@ -2,19 +2,115 @@
 
 ## Status und Versionierungsgrenze
 
-Die bestehende Registrierung `stadium_editor/blueprints/v2/models/947.json`
-bleibt **unverändert**. Auch `generated-artifacts/hsv-study` bleibt unangetastet.
+### Aktuell: freigegebene Kombination in der Arbeitskopie aktiviert
+
+Die ursprüngliche Aktivierung wurde **nicht ins Hauptprojekt übernommen**:
+dort wurde zwischenzeitlich die neue Sitzgrafik registriert. Wegen des
+abweichenden Ausgangshashes wurde die Zusammenführung abgebrochen.
+Nach erneuter Prüfung und direktem Bildvergleich hat der Nutzer ausdrücklich
+auch die Aktivierung des kombinierten Kandidaten freigegeben.
+
+| Erneute Prüfung | Version / SHA256 |
+|---|---|
+| Hauptprojekt mit neuer Sitzgrafik | `26bbf1d9b445d255` |
+| Erwarteter neuer Ausgangshash | `8736869c7f78320ead82226281cbe99e67154456b4549166c37cc3daa20357f4` |
+| Aktivierte kombinierte Version | `fdea273ea50e8748` |
+| Kombiniertes Kandidatenmanifest | `efa5689a0da72e0f1cad21b6b809bb9e74cf4b6209a588287eb399944a07a7d0` |
+
+Alle 57 Assets wurden aus dem dauerhaften Speicher der Sitzgrafik-Version
+heruntergeladen und gegen deren Manifest geprüft. Der kombinierte Kandidat
+übernimmt sämtliche Texturhashes und `seatingArtworkRevision` unverändert.
+Die drei Lichtquellen stimmen exakt mit dem zuvor freigegebenen Nachtkandidaten
+überein. Nur `fixtures`, `lightingRevision` und `assetVersion` ändern sich
+gegenüber dem Sitzgrafik-Ausgangsmanifest.
+
+Acht neue Browseraufnahmen prüfen die unveränderte Kamera, Dach, Exposure
+und Tag/Nacht × Flutlicht an/aus. Die Bilder bei ausgeschaltetem Flutlicht
+sind byteidentisch; nachts mit Flutlicht beträgt der Helligkeitsfaktor des
+Prüfausschnitts erneut 3,0415. Keine Browserfehler. 31 gezielte Tests bestanden.
+Der erneute Prüfzyklus war vollständig lesend. Erst nach der anschließenden
+Aktivierungsfreigabe wurden alle 57 Assets unter der neuen Version dauerhaft
+gespeichert und vollständig mit SHA256-Prüfung zurückgelesen. Die 57 Assets der
+Sitzgrafik-Ausgangsversion wurden vor und nach dem Ablegen vollständig geprüft:
+unverändert. Beide exakten Manifestdateien wurden separat unter
+`stadium-model-revisions/947/<assetVersion>/manifest.json` archiviert.
+Auch die ursprünglichen Pakete bleiben erhalten. Keine DB- oder
+Ökonomieänderungen und kein Produktionsdeployment.
+
+Vor der Aktivierung wurde ausschließlich die Arbeitskopie vom dort zuvor
+aktivierten ursprünglichen Nachtpaket auf den exakt gehashten, inzwischen
+aktuellen Hauptprojekt-Ausgangsstand mit Sitzgrafik synchronisiert. Dabei
+wurden sowohl der erwartete lokale Hash als auch die Übereinstimmung des
+Hauptprojekt-Manifests mit der geprüften Baseline kontrolliert. Der anschließende
+Aktivierungsbefehl prüfte den neuen Ausgangshash erneut vor Speicherzugriffen
+und unmittelbar vor dem atomaren Registry-Wechsel.
+
+Nach dem kombinierten Wechsel wurden `Start application` und `Import pilot`
+neu gestartet; beide Django-Systemchecks sind fehlerfrei. Die laufende
+Hauptanwendung liefert exakt das freigegebene Manifest sowie alle 57 Assets
+der kombinierten Version über HTTP mit den erwarteten SHA256-Hashes aus.
+
+Belege: `generated-artifacts/hsv-seating-night-reviewed/` mit eigenständigem
+Bildbericht, vollständigem Paket und exaktem Ausgangsmanifest
+`baseline-registry.json`. Die Dateien sind aus Git und Deployment ausgeschlossen.
+
+Der Auditor unterstützt für diese lesende Wiederholung `--baseline`,
+`--expected-baseline-sha256` und `--assets`; der Bildbericht `--baseline`.
+Der Browser lädt die Texturen immer aus dem geprüften Paket, nicht aus einem
+möglicherweise älteren Quellexport. Die aktive Registry muss dafür nicht
+zurückgestellt werden. Der Aktivierungsbefehl ist jetzt ausschließlich auf das
+erneut freigegebene kombinierte Paar begrenzt; ein anderer Ausgangshash bleibt
+ein harter Abbruch. Die ursprüngliche Freigabe ist keine Erlaubnis, eine
+zwischenzeitlich geänderte Sitzgrafik zu verwerfen.
+
+### Historisch: ursprüngliche Aktivierung nur in der Arbeitskopie
+
+Nach ausdrücklicher Nutzerfreigabe ist der Nachtkandidat jetzt in der
+Arbeitskopie registriert. **Kein Produktionsdeployment.** Die ursprüngliche
+Studie und die alten 57 dauerhaft gespeicherten Assets bleiben unverändert.
+
+| Aktivierung | SHA256 / Ergebnis |
+|---|---|
+| Erwartetes Ausgangsmanifest | `bd6bbc2b490744895dc731bce149b155622542dddb8bef4c647a186ae19ec7c6` |
+| Neues aktives Manifest | `e9f022dd47f8b1679a538f19fc5ca2cbb258aac5ae358c7a288c653df7f95d52` |
+| Neue Assets vollständig aus dauerhaftem Speicher zurückgelesen | 57 / 57 hashgültig |
+| Alte Assets vor und nach dem Ablegen geprüft | 57 / 57 unverändert |
+| Frische Quellenprüfung und Browservergleich | 416 Quellen, 19 zulässig, 3 Repräsentanten, 8 Zustände |
+| Nach Neustart über die laufende Anwendung geprüft | Manifest-Hash und alle 57 Asset-Hashes stimmen |
+
+Die Entwicklungsprozesse `Start application` und `Import pilot` wurden nach
+dem Wechsel neu gestartet; beide melden fehlerfreie Django-Systemchecks.
+Kamera und Kalibrierung sind unverändert. Tag/Nacht und Flutlicht an/aus
+wurden pro Variante in derselben Szene geprüft. Die unabhängigen Prüfungen
+umfassen 20 Quellen-/Exporttests und neun Aktivierungs-Schutztests.
+
+Beide exakten Manifestdateien sind zusätzlich dauerhaft unter
+`stadium-model-revisions/947/<assetVersion>/manifest.json` archiviert.
+Die Assets liegen jeweils getrennt unter
+`stadium-models/947/<assetVersion>/`. Der ältere Versionspfad wird nicht
+überschrieben oder gelöscht.
+
+Die einmalige, ausschließlich auf diese beiden HSV-Manifest-Hashes begrenzte
+Aktivierung erfolgt durch `scripts/activate_hsv_night.py --study <Prüfverzeichnis>
+--approved`. Der Befehl prüft die ausdrückliche Freigabe, Ausgangshash,
+Kandidatenhash, Quellen- und acht Bildbelege vor Speicherzugriffen und prüft
+den Ausgangshash unmittelbar vor dem atomaren Wechsel erneut. Wiederholtes
+Aktivieren oder ein anderer Ausgangsstand wird abgewiesen. Keine ORM-Zugriffe.
+
+### Historischer Prüfstand vor der Freigabe
+
+Während der separaten Prüfung blieb die Registrierung unverändert.
 Das vorhandene `register_stadium_model.py` lehnt das automatische Ersetzen
-einer Registrierung ab. Daher entsteht ein separates Prüfpaket, kein
-stillschweigendes Update des abgenommenen Pakets.
+einer Registrierung weiterhin ab; dieser Schutz wurde nicht verändert.
 
 | Stand | Asset-Version |
 |---|---|
-| Registrierter Ausgangsstand | `51bbcc74241c6795` |
-| Geprüfter Nachtkandidat | `1b96815599cec644` |
+| Erhaltener Ausgangsstand | `51bbcc74241c6795` |
+| Freigegebene neue Registrierung | `1b96815599cec644` |
 
-Keine Registry-, Storage- oder Datenbankschreibzugriffe; kein Publishing.
-Eine Aktivierung ist eine separate, ausdrücklich freizugebende Revision:
+Die ursprüngliche Prüfung hatte keine Registry-, Storage- oder
+Datenbankschreibzugriffe und kein Publishing. Eine Aktivierung ist eine
+separate, ausdrücklich freizugebende Revision:
 neue Version vollständig dauerhaft ablegen und prüfen, alten Assetbestand
 erhalten, erst danach den Registry-Verweis ändern und Worker neu starten.
 Den Schutz des bestehenden Registrierbefehls nicht durch dessen Aufruf
@@ -109,8 +205,15 @@ node scripts/capture_hsv_lights.mjs generated-artifacts/hsv-night-reviewed
 python -m scripts.report_hsv_lights generated-artifacts/hsv-night-reviewed
 
 python -m unittest stadium_editor.test_hsv_light_audit \
-  stadium_editor.test_export_stadium_model
+  stadium_editor.test_export_stadium_model stadium_editor.test_activate_hsv_night
 ```
+
+Die obige Auditor-Reproduktion beschreibt den historischen Ausgangsstand.
+Nach Aktivierung verwendet der Auditor sonst das neue Manifest als Baseline;
+das wäre keine Reproduktion des freigegebenen Versionswechsels.
+Für dessen Wiederholung in einer isolierten Arbeitskopie zunächst das
+archivierte Ausgangsmanifest mit dem oben genannten SHA256 bereitstellen.
+Die aktive Registry nicht für eine Studie zurückstellen.
 
 Der Auditor verifiziert zuerst Bundle-Hash, sämtliche unveränderten
 Geometrie-/Texturhashes und die vollständige Rekonstruktion der bisherigen

@@ -11,10 +11,12 @@ const scaleArg = args.find(a=>a.startsWith('--scales='))?.split('=')[1];
 const scales = scaleArg ? scaleArg.split(',').map(Number) : [];
 const serve = args.includes('--serve');
 const staticRoot = path.resolve('stadium_editor/static/stadium_editor');
-const assetRoot = path.resolve('generated-artifacts/hsv-study/source-export');
 const baselineRaw = await readFile(path.join(study, 'baseline-manifest.json'));
 const candidateRaw = await readFile(path.join(study, 'manifest.json'));
 const baseline = JSON.parse(baselineRaw), candidate = JSON.parse(candidateRaw);
+// Both variants have identical asset hashes; use the reviewed package, not an
+// unrelated source-export directory that may predate the seating artwork.
+const assetRoot = path.join(study,'package/stadium-models/947',candidate.assetVersion);
 const presentation = JSON.parse(await readFile(path.join(study,'presentation.json')));
 const sha = bytes=>createHash('sha256').update(bytes).digest('hex');
 const html = `<!doctype html><meta charset="utf-8"><title>HSV Lichtvergleich</title><link rel="icon" href="data:,">
