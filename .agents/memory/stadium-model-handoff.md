@@ -3,6 +3,17 @@ name: Stadionmodell-Übergabe an Claude
 description: Produktzweck der Registry als Übergabestelle für extern vorbereitete Stadionmodelle.
 ---
 
+## Künftige gemeinsame Stadionarbeit
+
+Der Nutzer möchte die nächsten Stadien gemeinsam mit Replit Agent statt
+mit Claude erstellen: „erstelle mit dir die nächsten statt mit Claude“.
+
+**Why:** Ausdrückliche Änderung der bisherigen Arbeitsteilung durch den Nutzer.
+
+**How to apply:** Weitere Stadionarbeiten hier gemeinsam vorbereiten und
+durchführen; keine Claude-Übergabe als Voraussetzung verlangen. Bestehende
+Quell-, Prüf- und Freigabeanforderungen bleiben bestehen.
+
 Der Nutzer erklärt den Zweck der Stadionmodell-Registry:
 „claude braucht die Registry damit er dir die Arbeit abnehmen kann und du
 nicht jedes Stadion machen musst.“
