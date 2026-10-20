@@ -2594,3 +2594,31 @@ mtime_ms = 1791986253790
 storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:6e4eaecc-e6c5-4f64-8de5-e8845034f33b/00c9a3d0-f598-454e-9f47-6e56e1b53a02/c9266c28-d26c-41e1-934c-31685d529785"
 storage_version_token = "1791986359285015"
 content_type = "image/jpeg"
+
+[[outputs]]
+id = "fKnrVBC4OBqShTYyPYDaj"
+uri = "file://generated-artifacts/mainz-study/mainz-erste-modellpruefung.jpg"
+type = "image"
+title = "Mainz – erste Modellvorschau"
+description = "Sechs beschriftete Ansichten: Quellgrundriss, Originalmodell mit und ohne Dach sowie Spielkamera bei Tag und Nacht. Geografisches Umfeld noch nicht angebunden."
+logical_id = "8ef88dab-9000-470c-8079-e7fa9a3e695a"
+content_hash = "sha256:aaba592884ef52adfe0338d07d96af3509fab4afec132eca10245db13d7c15f6"
+size = 399362
+mtime_ms = 1792483026867
+storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:6e4eaecc-e6c5-4f64-8de5-e8845034f33b/8ef88dab-9000-470c-8079-e7fa9a3e695a/c4c4d3bb-95c8-4727-87f5-5d2695fcb65e"
+storage_version_token = "1792483081136107"
+content_type = "image/jpeg"
+
+[[outputs]]
+id = "8PtaueVH_AhVqMGtP3acQ"
+uri = "file://generated-artifacts/mainz-study/mainz-modellpruefung.html"
+type = "html"
+title = "Mainz – Modellprüfung in voller Bildgröße"
+description = "Selbstständige HTML-Datei mit den fünf aktuellen 3D-Aufnahmen, dem Quellgrundriss und den ausdrücklich offenen Punkten. Noch keine Registrierung."
+logical_id = "bae9b267-1d47-4149-91d7-06a10a50d20f"
+content_hash = "sha256:a06d8403954a49f36f242b53f7fc1dd4c83a3324ec1bd1f300fb84f9fc341c36"
+size = 5773920
+mtime_ms = 1792483026891
+storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:6e4eaecc-e6c5-4f64-8de5-e8845034f33b/bae9b267-1d47-4149-91d7-06a10a50d20f/68ce12c7-e97a-4da2-9f55-c9f63b6a2e41"
+storage_version_token = "1792483082317995"
+content_type = "text/html"

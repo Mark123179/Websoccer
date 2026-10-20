@@ -22,3 +22,17 @@ Vollständig innenliegende
 Grün-/Wasserflächen bleiben Hinweise, weil nur die Darstellung sie auslässt.
 Kein Prüfer darf daraus eine automatische Quellbereinigung oder Freigabe
 für Registrierung, Upload oder Datenübernahme ableiten.
+
+Bei einer Geländeprüfung zusätzlich prüfen, ob die erwartete Deklaration
+tatsächlich erkannt wurde. Ein grünes Ergebnis für einen als leer
+interpretierten JSON-Umschlag ist keine Freigabe der enthaltenen Szene.
+
+**Why:** Die Mainzer HTTP-Hülle mit einer inneren Presentation lieferte
+zunächst `ok` ohne erkannte Geländedeklaration. Der echte Renderer lehnte
+dieselbe Szene wegen kreuzender Grünflächen und Straßen ab. Erst die
+Prüfung des eigentlichen Presentation-Objekts erfasste diese Konflikte.
+
+**How to apply:** HTTP-Hüllen vor der Prüfung gezielt auflösen und
+`terrainDeclared` gegen die Eingabe kontrollieren. Bei einem Konflikt
+Modellisolierung klar als solche kennzeichnen, statt mit ausgeblendeten
+Einzelflächen ein scheinbar bereinigtes geografisches Umfeld zu liefern.

@@ -15,7 +15,9 @@ sys.path.insert(0, str(ROOT))
 from scripts.export_stadium_study_lights import world
 from stadium_editor.pitch_validation import PitchValidationError, validate_pitch_geometry
 
-def export_model(SOURCE, seats_path, fmi, name, DEST, calibration):
+def export_model(SOURCE, seats_path, fmi, name, DEST, calibration, *,
+                 include_roots=(), lamp_materials=(), exclude_mesh_names=(),
+                 evidence_paths=None):
     env = UnityPy.load(str(SOURCE))
     cache, binary, meshes, tex_refs, lamps = {}, bytearray(), [], {}, []
     for obj in env.objects:
@@ -34,9 +36,12 @@ def export_model(SOURCE, seats_path, fmi, name, DEST, calibration):
             t = t.m_Father.read() if t.m_Father else None
         # Model, crowd and pitch only. No distant backgrounds or duplicate
         # accessory scenes; preserve each selected object's actual hierarchy.
-        if not any(n in ("MAIN", "AUDIAREA", "PITCH2021", "MESH_CROWD") for n in chain):
+        if not any(n in ("MAIN", "AUDIAREA", "PITCH2021", "MESH_CROWD",
+                          *include_roots) for n in chain):
             continue
         mesh = filt.m_Mesh.read()
+        if mesh.m_Name in exclude_mesh_names:
+            continue
         h = MeshHandler(mesh)
         h.process()
         if not h.m_Vertices:
@@ -63,7 +68,7 @@ def export_model(SOURCE, seats_path, fmi, name, DEST, calibration):
             rgb = [max(0, min(1, getattr(color, k))) for k in "rgb"] if color else [0.55]*3
             texture = None
             for key, value in mat.m_SavedProperties.m_TexEnvs:
-                if key in ("baseColorTexture", "_BaseMap", "_MainTex") and value.m_Texture:
+                if key in ("baseColorTexture", "_BaseMap", "_MainTex", "_Base_Texture") and value.m_Texture:
                     pointer = value.m_Texture
                     texture = f"texture-{pointer.path_id}.webp"
                     tex_refs[texture] = pointer
@@ -76,7 +81,8 @@ def export_model(SOURCE, seats_path, fmi, name, DEST, calibration):
             part = {"material": mat.m_Name, "color": rgb, "texture": texture,
                     "indexOffset": offset, "indexCount": len(ix)}
             parts.append(part)
-            if any(s in mat.m_Name.lower() for s in ("lght", "lamp", "light_bulb", "light_floodlight")):
+            if (mat.m_Name in lamp_materials or
+                    any(s in mat.m_Name.lower() for s in ("lght", "lamp", "light_bulb", "light_floodlight"))):
                 lamps.extend(vertices[np.unique(ix)])
         if not parts:
             continue
@@ -147,7 +153,7 @@ def export_model(SOURCE, seats_path, fmi, name, DEST, calibration):
         for name in ["geometry.bin", *manifest["textures"]]
     }
     manifest["sourceEvidence"] = {}
-    for path in sorted(SOURCE.parent.glob("*.json")):
+    for path in sorted(evidence_paths if evidence_paths is not None else SOURCE.parent.glob("*.json")):
         document = json.loads(path.read_text())
         manifest["sourceEvidence"][path.name] = {
             "sha256": hashlib.sha256(path.read_bytes()).hexdigest(),
@@ -184,6 +190,14 @@ def main():
     parser.add_argument("--out", type=Path, required=True)
     parser.add_argument("--calibration", type=Path, required=True,
                         help="JSON-Datei mit dem vollständigen calibration-Block")
+    parser.add_argument("--include-root", action="append", default=[],
+                        help="Zusätzliche, ausdrücklich geprüfte Quellhierarchie")
+    parser.add_argument("--lamp-material", action="append", default=[],
+                        help="Zusätzliches, anhand der Quelle geprüftes Leuchtenmaterial")
+    parser.add_argument("--exclude-mesh", action="append", default=[],
+                        help="Dokumentierter Quellmesh-Ausschluss (exakter Name)")
+    parser.add_argument("--evidence", type=Path, action="append",
+                        help="Explizite zum Modell gehörende JSON-Quelldatei")
     args = parser.parse_args()
     calibration = json.loads(args.calibration.read_text())
     if args.fmi <= 0 or not args.name.strip():
@@ -193,7 +207,9 @@ def main():
     if not isinstance(calibration, dict) or not required <= calibration.keys():
         parser.error("--calibration muss den vollständigen calibration-Block enthalten")
     try:
-        export_model(args.bundle, args.seats, args.fmi, args.name, args.out, calibration)
+        export_model(args.bundle, args.seats, args.fmi, args.name, args.out, calibration,
+                     include_roots=args.include_root, lamp_materials=args.lamp_material,
+                     exclude_mesh_names=args.exclude_mesh, evidence_paths=args.evidence)
     except PitchValidationError as error:
         print(f"Modell-Export abgebrochen: {error}", file=sys.stderr)
         return 1
