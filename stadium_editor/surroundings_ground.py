@@ -28,6 +28,23 @@ def _intersects(a, b, c, d):
 
 
 def validated_ground_fields(data):
+    elevation = {}
+    if "groundElevation" in data:
+        grid = data["groundElevation"]
+        if (not isinstance(grid, dict)
+                or not isinstance(grid.get("origin"), list) or len(grid["origin"]) != 2
+                or not all(_number(n, 10000) for n in grid["origin"])
+                or not _number(grid.get("step"), 100) or grid["step"] < 5
+                or any(type(grid.get(k)) is not int or not 2 <= grid[k] <= 257
+                       for k in ("cols", "rows"))
+                or not isinstance(grid.get("values"), list)
+                or len(grid["values"]) != grid["cols"] * grid["rows"]
+                or not all(_number(n, 100) for n in grid["values"])
+                or not isinstance(grid.get("source"), str) or not grid["source"].strip()):
+            raise ValueError("groundElevation benötigt ein belegtes, vollständiges Modellhöhenraster.")
+        if "groundLevel" not in data or "groundCutout" not in data:
+            raise ValueError("groundElevation benötigt groundLevel und groundCutout.")
+        elevation["groundElevation"] = deepcopy(grid)
     has_level, has_cutout = "groundLevel" in data, "groundCutout" in data
     if not has_level and not has_cutout:
         return {}
@@ -61,4 +78,4 @@ def validated_ground_fields(data):
                 raise ValueError("groundCutout enthält eine Selbstüberschneidung.")
     if abs(sum(a[0] * b[1] - b[0] * a[1] for a, b in edges)) <= EPS:
         raise ValueError("groundCutout besitzt keine Fläche.")
-    return {"groundLevel": level, "groundCutout": polygon}
+    return {"groundLevel": level, "groundCutout": polygon, **elevation}

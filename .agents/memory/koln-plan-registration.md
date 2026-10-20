@@ -18,3 +18,12 @@ lassen. Für genauere Grenzen zusätzliche belastbare Belege beschaffen, nicht
 einfach sichtbare Unity-Gänge durchnummerieren. Ein Topologiewechsel darf
 Unter-/Oberrang-Überlagerungen im Grundriss nicht als dieselben Sitzflächen
 behandeln.
+
+Ein fachlich optionaler Topologiewechsel gehört nicht als verpflichtender
+Schreibschritt in jeden Post-Merge-Lauf.
+
+**Why:** Die korrekte Ablehnung einer individuellen Manager-Geometrie würde
+sonst einen fachfremden Merge abbrechen, obwohl nichts beschädigt ist.
+
+**How to apply:** Solche Übernahmen ausdrücklich anfordern lassen; ihre
+fail-closed Prüfung bei bewussten Schreibaufrufen nicht abschwächen.

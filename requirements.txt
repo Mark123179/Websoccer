@@ -70,3 +70,5 @@ py7zr==1.1.3             # Archiv-Dep; CVE-2026-23879/55206/55195 gepatcht
 rembg[cpu]
 shapely==2.1.2           # Stadion-Blaupause V2: robuste OSM-Polygonoperationen
 UnityPy==1.25.3
+pyproj
+rasterio

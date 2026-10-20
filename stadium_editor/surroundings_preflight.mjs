@@ -22,7 +22,7 @@ export function inspectSurroundings(data = {}, frame = {}, axes = SURROUNDINGS_A
   const findings = [];
   const report = () => ({
     ok: !findings.some(f => f.severity === 'error'),
-    terrainDeclared: Object.hasOwn(data, 'groundLevel') || Object.hasOwn(data, 'groundCutout'),
+    terrainDeclared: ['groundLevel','groundCutout','groundElevation'].some(k => Object.hasOwn(data,k)),
     findings,
   });
   const add = (severity, path, code, message) => findings.push({severity, path, code, message});

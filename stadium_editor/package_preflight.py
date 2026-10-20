@@ -47,7 +47,7 @@ def inspect_package(package, *, frame=_UNSET, axes=_UNSET):
             data, source_frame = package, {}
         if not isinstance(data, dict):
             return _failure(prefix.rstrip(".") or "data", "Umfelddaten müssen ein Objekt sein.")
-        terrain_declared = any(key in data for key in ("groundLevel", "groundCutout"))
+        terrain_declared = any(key in data for key in ("groundLevel", "groundCutout", "groundElevation"))
         # Python checks happen before Node serialization (bool, huge int, NaN).
         try:
             validated_ground_fields(data)

@@ -2,7 +2,13 @@
 set -e
 
 python3 manage.py migrate --no-input
-python3 manage.py align_koln_official_blocks --if-present --apply
+# A base-topology conversion must not block unrelated merges for a manager's
+# customized stadium. Explicit opt-in retains the command's fail-closed checks.
+if [[ "${ALIGN_KOLN_OFFICIAL_BLOCKS:-0}" == "1" ]]; then
+    python3 manage.py align_koln_official_blocks --if-present --apply
+else
+    echo "[post-merge] Kölner Blockabgleich nicht angefordert; eigene Geometrie bleibt unverändert."
+fi
 python3 manage.py collectstatic --no-input --clear 2>/dev/null || true
 
 # ── Regressions-Schnelltest ───────────────────────────────────────────────────

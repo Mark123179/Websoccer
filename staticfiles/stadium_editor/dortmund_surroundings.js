@@ -2,7 +2,8 @@
 // Heights and tree forms are schematic, not a surveyed reconstruction.
 // Optional mapping of the editor's north end and west side to the source-model axes.
 // The default reproduces the existing transformation exactly.
-import {validateSurroundingsGround, createGroundCutoutChecks} from './surroundings_ground.js?v=2';
+import {validateSurroundingsGround, createGroundCutoutChecks} from './surroundings_ground.js?v=3';
+import {elevationSampler, drapeTriangles, drapeLines} from './measured_ground.js?v=1';
 const UNIT = Object.freeze({
   '+x': Object.freeze({index:0, sign:1}), '-x': Object.freeze({index:0, sign:-1}),
   '+z': Object.freeze({index:1, sign:1}), '-z': Object.freeze({index:1, sign:-1}),
@@ -46,8 +47,25 @@ export function createSurroundingsChecks(THREE, data = {}, frame = {},
   axes = SURROUNDINGS_AXES_DEFAULT) {
   resolveSurroundingsAxes(axes);
   const terrain = validateSurroundingsGround(data);
+  const elevation = elevationSampler(terrain.elevation);
+  let checkedRadius = 0;
+  const checkCoverage = ([x,z]) => {
+    elevation(x,z);
+    if (!terrain.elevation) return;
+    const radius = Math.max(450,Math.abs(x)+60,Math.abs(z)+60);
+    if (radius > checkedRadius) {
+      for (const sx of [-radius,radius]) for (const sz of [-radius,radius]) elevation(sx,sz);
+      checkedRadius = radius;
+    }
+  };
+  if (terrain.elevation) checkCoverage([0,0]);
   const cutoutChecks = createGroundCutoutChecks(terrain.cutout);
-  const point = p => editorPointToDortmund(p, frame, axes);
+  const point = p => {
+    const result = editorPointToDortmund(p, frame, axes);
+    checkCoverage(result);
+    return result;
+  };
+  if (terrain.elevation) terrain.cutout.forEach(checkCoverage);
   const polygon = raw => {
     if (!Array.isArray(raw)) throw new Error('Eine Umfeldfläche ist ungültig.');
     const points = raw.map(point);
@@ -62,6 +80,7 @@ export function createSurroundingsChecks(THREE, data = {}, frame = {},
     return faces;
   };
   const rejectOverlap = (points, label) => {
+    points.forEach(checkCoverage);
     if (cutoutChecks.polygonRelation(points) !== 'outside')
       throw new Error(`${label} berührt die groundCutout-Aussparung; Quelle prüfen, nichts automatisch löschen.`);
   };
@@ -113,13 +132,13 @@ export function createSurroundingsChecks(THREE, data = {}, frame = {},
     return p;
   };
   const tree = raw => checkTree(point(raw));
-  return {terrain, surface, building, road, roadFootprints, tree, point, checkTree};
+  return {terrain, elevation, surface, building, road, roadFootprints, tree, point, checkTree};
 }
 
 export function buildDortmundSurroundings(THREE, data = {}, frame = {},
   axes = SURROUNDINGS_AXES_DEFAULT) {
   const checks = createSurroundingsChecks(THREE, data, frame, axes);
-  const {terrain} = checks;
+  const {terrain, elevation} = checks;
   const group = new THREE.Group();
   group.name = 'EDITOR_SURROUNDINGS_3D';
   group.userData.source = data.source || '';
@@ -134,8 +153,10 @@ export function buildDortmundSurroundings(THREE, data = {}, frame = {},
   const material = (color, options = {}) => own(new THREE.MeshBasicMaterial({
     color, side: THREE.DoubleSide, toneMapped: false, ...options,
   }));
-  const mesh = (name, vertices, mat) => {
+  const mesh = (name, vertices, mat, drape = false) => {
     if (!vertices.length) return;
+    if (drape && terrain.elevation)
+      vertices = drapeTriangles(vertices, terrain.elevation, elevation);
     const geometry = own(new THREE.BufferGeometry());
     geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
     geometry.computeVertexNormals();
@@ -203,20 +224,42 @@ export function buildDortmundSurroundings(THREE, data = {}, frame = {},
     }
     (data.buildings || []).forEach((raw, index) => {
       const {points, height, faces} = checks.building(raw, data.buildingHeights?.[index] ?? 9, index);
+      // A flat envelope roof, not a claim to reproduce surveyed roof topology.
+      // All wall bottoms follow terrain. Keep the roof above the entire footprint.
+      let base = 0;
+      if (terrain.elevation) {
+        const footprint = [];
+        surface(footprint, points, 0, faces);
+        const sampled = drapeTriangles(footprint, terrain.elevation, elevation);
+        // Negative elevations must not be clamped to local apron zero.
+        base = sampled.length ? sampled.reduce((max,n,i) => i%3===1 ? Math.max(max,n) : max,
+          -Infinity) : Math.max(...points.map(p => elevation(...p)));
+      }
+      const top = base + height;
       includeBounds(points);
-      lineLoop(buildingContours, points, height + .025);
-      surface(roofs, points, height, faces);
+      lineLoop(buildingContours, points, top + .025);
+      surface(roofs, points, top, faces);
       for (let i = 0; i < points.length; i++) {
         const [ax, az] = points[i], [bx, bz] = points[(i + 1) % points.length];
-        const a = [ax, -.05, az], b = [bx, -.05, bz];
-        const c = [bx, height, bz], d = [ax, height, az];
+        if (terrain.elevation) {
+          const bottom = drapeLines([ax,-.35,az,bx,-.35,bz], terrain.elevation, elevation);
+          for (let j = 0; j < bottom.length; j += 6) {
+            const a = bottom.slice(j,j+3), b = bottom.slice(j+3,j+6);
+            const c = [b[0],top,b[2]], d = [a[0],top,a[2]];
+            triangle(walls,a,b,c); triangle(walls,a,c,d);
+          }
+          continue;
+        }
+        const a = [ax, -.35 + elevation(ax, az), az], b = [bx, -.35 + elevation(bx, bz), bz];
+        if (!terrain.elevation) { a[1] = -.05; b[1] = -.05; }
+        const c = [bx, top, bz], d = [ax, top, az];
         triangle(walls, a, b, c); triangle(walls, a, c, d);
       }
     });
     const trees = (data.trees || []).map(checks.point);
     trees.forEach(checks.checkTree);
     includeBounds(trees);
-    // Flat source-declared elevation only: never invent relief from 2D data.
+    // Legacy stays flat; source-declared grids are draped only when present.
     let groundGeometry;
     if (terrain.cutout) {
       includeBounds(terrain.cutout);
@@ -228,25 +271,36 @@ export function buildDortmundSurroundings(THREE, data = {}, frame = {},
       hole.closePath(); shape.holes.push(hole);
       groundGeometry = own(new THREE.ShapeGeometry(shape));
     } else groundGeometry = own(new THREE.PlaneGeometry(radius * 2, radius * 2));
-    const ground = new THREE.Mesh(groundGeometry,
-      material('#03070c'));
-    ground.name = 'ENV_GROUND';
-    ground.rotation.x = -Math.PI / 2;
-    ground.position.y = -.35;
-    group.add(ground);
+    if (terrain.elevation) {
+      const geometry = groundGeometry.index ? groundGeometry.toNonIndexed() : groundGeometry;
+      const positions = geometry.getAttribute('position'), vertices = [];
+      for (let i = 0; i < positions.count; i++)
+        vertices.push(positions.getX(i), -.35, -positions.getY(i));
+      if (geometry !== groundGeometry) geometry.dispose();
+      mesh('ENV_GROUND', vertices, material('#03070c'), true);
+    } else {
+      const ground = new THREE.Mesh(groundGeometry, material('#03070c'));
+      ground.name = 'ENV_GROUND';
+      ground.rotation.x = -Math.PI / 2;
+      ground.position.y = -.35;
+      group.add(ground);
+    }
     if (Object.hasOwn(data, 'groundLevel')) {
       group.position.y = terrain.level;
       group.userData.terrain = {
         groundLevel: terrain.level, groundCutout: terrain.cutout, omitted,
+        ...(terrain.elevation ? {elevationSource: terrain.elevation.source} : {}),
       };
     }
-    if (green.length) mesh('ENV_GREEN', green, material('#09261e'));
-    if (water.length) mesh('ENV_WATER', water, material('#071b26'));
-    if (roads.length) mesh('ENV_ROADS', roads, material('#061116'));
+    if (green.length) mesh('ENV_GREEN', green, material('#09261e'), true);
+    if (water.length) mesh('ENV_WATER', water, material('#071b26'), true);
+    if (roads.length) mesh('ENV_ROADS', roads, material('#061116'), true);
     if (walls.length) mesh('ENV_BUILDINGS', walls, material('#071312'));
     if (roofs.length) mesh('ENV_BUILDING_ROOFS', roofs, material('#091b1a'));
     const lines = (name, vertices, color, opacity = 1) => {
       if (!vertices.length) return;
+      if (terrain.elevation && !name.includes('BUILDING') && !name.includes('TREE'))
+        vertices = drapeLines(vertices, terrain.elevation, elevation);
       const geometry = own(new THREE.BufferGeometry());
       geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
       geometry.computeBoundingSphere();
@@ -271,12 +325,12 @@ export function buildDortmundSurroundings(THREE, data = {}, frame = {},
         const seed = Math.sin(x * 12.9898 + z * 78.233) * 43758.5453;
         const variation = seed - Math.floor(seed);
         trunk.setMatrixAt(index, matrix.compose(
-          new THREE.Vector3(x, 1.02, z),
+          new THREE.Vector3(x, 1.02 + elevation(x, z), z),
           new THREE.Quaternion().setFromEuler(new THREE.Euler(0, variation * Math.PI * 2, 0)),
           new THREE.Vector3(.75 + variation * .35, .75 + variation * .45, .75 + variation * .35),
         ));
         crown.setMatrixAt(index, matrix.compose(
-          new THREE.Vector3(x, 3.45 + variation * .6, z),
+          new THREE.Vector3(x, 3.45 + variation * .6 + elevation(x, z), z),
           new THREE.Quaternion().setFromEuler(new THREE.Euler(
             variation * .35, variation * Math.PI * 2, variation * .2,
           )),

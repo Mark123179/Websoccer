@@ -12,7 +12,7 @@
   <main data-creator-stadium-viewer data-view-kind="{{ mode }}"
         {% if mode == 'original' %}data-mode="original"{% else %}data-stadium-live-mode data-mode="live" data-camera="orbit" data-day="true"{% endif %}
         data-scene-url="{{ scene_url }}"
-        data-original-module="{% static 'stadium_editor/dortmund_editor_scene.js' %}?v=55">
+        data-original-module="{% static 'stadium_editor/dortmund_editor_scene.js' %}?v=56">
     <div data-stadium-stage aria-label="3D-Stadion von {{ club.name }}"></div>
     <canvas {% if mode == 'original' %}hidden{% endif %} aria-label="2D-Ersatzansicht von {{ club.name }}"></canvas>
     <p class="live-stage__status" role="status" aria-live="polite" data-viewer-status>Stadion wird geladen …</p>

@@ -28,3 +28,26 @@ als fehlend behandeln oder die begrenzte erste Seite für vollständig halten.
 **How to apply:** Tatsächliche Gebäudeelemente zählen, Seiten eindeutig
 zusammenführen und eine kurze Schlussseite verlangen; bei Fehlerantworten
 keine stillen Ersatzwerte einsetzen.
+
+## NRW: amtlicher Zahlenwert ist nicht automatisch eine Messung
+
+Bei LoD2 zusätzlich die Herkunftsattribute prüfen: das Produkt enthält auch
+Standardwerte. Mehrere räumlich passende Teilkörper mit unterschiedlichen
+Bodenniveaus ergeben noch keine belegte Einzelhöhe für einen ganzen
+OSM-Gebäudegrundriss.
+
+**Why:** Die Kölner Abelbauten überdecken mehrere amtliche Teilkörper;
+die Auswahl einer maximalen oder mittleren Höhe würde Präzision vortäuschen.
+
+**How to apply:** Nur im dokumentierten Überdeckungsumfang übernehmen.
+Ungeeignete Einzelhöhen weiterhin als unvermessen kennzeichnen; die
+Quellbezeichnung „measuredHeight“ nicht als ausreichenden Messnachweis lesen.
+
+NRW-WCS-Parameterfehler bei großen Ausschnitten sind kein Nachweis fehlender
+Höhendaten.
+
+**Why:** Derselbe gültige DGM-Bereich war in kleineren, explizit dokumentierten
+Teilausschnitten erreichbar, obwohl die Gesamtanfrage abgewiesen wurde.
+
+**How to apply:** Dienstgrenzen von räumlicher Datenabdeckung unterscheiden;
+Auflösung und Höhenbezug bei einer Aufteilung unverändert lassen.

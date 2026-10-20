@@ -21,6 +21,5 @@ def unity_presentation(stadium, geometry, design, manifest):
         "sourceSha256": manifest["sourceSha256"],
         "calibration": deepcopy(manifest["calibration"]),
     })
-    presentation["surroundings"]["source"] = "OpenStreetMap/BLUEPRINT-Bundle (ODbL)"
-    presentation["surroundings"]["heightQuality"] = "schematic"
+    presentation["surroundings"].setdefault("heightQuality", "schematic")
     return presentation

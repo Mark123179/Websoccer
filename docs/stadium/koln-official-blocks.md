@@ -105,6 +105,14 @@ python manage.py align_koln_official_blocks
 python manage.py align_koln_official_blocks --apply
 ```
 
+Der Post-Merge-Ablauf startet diesen Topologiewechsel standardmäßig **nicht**:
+Eine individuell ausgebaute Köln-Geometrie darf einen fachfremden Merge nicht
+blockieren. Der einmalige Aufruf bleibt eine bewusste Übernahme; alternativ kann
+der Setup-Aufruf ausdrücklich mit `ALIGN_KOLN_OFFICIAL_BLOCKS=1` aktiviert werden.
+Dann gelten weiterhin alle Ablehnungen und Backups des expliziten `--apply`.
+`--if-present` überspringt ausschließlich fehlende Geometrien und ist keine
+Erlaubnis, individuell ausgebaute Blöcke zu überschreiben.
+
 Vor dem ersten Schreiben entsteht eine exklusiv neu angelegte JSON-Sicherung
 unter `generated-artifacts/koln-blocks/backups/`, mit vollständigen
 Geometrie-, Stadion- und Entwurfsdatensätzen einschließlich Metadaten.

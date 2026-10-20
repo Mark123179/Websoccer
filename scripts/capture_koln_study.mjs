@@ -2,6 +2,7 @@
 import {createServer} from 'node:http';
 import {readFile, writeFile, mkdir} from 'node:fs/promises';
 import path from 'node:path';
+import {createHash} from 'node:crypto';
 import {chromium} from 'playwright-core';
 
 const study = path.resolve('generated-artifacts/koln-study');
@@ -13,6 +14,7 @@ const base = `/models/916/${manifest.assetVersion}/`;
 const installed = process.argv.includes('--installed');
 const presentationFile = installed ? path.join(review,'installed-presentation.json') :
   path.join(review,'presentation.json');
+const presentationSha256=createHash('sha256').update(await readFile(presentationFile)).digest('hex');
 const html = `<!doctype html><meta charset="utf-8"><style>
 html,body{margin:0;background:#060b10;color:white}
 #stage{width:1200px;height:675px;position:relative}
@@ -70,6 +72,7 @@ try {
     ['editor-dach-an',''],['editor-dach-aus','roof=0'],['draufsicht','az=0&el=80'],
     ['ticker-tag','ticker=1'],['ticker-ohne-dach','ticker=1&roof=0'],
     ['ticker-nacht-flutlicht','ticker=1&night=1&flood=1'],['sitzkamera','seat=1'],
+    ['editor-nacht-flutlicht','night=1&flood=1'],
   ]){
     if(selected.size&&!selected.has(name))continue;
     const page=await browser.newPage({viewport:{width:1200,height:675}});
@@ -89,7 +92,8 @@ try {
       window.stage.stage.render();return window.stage.stage.renderer.domElement.toDataURL('image/png');
     });
     await writeFile(path.join(output,name+'.png'),Buffer.from(image.split(',')[1],'base64'));
-    captures.push({name,query,evidence,errors,assetVersion:manifest.assetVersion,installed});
+    captures.push({name,query,evidence,errors,assetVersion:manifest.assetVersion,installed,
+      presentationSha256});
     await writeFile(path.join(output,'render-evidence.json'),JSON.stringify(captures,null,2));
     console.log('Captured',name,JSON.stringify(evidence));
     await page.close();

@@ -25,8 +25,12 @@ def project_surroundings(geometry, *, validate_ground=True):
     data["buildingHeights"] = [None if isinstance(b, list) else b.get("h") for b in buildings]
     data["buildingIds"] = [None if isinstance(b, list) else b.get("id") for b in buildings]
     data["buildings"] = [b if isinstance(b, list) else b["poly"] for b in buildings]
+    for key in ("heightQuality", "heightEvidence"):
+        if key in live:
+            data[key] = deepcopy(live[key])
     if validate_ground:
         data.update(validated_ground_fields(live))
     else:
-        data.update({k: deepcopy(live[k]) for k in ("groundLevel", "groundCutout") if k in live})
+        data.update({k: deepcopy(live[k]) for k in
+                     ("groundLevel", "groundCutout", "groundElevation") if k in live})
     return data, paths

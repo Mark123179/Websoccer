@@ -1,4 +1,5 @@
 // Optional, source-declared terrain only. Coordinates of the cutout are model x,z.
+import {validateElevationGrid} from './measured_ground.js?v=1';
 const EPS = 1e-8;
 const cross = (a, b, c) =>
   (b[0] - a[0]) * (c[1] - a[1]) - (b[1] - a[1]) * (c[0] - a[0]);
@@ -26,8 +27,12 @@ export function pointInGroundCutout(p, polygon) {
 }
 
 export function validateSurroundingsGround(data = {}) {
+  const elevation = Object.hasOwn(data, 'groundElevation') ?
+    validateElevationGrid(data.groundElevation) : null;
   const hasLevel = Object.hasOwn(data, 'groundLevel');
   const hasCutout = Object.hasOwn(data, 'groundCutout');
+  if (elevation && (!hasLevel || !hasCutout))
+    throw new Error('groundElevation benötigt groundLevel und groundCutout.');
   if (!hasLevel && !hasCutout) return {level: 0, cutout: null};
   if (!hasLevel || typeof data.groundLevel !== 'number' ||
       !Number.isFinite(data.groundLevel) || Math.abs(data.groundLevel) > 30)
@@ -62,7 +67,7 @@ export function validateSurroundingsGround(data = {}) {
   }
   if (Math.abs(lines.reduce((sum, [a, b]) => sum + a[0] * b[1] - b[0] * a[1], 0)) <= EPS)
     throw new Error('groundCutout besitzt keine Fläche.');
-  return {level: data.groundLevel, cutout};
+  return {level: data.groundLevel, cutout, ...(elevation ? {elevation} : {})};
 }
 
 // Fail closed for crossings, including edges crossing with every vertex outside,

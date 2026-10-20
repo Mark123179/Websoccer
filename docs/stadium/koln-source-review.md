@@ -67,8 +67,13 @@ Abrufmetadaten und objektbezogene Herkunft bleiben im Studienverzeichnis.
   Gemeinsame Vorprüfung verlangt `terrainDeclared=true`, `ok=true`
   und keine Befunde.
 
-Grenzen: flaches Gelände, kein vermessenes DEM; Gebäudehöhen und
-Baumkronen teilweise schematisch. Drei im API-Ausschnitt unvollständige
+Grenzen des **ursprünglichen Einbaus**: flaches Gelände, kein vermessenes DEM;
+Gebäudehöhen und Baumkronen teilweise schematisch. Das Gelände und 966
+eindeutig zugeordnete Gebäudehöhen wurden anschließend mit amtlichen
+NRW-Quellen verfeinert; siehe [Höhenprüfung](koln-height-review.md) und
+[objektbezogene Belege](koln-height-evidence.json).
+Unvermessene Gebäude und Modellübergänge bleiben ausdrücklich gekennzeichnet.
+Drei im API-Ausschnitt unvollständige
 Multipolygon-Relationen bleiben ausdrücklich dokumentierte Datenlücken.
 Render-Polygone und Straßenabschnitte sind nicht gleich der Anzahl
 unterschiedlicher OSM-Objekte.
@@ -121,3 +126,8 @@ Nachweise liegen unter `generated-artifacts/koln-study/osm-fresh/`:
 Vorprüfung, Objektprovenienz, sieben Quellrenderings, Installationsbackup,
 Einbaubeleg und anschließend echte Renderings über die registrierten
 Anwendungs-Asset-Endpunkte.
+
+Die obige Reihenfolge reproduziert den ursprünglichen, ebenen Erstaufbau.
+Für den aktuellen Höhenstand anschließend die gesonderte Reihenfolge in
+`koln-height-review.md` verwenden. Die Höhenverfeinerung registriert keine
+neuen Modellassets und ersetzt weder Editor-Blöcke noch Entwürfe.
