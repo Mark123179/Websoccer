@@ -1,7 +1,23 @@
 # Mainz: erste Quellmodell-Prüfung
 
-Dieser Stand ist eine **isolierte Prüfung**, keine Modellregistrierung und
-keine fertige Integration in die aktuellen Editoren.
+Diese Dokumentation hält die ursprüngliche isolierte Prüfung fest.
+Der geprüfte Folge-Stand wird über `python -m scripts.install_mainz_review`
+registriert und mit dem vorhandenen Editor-/Spielansichtsvertrag verbunden.
+Der Installationsbeleg liegt unter
+`generated-artifacts/mainz-study/osm-fresh/integration-check.json`.
+
+## Einbau des geprüften Folge-Stands
+
+Die Registrierung lädt Geometrie und Texturen mit SHA-256-Rückprüfung in
+den dauerhaften Assetspeicher. Das Manifest aktiviert den bestehenden
+gemeinsamen Unity-Renderer; vereinsbezogener Renderer-Code ist nicht nötig.
+Der neue OSM-Auszug ersetzt ausschließlich die Umfeldschichten der
+Editor-Geometrie. Fehlt diese wie beim ersten Mainzer Einbau, liefert die
+vorhandene Mainz-Blaupause die Editor-Blöcke.
+Wirtschaftliche Stadiondaten, Manager-Ausbau und gespeicherte Entwürfe
+werden nicht verändert und beim Einbau auf Gleichheit geprüft.
+Vorherzustand und Einbaubeleg bleiben im ignorierten Studienverzeichnis.
+Dies ist ein Workspace-Einbau, kein Produktions-Deployment.
 
 ## Aktueller Folge-Stand: neues OSM-Umfeld
 
@@ -52,8 +68,10 @@ Reproduktion des Folge-Stands:
 3. `node scripts/capture_mainz_study.mjs --fresh 3d-editor-dach-an draufsicht ticker-tag-dach-an ticker-nacht-flutlicht`.
 4. `python -m scripts.package_mainz_osm_review`.
 
-Auch dieser Folge-Stand ist nur eine Vorschau. Kein Upload, keine
-Registrierung, keine Änderung an Kapazität oder Manager-Ausbaustand.
+Der eigenständige HTML-Prüfbericht dokumentiert den Zustand vor dem Einbau.
+Seine Vorschaukennzeichnung ist historisch; der separate Einbaubeleg
+dokumentiert die anschließende Registrierung. Kapazität und
+Manager-Ausbaustand bleiben unverändert.
 OSM-Attribution und Grenzen stehen im eigenständigen HTML-Prüfbericht.
 
 ## Quellen und unveränderte Grenzen

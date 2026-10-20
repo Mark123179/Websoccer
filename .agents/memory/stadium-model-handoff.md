@@ -5,6 +5,17 @@ description: Produktzweck der Registry als Übergabestelle für extern vorbereit
 
 ## Künftige gemeinsame Stadionarbeit
 
+Die hier aufbereiteten Stadien direkt registrieren und einbauen.
+
+**Why:** Der Nutzer hat ausdrücklich erlaubt: „kannst auch direkt immer
+reigistieren und einbauen.“
+
+**How to apply:** Nach erfolgreicher Quellen- und Darstellungsprüfung auch
+die Registrierung und Integration erledigen, nicht bei einer isolierten
+Vorschau auf eine weitere Einbaufreigabe warten. Diese Erlaubnis betrifft
+Stadionassets und deren Einbindung, nicht Änderungen an wirtschaftlichen
+Kapazitäten, Manager-Ausbauten oder gespeicherten Entwürfen.
+
 Der Nutzer möchte die nächsten Stadien gemeinsam mit Replit Agent statt
 mit Claude erstellen: „erstelle mit dir die nächsten statt mit Claude“.
 
