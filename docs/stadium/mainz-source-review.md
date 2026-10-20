@@ -3,6 +3,59 @@
 Dieser Stand ist eine **isolierte Prüfung**, keine Modellregistrierung und
 keine fertige Integration in die aktuellen Editoren.
 
+## Aktueller Folge-Stand: neues OSM-Umfeld
+
+Der Nutzer hat den Neuaufbau mit frischen OSM-Daten gewählt. Die frühere
+isolierte Modellprüfung unten bleibt als Herkunft des ersten Stands erhalten;
+die aktuelle Umfeldvorschau liegt unter
+`generated-artifacts/mainz-study/osm-fresh/`.
+
+- OSM-API: `https://api.openstreetmap.org/api/0.6/map`,
+  Bounding Box `8.210,49.9755,8.239,49.993`.
+- Spielfeld: Way 91231799. Stadionumriss: Way 91231800.
+  Originalstadion-Building: Relation 1338495 / Wikidata Q392494;
+  wird nicht noch einmal als generischer Baukörper dargestellt.
+- Ortsbezug: Spielfeldpolygon-Mitte, Länge zum Nordosten, Breite zum
+  Nordwesten. Keine Skalierung der Originalgeometrie.
+- OSM-Pitch enthält Auslauf und misst etwa 118 × 77 m, nicht die
+  105 × 68 m der tatsächlich geprüften Originalmarkierungen.
+- Die Aussparung schützt jetzt den unter Geländeniveau liegenden
+  Sitz-/Spielfeldbereich. Ihre konservative Kontur wird aus den echten
+  Crowd-/Pitch-/Field-Dreiecken am Quell-Umlaufniveau geschnitten.
+  Die frühere Umlaufplatten-Grenze schloss auch unterirdische Fundamente
+  und einen äußeren Rampenbereich ein; sie war keine geeignete
+  Bodenaussparung für das gesamte Stadionumfeld.
+- Keine OSM-Flächen am Stadion zugeschnitten, keine Straßen verschoben
+  oder entfernt und keine Grün-/Wasserflächen durch den Renderer ausgelassen.
+  Beschneidung nur an der ausdrücklich dokumentierten Auswahlgrenze
+  von ±800 m in Ost-/Nordrichtung.
+- 376 verschiedene Gebäudeobjekte, 787 Straßen-/Wegeobjekte,
+  728 kartierte Einzelbäume, 267 Grünflächenobjekte und zwei Wasserobjekte.
+  Multipart-Geometrien/Höhlen erzeugen mehr Renderer-Polygone als Objekte.
+- OSM-Innenringe bleiben erhalten; die Aufteilung in einfache Polygone
+  erfolgt durch beschränkte Triangulation mit Flächenerhaltungsprüfung.
+- Gebäudehöhen aus vorhandenen OSM-Höhen oder Geschosszahlen, sonst
+  schematisch; keine amtliche Vermessung, ebenes Gelände.
+- Vier als unterirdisch/innenliegend kartierte Wege werden nicht als
+  oberirdische Wege gezeichnet. Drei im API-Kartenausschnitt
+  unvollständige Multipolygon-Grenzen bleiben dokumentierte Datenlücken.
+- Die gemeinsame Geländeprüfung erkennt die Deklaration ausdrücklich und
+  ist fehlerfrei; vier echte Browserrenderings prüfen zusätzlich
+  Modell-, Umfeld- und Fehlerzustand.
+
+Reproduktion des Folge-Stands:
+
+1. Erst die Modellprüfung unten reproduzieren, falls ihre ignorierten
+   Quellexporte nicht mehr verfügbar sind.
+2. `python -m scripts.build_mainz_osm_review --fetch`.
+   Ohne `--fetch` wird der schon gespeicherte OSM-Snapshot erneut verwendet.
+3. `node scripts/capture_mainz_study.mjs --fresh 3d-editor-dach-an draufsicht ticker-tag-dach-an ticker-nacht-flutlicht`.
+4. `python -m scripts.package_mainz_osm_review`.
+
+Auch dieser Folge-Stand ist nur eine Vorschau. Kein Upload, keine
+Registrierung, keine Änderung an Kapazität oder Manager-Ausbaustand.
+OSM-Attribution und Grenzen stehen im eigenständigen HTML-Prüfbericht.
+
 ## Quellen und unveränderte Grenzen
 
 - Nutzerquellen: `attached_assets/mainz_1792480841090.bundle`,

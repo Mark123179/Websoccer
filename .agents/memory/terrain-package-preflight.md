@@ -36,3 +36,20 @@ Prüfung des eigentlichen Presentation-Objekts erfasste diese Konflikte.
 `terrainDeclared` gegen die Eingabe kontrollieren. Bei einem Konflikt
 Modellisolierung klar als solche kennzeichnen, statt mit ausgeblendeten
 Einzelflächen ein scheinbar bereinigtes geografisches Umfeld zu liefern.
+
+## Bodenöffnung und unterirdische Modellteile
+
+Die Geländeöffnung muss den sichtbar unter Geländeniveau liegenden
+Innenraum schützen; die größte Bodenplatten-/Fundamentkontur ist nicht
+automatisch diese Öffnung.
+
+**Why:** Beim Mainz-Abgleich schnitt eine aus der Umlaufplatte abgeleitete
+Öffnung auch mit frischen, richtig ausgerichteten OSM-Daten Straßen,
+eine Ackerfläche und ein äußeres Gebäude. Sie umfasste unterirdische
+Fundamentteile. Eine aus dem Sitz-/Spielfeldquerschnitt am Umlaufniveau
+abgeleitete Schutzkontur löste die Konflikte ohne OSM-Bereinigung.
+
+**How to apply:** Bei Kollisionen zuerst Bedeutung und Höhenlage der
+Öffnung prüfen, nicht kartierte Nachbarobjekte löschen. Unterirdische
+Tragteile dürfen von Gelände überdeckt sein. Die sichtbaren tieferen
+Sitze und das Feld müssen vollständig frei bleiben; im Renderer prüfen.

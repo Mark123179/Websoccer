@@ -5,9 +5,11 @@ import path from 'node:path';
 import {chromium} from 'playwright-core';
 
 const out = path.resolve('generated-artifacts/mainz-study');
+const fresh = process.argv.includes('--fresh');
+const reviewDir = fresh ? path.join(out,'osm-fresh') : out;
 const staticDir = path.resolve('stadium_editor/static/stadium_editor');
 const assets = path.join(out,'source-export');
-const manifest = JSON.parse(await readFile(path.join(out,'manifest.json'),'utf8'));
+const manifest = JSON.parse(await readFile(path.join(reviewDir,'manifest.json'),'utf8'));
 const base = `/models/918/${manifest.assetVersion}/`;
 const contentType = file => file.endsWith('.js')?'text/javascript':
   file.endsWith('.json')?'application/json':file.endsWith('.webp')?'image/webp':
@@ -31,9 +33,11 @@ const html = `<!doctype html><meta charset="utf-8"><style>
       orbit:{azimuth:Number(q.get('az')||55),elevation:Number(q.get('el')||37)}
     });
     const roof=window.stage.stage.model.children.filter(x=>x.name?.startsWith('SOURCE_DACH_'));
+    const env=window.stage.stage.scene.getObjectByName('EDITOR_SURROUNDINGS_3D');
     window.evidence={roofMeshes:roof.length,visibleRoof:roof.filter(x=>x.visible).length,
       fixtures:window.stage.lightingEvidence().length,
-      modelMeshes:window.stage.stage.model.children.length};
+      modelMeshes:window.stage.stage.model.children.length,
+      terrain:env.userData.terrain,counts:env.userData.counts,environmentY:env.position.y};
     window.ready=true;
   } catch(e){window.failure=e.message;console.error(e)}
   </script>`;
@@ -42,29 +46,29 @@ const server=createServer(async(req,res)=>{
     const name=decodeURIComponent(new URL(req.url,'http://127.0.0.1').pathname);
     if (name==='/') {res.writeHead(200,{'Content-Type':'text/html'});res.end(html);return}
     let file;
-    if(name==='/presentation.json')file=path.join(out,'presentation.json');
+    if(name==='/presentation.json')file=path.join(reviewDir,'presentation.json');
     else if(name.startsWith('/static/'))file=path.join(staticDir,name.slice(8));
     else if(name.startsWith(base))
       file=path.join(assets,name.slice(base.length));
     else throw new Error('unknown path');
     const root=name.startsWith('/static/')?staticDir:
-      name==='/presentation.json'?out:assets;
+      name==='/presentation.json'?reviewDir:assets;
     const resolved=path.resolve(file);
     if(!resolved.startsWith(root+path.sep))throw new Error('invalid path');
     const data=name===base+'manifest.json'?
-      await readFile(path.join(out,'manifest.json')):await readFile(file);
+      await readFile(path.join(reviewDir,'manifest.json')):await readFile(file);
     res.writeHead(200,{'Content-Type':contentType(resolved),'Cache-Control':'no-store'});
     res.end(data);
   } catch(e){res.writeHead(404);res.end('Not found')}
 });
 await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
-await mkdir(path.join(out,'ansichten'),{recursive:true});
+await mkdir(path.join(reviewDir,'ansichten'),{recursive:true});
 const browser=await chromium.launch({executablePath:'/repl/tools/bin/chromium',args:[
   '--no-sandbox','--use-gl=angle','--use-angle=swiftshader',
   '--enable-unsafe-swiftshader','--disable-gpu-sandbox','--disable-accelerated-2d-canvas'
 ]});
 const captures=[];
-const selected = new Set(process.argv.slice(2));
+const selected = new Set(process.argv.slice(2).filter(x=>x!=='--fresh'));
 try {
   for(const [name,query] of [
     ['3d-editor-dach-an',''],['3d-editor-dach-aus','roof=0'],
@@ -86,19 +90,22 @@ try {
     if(evidence.roofMeshes!==34||evidence.fixtures!==12 ||
        evidence.visibleRoof!==(query.includes('roof=0')?0:34))
       throw new Error(JSON.stringify({name,evidence}));
+    if(fresh && (!evidence.terrain?.groundCutout ||
+       evidence.counts.trees!==728 || evidence.counts.roads!==796))
+      throw new Error(JSON.stringify({name,message:'fresh surroundings not rendered',evidence}));
     await page.waitForTimeout(300);
     const image=await page.evaluate(()=>{
       window.stage.stage.render();
       return window.stage.stage.renderer.domElement.toDataURL('image/png');
     });
-    await writeFile(path.join(out,'ansichten',`${name}.png`),
+    await writeFile(path.join(reviewDir,'ansichten',`${name}.png`),
       Buffer.from(image.split(',')[1],'base64'));
     captures.push({name,query,evidence,errors,assetVersion:manifest.assetVersion});
-    await writeFile(path.join(out,'render-evidence.json'),JSON.stringify(captures,null,2));
+    await writeFile(path.join(reviewDir,'render-evidence.json'),JSON.stringify(captures,null,2));
     console.log('Captured',name,JSON.stringify(evidence));
     await page.close();
   }
-  await writeFile(path.join(out,'render-evidence.json'),JSON.stringify(captures,null,2));
+  await writeFile(path.join(reviewDir,'render-evidence.json'),JSON.stringify(captures,null,2));
 } finally {
   await browser.close();
   await new Promise(resolve=>server.close(resolve));
