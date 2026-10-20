@@ -120,6 +120,7 @@
 - [Stadionsitz-Basis](stadium-seat-basis.md) — Sitzachsen für Quaternionen müssen rechtshändig bleiben; Hochachse nie allein spiegeln, Lehnenrichtung geometrisch ableiten.
 - [Sitzansicht-Himmel für 16:9-Fotos](stadium-seat-sky.md) — normale Himmelsfotos als überdeckende kamerafeste Fernfläche zeigen, nicht als 360°-Panorama.
 - [Stadion-Flutlicht-Laufzeitvertrag](stadium-floodlight-runtime.md) — Leuchten aus Modellen prüfen und deklarieren, keine erfundenen Lichtorte; Zustand unabhängig von Tag/Nacht, höchstens 12 Quellen.
+- [HSV-Leuchtenbeleg](hsv-light-source-mismatch.md) — Einseitige Quellübereinstimmung nicht durch größere Montageabstände oder verschobene Lichtquellen kaschieren.
 - [Stadion-Umgebungslichtvertrag](stadium-ambient-lighting.md) — Tag/Nacht wechselt Lichtsets in-place; Exposure bleibt Multiplikator, ACES-Schatten brauchen mehrere Lichtlagen.
 - [Stadion-Quellrahmen](stadium-source-frames.md) — Dortmund/Borussia-Park: Sitzachsen, Dachlagen, OSM-Ausrichtung, Ausbaukanten und Kennzeichnung von Rekonstruktionen.
 - [WebGL-Screenshot-Falle](software-webgl-screenshots.md) — Leere Preview-Aufnahme ist kein Beweis für defekte Three.js-Szene; Software-WebGL kann separat geprüft werden.

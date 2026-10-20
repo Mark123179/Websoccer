@@ -2734,3 +2734,45 @@ mtime_ms = 1792497755695
 storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:6e4eaecc-e6c5-4f64-8de5-e8845034f33b/e10c4e65-aebb-4ee4-8282-98644453ca61/34fda82b-0470-47df-9773-64b79fdd87c2"
 storage_version_token = "1792497851124560"
 content_type = "image/png"
+
+[[outputs]]
+id = "qlbiP3jE1HMVXUJ4zn07t"
+uri = "file://generated-artifacts/hsv-night-reviewed/preview-check.jpg"
+type = "image"
+title = "HSV-Nachtansicht: vorher und nachher"
+description = "Identische Kamera, Nacht mit Flutlicht. Links registrierter Stand, rechts der separate HSV-Kandidat mit drei belegten Originalquellen."
+logical_id = "27a04f65-d512-4f2a-b6d2-7766078ab060"
+content_hash = "sha256:f68689c19b4872229c7d843bcb9ee6b4c7c31dd077eef6d954f428b476bf3568"
+size = 89434
+mtime_ms = 1792500347663
+storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:6e4eaecc-e6c5-4f64-8de5-e8845034f33b/27a04f65-d512-4f2a-b6d2-7766078ab060/72832739-d8e1-4837-bd47-044f25076045"
+storage_version_token = "1792500429650748"
+content_type = "image/jpeg"
+
+[[outputs]]
+id = "yC8BsNk1_EUmJbgM7EF_J"
+uri = "file://generated-artifacts/hsv-night-reviewed/pruefbericht.html"
+type = "html"
+title = "HSV-Prüfbericht mit allen acht Lichtzuständen"
+description = "Eigenständiger Bildbericht mit Quellenprüfung, Kalibrierung, Grenzen und getrennten Tag-/Nacht-/Flutlichtvergleichen."
+logical_id = "28460df7-afc8-4a08-8594-93afa892cd33"
+content_hash = "sha256:34c7098506ab45b0f2b5b1082d03143ca3c505b35dce2d093a0ef4200b0298ce"
+size = 10281872
+mtime_ms = 1792500290143
+storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:6e4eaecc-e6c5-4f64-8de5-e8845034f33b/28460df7-afc8-4a08-8594-93afa892cd33/65c4a8b3-4cb0-4925-a094-f5eea0e938a2"
+storage_version_token = "1792500430666292"
+content_type = "text/html"
+
+[[outputs]]
+id = "mN-KzGgI1S5Hu-eH3qwd8"
+uri = "file://generated-artifacts/hsv-night-reviewed/hsv-nacht-pruefpaket.zip"
+type = "unspecified"
+title = "HSV-Nachtkalibrierung – vollständiges Prüfpaket"
+description = "Neue Asset-Version 1b96815599cec644 mit unveränderter Geometrie, Texturen, allen 416 Einzelentscheidungen und gehashten Renderbelegen. Nicht aktiviert; bestehendes Paket unverändert."
+logical_id = "2bfbacda-e324-4194-aef7-05788b8a33b2"
+content_hash = "sha256:b5ce93633a2e58c0011a2c34ed88cc9f7dbd9bf0817c70d8f4c9723ff4d493be"
+size = 20128269
+mtime_ms = 1792500291155
+storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:6e4eaecc-e6c5-4f64-8de5-e8845034f33b/2bfbacda-e324-4194-aef7-05788b8a33b2/1eed8b89-5b6f-4cd8-b693-337af3ece403"
+storage_version_token = "1792500431758496"
+content_type = "application/octet-stream"
