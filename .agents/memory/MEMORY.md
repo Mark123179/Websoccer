@@ -122,7 +122,7 @@
 - [Stadion-Flutlicht-Laufzeitvertrag](stadium-floodlight-runtime.md) — Leuchten aus Modellen prüfen und deklarieren, keine erfundenen Lichtorte; Zustand unabhängig von Tag/Nacht, höchstens 12 Quellen.
 - [HSV-Leuchtenbeleg](hsv-light-source-mismatch.md) — Einseitige Quellübereinstimmung nicht durch größere Montageabstände oder verschobene Lichtquellen kaschieren.
 - [Stadion-Umgebungslichtvertrag](stadium-ambient-lighting.md) — Tag/Nacht wechselt Lichtsets in-place; Exposure bleibt Multiplikator, ACES-Schatten brauchen mehrere Lichtlagen.
-- [Stadion-Quellrahmen](stadium-source-frames.md) — Dortmund/Borussia-Park: Sitzachsen, Dachlagen, OSM-Ausrichtung, Ausbaukanten und Kennzeichnung von Rekonstruktionen.
+- [Stadion-Quellrahmen](stadium-source-frames.md) — Sitzachsen, Dachlagen/-deckung, OSM-Ausrichtung, ausfahrbare Spielfelder und Kennzeichnung von Rekonstruktionen.
 - [WebGL-Screenshot-Falle](software-webgl-screenshots.md) — Leere Preview-Aufnahme ist kein Beweis für defekte Three.js-Szene; Software-WebGL kann separat geprüft werden.
 - [Stadion-Kachel](club-stadium-presentation.md) — Automatische statt manueller Drehung; transparentes Modell über dem ursprünglichen Kachelhintergrund.
 - [Kleiderstangen-Vorlage](manager-kit-rack-handoff.md) — Managerprofil-Trikots strikt 1:1 übernehmen; Unklarheiten direkt melden, übriges Profil nicht ändern.
@@ -145,7 +145,6 @@
 - [Stadionmodell-Übergabe](stadium-model-handoff.md) — Registry als Übergabestelle für Claude; weitere Stadien ohne erneute vereinsbezogene Codearbeit.
 - [Allianz-Arena Darstellung](allianz-arena-presentation.md) — Korrigierte Arena für Bayern abgenommen; Choreo/Fangnetze ausblenden, Tore/Tornetze erhalten.
 - [Stadion-Texturmasken](stadium-texture-alpha.md) — Bodenartefakte sichtbar isolieren; Meshnamen und Raycasts beweisen die Ursache nicht. Markierungen erhalten und Rasenangleichung bewahren.
-- [Überlappende Dach- und Ranghöhen](stadium-roof-height-overlap.md) — Höhenbasierte Dachschalter können Oberrang-Stufen ausblenden; Schema- und Hashprüfung reichen nicht.
 - [Red Bull Arena Abnahme](leipzig-stadium-presentation.md) — Gästeblock-Netz bleibt erhalten; Zentralstadion-Wall und Brücken bleiben ausgeschlossen.
 - [Gelände-Paketvorprüfung](terrain-package-preflight.md) — Renderer als CPU-Prüforakel verwenden; innenliegende Flächen sind Hinweise, keine Quellbereinigung.
 - [Creator-Importstand](creator-importstand-visibility.md) — Importierter Vereinsstand ausschließlich im eigenen Creator-Tab des Vereins, niemals im öffentlichen Profil.
@@ -154,6 +153,5 @@
 - [Stammvereins-Quellenkonflikte](import-owner-source-conflicts.md) — Freigegebene Einzelfälle: Ofli bei Bayern, Benkara bei Dortmund; Zweitmannschaftsabweichungen markieren.
 - [Kölner Planregistrierung](koln-plan-registration.md) — Offizielle Namen und Fanbereiche belegen; schematische Innenaufteilung niemals als vermessene Unity-Gänge ausgeben.
 - [Native Geodaten-Importe](native-geodata-imports.md) — Größere Aufbereitungsläufe können fehlende native Bibliotheken durch Importreihenfolge verdecken; Offline-Prüfer eigenständig starten.
-- [Amtliche Dachdeckung](official-roof-coverage.md) — Kleine echte Quelllücken nicht als Rundung verstecken; unvollständige Dächer behalten ihre ausdrücklich schematische Hülle.
 - [Sitzquellen und Fangruppen](stadium-seat-source-semantics.md) — Sitz-JSON und Unity können Fangruppen unterschiedlich aufteilen; Editor-Hüllen bei Widersprüchen aus dem Originalmodell ableiten.
 - [Django Static-Finder-Misses](django-static-finder-misses.md) — Django 6.1 sammelt None als Treffer; Signatur-Kompatibilität allein verhindert keine Static-500er.

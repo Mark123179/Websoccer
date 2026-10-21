@@ -78,7 +78,8 @@ def fetch_source():
 
 def build(*, study=STUDY, out=OUT, pitch_id=PITCH_ID, stadium_id=STADIUM_ID,
           stadium_building_id=STADIUM_BUILDING_ID, stadium_wikidata="Q392494",
-          fmi=918, opening=None, north_axis=False):
+          fmi=918, opening=None, north_axis=False, frame_reference=None,
+          represented_stadium_roofs=()):
     # Explicit configuration lets another reviewed source package reuse the
     # identical projection/selection rules without copying or editing raw OSM.
     def write(name, data):
@@ -90,7 +91,8 @@ def build(*, study=STUDY, out=OUT, pitch_id=PITCH_ID, stadium_id=STADIUM_ID,
     ways = {e["id"]: e for e in raw["elements"] if e["type"] == "way"}
     pitch = ways[pitch_id]
     ll = np.array([[nodes[n]["lon"], nodes[n]["lat"]] for n in pitch["nodes"][:-1]])
-    center = ll.mean(axis=0)
+    center = (ll.mean(axis=0) if frame_reference is None else
+              np.asarray(frame_reference["centerLonLat"], dtype=float))
     meters = np.array([math.cos(math.radians(center[1])), 1]) * 6371000 * math.pi / 180
 
     def xy(node):
@@ -101,7 +103,10 @@ def build(*, study=STUDY, out=OUT, pitch_id=PITCH_ID, stadium_id=STADIUM_ID,
 
     points = (ll - center) * meters
     edges = np.roll(points, -1, axis=0) - points
-    axis = max(edges, key=np.linalg.norm).copy()
+    axis = (max(edges, key=np.linalg.norm).copy() if frame_reference is None else
+            np.asarray(frame_reference["axisEastNorth"], dtype=float))
+    if not np.isfinite(center).all() or not np.isfinite(axis).all() or np.linalg.norm(axis) < 1e-6:
+        raise ValueError("Invalid geographic frame reference")
     if axis[1 if north_axis else 0] < 0:
         axis = -axis
     theta = math.atan2(axis[1], axis[0])
@@ -113,6 +118,12 @@ def build(*, study=STUDY, out=OUT, pitch_id=PITCH_ID, stadium_id=STADIUM_ID,
         return [[-float(np.dot(p, short_axis)), float(np.dot(p, axis))] for p in points]
 
     stadium = Polygon(coords(ways[stadium_id]))
+    represented_stadium_roofs = set(represented_stadium_roofs)
+    for identity in represented_stadium_roofs:
+        way = ways[identity]
+        roof = Polygon(coords(way))
+        if way.get("tags", {}).get("building") != "roof" or not stadium.covers(roof):
+            raise ValueError(f"Represented stadium roof is not inside the mapped arena: {identity}")
     extent = box(-800, -800, 800, 800)
     data = {
         "source": "© OpenStreetMap contributors, ODbL; fresh OSM API extract",
@@ -131,6 +142,8 @@ def build(*, study=STUDY, out=OUT, pitch_id=PITCH_ID, stadium_id=STADIUM_ID,
                 "selectionExtentEastNorthMeters": [-800, -800, 800, 800],
                 "selectionNotes": [], "features": {k: [] for k in
                     ("green", "water", "roads", "buildings", "trees")}}
+    if frame_reference is not None:
+        evidence["frameReference"] = deepcopy(frame_reference)
 
     def add_polygon(polygon, kind, source_id, tags, height=None, height_kind=None):
         if not polygon.is_valid:
@@ -230,6 +243,13 @@ def build(*, study=STUDY, out=OUT, pitch_id=PITCH_ID, stadium_id=STADIUM_ID,
         if len(pts) < 2:
             continue
         source_id = f"way/{way['id']}"
+        if way["id"] in represented_stadium_roofs:
+            evidence["selectionNotes"].append({
+                "osm": source_id,
+                "reason": "Explicitly reviewed mapped stadium roof inside the arena footprint; "
+                          "represented by source Unity roof geometry, not a ground-level building.",
+            })
+            continue
         highway = tags.get("highway")
         if highway in widths and tags.get("area") != "yes":
             if tags.get("indoor") == "yes" or tags.get("tunnel") == "yes":
@@ -291,7 +311,10 @@ def build(*, study=STUDY, out=OUT, pitch_id=PITCH_ID, stadium_id=STADIUM_ID,
         "Fresh OSM surroundings; mapped footprints and tree positions, mostly schematic heights.",
         "Terrain is flat at the source apron level, not a measured DEM.",
         "Source bowl opening protects lower seats and pitch; underground foundations remain buried.",
-        "OSM pitch polygon includes runoff; original painted lines remain 105x68m.",
+        ("OSM pitch polygon includes runoff; original painted lines remain 105x68m."
+         if frame_reference is None else
+         "Geographic frame uses the explicitly documented mapped stadium reference, "
+         "not the displaced roll-out pitch; source painted lines remain unchanged."),
     ]
     manifest.pop("assetVersion")
     manifest["assetVersion"] = hashlib.sha256(

@@ -2790,3 +2790,31 @@ mtime_ms = 1792501776671
 storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:6e4eaecc-e6c5-4f64-8de5-e8845034f33b/143ccb37-1084-4181-b96d-1f100307b911/807b8889-4d92-4963-8b5b-7806e782aeec"
 storage_version_token = "1792501791896259"
 content_type = "image/jpeg"
+
+[[outputs]]
+id = "4bGhtEM5HB4vNV_J9h-0j"
+uri = "file://generated-artifacts/veltins-study/veltins-fuenf-ansichten.jpg"
+type = "image"
+title = "VELTINS-Arena – alle fünf Ansichten"
+description = "2D, 3D-Editor, Liveticker mit Dach, ohne Dach und bei Nacht gemeinsam zur Abnahme."
+logical_id = "97f5d9bb-c3f2-40b7-9b6b-dcfe3e7ce1bf"
+content_hash = "sha256:5f23ad5fa736779afcb87767bb5539445b4f54f5f25475ce926be3a26b28ca7c"
+size = 1235269
+mtime_ms = 1792606545672
+storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:6e4eaecc-e6c5-4f64-8de5-e8845034f33b/97f5d9bb-c3f2-40b7-9b6b-dcfe3e7ce1bf/b87f12ae-f19d-4d66-b3a4-0fad24260f79"
+storage_version_token = "1792606587490399"
+content_type = "image/jpeg"
+
+[[outputs]]
+id = "iVzyjYyzup3-IrRD_JjlM"
+uri = "file://generated-artifacts/veltins-study/veltins-ansichten.html"
+type = "html"
+title = "VELTINS-Arena – Ansichten in voller Auflösung"
+description = "Selbstständige Galerie mit allen fünf Bildern und Angaben zu den Darstellungsgrenzen."
+logical_id = "32bae882-f276-4b81-afc4-ee8713b5b051"
+content_hash = "sha256:94c9a8662692077218e0ecab2ba3357a8a126d96b9f9ec0cd917b51620196e53"
+size = 7084822
+mtime_ms = 1792606545728
+storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:6e4eaecc-e6c5-4f64-8de5-e8845034f33b/32bae882-f276-4b81-afc4-ee8713b5b051/00c8e9ec-983a-45a6-b1e3-1e8e3ffbdcd9"
+storage_version_token = "1792606589711855"
+content_type = "text/html"
