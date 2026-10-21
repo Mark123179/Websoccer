@@ -32,6 +32,14 @@ Stadiongeometrie oder Kapazitäten. Bei vergleichbaren Korrekturen Muster
 über die tatsächlichen UV-Flächen abgleichen und im Stadion ansehen;
 ein sauberes Wappenbild allein beweist keine unverzerrte Projektion.
 
+Der bereinigte Sitzschriftzug „FC SCHALKE 04“ der Veltins-Arena ist nach
+Fotorecherche und Vorher-/Nachher-Vergleich vom Nutzer abgenommen.
+
+**Why:** Der Nutzer bestätigte die Schriftkorrektur ausdrücklich mit „passt“.
+
+**How to apply:** Die saubere Schriftfassung beibehalten; bei erneuten
+Quellimporten nicht ungefragt zur handgezeichneten Originaltextur zurückkehren.
+
 Bei Sitzschriftzügen nicht voraussetzen, dass jeder UV-Punkt genau einer
 Welthöhe entspricht. Crowd-Atlanten können dieselbe Bildstelle für Tritt-
 und Setzflächen wiederverwenden; die Schrift muss trotzdem eine Zeile bleiben.
