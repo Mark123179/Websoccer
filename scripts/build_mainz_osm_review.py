@@ -79,7 +79,7 @@ def fetch_source():
 def build(*, study=STUDY, out=OUT, pitch_id=PITCH_ID, stadium_id=STADIUM_ID,
           stadium_building_id=STADIUM_BUILDING_ID, stadium_wikidata="Q392494",
           fmi=918, opening=None, north_axis=False, frame_reference=None,
-          represented_stadium_roofs=()):
+          represented_stadium_roofs=(), represented_stadium_buildings=()):
     # Explicit configuration lets another reviewed source package reuse the
     # identical projection/selection rules without copying or editing raw OSM.
     def write(name, data):
@@ -119,6 +119,13 @@ def build(*, study=STUDY, out=OUT, pitch_id=PITCH_ID, stadium_id=STADIUM_ID,
 
     stadium = Polygon(coords(ways[stadium_id]))
     represented_stadium_roofs = set(represented_stadium_roofs)
+    represented_stadium_buildings = set(represented_stadium_buildings)
+    for identity in represented_stadium_buildings:
+        way = ways[identity]
+        footprint = Polygon(coords(way))
+        if (way.get("tags", {}).get("building") != "stadium" or
+                not stadium.covers(footprint.centroid)):
+            raise ValueError(f"Represented stand building is not part of the mapped arena: {identity}")
     for identity in represented_stadium_roofs:
         way = ways[identity]
         roof = Polygon(coords(way))
@@ -243,6 +250,12 @@ def build(*, study=STUDY, out=OUT, pitch_id=PITCH_ID, stadium_id=STADIUM_ID,
         if len(pts) < 2:
             continue
         source_id = f"way/{way['id']}"
+        if way["id"] in represented_stadium_buildings:
+            evidence["selectionNotes"].append({
+                "osm": source_id,
+                "reason": "Explicitly reviewed named stadium stand already represented by source Unity stadium geometry.",
+            })
+            continue
         if way["id"] in represented_stadium_roofs:
             evidence["selectionNotes"].append({
                 "osm": source_id,

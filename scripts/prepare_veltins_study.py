@@ -40,7 +40,8 @@ def write(name, document):
     (OUT / name).write_text(json.dumps(document, ensure_ascii=False, indent=2))
 
 
-def editor_geometry(stadium, manifest, binary, presentation):
+def editor_geometry(stadium, manifest, binary, presentation, *,
+                    out=OUT, model_stands=None, home_stand="NORD", main_stand="WEST"):
     """Source crowd hull strips; capacity still comes exclusively from Stadium."""
     crowd = [m for m in manifest["meshes"] if m["name"].startswith("C_")]
     points = np.unique(np.vstack([
@@ -54,10 +55,11 @@ def editor_geometry(stadium, manifest, binary, presentation):
                 z * math.sin(theta) - x * math.cos(theta)]
 
     blocks, evidence = [], []
-    for stand in ("NORD", "SUED", "OST", "WEST"):
-        end = stand in ("NORD", "SUED")
+    for model_stand in ("NORD", "SUED", "OST", "WEST"):
+        stand = (model_stands or {}).get(model_stand, model_stand)
+        end = model_stand in ("NORD", "SUED")
         radial, tangent = (2, 0) if end else (0, 2)
-        sign = 1 if stand in ("NORD", "OST") else -1
+        sign = 1 if model_stand in ("NORD", "OST") else -1
         dominant = (np.abs(points[:, radial]) >= np.abs(points[:, tangent]) if end else
                     np.abs(points[:, radial]) > np.abs(points[:, tangent]))
         mask = (points[:, radial] * sign > 0) & dominant
@@ -88,14 +90,14 @@ def editor_geometry(stadium, manifest, binary, presentation):
                 evidence.append({"blockId": blocks[-1]["id"], "stand": stand,
                                  "tier": tier, "sourceVertices": len(strip)})
     assert sum(row["sourceVertices"] for row in evidence) == len(points)
-    osm = json.loads((OUT / "osm-fresh/evidence.json").read_text())
+    osm = json.loads((out / "osm-fresh/evidence.json").read_text())
     geometry = {
-        "version": 2, "physical_grid": "v2", "homeStand": "NORD", "mainStand": "WEST",
+        "version": 2, "physical_grid": "v2", "homeStand": home_stand, "mainStand": main_stand,
         "meta": {"name": stadium.name, "club": stadium.club.name,
                  **deepcopy(presentation["frame"])},
         "outline": [project(x, z) for x, z in osm["mappedStadiumModelCoordinates"]],
         "blocks": blocks, "roofs": [],
-        "source": "Veltins original crowd mesh envelopes + fresh OpenStreetMap",
+        "source": "Original crowd mesh envelopes + fresh OpenStreetMap",
         "surroundings": deepcopy(presentation["surroundings"]),
         "bg": deepcopy(presentation["surroundings"]),
     }
@@ -110,12 +112,12 @@ def editor_geometry(stadium, manifest, binary, presentation):
         block.update(trusted[block["id"]])
     build_live_scene(stadium, geometry, standard_design_for_geometry(stadium, effective))
     assert sum(b["capacity"] for b in effective["blocks"]) == stadium.capacity_total
-    write("editor-envelope-evidence.json", {
+    (out / "editor-envelope-evidence.json").write_text(json.dumps({
         "method": "Actual source crowd vertices, two height bands, four tangent strips per side.",
         "limits": "Schematic source envelopes, not official numbered block boundaries.",
         "sourceCrowdVertices": len(points), "blocks": evidence,
         "economicCapacityUnchanged": stadium.capacity_total,
-    })
+    }, ensure_ascii=False, indent=2))
     return geometry
 
 

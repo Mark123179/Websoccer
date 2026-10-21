@@ -2860,3 +2860,31 @@ mtime_ms = 1792607475611
 storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:6e4eaecc-e6c5-4f64-8de5-e8845034f33b/971fc235-6143-4e13-9f6b-9a65e1164231/72ae1591-db31-4a98-9372-229950980b74"
 storage_version_token = "1792607490650153"
 content_type = "text/html"
+
+[[outputs]]
+id = "nqbmJX3eII0HResmD5uMS"
+uri = "file://generated-artifacts/heidenheim-study/heidenheim-fuenf-ansichten.jpg"
+type = "image"
+title = "Voith-Arena – alle fünf Ansichten"
+description = "Vollständiges Abnahme-Set: 2D, 3D-Editor, Liveticker mit Dach, ohne Dach und bei Nacht. Tatsächlich eingebaute Darstellung."
+logical_id = "dceb7313-5386-44d9-a787-61128e127f30"
+content_hash = "sha256:ea8557e9f737fba4de8f9665cee4343ac5643d2dac5d5a98024acb0042074e93"
+size = 501987
+mtime_ms = 1792609288127
+storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:6e4eaecc-e6c5-4f64-8de5-e8845034f33b/dceb7313-5386-44d9-a787-61128e127f30/2cb5d507-4df6-4c77-9241-b31273b5bb7d"
+storage_version_token = "1792609313061376"
+content_type = "image/jpeg"
+
+[[outputs]]
+id = "sJubV7A3k064IZu5IkaEJ"
+uri = "file://generated-artifacts/heidenheim-study/heidenheim-ansichten.html"
+type = "html"
+title = "Voith-Arena – Ansichten in voller Auflösung"
+description = "Selbstständige Galerie mit allen fünf Ansichten sowie Quellen und Darstellungsgrenzen."
+logical_id = "6c906d00-14df-4386-a120-05e7a9f0f384"
+content_hash = "sha256:68663d67c8880eae1bba710e74fb04316eb77c507b24f913b346035ba5e284ce"
+size = 4839300
+mtime_ms = 1792609288179
+storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:6e4eaecc-e6c5-4f64-8de5-e8845034f33b/6c906d00-14df-4386-a120-05e7a9f0f384/0170b5b3-e48e-4082-b426-f5a9e11c1201"
+storage_version_token = "1792609313714965"
+content_type = "text/html"

@@ -17,7 +17,7 @@ from stadium_editor.pitch_validation import PitchValidationError, validate_pitch
 
 def export_model(SOURCE, seats_path, fmi, name, DEST, calibration, *,
                  include_roots=(), lamp_materials=(), exclude_mesh_names=(),
-                 evidence_paths=None):
+                 evidence_paths=None, fixture_samples=None):
     env = UnityPy.load(str(SOURCE))
     cache, binary, meshes, tex_refs, lamps = {}, bytearray(), [], {}, []
     for obj in env.objects:
@@ -127,6 +127,9 @@ def export_model(SOURCE, seats_path, fmi, name, DEST, calibration, *,
                        "color": [light.m_Color.r, light.m_Color.g, light.m_Color.b],
                        "range": light.m_Range, "angle": light.m_SpotAngle,
                        "intensity": light.m_Intensity, "meshDistance": distance})
+    if fixture_samples is not None:
+        from stadium_editor.source_fixture_sampling import verified_geometry_fixtures
+        lights = verified_geometry_fixtures(meshes, binary, fixture_samples)
     if not lights:
         raise ValueError("No source-verified pitch-directed roof lights")
     # Spatial coverage selection of actual source lights, not invented points.
@@ -205,6 +208,8 @@ def main():
                         help="Dokumentierter Quellmesh-Ausschluss (exakter Name)")
     parser.add_argument("--evidence", type=Path, action="append",
                         help="Explizite zum Modell gehörende JSON-Quelldatei")
+    parser.add_argument("--fixture-samples", type=Path,
+                        help="Geprüfte UV-Leuchtflächen statt unpassender Unity-Light-Komponenten")
     args = parser.parse_args()
     calibration = json.loads(args.calibration.read_text())
     if args.fmi <= 0 or not args.name.strip():
@@ -216,7 +221,9 @@ def main():
     try:
         export_model(args.bundle, args.seats, args.fmi, args.name, args.out, calibration,
                      include_roots=args.include_root, lamp_materials=args.lamp_material,
-                     exclude_mesh_names=args.exclude_mesh, evidence_paths=args.evidence)
+                     exclude_mesh_names=args.exclude_mesh, evidence_paths=args.evidence,
+                     fixture_samples=(json.loads(args.fixture_samples.read_text())
+                                      if args.fixture_samples else None))
     except PitchValidationError as error:
         print(f"Modell-Export abgebrochen: {error}", file=sys.stderr)
         return 1

@@ -5,6 +5,19 @@ description: Regeln für unabhängigen Flutlichtzustand und begrenzte Three.js-L
 
 Flutlichter müssen aus dem jeweiligen Modell erkannt und ausdrücklich deklariert werden; Nachtlicht darf nicht aus willkürlich verteilten Lichtquellen stammen.
 
+Importierte Unity-Lichtkomponenten sind nicht automatisch der Nachweis für
+die sichtbaren Flutlichtanlagen des neuen Modells.
+
+**Why:** Die Heidenheimer Quelle enthielt Punkt-/Flächenlichter mit unpassender
+Reichweite statt nutzbarer stadiongerichteter Spots, zugleich aber eindeutig
+texturierte und geneigte Lampenflächen an vier Masten.
+
+**How to apply:** Typ, Reichweite und Ausrichtung zuerst mit den tatsächlichen
+Emitterflächen abgleichen. Bei ungeeigneten Komponenten dürfen geprüfte
+UV-Lampenpunkte und Dreiecksnormalen die geometrischen Quellen belegen.
+Die Browser-Helligkeit bleibt ausdrücklich eine Laufzeitkalibrierung, keine
+Behauptung über die ursprüngliche Unity-Photometrie.
+
 **Why:** Der Nutzer verlangte: „wir müssen Flutlichter aus dem Modell irgendwie erkennen und deklariere, sodass bei NAcht nicht willkürliches Licht von überall hinfällt.“
 
 **How to apply:** Kandidaten aus Modellkomponenten und Geometrie prüfen und Montagepunkt, Modellbezug sowie Ausrichtung deklarieren. Generische Dach-/Mastpläne und frei berechnete Leuchtenpositionen nicht als Quellnachweis behandeln. Fehlende Modellleuchten benennen statt Ersatzlicht erfinden; die Zuordnung in einer Kontrollansicht sichtbar prüfen.

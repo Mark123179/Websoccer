@@ -69,6 +69,18 @@ class SourceGeographicFrameTests(TestCase):
         self.assertEqual(evidence["counts"]["buildings"], 0)
         self.assertTrue(any(note["osm"] == "way/11" for note in evidence["selectionNotes"]))
 
+    def test_only_explicitly_reviewed_stand_building_is_not_duplicated(self):
+        for element in self.raw["elements"]:
+            if element["type"] == "way" and element["id"] == 11:
+                element["tags"]["building"] = "stadium"
+        evidence = self.run_build(represented_stadium_buildings=(11,))
+        self.assertEqual(evidence["counts"]["buildings"], 0)
+        self.assertTrue(any(note["osm"] == "way/11" for note in evidence["selectionNotes"]))
+
+    def test_other_buildings_cannot_be_excluded_as_stadium_stands(self):
+        with self.assertRaisesRegex(ValueError, "not part"):
+            self.run_build(represented_stadium_buildings=(11,))
+
     def test_non_roof_and_roof_outside_stadium_are_rejected(self):
         with self.assertRaisesRegex(ValueError, "not inside"):
             self.run_build(represented_stadium_roofs=(10,))

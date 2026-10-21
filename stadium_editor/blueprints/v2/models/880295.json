@@ -1,0 +1,4642 @@
+{
+  "format": "unity-mesh-binary-v1",
+  "clubFmiId": 880295,
+  "stadiumName": "Voith-Arena",
+  "calibration": {
+    "roofMinHeight": -1,
+    "roofMeshPrefixes": [
+      "DACH_"
+    ],
+    "skipMeshPrefixes": [],
+    "crowdPrefix": "C_",
+    "pitchPrefix": "st081_pitch_",
+    "tickerRotationY": 90,
+    "tickerFrontCut": {
+      "normal": [
+        -1,
+        0,
+        0
+      ],
+      "constant": 32
+    },
+    "standAxes": {
+      "+x": "SUED",
+      "-x": "NORD",
+      "+z": "OST",
+      "-z": "WEST"
+    },
+    "surroundingsAxes": {
+      "NORD": "-x",
+      "WEST": "-z"
+    },
+    "orbitDefault": {
+      "azimuth": 0.95,
+      "elevation": 0.65,
+      "distance": 420
+    }
+  },
+  "source": "heidenheim_1792607899715.bundle",
+  "sourceSha256": "faec015a663bed30fb5ce74dbca40aa799796fbdbf54b91beca36edd85d9bf2f",
+  "geometrySha256": "2dbf1b0e74778aee71d3e54be153b33fea1f63fe1b95bdb744301d951f9b998e",
+  "meshes": [
+    {
+      "name": "right1_3",
+      "pathId": "2145461745187018865",
+      "hierarchy": [
+        "right1_3",
+        "MESH_ROOT.006",
+        "right1.001",
+        "MAIN",
+        "heidenheim"
+      ],
+      "positionOffset": 0,
+      "uvOffset": 1824,
+      "vertexCount": 152,
+      "parts": [
+        {
+          "material": "terrain_grass_artificial_02_gray_clean_newyork_color 8.004",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "texture": "texture--3801619612690254329.webp",
+          "indexOffset": 3040,
+          "indexCount": 228,
+          "transparent": true,
+          "alphaTest": 0.02
+        }
+      ],
+      "bounds": [
+        [
+          -41.999924182891846,
+          1.399994920939207,
+          -75.00006556510925
+        ],
+        [
+          42.000094056129456,
+          10.40000319480896,
+          -57.99992084503174
+        ]
+      ]
+    },
+    {
+      "name": "front3_6",
+      "pathId": "-254862472782715311",
+      "hierarchy": [
+        "front3_6",
+        "MESH_ROOT.004",
+        "front3.001",
+        "MAIN",
+        "heidenheim"
+      ],
+      "positionOffset": 3952,
+      "uvOffset": 4312,
+      "vertexCount": 30,
+      "parts": [
+        {
+          "material": "terrain_grass_artificial_02_gray_clean_newyork_color 3.001",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "texture": "texture-7839539149927720678.webp",
+          "indexOffset": 4552,
+          "indexCount": 48,
+          "transparent": true,
+          "alphaTest": 0.02
+        }
+      ],
+      "bounds": [
+        [
+          -55.00008463859558,
+          8.99999663233757,
+          -54.00007367134094
+        ],
+        [
+          -50.79997777938843,
+          11.399997770786285,
+          53.999924659729004
+        ]
+      ]
+    },
+    {
+      "name": "right1_9",
+      "pathId": "2414009568990058335",
+      "hierarchy": [
+        "right1_9",
+        "MESH_ROOT.006",
+        "right1.001",
+        "MAIN",
+        "heidenheim"
+      ],
+      "positionOffset": 4744,
+      "uvOffset": 5224,
+      "vertexCount": 40,
+      "parts": [
+        {
+          "material": "terrain_grass_artificial_02_gray_clean_newyork_color 26.003",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "texture": "texture--176535787237494136.webp",
+          "indexOffset": 5544,
+          "indexCount": 60,
+          "transparent": true,
+          "alphaTest": 0.02
+        }
+      ],
+      "bounds": [
+        [
+          38.00010681152344,
+          8.400001376867294,
+          -76.84769034385681
+        ],
+        [
+          56.847840547561646,
+          11.400001496076584,
+          -57.99992084503174
+        ]
+      ]
+    },
+    {
+      "name": "front3_1",
+      "pathId": "-6746605953290251825",
+      "hierarchy": [
+        "front3_1",
+        "MESH_ROOT.004",
+        "front3.001",
+        "MAIN",
+        "heidenheim"
+      ],
+      "positionOffset": 5784,
+      "uvOffset": 6588,
+      "vertexCount": 67,
+      "parts": [
+        {
+          "material": "terrain_grass_artificial_02_gray_clean_newyork_color 20.001",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "texture": "texture-4321197874579585975.webp",
+          "indexOffset": 7124,
+          "indexCount": 132,
+          "transparent": true,
+          "alphaTest": 0.02
+        }
+      ],
+      "bounds": [
+        [
+          -54.400068521499634,
+          3.199997916817665,
+          -43.600067496299744
+        ],
+        [
+          -45.99991738796234,
+          9.799996763467789,
+          39.59992229938507
+        ]
+      ]
+    },
+    {
+      "name": "back1_7",
+      "pathId": "-282285589460582239",
+      "hierarchy": [
+        "back1_7",
+        "MESH_ROOT",
+        "back1.001",
+        "MAIN",
+        "heidenheim"
+      ],
+      "positionOffset": 7652,
+      "uvOffset": 10436,
+      "vertexCount": 232,
+      "parts": [
+        {
+          "material": "terrain_grass_artificial_02_gray_clean_newyork_color 26",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "texture": "texture--176535787237494136.webp",
+          "indexOffset": 12292,
+          "indexCount": 462,
+          "transparent": true,
+          "alphaTest": 0.02
+        }
+      ],
+      "bounds": [
+        [
+          54.99992370605469,
+          8.400001376867294,
+          -53.999924659729004
+        ],
+        [
+          57.00007677078247,
+          11.400001496076584,
+          54.00007963180542
+        ]
+      ]
+    },
+    {
+      "name": "front1_9",
+      "pathId": "-6785912010627772101",
+      "hierarchy": [
+        "front1_9",
+        "MESH_ROOT.003",
+        "front1.001",
+        "MAIN",
+        "heidenheim"
+      ],
+      "positionOffset": 14140,
+      "uvOffset": 15460,
+      "vertexCount": 110,
+      "parts": [
+        {
+          "material": "terrain_grass_artificial_02_gray_clean_newyork_color 32.001",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "texture": "texture--8014282648861575920.webp",
+          "indexOffset": 16340,
+          "indexCount": 204,
+          "transparent": true,
+          "alphaTest": 0.02
+        }
+      ],
+      "bounds": [
+        [
+          -49.20005798339844,
+          -1.999999987845058e-06,
+          -58.000051975250244
+        ],
+        [
+          -41.799917817115784,
+          6.399998068809509,
+          57.99994468688965
+        ]
+      ]
+    },
+    {
+      "name": "back1_11",
+      "pathId": "1628103107015552476",
+      "hierarchy": [
+        "back1_11",
+        "MESH_ROOT",
+        "back1.001",
+        "MAIN",
+        "heidenheim"
+      ],
+      "positionOffset": 17156,
+      "uvOffset": 17828,
+      "vertexCount": 56,
+      "parts": [
+        {
+          "material": "terrain_grass_artificial_02_gray_clean_newyork_color 37",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "texture": "texture-3293647554866940380.webp",
+          "indexOffset": 18276,
+          "indexCount": 150,
+          "transparent": true,
+          "alphaTest": 0.02
+        }
+      ],
+      "bounds": [
+        [
+          41.999924182891846,
+          12.400001287460327,
+          -53.99993658065796
+        ],
+        [
+          42.00007617473602,
+          13.600002229213715,
+          54.00006175041199
+        ]
+      ]
+    },
+    {
+      "name": "DACH_front3_7",
+      "pathId": "2098487175124187383",
+      "hierarchy": [
+        "front3_7",
+        "MESH_ROOT.004",
+        "front3.001",
+        "MAIN",
+        "heidenheim"
+      ],
+      "positionOffset": 18876,
+      "uvOffset": 22236,
+      "vertexCount": 280,
+      "parts": [
+        {
+          "material": "terrain_grass_artificial_02_gray_clean_newyork_color 23.001",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "texture": "texture-7766939008036917318.webp",
+          "indexOffset": 24476,
+          "indexCount": 420
+        }
+      ],
+      "bounds": [
+        [
+          -55.00009059906006,
+          11.99999675154686,
+          -75.0000536441803
+        ],
+        [
+          -37.999892234802246,
+          13.599997758865356,
+          74.9999463558197
+        ]
+      ],
+      "sourceMeshName": "front3_7"
+    },
+    {
+      "name": "DACH_center2_5",
+      "pathId": "5919086280250819689",
+      "hierarchy": [
+        "center2_5",
+        "MESH_ROOT.002",
+        "center2.001",
+        "MAIN",
+        "heidenheim"
+      ],
+      "positionOffset": 26156,
+      "uvOffset": 65684,
+      "vertexCount": 3294,
+      "parts": [
+        {
+          "material": "terrain_grass_artificial_02_gray_clean_newyork_color 24.001",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "texture": "texture--8418034599560809732.webp",
+          "indexOffset": 92036,
+          "indexCount": 5214
+        }
+      ],
+      "bounds": [
+        [
+          -36.20010018348694,
+          11.399998515844345,
+          -75.0000536441803
+        ],
+        [
+          55.0000786781311,
+          16.00000113248825,
+          75.0000536441803
+        ]
+      ],
+      "sourceMeshName": "center2_5"
+    },
+    {
+      "name": "center2_6",
+      "pathId": "-502901994400219396",
+      "hierarchy": [
+        "center2_6",
+        "MESH_ROOT.002",
+        "center2.001",
+        "MAIN",
+        "heidenheim"
+      ],
+      "positionOffset": 112892,
+      "uvOffset": 116720,
+      "vertexCount": 319,
+      "parts": [
+        {
+          "material": "terrain_grass_artificial_02_gray_clean_newyork_color 15",
+          "color": [
+            0.9063317179679871,
+            0.9063317179679871,
+            0.9063317179679871
+          ],
+          "texture": null,
+          "indexOffset": 119272,
+          "indexCount": 915
+        }
+      ],
+      "bounds": [
+        [
+          4.1901469230651855,
+          12.771259248256683,
+          -75.19998550415039
+        ],
+        [
+          27.81083583831787,
+          15.299996733665466,
+          -75.19994974136353
+        ]
+      ]
+    },
+    {
+      "name": "left1_20",
+      "pathId": "-63944230163292752",
+      "hierarchy": [
+        "left1_20",
+        "MESH_ROOT.005",
+        "left1.001",
+        "MAIN",
+        "heidenheim"
+      ],
+      "positionOffset": 122932,
+      "uvOffset": 123112,
+      "vertexCount": 15,
+      "parts": [
+        {
+          "material": "terrain_grass_artificial_02_gray_clean_newyork_color 8.003",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "texture": "texture--3801619612690254329.webp",
+          "indexOffset": 123232,
+          "indexCount": 21,
+          "transparent": true,
+          "alphaTest": 0.02
+        }
+      ],
+      "bounds": [
+        [
+          39.39399719238281,
+          5.400004610419273,
+          58.00006985664368
+        ],
+        [
+          49.1999089717865,
+          6.400006264448166,
+          70.22259831428528
+        ]
+      ]
+    },
+    {
+      "name": "left1_9",
+      "pathId": "-6994702475630876686",
+      "hierarchy": [
+        "left1_9",
+        "MESH_ROOT.005",
+        "left1.001",
+        "MAIN",
+        "heidenheim"
+      ],
+      "positionOffset": 123316,
+      "uvOffset": 125932,
+      "vertexCount": 218,
+      "parts": [
+        {
+          "material": "terrain_grass_artificial_02_gray_clean_newyork_color 31.003",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "texture": "texture-2255690620462212964.webp",
+          "indexOffset": 127676,
+          "indexCount": 456
+        }
+      ],
+      "bounds": [
+        [
+          -55.00009059906006,
+          1.3999979011714458,
+          57.99990892410278
+        ],
+        [
+          54.99992370605469,
+          8.400001376867294,
+          75.0000536441803
+        ]
+      ]
+    },
+    {
+      "name": "right1_0",
+      "pathId": "-3720011053113300554",
+      "hierarchy": [
+        "right1_0",
+        "MESH_ROOT.006",
+        "right1.001",
+        "MAIN",
+        "heidenheim"
+      ],
+      "positionOffset": 129500,
+      "uvOffset": 129884,
+      "vertexCount": 32,
+      "parts": [
+        {
+          "material": "Glass.003",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "texture": "texture--2275004737771964962.webp",
+          "indexOffset": 130140,
+          "indexCount": 48,
+          "transparent": true,
+          "alphaTest": 0.02
+        }
+      ],
+      "bounds": [
+        [
+          -46.606481075286865,
+          4.399995878338814,
+          -69.20005083084106
+        ],
+        [
+          44.343915581703186,
+          7.000003755092621,
+          -61.79817318916321
+        ]
+      ]
+    },
+    {
+      "name": "front3_2",
+      "pathId": "3766530700295354661",
+      "hierarchy": [
+        "front3_2",
+        "MESH_ROOT.004",
+        "front3.001",
+        "MAIN",
+        "heidenheim"
+      ],
+      "positionOffset": 130332,
+      "uvOffset": 131100,
+      "vertexCount": 64,
+      "parts": [
+        {
+          "material": "terrain_grass_artificial_02_gray_clean_newyork_color 26.001",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "texture": "texture--176535787237494136.webp",
+          "indexOffset": 131612,
+          "indexCount": 132,
+          "transparent": true,
+          "alphaTest": 0.02
+        }
+      ],
+      "bounds": [
+        [
+          -52.00003981590271,
+          6.799996644258499,
+          -4.000069200992584
+        ],
+        [
+          -50.999999046325684,
+          9.799996763467789,
+          19.999930262565613
+        ]
+      ]
+    },
+    {
+      "name": "back1_3",
+      "pathId": "7280742124776449848",
+      "hierarchy": [
+        "back1_3",
+        "MESH_ROOT",
+        "back1.001",
+        "MAIN",
+        "heidenheim"
+      ],
+      "positionOffset": 132140,
+      "uvOffset": 132764,
+      "vertexCount": 52,
+      "parts": [
+        {
+          "material": "terrain_grass_artificial_02_gray_clean_newyork_color 22",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "texture": "texture--7299600711769920717.webp",
+          "indexOffset": 133180,
+          "indexCount": 78
+        }
+      ],
+      "bounds": [
+        [
+          42.79991388320923,
+          1.4000019989907742,
+          -53.99993658065796
+        ],
+        [
+          54.0000855922699,
+          8.400003612041473,
+          54.00007367134094
+        ]
+      ]
+    },
+    {
+      "name": "DACH_center2_8",
+      "pathId": "-3537654183782604339",
+      "hierarchy": [
+        "center2_8",
+        "MESH_ROOT.002",
+        "center2.001",
+        "MAIN",
+        "heidenheim"
+      ],
+      "positionOffset": 133492,
+      "uvOffset": 148372,
+      "vertexCount": 1240,
+      "parts": [
+        {
+          "material": "terrain_grass_artificial_02_gray_clean_newyork_color 8.001",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "texture": "texture--4058065077612911543.webp",
+          "indexOffset": 158292,
+          "indexCount": 1488
+        }
+      ],
+      "bounds": [
+        [
+          -35.333457589149475,
+          12.600001692771912,
+          -75.0000536441803
+        ],
+        [
+          55.000072717666626,
+          14.023078978061676,
+          75.0000536441803
+        ]
+      ],
+      "sourceMeshName": "center2_8"
+    },
+    {
+      "name": "left1_12",
+      "pathId": "1452074253061049594",
+      "hierarchy": [
+        "left1_12",
+        "MESH_ROOT.005",
+        "left1.001",
+        "MAIN",
+        "heidenheim"
+      ],
+      "positionOffset": 164244,
+      "uvOffset": 164724,
+      "vertexCount": 40,
+      "parts": [
+        {
+          "material": "terrain_grass_artificial_02_gray_clean_newyork_color 26.002",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "texture": "texture--176535787237494136.webp",
+          "indexOffset": 165044,
+          "indexCount": 60,
+          "transparent": true,
+          "alphaTest": 0.02
+        }
+      ],
+      "bounds": [
+        [
+          37.99990117549896,
+          8.400001376867294,
+          58.00006985664368
+        ],
+        [
+          56.8476676940918,
+          11.400001496076584,
+          76.84781551361084
+        ]
+      ]
+    },
+    {
+      "name": "right1_6",
+      "pathId": "-2176874401134690280",
+      "hierarchy": [
+        "right1_6",
+        "MESH_ROOT.006",
+        "right1.001",
+        "MAIN",
+        "heidenheim"
+      ],
+      "positionOffset": 165284,
+      "uvOffset": 165860,
+      "vertexCount": 48,
+      "parts": [
+        {
+          "material": "terrain_grass_artificial_02_gray_clean_newyork_color 20.003",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "texture": "texture-4321197874579585975.webp",
+          "indexOffset": 166244,
+          "indexCount": 96,
+          "transparent": true,
+          "alphaTest": 0.02
+        }
+      ],
+      "bounds": [
+        [
+          -51.556241512298584,
+          3.199997916817665,
+          -74.40005540847778
+        ],
+        [
+          49.293676018714905,
+          5.20000047981739,
+          -61.79817318916321
+        ]
+      ]
+    },
+    {
+      "name": "left1_3",
+      "pathId": "3939362842909236107",
+      "hierarchy": [
+        "left1_3",
+        "MESH_ROOT.005",
+        "left1.001",
+        "MAIN",
+        "heidenheim"
+      ],
+      "positionOffset": 166628,
+      "uvOffset": 166724,
+      "vertexCount": 8,
+      "parts": [
+        {
+          "material": "Glass.002",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "texture": "texture--2275004737771964962.webp",
+          "indexOffset": 166788,
+          "indexCount": 12,
+          "transparent": true,
+          "alphaTest": 0.02
+        }
+      ],
+      "bounds": [
+        [
+          37.99990117549896,
+          8.400005102157593,
+          58.00006985664368
+        ],
+        [
+          54.99992370605469,
+          11.400006711483002,
+          75.00006556510925
+        ]
+      ]
+    },
+    {
+      "name": "back1_6",
+      "pathId": "8192054649070386851",
+      "hierarchy": [
+        "back1_6",
+        "MESH_ROOT",
+        "back1.001",
+        "MAIN",
+        "heidenheim"
+      ],
+      "positionOffset": 166836,
+      "uvOffset": 169356,
+      "vertexCount": 210,
+      "parts": [
+        {
+          "material": "terrain_grass_artificial_02_gray_clean_newyork_color 31",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "texture": "texture-2255690620462212964.webp",
+          "indexOffset": 171036,
+          "indexCount": 504
+        }
+      ],
+      "bounds": [
+        [
+          41.99991822242737,
+          1.999999987845058e-06,
+          -59.59991812705994
+        ],
+        [
+          55.0000786781311,
+          8.400001376867294,
+          59.60007309913635
+        ]
+      ]
+    },
+    {
+      "name": "left1_11",
+      "pathId": "-1202373688390997547",
+      "hierarchy": [
+        "left1_11",
+        "MESH_ROOT.005",
+        "left1.001",
+        "MAIN",
+        "heidenheim"
+      ],
+      "positionOffset": 173052,
+      "uvOffset": 175308,
+      "vertexCount": 188,
+      "parts": [
+        {
+          "material": "terrain_grass_artificial_02_gray_clean_newyork_color 25.002",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "texture": "texture--90284191801784478.webp",
+          "indexOffset": 176812,
+          "indexCount": 300
+        }
+      ],
+      "bounds": [
+        [
+          -55.00009059906006,
+          1.3999979011714458,
+          57.99990892410278
+        ],
+        [
+          54.99992370605469,
+          12.000002712011337,
+          75.0000536441803
+        ]
+      ]
+    },
+    {
+      "name": "left1_6",
+      "pathId": "-3514122015479830604",
+      "hierarchy": [
+        "left1_6",
+        "MESH_ROOT.005",
+        "left1.001",
+        "MAIN",
+        "heidenheim"
+      ],
+      "positionOffset": 178012,
+      "uvOffset": 180268,
+      "vertexCount": 188,
+      "parts": [
+        {
+          "material": "terrain_grass_artificial_02_gray_clean_newyork_color 19.002",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "texture": "texture-8584201628268135415.webp",
+          "indexOffset": 181772,
+          "indexCount": 276
+        }
+      ],
+      "bounds": [
+        [
+          -38.00009787082672,
+          1.3999979011714458,
+          58.00005793571472
+        ],
+        [
+          53.999900817871094,
+          8.400001376867294,
+          74.00005459785461
+        ]
+      ]
+    },
+    {
+      "name": "left1_2",
+      "pathId": "-3896042901694096538",
+      "hierarchy": [
+        "left1_2",
+        "MESH_ROOT.005",
+        "left1.001",
+        "MAIN",
+        "heidenheim"
+      ],
+      "positionOffset": 182876,
+      "uvOffset": 183164,
+      "vertexCount": 24,
+      "parts": [
+        {
+          "material": "Glass.002",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "texture": "texture--2275004737771964962.webp",
+          "indexOffset": 183356,
+          "indexCount": 36,
+          "transparent": true,
+          "alphaTest": 0.02
+        }
+      ],
+      "bounds": [
+        [
+          -37.80008852481842,
+          4.399995878338814,
+          65.9999132156372
+        ],
+        [
+          37.799906730651855,
+          7.000003755092621,
+          69.20005083084106
+        ]
+      ]
+    },
+    {
+      "name": "left1_5",
+      "pathId": "9154824354482190683",
+      "hierarchy": [
+        "left1_5",
+        "MESH_ROOT.005",
+        "left1.001",
+        "MAIN",
+        "heidenheim"
+      ],
+      "positionOffset": 183500,
+      "uvOffset": 190820,
+      "vertexCount": 610,
+      "parts": [
+        {
+          "material": "terrain_grass_artificial_02_gray_clean_newyork_color 34",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "texture": "texture--7227545526968421632.webp",
+          "indexOffset": 195700,
+          "indexCount": 2700,
+          "transparent": true,
+          "alphaTest": 0.02
+        }
+      ],
+      "bounds": [
+        [
+          -36.67837679386139,
+          3.409111872315407,
+          61.077702045440674
+        ],
+        [
+          37.51305341720581,
+          12.26746067404747,
+          62.4450147151947
+        ]
+      ]
+    },
+    {
+      "name": "left1_0",
+      "pathId": "-1742635688270940761",
+      "hierarchy": [
+        "left1_0",
+        "MESH_ROOT.005",
+        "left1.001",
+        "MAIN",
+        "heidenheim"
+      ],
+      "positionOffset": 206500,
+      "uvOffset": 207460,
+      "vertexCount": 80,
+      "parts": [
+        {
+          "material": "terrain_grass_artificial_02_gray_clean_newyork_color 8.003",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "texture": "texture--3801619612690254329.webp",
+          "indexOffset": 208100,
+          "indexCount": 120,
+          "transparent": true,
+          "alphaTest": 0.02
+        }
+      ],
+      "bounds": [
+        [
+          -45.42261362075806,
+          1.3999939896166325,
+          58.00006985664368
+        ],
+        [
+          49.1999089717865,
+          7.400006800889969,
+          69.20005083084106
+        ]
+      ]
+    },
+    {
+      "name": "front1_5",
+      "pathId": "-716975281486756860",
+      "hierarchy": [
+        "front1_5",
+        "MESH_ROOT.003",
+        "front1.001",
+        "MAIN",
+        "heidenheim"
+      ],
+      "positionOffset": 208580,
+      "uvOffset": 210980,
+      "vertexCount": 200,
+      "parts": [
+        {
+          "material": "terrain_grass_artificial_02_gray_clean_newyork_color 17.001",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "texture": "texture--7346565461789816325.webp",
+          "indexOffset": 212580,
+          "indexCount": 300
+        }
+      ],
+      "bounds": [
+        [
+          -52.40005850791931,
+          -1.999999987845058e-06,
+          -42.00006127357483
+        ],
+        [
+          -41.99998676776886,
+          6.399998068809509,
+          37.99993693828583
+        ]
+      ]
+    },
+    {
+      "name": "front1_2",
+      "pathId": "6286866782878852283",
+      "hierarchy": [
+        "front1_2",
+        "MESH_ROOT.003",
+        "front1.001",
+        "MAIN",
+        "heidenheim"
+      ],
+      "positionOffset": 213780,
+      "uvOffset": 215412,
+      "vertexCount": 136,
+      "parts": [
+        {
+          "material": "terrain_grass_artificial_02_gray_clean_newyork_color 19.001",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "texture": "texture-5149818586115429441.webp",
+          "indexOffset": 216500,
+          "indexCount": 204
+        }
+      ],
+      "bounds": [
+        [
+          -54.000091552734375,
+          1.3999979011714458,
+          -58.00006985664368
+        ],
+        [
+          -42.79991686344147,
+          8.399996906518936,
+          57.99993872642517
+        ]
+      ]
+    },
+    {
+      "name": "back1_10",
+      "pathId": "-7713048817672250302",
+      "hierarchy": [
+        "back1_10",
+        "MESH_ROOT",
+        "back1.001",
+        "MAIN",
+        "heidenheim"
+      ],
+      "positionOffset": 217316,
+      "uvOffset": 221876,
+      "vertexCount": 380,
+      "parts": [
+        {
+          "material": "terrain_grass_artificial_02_gray_clean_newyork_color 24",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "texture": "texture--8418034599560809732.webp",
+          "indexOffset": 224916,
+          "indexCount": 594
+        }
+      ],
+      "bounds": [
+        [
+          41.799914836883545,
+          1.999999987845058e-06,
+          -57.99993276596069
+        ],
+        [
+          55.00008463859558,
+          9.400001168251038,
+          58.00006985664368
+        ]
+      ]
+    },
+    {
+      "name": "center1_6",
+      "pathId": "-8675338242410999903",
+      "hierarchy": [
+        "center1_6",
+        "MESH_ROOT.001",
+        "center1.001",
+        "MAIN",
+        "heidenheim"
+      ],
+      "positionOffset": 227292,
+      "uvOffset": 229740,
+      "vertexCount": 204,
+      "parts": [
+        {
+          "material": "terrain_grass_artificial_02_gray_clean_newyork_color 21",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "texture": "texture--9099586508026664555.webp",
+          "indexOffset": 231372,
+          "indexCount": 306
+        }
+      ],
+      "bounds": [
+        [
+          -41.999924182891846,
+          1.999999987845058e-06,
+          -62.000060081481934
+        ],
+        [
+          42.00007915496826,
+          1.9000019878149033,
+          -57.999926805496216
+        ]
+      ]
+    },
+    {
+      "name": "right1_12",
+      "pathId": "8647366227606014941",
+      "hierarchy": [
+        "right1_12",
+        "MESH_ROOT.006",
+        "right1.001",
+        "MAIN",
+        "heidenheim"
+      ],
+      "positionOffset": 232596,
+      "uvOffset": 235884,
+      "vertexCount": 274,
+      "parts": [
+        {
+          "material": "terrain_grass_artificial_02_gray_clean_newyork_color 24.004",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "texture": "texture--8418034599560809732.webp",
+          "indexOffset": 238076,
+          "indexCount": 480
+        }
+      ],
+      "bounds": [
+        [
+          -36.184221506118774,
+          3.9999987930059433,
+          -68.58443021774292
+        ],
+        [
+          36.18441820144653,
+          12.000000476837158,
+          -68.21568012237549
+        ]
+      ]
+    },
+    {
+      "name": "front1_8",
+      "pathId": "-1096612107000054259",
+      "hierarchy": [
+        "front1_8",
+        "MESH_ROOT.003",
+        "front1.001",
+        "MAIN",
+        "heidenheim"
+      ],
+      "positionOffset": 239996,
+      "uvOffset": 240140,
+      "vertexCount": 12,
+      "parts": [
+        {
+          "material": "terrain_grass_artificial_02_gray_clean_newyork_color 3",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "texture": "texture-7839539149927720678.webp",
+          "indexOffset": 240236,
+          "indexCount": 18,
+          "transparent": true,
+          "alphaTest": 0.02
+        }
+      ],
+      "bounds": [
+        [
+          -53.422629833221436,
+          3.3999979496002197,
+          59.39401984214783
+        ],
+        [
+          -39.394205808639526,
+          11.999998986721039,
+          73.42246770858765
+        ]
+      ]
+    },
+    {
+      "name": "back1_2",
+      "pathId": "-2517153062552004186",
+      "hierarchy": [
+        "back1_2",
+        "MESH_ROOT",
+        "back1.001",
+        "MAIN",
+        "heidenheim"
+      ],
+      "positionOffset": 240308,
+      "uvOffset": 240980,
+      "vertexCount": 56,
+      "parts": [
+        {
+          "material": "Glass",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "texture": "texture--2275004737771964962.webp",
+          "indexOffset": 241428,
+          "indexCount": 126,
+          "transparent": true,
+          "alphaTest": 0.02
+        }
+      ],
+      "bounds": [
+        [
+          54.99991774559021,
+          8.400005847215652,
+          -53.999918699264526
+        ],
+        [
+          55.0000786781311,
+          11.400006711483002,
+          54.00007963180542
+        ]
+      ]
+    },
+    {
+      "name": "back1_1",
+      "pathId": "-237270155102126554",
+      "hierarchy": [
+        "back1_1",
+        "MESH_ROOT",
+        "back1.001",
+        "MAIN",
+        "heidenheim"
+      ],
+      "positionOffset": 241932,
+      "uvOffset": 243900,
+      "vertexCount": 164,
+      "parts": [
+        {
+          "material": "terrain_grass_artificial_02_gray_clean_newyork_color 19",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "texture": "texture-5149818586115429441.webp",
+          "indexOffset": 245212,
+          "indexCount": 246
+        }
+      ],
+      "bounds": [
+        [
+          42.79991686344147,
+          1.4000019989907742,
+          -57.99993276596069
+        ],
+        [
+          54.0000855922699,
+          8.400003612041473,
+          58.00008773803711
+        ]
+      ]
+    },
+    {
+      "name": "front1_6",
+      "pathId": "3887597117597688942",
+      "hierarchy": [
+        "front1_6",
+        "MESH_ROOT.003",
+        "front1.001",
+        "MAIN",
+        "heidenheim"
+      ],
+      "positionOffset": 246196,
+      "uvOffset": 247108,
+      "vertexCount": 76,
+      "parts": [
+        {
+          "material": "terrain_grass_artificial_02_gray_clean_newyork_color 27.002",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "texture": "texture-5853353018763637615.webp",
+          "indexOffset": 247716,
+          "indexCount": 114
+        }
+      ],
+      "bounds": [
+        [
+          -54.400068521499634,
+          1.3999979011714458,
+          -43.600067496299744
+        ],
+        [
+          -49.19992685317993,
+          5.199996754527092,
+          39.59992229938507
+        ]
+      ]
+    },
+    {
+      "name": "left1_17",
+      "pathId": "4350419092057239977",
+      "hierarchy": [
+        "left1_17",
+        "MESH_ROOT.005",
+        "left1.001",
+        "MAIN",
+        "heidenheim"
+      ],
+      "positionOffset": 248172,
+      "uvOffset": 258300,
+      "vertexCount": 844,
+      "parts": [
+        {
+          "material": "terrain_grass_artificial_02_gray_clean_newyork_color 33",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "texture": "texture-1005570292943473535.webp",
+          "indexOffset": 265052,
+          "indexCount": 2148,
+          "transparent": true,
+          "alphaTest": 0.02
+        }
+      ],
+      "bounds": [
+        [
+          -36.71861290931702,
+          3.382757678627968,
+          61.44992113113403
+        ],
+        [
+          37.82864212989807,
+          13.261885941028595,
+          62.70681619644165
+        ]
+      ]
+    },
+    {
+      "name": "C_right1_C1-UltraHome",
+      "pathId": "-1685643530004269913",
+      "hierarchy": [
+        "C_right1_C1-UltraHome",
+        "MESH_CROWD",
+        "AUDIAREA",
+        "heidenheim"
+      ],
+      "positionOffset": 273644,
+      "uvOffset": 287060,
+      "vertexCount": 1118,
+      "parts": [
+        {
+          "material": "audi_seat_mat",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "texture": "texture-8396520302001932045.webp",
+          "indexOffset": 296004,
+          "indexCount": 4650
+        }
+      ],
+      "bounds": [
+        [
+          -53.86807918548584,
+          1.3999964110553265,
+          -73.97572994232178
+        ],
+        [
+          53.970867395401,
+          8.431878685951233,
+          -58.0034613609314
+        ]
+      ]
+    },
+    {
+      "name": "back1_8",
+      "pathId": "-507559171140244445",
+      "hierarchy": [
+        "back1_8",
+        "MESH_ROOT",
+        "back1.001",
+        "MAIN",
+        "heidenheim"
+      ],
+      "positionOffset": 314604,
+      "uvOffset": 315612,
+      "vertexCount": 84,
+      "parts": [
+        {
+          "material": "terrain_grass_artificial_02_gray_clean_newyork_color 27",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "texture": "texture-4237214104592536735.webp",
+          "indexOffset": 316284,
+          "indexCount": 126,
+          "transparent": true,
+          "alphaTest": 0.02
+        }
+      ],
+      "bounds": [
+        [
+          49.19990301132202,
+          1.999999987845058e-06,
+          -59.59991812705994
+        ],
+        [
+          51.20007395744324,
+          3.2000020146369934,
+          59.60007309913635
+        ]
+      ]
+    },
+    {
+      "name": "right1_15",
+      "pathId": "-2430025920747790400",
+      "hierarchy": [
+        "right1_15",
+        "MESH_ROOT.006",
+        "right1.001",
+        "MAIN",
+        "heidenheim"
+      ],
+      "positionOffset": 316788,
+      "uvOffset": 317856,
+      "vertexCount": 89,
+      "parts": [
+        {
+          "material": "terrain_grass_artificial_02_gray_clean_newyork_color 32.003",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "texture": "texture--8014282648861575920.webp",
+          "indexOffset": 318568,
+          "indexCount": 192,
+          "transparent": true,
+          "alphaTest": 0.02
+        }
+      ],
+      "bounds": [
+        [
+          -46.606481075286865,
+          -1.999999987845058e-06,
+          -69.20005083084106
+        ],
+        [
+          44.343915581703186,
+          6.400001049041748,
+          -57.99993276596069
+        ]
+      ]
+    },
+    {
+      "name": "back1_4",
+      "pathId": "3135796633708357006",
+      "hierarchy": [
+        "back1_4",
+        "MESH_ROOT",
+        "back1.001",
+        "MAIN",
+        "heidenheim"
+      ],
+      "positionOffset": 319336,
+      "uvOffset": 319840,
+      "vertexCount": 42,
+      "parts": [
+        {
+          "material": "terrain_grass_artificial_02_gray_clean_newyork_color 20",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "texture": "texture-4321197874579585975.webp",
+          "indexOffset": 320176,
+          "indexCount": 84,
+          "transparent": true,
+          "alphaTest": 0.02
+        }
+      ],
+      "bounds": [
+        [
+          45.99989950656891,
+          3.2000020146369934,
+          -59.59991812705994
+        ],
+        [
+          51.20007395744324,
+          3.2000020146369934,
+          59.60007309913635
+        ]
+      ]
+    },
+    {
+      "name": "C_left1_C1-UltraAway",
+      "pathId": "2533093636519194738",
+      "hierarchy": [
+        "C_left1_C1-UltraAway",
+        "MESH_CROWD",
+        "AUDIAREA",
+        "heidenheim"
+      ],
+      "positionOffset": 320512,
+      "uvOffset": 323104,
+      "vertexCount": 216,
+      "parts": [
+        {
+          "material": "audi_seat_mat",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "texture": "texture-8396520302001932045.webp",
+          "indexOffset": 324832,
+          "indexCount": 900
+        }
+      ],
+      "bounds": [
+        [
+          -37.90937662124634,
+          1.4252807945013046,
+          62.80427575111389
+        ],
+        [
+          -18.078504502773285,
+          8.392375707626343,
+          73.97572994232178
+        ]
+      ]
+    },
+    {
+      "name": "front3_0",
+      "pathId": "-7223093968531297182",
+      "hierarchy": [
+        "front3_0",
+        "MESH_ROOT.004",
+        "front3.001",
+        "MAIN",
+        "heidenheim"
+      ],
+      "positionOffset": 328432,
+      "uvOffset": 329248,
+      "vertexCount": 68,
+      "parts": [
+        {
+          "material": "terrain_grass_artificial_02_gray_clean_newyork_color 25.001",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "texture": "texture--3120813598682035713.webp",
+          "indexOffset": 329792,
+          "indexCount": 144
+        }
+      ],
+      "bounds": [
+        [
+          -55.00003099441528,
+          6.399998068809509,
+          -18.000072240829468
+        ],
+        [
+          -50.79997777938843,
+          11.399997770786285,
+          21.99993133544922
+        ]
+      ]
+    },
+    {
+      "name": "left1_13",
+      "pathId": "7906644272591758426",
+      "hierarchy": [
+        "left1_13",
+        "MESH_ROOT.005",
+        "left1.001",
+        "MAIN",
+        "heidenheim"
+      ],
+      "positionOffset": 330368,
+      "uvOffset": 330512,
+      "vertexCount": 12,
+      "parts": [
+        {
+          "material": "terrain_grass_artificial_02_gray_clean_newyork_color 27.003",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "texture": "texture-4237214104592536735.webp",
+          "indexOffset": 330608,
+          "indexCount": 18,
+          "transparent": true,
+          "alphaTest": 0.02
+        }
+      ],
+      "bounds": [
+        [
+          46.32364809513092,
+          3.400002047419548,
+          66.32381081581116
+        ],
+        [
+          51.556241512298584,
+          5.200003087520599,
+          71.55638933181763
+        ]
+      ]
+    },
+    {
+      "name": "back1_9",
+      "pathId": "-3954820912636190172",
+      "hierarchy": [
+        "back1_9",
+        "MESH_ROOT",
+        "back1.001",
+        "MAIN",
+        "heidenheim"
+      ],
+      "positionOffset": 330680,
+      "uvOffset": 332456,
+      "vertexCount": 148,
+      "parts": [
+        {
+          "material": "terrain_grass_artificial_02_gray_clean_newyork_color 25",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "texture": "texture--3120813598682035713.webp",
+          "indexOffset": 333640,
+          "indexCount": 246
+        }
+      ],
+      "bounds": [
+        [
+          46.000003814697266,
+          1.4000019989907742,
+          -57.99992084503174
+        ],
+        [
+          55.0000786781311,
+          12.000002712011337,
+          58.000075817108154
+        ]
+      ]
+    },
+    {
+      "name": "left1_10",
+      "pathId": "-2329045647129675656",
+      "hierarchy": [
+        "left1_10",
+        "MESH_ROOT.005",
+        "left1.001",
+        "MAIN",
+        "heidenheim"
+      ],
+      "positionOffset": 334624,
+      "uvOffset": 335128,
+      "vertexCount": 42,
+      "parts": [
+        {
+          "material": "terrain_grass_artificial_02_gray_clean_newyork_color 20.002",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "texture": "texture-4321197874579585975.webp",
+          "indexOffset": 335464,
+          "indexCount": 84,
+          "transparent": true,
+          "alphaTest": 0.02
+        }
+      ],
+      "bounds": [
+        [
+          -39.60009813308716,
+          3.199997916817665,
+          64.06106352806091
+        ],
+        [
+          51.556241512298584,
+          5.200003087520599,
+          74.40005540847778
+        ]
+      ]
+    },
+    {
+      "name": "front3_4",
+      "pathId": "-7021034930785441309",
+      "hierarchy": [
+        "front3_4",
+        "MESH_ROOT.004",
+        "front3.001",
+        "MAIN",
+        "heidenheim"
+      ],
+      "positionOffset": 335800,
+      "uvOffset": 337240,
+      "vertexCount": 120,
+      "parts": [
+        {
+          "material": "terrain_grass_artificial_02_gray_clean_newyork_color 24.002",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "texture": "texture--8418034599560809732.webp",
+          "indexOffset": 338200,
+          "indexCount": 192
+        }
+      ],
+      "bounds": [
+        [
+          -51.00003480911255,
+          3.9999980479478836,
+          -4.000068083405495
+        ],
+        [
+          -48.21581244468689,
+          11.99999675154686,
+          56.18424415588379
+        ]
+      ]
+    },
+    {
+      "name": "C_front1_C1-PopHome",
+      "pathId": "1480106114142347587",
+      "hierarchy": [
+        "C_front1_C1-PopHome",
+        "MESH_CROWD",
+        "AUDIAREA",
+        "heidenheim"
+      ],
+      "positionOffset": 338968,
+      "uvOffset": 346744,
+      "vertexCount": 648,
+      "parts": [
+        {
+          "material": "audi_seat_mat",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "texture": "texture-8396520302001932045.webp",
+          "indexOffset": 351928,
+          "indexCount": 2700
+        }
+      ],
+      "bounds": [
+        [
+          -53.90952825546265,
+          1.4015763998031616,
+          -58.12169313430786
+        ],
+        [
+          -42.783138155937195,
+          8.392970263957977,
+          57.91156888008118
+        ]
+      ]
+    },
+    {
+      "name": "center1_5",
+      "pathId": "-5228032708464955705",
+      "hierarchy": [
+        "center1_5",
+        "MESH_ROOT.001",
+        "center1.001",
+        "MAIN",
+        "heidenheim"
+      ],
+      "positionOffset": 362728,
+      "uvOffset": 393832,
+      "vertexCount": 2592,
+      "parts": [
+        {
+          "material": "terrain_grass_artificial_02_gray_clean_newyork_color 29",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "texture": "texture-8625320668301070027.webp",
+          "indexOffset": 414568,
+          "indexCount": 4932
+        }
+      ],
+      "bounds": [
+        [
+          39.82042968273163,
+          3.999999975690116e-06,
+          -57.17213153839111
+        ],
+        [
+          41.780075430870056,
+          1.9000040367245674,
+          57.17225670814514
+        ]
+      ]
+    },
+    {
+      "name": "back1_12",
+      "pathId": "-5437464630487296994",
+      "hierarchy": [
+        "back1_12",
+        "MESH_ROOT",
+        "back1.001",
+        "MAIN",
+        "heidenheim"
+      ],
+      "positionOffset": 434296,
+      "uvOffset": 435484,
+      "vertexCount": 99,
+      "parts": [
+        {
+          "material": "terrain_grass_artificial_02_gray_clean_newyork_color 32",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "texture": "texture--8014282648861575920.webp",
+          "indexOffset": 436276,
+          "indexCount": 162,
+          "transparent": true,
+          "alphaTest": 0.02
+        }
+      ],
+      "bounds": [
+        [
+          41.51550531387329,
+          1.999999987845058e-06,
+          -58.68692398071289
+        ],
+        [
+          46.00006341934204,
+          4.400001838803291,
+          58.0000638961792
+        ]
+      ]
+    },
+    {
+      "name": "st081_pitch_0",
+      "pathId": "-369266655317431328",
+      "hierarchy": [
+        "st081_pitch_0",
+        "MESH_Pitch",
+        "Pitch",
+        "PITCH2021",
+        "heidenheim"
+      ],
+      "positionOffset": 436924,
+      "uvOffset": 436972,
+      "vertexCount": 4,
+      "parts": [
+        {
+          "material": "0002-Bayern 1",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "texture": "texture-7741725615414109625.webp",
+          "indexOffset": 437004,
+          "indexCount": 6,
+          "transparent": true,
+          "alphaTest": 0.02
+        }
+      ],
+      "bounds": [
+        [
+          -37.90000081062317,
+          -5.99999978589949e-06,
+          -57.19999670982361
+        ],
+        [
+          37.90000081062317,
+          5.99999978589949e-06,
+          57.19999670982361
+        ]
+      ]
+    },
+    {
+      "name": "C_left1_C1-UltraHome",
+      "pathId": "2214291499925144916",
+      "hierarchy": [
+        "C_left1_C1-UltraHome",
+        "MESH_CROWD",
+        "AUDIAREA",
+        "heidenheim"
+      ],
+      "positionOffset": 437028,
+      "uvOffset": 446124,
+      "vertexCount": 758,
+      "parts": [
+        {
+          "material": "audi_seat_mat",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "texture": "texture-8396520302001932045.webp",
+          "indexOffset": 452188,
+          "indexCount": 3150
+        }
+      ],
+      "bounds": [
+        [
+          -17.940951883792877,
+          1.4252813532948494,
+          58.01661014556885
+        ],
+        [
+          53.99990677833557,
+          8.461181819438934,
+          73.97573590278625
+        ]
+      ]
+    },
+    {
+      "name": "center1_4",
+      "pathId": "-1322861063895170707",
+      "hierarchy": [
+        "center1_4",
+        "MESH_ROOT.001",
+        "center1.001",
+        "MAIN",
+        "heidenheim"
+      ],
+      "positionOffset": 464788,
+      "uvOffset": 465076,
+      "vertexCount": 24,
+      "parts": [
+        {
+          "material": "terrain_grass_artificial_02_gray_clean_newyork_color 27.001",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "texture": "texture-4237214104592536735.webp",
+          "indexOffset": 465268,
+          "indexCount": 36,
+          "transparent": true,
+          "alphaTest": 0.02
+        }
+      ],
+      "bounds": [
+        [
+          -51.556241512298584,
+          1.999999987845058e-06,
+          -71.5563952922821
+        ],
+        [
+          49.293676018714905,
+          5.1999978721141815,
+          -64.06092047691345
+        ]
+      ]
+    },
+    {
+      "name": "front1_3",
+      "pathId": "-3707571826539343598",
+      "hierarchy": [
+        "front1_3",
+        "MESH_ROOT.003",
+        "front1.001",
+        "MAIN",
+        "heidenheim"
+      ],
+      "positionOffset": 465412,
+      "uvOffset": 466660,
+      "vertexCount": 104,
+      "parts": [
+        {
+          "material": "terrain_grass_artificial_02_gray_clean_newyork_color 22.001",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "texture": "texture--7299600711769920717.webp",
+          "indexOffset": 467492,
+          "indexCount": 156
+        }
+      ],
+      "bounds": [
+        [
+          -54.00006175041199,
+          -1.999999987845058e-06,
+          -43.33340227603912
+        ],
+        [
+          -42.79992878437042,
+          8.399996906518936,
+          39.33327794075012
+        ]
+      ]
+    },
+    {
+      "name": "front1_7",
+      "pathId": "6027358393482035796",
+      "hierarchy": [
+        "front1_7",
+        "MESH_ROOT.003",
+        "front1.001",
+        "MAIN",
+        "heidenheim"
+      ],
+      "positionOffset": 468116,
+      "uvOffset": 470948,
+      "vertexCount": 236,
+      "parts": [
+        {
+          "material": "terrain_grass_artificial_02_gray_clean_newyork_color 21.001",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "texture": "texture--9099586508026664555.webp",
+          "indexOffset": 472836,
+          "indexCount": 354
+        }
+      ],
+      "bounds": [
+        [
+          -42.00009107589722,
+          -1.999999987845058e-06,
+          -58.00005793571472
+        ],
+        [
+          -41.799917817115784,
+          1.899997889995575,
+          57.99994468688965
+        ]
+      ]
+    },
+    {
+      "name": "front1_1",
+      "pathId": "1517783549989055375",
+      "hierarchy": [
+        "front1_1",
+        "MESH_ROOT.003",
+        "front1.001",
+        "MAIN",
+        "heidenheim"
+      ],
+      "positionOffset": 474252,
+      "uvOffset": 474492,
+      "vertexCount": 20,
+      "parts": [
+        {
+          "material": "Glass.001",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "texture": "texture--2275004737771964962.webp",
+          "indexOffset": 474652,
+          "indexCount": 30,
+          "transparent": true,
+          "alphaTest": 0.02
+        }
+      ],
+      "bounds": [
+        [
+          -49.20005798339844,
+          1.5999939292669296,
+          -9.80006754398346
+        ],
+        [
+          -45.9999680519104,
+          6.9999925792217255,
+          37.799933552742004
+        ]
+      ]
+    },
+    {
+      "name": "front1_0",
+      "pathId": "1967140149894911843",
+      "hierarchy": [
+        "front1_0",
+        "MESH_ROOT.003",
+        "front1.001",
+        "MAIN",
+        "heidenheim"
+      ],
+      "positionOffset": 474772,
+      "uvOffset": 475912,
+      "vertexCount": 95,
+      "parts": [
+        {
+          "material": "terrain_grass_artificial_02_gray_clean_newyork_color 8.002",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "texture": "texture--3801619612690254329.webp",
+          "indexOffset": 476672,
+          "indexCount": 141,
+          "transparent": true,
+          "alphaTest": 0.02
+        }
+      ],
+      "bounds": [
+        [
+          -54.999977350234985,
+          1.3999939896166325,
+          -58.00005793571472
+        ],
+        [
+          -41.999924182891846,
+          10.399992763996124,
+          -22.000062465667725
+        ]
+      ]
+    },
+    {
+      "name": "left1_16",
+      "pathId": "5868713499521837953",
+      "hierarchy": [
+        "left1_16",
+        "MESH_ROOT.005",
+        "left1.001",
+        "MAIN",
+        "heidenheim"
+      ],
+      "positionOffset": 477236,
+      "uvOffset": 477524,
+      "vertexCount": 24,
+      "parts": [
+        {
+          "material": "terrain_grass_artificial_02_gray_clean_newyork_color 15.002",
+          "color": [
+            0.9063317179679871,
+            0.9063317179679871,
+            0.9063317179679871
+          ],
+          "texture": "texture-6178632576032910043.webp",
+          "indexOffset": 477716,
+          "indexCount": 45
+        }
+      ],
+      "bounds": [
+        [
+          -45.422616600990295,
+          3.3999979496002197,
+          59.39403176307678
+        ],
+        [
+          -39.394205808639526,
+          11.999998986721039,
+          65.42246341705322
+        ]
+      ]
+    },
+    {
+      "name": "front3_5",
+      "pathId": "-3699861053904658673",
+      "hierarchy": [
+        "front3_5",
+        "MESH_ROOT.004",
+        "front3.001",
+        "MAIN",
+        "heidenheim"
+      ],
+      "positionOffset": 477896,
+      "uvOffset": 478088,
+      "vertexCount": 16,
+      "parts": [
+        {
+          "material": "terrain_grass_artificial_02_gray_clean_newyork_color 21.002",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "texture": "texture--9099586508026664555.webp",
+          "indexOffset": 478216,
+          "indexCount": 24
+        }
+      ],
+      "bounds": [
+        [
+          -52.0000159740448,
+          6.399998068809509,
+          -17.600072920322418
+        ],
+        [
+          -51.999980211257935,
+          9.799996763467789,
+          9.999928623437881
+        ]
+      ]
+    },
+    {
+      "name": "right1_7",
+      "pathId": "-3451684351863538010",
+      "hierarchy": [
+        "right1_7",
+        "MESH_ROOT.006",
+        "right1.001",
+        "MAIN",
+        "heidenheim"
+      ],
+      "positionOffset": 478312,
+      "uvOffset": 479128,
+      "vertexCount": 68,
+      "parts": [
+        {
+          "material": "terrain_grass_artificial_02_gray_clean_newyork_color 22.003",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "texture": "texture--7299600711769920717.webp",
+          "indexOffset": 479672,
+          "indexCount": 102
+        }
+      ],
+      "bounds": [
+        [
+          -50.686585903167725,
+          1.3999979011714458,
+          -74.00005459785461
+        ],
+        [
+          39.39419984817505,
+          8.400001376867294,
+          -60.33695936203003
+        ]
+      ]
+    },
+    {
+      "name": "right1_5",
+      "pathId": "41300830981479865",
+      "hierarchy": [
+        "right1_5",
+        "MESH_ROOT.006",
+        "right1.001",
+        "MAIN",
+        "heidenheim"
+      ],
+      "positionOffset": 480080,
+      "uvOffset": 482624,
+      "vertexCount": 212,
+      "parts": [
+        {
+          "material": "terrain_grass_artificial_02_gray_clean_newyork_color 19.003",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "texture": "texture-5149818586115429441.webp",
+          "indexOffset": 484320,
+          "indexCount": 306
+        }
+      ],
+      "bounds": [
+        [
+          -53.999918699264526,
+          1.3999979011714458,
+          -74.00005459785461
+        ],
+        [
+          54.00007963180542,
+          8.400001376867294,
+          -57.99990892410278
+        ]
+      ]
+    },
+    {
+      "name": "center2_0",
+      "pathId": "-533620439954360200",
+      "hierarchy": [
+        "center2_0",
+        "MESH_ROOT.002",
+        "center2.001",
+        "MAIN",
+        "heidenheim"
+      ],
+      "positionOffset": 485544,
+      "uvOffset": 514536,
+      "vertexCount": 2416,
+      "parts": [
+        {
+          "material": "terrain_grass_artificial_02_gray_clean_newyork_color 39",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "texture": "texture--5296624983508636997.webp",
+          "indexOffset": 533864,
+          "indexCount": 8436,
+          "transparent": true,
+          "alphaTest": 0.02
+        }
+      ],
+      "bounds": [
+        [
+          -11.700668185949326,
+          2.249710075557232,
+          -62.12664246559143
+        ],
+        [
+          34.715887904167175,
+          3.520720824599266,
+          -61.733031272888184
+        ]
+      ]
+    },
+    {
+      "name": "left1_7",
+      "pathId": "9205619749389615324",
+      "hierarchy": [
+        "left1_7",
+        "MESH_ROOT.005",
+        "left1.001",
+        "MAIN",
+        "heidenheim"
+      ],
+      "positionOffset": 567608,
+      "uvOffset": 568472,
+      "vertexCount": 72,
+      "parts": [
+        {
+          "material": "terrain_grass_artificial_02_gray_clean_newyork_color 22.002",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "texture": "texture--7299600711769920717.webp",
+          "indexOffset": 569048,
+          "indexCount": 108
+        }
+      ],
+      "bounds": [
+        [
+          -54.000091552734375,
+          1.3999979011714458,
+          57.999926805496216
+        ],
+        [
+          47.29248583316803,
+          8.400001376867294,
+          74.00005459785461
+        ]
+      ]
+    },
+    {
+      "name": "right1_14",
+      "pathId": "45451995571708038",
+      "hierarchy": [
+        "right1_14",
+        "MESH_ROOT.006",
+        "right1.001",
+        "MAIN",
+        "heidenheim"
+      ],
+      "positionOffset": 569480,
+      "uvOffset": 570320,
+      "vertexCount": 70,
+      "parts": [
+        {
+          "material": "terrain_grass_artificial_02_gray_clean_newyork_color 36",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "texture": "texture-3293647554866940380.webp",
+          "indexOffset": 570880,
+          "indexCount": 132,
+          "transparent": true,
+          "alphaTest": 0.02
+        }
+      ],
+      "bounds": [
+        [
+          -33.999910950660706,
+          12.399998307228088,
+          -62.000054121017456
+        ],
+        [
+          42.00007915496826,
+          13.600002229213715,
+          -53.99993658065796
+        ]
+      ]
+    },
+    {
+      "name": "right1_10",
+      "pathId": "-3649626061182928712",
+      "hierarchy": [
+        "right1_10",
+        "MESH_ROOT.006",
+        "right1.001",
+        "MAIN",
+        "heidenheim"
+      ],
+      "positionOffset": 571408,
+      "uvOffset": 573520,
+      "vertexCount": 176,
+      "parts": [
+        {
+          "material": "terrain_grass_artificial_02_gray_clean_newyork_color 25.003",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "texture": "texture--90284191801784478.webp",
+          "indexOffset": 574928,
+          "indexCount": 288
+        }
+      ],
+      "bounds": [
+        [
+          -54.99991774559021,
+          8.399996906518936,
+          -75.0000536441803
+        ],
+        [
+          55.0000786781311,
+          12.000002712011337,
+          -57.99992084503174
+        ]
+      ]
+    },
+    {
+      "name": "right1_11",
+      "pathId": "-7765158702420906677",
+      "hierarchy": [
+        "right1_11",
+        "MESH_ROOT.006",
+        "right1.001",
+        "MAIN",
+        "heidenheim"
+      ],
+      "positionOffset": 576080,
+      "uvOffset": 576320,
+      "vertexCount": 20,
+      "parts": [
+        {
+          "material": "terrain_grass_artificial_02_gray_clean_newyork_color 3.003",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "texture": "texture--286775031294682104.webp",
+          "indexOffset": 576480,
+          "indexCount": 30,
+          "transparent": true,
+          "alphaTest": 0.02
+        }
+      ],
+      "bounds": [
+        [
+          -37.999892234802246,
+          8.99999812245369,
+          -75.0000536441803
+        ],
+        [
+          38.00010681152344,
+          11.400001496076584,
+          -74.9999463558197
+        ]
+      ]
+    },
+    {
+      "name": "DACH_center2_3",
+      "pathId": "1182358964860309491",
+      "hierarchy": [
+        "center2_3",
+        "MESH_ROOT.002",
+        "center2.001",
+        "MAIN",
+        "heidenheim"
+      ],
+      "positionOffset": 576600,
+      "uvOffset": 583608,
+      "vertexCount": 584,
+      "parts": [
+        {
+          "material": "terrain_grass_artificial_02_gray_clean_newyork_color 23",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "texture": "texture-7766939008036917318.webp",
+          "indexOffset": 588280,
+          "indexCount": 876
+        }
+      ],
+      "bounds": [
+        [
+          -38.00009787082672,
+          11.999998986721039,
+          -75.0000536441803
+        ],
+        [
+          55.0000786781311,
+          13.600002229213715,
+          75.0000536441803
+        ]
+      ],
+      "sourceMeshName": "center2_3"
+    },
+    {
+      "name": "left1_4",
+      "pathId": "-4431849340502982059",
+      "hierarchy": [
+        "left1_4",
+        "MESH_ROOT.005",
+        "left1.001",
+        "MAIN",
+        "heidenheim"
+      ],
+      "positionOffset": 591784,
+      "uvOffset": 593656,
+      "vertexCount": 156,
+      "parts": [
+        {
+          "material": "terrain_grass_artificial_02_gray_clean_newyork_color 8.003",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "texture": "texture--3801619612690254329.webp",
+          "indexOffset": 594904,
+          "indexCount": 234,
+          "transparent": true,
+          "alphaTest": 0.02
+        }
+      ],
+      "bounds": [
+        [
+          -38.00011873245239,
+          1.399994920939207,
+          58.00005793571472
+        ],
+        [
+          41.999924182891846,
+          10.40000319480896,
+          75.00006556510925
+        ]
+      ]
+    },
+    {
+      "name": "DACH_front3_8",
+      "pathId": "1549475517118601722",
+      "hierarchy": [
+        "front3_8",
+        "MESH_ROOT.004",
+        "front3.001",
+        "MAIN",
+        "heidenheim"
+      ],
+      "positionOffset": 595840,
+      "uvOffset": 599200,
+      "vertexCount": 280,
+      "parts": [
+        {
+          "material": "terrain_grass_artificial_02_gray_clean_newyork_color 7.001",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "texture": "texture--2485462018741777862.webp",
+          "indexOffset": 601440,
+          "indexCount": 420
+        }
+      ],
+      "bounds": [
+        [
+          -55.00009059906006,
+          12.600000202655792,
+          -55.333411693573
+        ],
+        [
+          -42.99992620944977,
+          13.723073899745941,
+          55.333274602890015
+        ]
+      ],
+      "sourceMeshName": "front3_8"
+    },
+    {
+      "name": "DACH_center2_4",
+      "pathId": "-3352686066537611708",
+      "hierarchy": [
+        "center2_4",
+        "MESH_ROOT.002",
+        "center2.001",
+        "MAIN",
+        "heidenheim"
+      ],
+      "positionOffset": 603120,
+      "uvOffset": 609072,
+      "vertexCount": 496,
+      "parts": [
+        {
+          "material": "terrain_grass_artificial_02_gray_clean_newyork_color 7",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "texture": "texture--2485462018741777862.webp",
+          "indexOffset": 613040,
+          "indexCount": 744
+        }
+      ],
+      "bounds": [
+        [
+          -35.333457589149475,
+          12.600001692771912,
+          -75.0000536441803
+        ],
+        [
+          55.000072717666626,
+          14.023078978061676,
+          75.0000536441803
+        ]
+      ],
+      "sourceMeshName": "center2_4"
+    },
+    {
+      "name": "right1_2",
+      "pathId": "7374785792248147587",
+      "hierarchy": [
+        "right1_2",
+        "MESH_ROOT.006",
+        "right1.001",
+        "MAIN",
+        "heidenheim"
+      ],
+      "positionOffset": 616016,
+      "uvOffset": 616112,
+      "vertexCount": 8,
+      "parts": [
+        {
+          "material": "Glass.003",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "texture": "texture--2275004737771964962.webp",
+          "indexOffset": 616176,
+          "indexCount": 12,
+          "transparent": true,
+          "alphaTest": 0.02
+        }
+      ],
+      "bounds": [
+        [
+          38.00010681152344,
+          8.400005102157593,
+          -74.99992847442627
+        ],
+        [
+          55.0000786781311,
+          11.400006711483002,
+          -57.99992084503174
+        ]
+      ]
+    },
+    {
+      "name": "left1_8",
+      "pathId": "2279863189654639913",
+      "hierarchy": [
+        "left1_8",
+        "MESH_ROOT.005",
+        "left1.001",
+        "MAIN",
+        "heidenheim"
+      ],
+      "positionOffset": 616224,
+      "uvOffset": 619584,
+      "vertexCount": 280,
+      "parts": [
+        {
+          "material": "terrain_grass_artificial_02_gray_clean_newyork_color 17.002",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "texture": "texture--7346565461789816325.webp",
+          "indexOffset": 621824,
+          "indexCount": 420
+        }
+      ],
+      "bounds": [
+        [
+          -38.000085949897766,
+          1.3999979011714458,
+          61.65689826011658
+        ],
+        [
+          48.869237303733826,
+          6.400001794099808,
+          72.40005135536194
+        ]
+      ]
+    },
+    {
+      "name": "front3_10",
+      "pathId": "-1019927393115372143",
+      "hierarchy": [
+        "front3_10",
+        "MESH_ROOT.004",
+        "front3.001",
+        "MAIN",
+        "heidenheim"
+      ],
+      "positionOffset": 623504,
+      "uvOffset": 649616,
+      "vertexCount": 2176,
+      "parts": [
+        {
+          "material": "terrain_grass_artificial_02_gray_clean_newyork_color 5.001",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "texture": "texture-2049134651936989917.webp",
+          "indexOffset": 667024,
+          "indexCount": 4704
+        }
+      ],
+      "bounds": [
+        [
+          -42.93397068977356,
+          11.244653165340424,
+          -61.057305335998535
+        ],
+        [
+          -40.25155305862427,
+          12.354251742362976,
+          56.21594786643982
+        ]
+      ]
+    },
+    {
+      "name": "C_back1_C1-UltraHome",
+      "pathId": "7818444986005273603",
+      "hierarchy": [
+        "C_back1_C1-UltraHome",
+        "MESH_CROWD",
+        "AUDIAREA",
+        "heidenheim"
+      ],
+      "positionOffset": 685840,
+      "uvOffset": 691888,
+      "vertexCount": 504,
+      "parts": [
+        {
+          "material": "audi_seat_mat",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "texture": "texture-8396520302001932045.webp",
+          "indexOffset": 695920,
+          "indexCount": 2100
+        }
+      ],
+      "bounds": [
+        [
+          42.79942512512207,
+          1.4252841472625732,
+          -57.99042582511902
+        ],
+        [
+          53.99990677833557,
+          8.4341362118721,
+          58.00008773803711
+        ]
+      ]
+    },
+    {
+      "name": "left1_15",
+      "pathId": "-4061907294574057002",
+      "hierarchy": [
+        "left1_15",
+        "MESH_ROOT.005",
+        "left1.001",
+        "MAIN",
+        "heidenheim"
+      ],
+      "positionOffset": 704320,
+      "uvOffset": 706720,
+      "vertexCount": 200,
+      "parts": [
+        {
+          "material": "terrain_grass_artificial_02_gray_clean_newyork_color 21.003",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "texture": "texture--9099586508026664555.webp",
+          "indexOffset": 708320,
+          "indexCount": 300
+        }
+      ],
+      "bounds": [
+        [
+          -42.000094056129456,
+          1.3999979011714458,
+          57.99992084503174
+        ],
+        [
+          41.999924182891846,
+          1.9000019878149033,
+          62.000054121017456
+        ]
+      ]
+    },
+    {
+      "name": "front3_3",
+      "pathId": "3269851336845426947",
+      "hierarchy": [
+        "front3_3",
+        "MESH_ROOT.004",
+        "front3.001",
+        "MAIN",
+        "heidenheim"
+      ],
+      "positionOffset": 709520,
+      "uvOffset": 713912,
+      "vertexCount": 366,
+      "parts": [
+        {
+          "material": "terrain_grass_artificial_02_gray_clean_newyork_color 25.001",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "texture": "texture--3120813598682035713.webp",
+          "indexOffset": 716840,
+          "indexCount": 570
+        }
+      ],
+      "bounds": [
+        [
+          -55.00009059906006,
+          1.3999979011714458,
+          -58.00006985664368
+        ],
+        [
+          -47.399917244911194,
+          11.99999675154686,
+          57.999926805496216
+        ]
+      ]
+    },
+    {
+      "name": "center1_3",
+      "pathId": "-2551439885780368085",
+      "hierarchy": [
+        "center1_3",
+        "MESH_ROOT.001",
+        "center1.001",
+        "MAIN",
+        "heidenheim"
+      ],
+      "positionOffset": 719120,
+      "uvOffset": 721544,
+      "vertexCount": 202,
+      "parts": [
+        {
+          "material": "terrain_grass_artificial_02_gray_clean_newyork_color 31.001",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "texture": "texture--1636729374270870682.webp",
+          "indexOffset": 723160,
+          "indexCount": 462
+        }
+      ],
+      "bounds": [
+        [
+          -54.99991774559021,
+          1.999999987845058e-06,
+          -75.0000536441803
+        ],
+        [
+          55.0000786781311,
+          8.400001376867294,
+          -57.99991488456726
+        ]
+      ]
+    },
+    {
+      "name": "DACH_center2_7",
+      "pathId": "8875583625283578710",
+      "hierarchy": [
+        "center2_7",
+        "MESH_ROOT.002",
+        "center2.001",
+        "MAIN",
+        "heidenheim"
+      ],
+      "positionOffset": 725008,
+      "uvOffset": 785392,
+      "vertexCount": 5032,
+      "parts": [
+        {
+          "material": "terrain_grass_artificial_02_gray_clean_newyork_color 5",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "texture": "texture-2049134651936989917.webp",
+          "indexOffset": 825648,
+          "indexCount": 10878
+        }
+      ],
+      "bounds": [
+        [
+          -36.22012138366699,
+          11.244654655456543,
+          -62.933945655822754
+        ],
+        [
+          42.93397665023804,
+          12.354256212711334,
+          62.93395161628723
+        ]
+      ],
+      "sourceMeshName": "center2_7"
+    },
+    {
+      "name": "back1_0",
+      "pathId": "-3326644102879299472",
+      "hierarchy": [
+        "back1_0",
+        "MESH_ROOT",
+        "back1.001",
+        "MAIN",
+        "heidenheim"
+      ],
+      "positionOffset": 869160,
+      "uvOffset": 870552,
+      "vertexCount": 116,
+      "parts": [
+        {
+          "material": "Glass",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "texture": "texture--2275004737771964962.webp",
+          "indexOffset": 871480,
+          "indexCount": 174,
+          "transparent": true,
+          "alphaTest": 0.02
+        }
+      ],
+      "bounds": [
+        [
+          45.99989950656891,
+          3.6500059068202972,
+          -57.79992938041687
+        ],
+        [
+          46.400079131126404,
+          5.0000060349702835,
+          57.80007243156433
+        ]
+      ]
+    },
+    {
+      "name": "left1_1",
+      "pathId": "-6669957565202620175",
+      "hierarchy": [
+        "left1_1",
+        "MESH_ROOT.005",
+        "left1.001",
+        "MAIN",
+        "heidenheim"
+      ],
+      "positionOffset": 872176,
+      "uvOffset": 872992,
+      "vertexCount": 68,
+      "parts": [
+        {
+          "material": "terrain_grass_artificial_02_gray_clean_newyork_color 8.003",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "texture": "texture--3801619612690254329.webp",
+          "indexOffset": 873536,
+          "indexCount": 102,
+          "transparent": true,
+          "alphaTest": 0.02
+        }
+      ],
+      "bounds": [
+        [
+          -38.00011873245239,
+          1.399994920939207,
+          61.999934911727905
+        ],
+        [
+          37.999916076660156,
+          10.40000319480896,
+          75.00006556510925
+        ]
+      ]
+    },
+    {
+      "name": "center1_9",
+      "pathId": "5858610742667174808",
+      "hierarchy": [
+        "center1_9",
+        "MESH_ROOT.001",
+        "center1.001",
+        "MAIN",
+        "heidenheim"
+      ],
+      "positionOffset": 873944,
+      "uvOffset": 874328,
+      "vertexCount": 32,
+      "parts": [
+        {
+          "material": "terrain_grass_artificial_02_gray_clean_newyork_color 18",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "texture": "texture--6284408302541231691.webp",
+          "indexOffset": 874584,
+          "indexCount": 48,
+          "transparent": true,
+          "alphaTest": 0.02
+        }
+      ],
+      "bounds": [
+        [
+          -41.790252923965454,
+          9.799999816095806e-05,
+          -21.600058674812317
+        ],
+        [
+          -35.799968242645264,
+          9.799999816095806e-05,
+          21.599942445755005
+        ]
+      ]
+    },
+    {
+      "name": "left1_18",
+      "pathId": "-3874064553859277936",
+      "hierarchy": [
+        "left1_18",
+        "MESH_ROOT.005",
+        "left1.001",
+        "MAIN",
+        "heidenheim"
+      ],
+      "positionOffset": 874776,
+      "uvOffset": 875016,
+      "vertexCount": 20,
+      "parts": [
+        {
+          "material": "terrain_grass_artificial_02_gray_clean_newyork_color 3.002",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "texture": "texture-7839539149927720678.webp",
+          "indexOffset": 875176,
+          "indexCount": 30,
+          "transparent": true,
+          "alphaTest": 0.02
+        }
+      ],
+      "bounds": [
+        [
+          -38.00011873245239,
+          8.99999812245369,
+          74.99993443489075
+        ],
+        [
+          37.99988031387329,
+          11.400001496076584,
+          75.00005960464478
+        ]
+      ]
+    },
+    {
+      "name": "left1_21",
+      "pathId": "1477231649210444064",
+      "hierarchy": [
+        "left1_21",
+        "MESH_ROOT.005",
+        "left1.001",
+        "MAIN",
+        "heidenheim"
+      ],
+      "positionOffset": 875296,
+      "uvOffset": 876544,
+      "vertexCount": 104,
+      "parts": [
+        {
+          "material": "terrain_grass_artificial_02_gray_clean_newyork_color 32.002",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "texture": "texture--8014282648861575920.webp",
+          "indexOffset": 877376,
+          "indexCount": 192,
+          "transparent": true,
+          "alphaTest": 0.02
+        }
+      ],
+      "bounds": [
+        [
+          -41.80009365081787,
+          -1.999999987845058e-06,
+          57.99992084503174
+        ],
+        [
+          46.60648703575134,
+          6.400001794099808,
+          69.20005083084106
+        ]
+      ]
+    },
+    {
+      "name": "back1_5",
+      "pathId": "-3102792749889189039",
+      "hierarchy": [
+        "back1_5",
+        "MESH_ROOT",
+        "back1.001",
+        "MAIN",
+        "heidenheim"
+      ],
+      "positionOffset": 878144,
+      "uvOffset": 881504,
+      "vertexCount": 280,
+      "parts": [
+        {
+          "material": "terrain_grass_artificial_02_gray_clean_newyork_color 17",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "texture": "texture--7346565461789816325.webp",
+          "indexOffset": 883744,
+          "indexCount": 420
+        }
+      ],
+      "bounds": [
+        [
+          41.999998688697815,
+          1.999999987845058e-06,
+          -57.99993276596069
+        ],
+        [
+          49.20007586479187,
+          4.400001838803291,
+          58.00006985664368
+        ]
+      ]
+    },
+    {
+      "name": "center1_1",
+      "pathId": "-4903396149472465919",
+      "hierarchy": [
+        "center1_1",
+        "MESH_ROOT.001",
+        "center1.001",
+        "MAIN",
+        "heidenheim"
+      ],
+      "positionOffset": 885424,
+      "uvOffset": 887008,
+      "vertexCount": 132,
+      "parts": [
+        {
+          "material": "Glass 1",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "texture": "texture-8539801630633446906.webp",
+          "indexOffset": 888064,
+          "indexCount": 324,
+          "transparent": true,
+          "alphaTest": 0.02
+        }
+      ],
+      "bounds": [
+        [
+          -41.733866930007935,
+          1.0289180092513561,
+          -20.91638743877411
+        ],
+        [
+          -40.185073018074036,
+          2.192169800400734,
+          20.916272699832916
+        ]
+      ]
+    },
+    {
+      "name": "DACH_front3_9",
+      "pathId": "-8912042442154987616",
+      "hierarchy": [
+        "front3_9",
+        "MESH_ROOT.004",
+        "front3.001",
+        "MAIN",
+        "heidenheim"
+      ],
+      "positionOffset": 889360,
+      "uvOffset": 907432,
+      "vertexCount": 1506,
+      "parts": [
+        {
+          "material": "terrain_grass_artificial_02_gray_clean_newyork_color 24.002",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "texture": "texture--8418034599560809732.webp",
+          "indexOffset": 919480,
+          "indexCount": 2394
+        }
+      ],
+      "bounds": [
+        [
+          -55.0000786781311,
+          11.399997770786285,
+          -73.00153374671936
+        ],
+        [
+          -38.22583556175232,
+          15.999998152256012,
+          73.00139665603638
+        ]
+      ],
+      "sourceMeshName": "front3_9"
+    },
+    {
+      "name": "st081_pitch_1",
+      "pathId": "-7806852651025396906",
+      "hierarchy": [
+        "st081_pitch_1",
+        "MESH_Pitch",
+        "Pitch",
+        "PITCH2021",
+        "heidenheim"
+      ],
+      "positionOffset": 929056,
+      "uvOffset": 1032316,
+      "vertexCount": 8605,
+      "parts": [
+        {
+          "material": "000STADIUMLINE",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "texture": null,
+          "indexOffset": 1101156,
+          "indexCount": 13848,
+          "transparent": false
+        }
+      ],
+      "bounds": [
+        [
+          -34.0800017118454,
+          0.008340999920619652,
+          -52.95000076293945
+        ],
+        [
+          34.0800017118454,
+          0.008352000440936536,
+          52.95000076293945
+        ]
+      ]
+    },
+    {
+      "name": "center2_9",
+      "pathId": "-7651222602372408736",
+      "hierarchy": [
+        "center2_9",
+        "MESH_ROOT.002",
+        "center2.001",
+        "MAIN",
+        "heidenheim"
+      ],
+      "positionOffset": 1156548,
+      "uvOffset": 1163268,
+      "vertexCount": 560,
+      "parts": [
+        {
+          "material": "terrain_grass_artificial_02_gray_clean_newyork_color 4",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "texture": "texture-8580422419987079132.webp",
+          "indexOffset": 1167748,
+          "indexCount": 960,
+          "transparent": true,
+          "alphaTest": 0.02
+        }
+      ],
+      "bounds": [
+        [
+          -53.41430306434631,
+          -1.999999987845058e-06,
+          -73.41428995132446
+        ],
+        [
+          53.41430306434631,
+          40.000030398368835,
+          73.41428995132446
+        ]
+      ]
+    },
+    {
+      "name": "right1_13",
+      "pathId": "-2368911703507822078",
+      "hierarchy": [
+        "right1_13",
+        "MESH_ROOT.006",
+        "right1.001",
+        "MAIN",
+        "heidenheim"
+      ],
+      "positionOffset": 1171588,
+      "uvOffset": 1181764,
+      "vertexCount": 848,
+      "parts": [
+        {
+          "material": "terrain_grass_artificial_02_gray_clean_newyork_color 35",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "texture": "texture-2195472113036983707.webp",
+          "indexOffset": 1188548,
+          "indexCount": 2166
+        }
+      ],
+      "bounds": [
+        [
+          -38.19883167743683,
+          3.4900419414043427,
+          -62.625205516815186
+        ],
+        [
+          37.81358599662781,
+          13.193172216415405,
+          -61.663901805877686
+        ]
+      ]
+    },
+    {
+      "name": "center1_8",
+      "pathId": "-5059615706125446588",
+      "hierarchy": [
+        "center1_8",
+        "MESH_ROOT.001",
+        "center1.001",
+        "MAIN",
+        "heidenheim"
+      ],
+      "positionOffset": 1197212,
+      "uvOffset": 1197260,
+      "vertexCount": 4,
+      "parts": [
+        {
+          "material": "st011_turf000.014",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "texture": "texture--8605461347660624817.webp",
+          "indexOffset": 1197292,
+          "indexCount": 6
+        }
+      ],
+      "bounds": [
+        [
+          -56.804001331329346,
+          -0.004916999751003459,
+          -75.4557192325592
+        ],
+        [
+          56.21684193611145,
+          -0.004916999751003459,
+          75.17931461334229
+        ]
+      ]
+    },
+    {
+      "name": "right1_1",
+      "pathId": "6904182806039295094",
+      "hierarchy": [
+        "right1_1",
+        "MESH_ROOT.006",
+        "right1.001",
+        "MAIN",
+        "heidenheim"
+      ],
+      "positionOffset": 1197316,
+      "uvOffset": 1198084,
+      "vertexCount": 64,
+      "parts": [
+        {
+          "material": "terrain_grass_artificial_02_gray_clean_newyork_color 8.004",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "texture": "texture--3801619612690254329.webp",
+          "indexOffset": 1198596,
+          "indexCount": 96,
+          "transparent": true,
+          "alphaTest": 0.02
+        }
+      ],
+      "bounds": [
+        [
+          -46.677201986312866,
+          1.900004968047142,
+          -69.20005083084106
+        ],
+        [
+          44.41463053226471,
+          6.700003892183304,
+          -58.899056911468506
+        ]
+      ]
+    },
+    {
+      "name": "DACH_front3_11",
+      "pathId": "-9081525558156020041",
+      "hierarchy": [
+        "front3_11",
+        "MESH_ROOT.004",
+        "front3.001",
+        "MAIN",
+        "heidenheim"
+      ],
+      "positionOffset": 1198980,
+      "uvOffset": 1200228,
+      "vertexCount": 104,
+      "parts": [
+        {
+          "material": "terrain_grass_artificial_02_gray_clean_newyork_color 15.001",
+          "color": [
+            0.9063317179679871,
+            0.9063317179679871,
+            0.9063317179679871
+          ],
+          "texture": "texture-3293647554866940380.webp",
+          "indexOffset": 1201060,
+          "indexCount": 156,
+          "transparent": true,
+          "alphaTest": 0.02
+        }
+      ],
+      "bounds": [
+        [
+          -42.00003445148468,
+          12.399997562170029,
+          -62.000060081481934
+        ],
+        [
+          -33.999910950660706,
+          13.599997758865356,
+          54.00216579437256
+        ]
+      ],
+      "sourceMeshName": "front3_11"
+    },
+    {
+      "name": "DACH_left1_19",
+      "pathId": "-6133690217565457648",
+      "hierarchy": [
+        "left1_19",
+        "MESH_ROOT.005",
+        "left1.001",
+        "MAIN",
+        "heidenheim"
+      ],
+      "positionOffset": 1201684,
+      "uvOffset": 1202812,
+      "vertexCount": 94,
+      "parts": [
+        {
+          "material": "terrain_grass_artificial_02_gray_clean_newyork_color 38",
+          "color": [
+            0.9063317179679871,
+            0.9063317179679871,
+            0.9063317179679871
+          ],
+          "texture": "texture-3293647554866940380.webp",
+          "indexOffset": 1203564,
+          "indexCount": 162,
+          "transparent": true,
+          "alphaTest": 0.02
+        }
+      ],
+      "bounds": [
+        [
+          -42.000094056129456,
+          12.399997562170029,
+          53.99994254112244
+        ],
+        [
+          41.999927163124084,
+          13.600002229213715,
+          62.000054121017456
+        ]
+      ],
+      "sourceMeshName": "left1_19"
+    },
+    {
+      "name": "front1_4",
+      "pathId": "-1548507622671728840",
+      "hierarchy": [
+        "front1_4",
+        "MESH_ROOT.003",
+        "front1.001",
+        "MAIN",
+        "heidenheim"
+      ],
+      "positionOffset": 1204212,
+      "uvOffset": 1206684,
+      "vertexCount": 206,
+      "parts": [
+        {
+          "material": "terrain_grass_artificial_02_gray_clean_newyork_color 31.002",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "texture": "texture-2255690620462212964.webp",
+          "indexOffset": 1208332,
+          "indexCount": 438
+        }
+      ],
+      "bounds": [
+        [
+          -55.00009059906006,
+          -1.999999987845058e-06,
+          -58.00006985664368
+        ],
+        [
+          -41.999924182891846,
+          8.399996906518936,
+          57.99993872642517
+        ]
+      ]
+    },
+    {
+      "name": "center2_1",
+      "pathId": "-6116216266864757862",
+      "hierarchy": [
+        "center2_1",
+        "MESH_ROOT.002",
+        "center2.001",
+        "MAIN",
+        "heidenheim"
+      ],
+      "positionOffset": 1210084,
+      "uvOffset": 1223452,
+      "vertexCount": 1114,
+      "parts": [
+        {
+          "material": "terrain_grass_artificial_02_gray_clean_newyork_color 39",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "texture": "texture--5296624983508636997.webp",
+          "indexOffset": 1232364,
+          "indexCount": 3768,
+          "transparent": true,
+          "alphaTest": 0.02
+        }
+      ],
+      "bounds": [
+        [
+          -21.52472585439682,
+          1.0108349844813347,
+          61.5886926651001
+        ],
+        [
+          37.820038199424744,
+          3.6130640655755997,
+          62.15335726737976
+        ]
+      ]
+    },
+    {
+      "name": "center1_0",
+      "pathId": "-6254759619348405288",
+      "hierarchy": [
+        "center1_0",
+        "MESH_ROOT.001",
+        "center1.001",
+        "MAIN",
+        "heidenheim"
+      ],
+      "positionOffset": 1247436,
+      "uvOffset": 1286508,
+      "vertexCount": 3256,
+      "parts": [
+        {
+          "material": "terrain_grass_artificial_02_gray_clean_newyork_color 6",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "texture": "texture-6836107134859275710.webp",
+          "indexOffset": 1312556,
+          "indexCount": 7884,
+          "transparent": true,
+          "alphaTest": 0.02
+        }
+      ],
+      "bounds": [
+        [
+          -41.75781011581421,
+          -0.0002379999841650715,
+          -20.97375839948654
+        ],
+        [
+          -40.17292559146881,
+          2.213815785944462,
+          20.97366154193878
+        ]
+      ]
+    },
+    {
+      "name": "center1_7",
+      "pathId": "6310693895678160410",
+      "hierarchy": [
+        "center1_7",
+        "MESH_ROOT.001",
+        "center1.001",
+        "MAIN",
+        "heidenheim"
+      ],
+      "positionOffset": 1344092,
+      "uvOffset": 1344416,
+      "vertexCount": 27,
+      "parts": [
+        {
+          "material": "terrain_grass_artificial_02_gray_clean_newyork_color 8",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "texture": "texture--3801619612690254329.webp",
+          "indexOffset": 1344632,
+          "indexCount": 39,
+          "transparent": true,
+          "alphaTest": 0.02
+        }
+      ],
+      "bounds": [
+        [
+          39.39421474933624,
+          5.400004610419273,
+          -70.22247910499573
+        ],
+        [
+          49.200090765953064,
+          6.400006264448166,
+          58.00008177757263
+        ]
+      ]
+    },
+    {
+      "name": "right1_8",
+      "pathId": "4628133425397843726",
+      "hierarchy": [
+        "right1_8",
+        "MESH_ROOT.006",
+        "right1.001",
+        "MAIN",
+        "heidenheim"
+      ],
+      "positionOffset": 1344788,
+      "uvOffset": 1348628,
+      "vertexCount": 320,
+      "parts": [
+        {
+          "material": "terrain_grass_artificial_02_gray_clean_newyork_color 17.003",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "texture": "texture--7346565461789816325.webp",
+          "indexOffset": 1351188,
+          "indexCount": 480
+        }
+      ],
+      "bounds": [
+        [
+          -48.86923134326935,
+          1.999999987845058e-06,
+          -72.40005135536194
+        ],
+        [
+          46.606677770614624,
+          6.400001049041748,
+          -58.82834792137146
+        ]
+      ]
+    },
+    {
+      "name": "right1_4",
+      "pathId": "-3948982310914030432",
+      "hierarchy": [
+        "right1_4",
+        "MESH_ROOT.006",
+        "right1.001",
+        "MAIN",
+        "heidenheim"
+      ],
+      "positionOffset": 1353108,
+      "uvOffset": 1360428,
+      "vertexCount": 610,
+      "parts": [
+        {
+          "material": "terrain_grass_artificial_02_gray_clean_newyork_color 34.001",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "texture": "texture--7227545526968421632.webp",
+          "indexOffset": 1365308,
+          "indexCount": 2700,
+          "transparent": true,
+          "alphaTest": 0.02
+        }
+      ],
+      "bounds": [
+        [
+          -37.929946184158325,
+          3.5263068974018097,
+          -62.36340403556824
+        ],
+        [
+          37.772709131240845,
+          12.204980850219727,
+          -61.52413487434387
+        ]
+      ]
+    },
+    {
+      "name": "left1_14",
+      "pathId": "-6718615380983060132",
+      "hierarchy": [
+        "left1_14",
+        "MESH_ROOT.005",
+        "left1.001",
+        "MAIN",
+        "heidenheim"
+      ],
+      "positionOffset": 1376108,
+      "uvOffset": 1379588,
+      "vertexCount": 290,
+      "parts": [
+        {
+          "material": "terrain_grass_artificial_02_gray_clean_newyork_color 24.003",
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "texture": "texture--8418034599560809732.webp",
+          "indexOffset": 1381908,
+          "indexCount": 504
+        }
+      ],
+      "bounds": [
+        [
+          -44.361963868141174,
+          3.9999987930059433,
+          60.31327247619629
+        ],
+        [
+          36.1842155456543,
+          12.000000476837158,
+          68.58444809913635
+        ]
+      ]
+    }
+  ],
+  "textures": [
+    "texture--3801619612690254329.webp",
+    "texture-7839539149927720678.webp",
+    "texture--176535787237494136.webp",
+    "texture-4321197874579585975.webp",
+    "texture--8014282648861575920.webp",
+    "texture-3293647554866940380.webp",
+    "texture-7766939008036917318.webp",
+    "texture--8418034599560809732.webp",
+    "texture-2255690620462212964.webp",
+    "texture--2275004737771964962.webp",
+    "texture--7299600711769920717.webp",
+    "texture--4058065077612911543.webp",
+    "texture--90284191801784478.webp",
+    "texture-8584201628268135415.webp",
+    "texture--7227545526968421632.webp",
+    "texture--7346565461789816325.webp",
+    "texture-5149818586115429441.webp",
+    "texture--9099586508026664555.webp",
+    "texture-5853353018763637615.webp",
+    "texture-1005570292943473535.webp",
+    "texture-8396520302001932045.webp",
+    "texture-4237214104592536735.webp",
+    "texture--3120813598682035713.webp",
+    "texture-8625320668301070027.webp",
+    "texture-7741725615414109625.webp",
+    "texture-6178632576032910043.webp",
+    "texture--5296624983508636997.webp",
+    "texture--286775031294682104.webp",
+    "texture--2485462018741777862.webp",
+    "texture-2049134651936989917.webp",
+    "texture--1636729374270870682.webp",
+    "texture--6284408302541231691.webp",
+    "texture-8539801630633446906.webp",
+    "texture--7554497896290103511.webp",
+    "texture-8580422419987079132.webp",
+    "texture-2195472113036983707.webp",
+    "texture--8605461347660624817.webp",
+    "texture-6836107134859275710.webp"
+  ],
+  "fixtures": [
+    {
+      "id": "mesh--7651222602372408736-100-36",
+      "name": "center2_9 UV emitter 37",
+      "position": [
+        43.65729028112462,
+        35.258120458636796,
+        -61.13801722339904
+      ],
+      "direction": [
+        -0.6582984983338389,
+        -0.36508512467930654,
+        0.6582977584872275
+      ],
+      "color": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "range": 250.0,
+      "angle": 100.0,
+      "intensity": 320.0,
+      "meshDistance": 0.0,
+      "sourceGeometry": {
+        "mesh": "center2_9",
+        "material": "terrain_grass_artificial_02_gray_clean_newyork_color 4",
+        "triangle": 100,
+        "uv": [
+          0.064453125,
+          0.544921875
+        ]
+      },
+      "representedIds": [
+        "mesh--7651222602372408736-100-36",
+        "mesh--7651222602372408736-100-37",
+        "mesh--7651222602372408736-100-38",
+        "mesh--7651222602372408736-100-39",
+        "mesh--7651222602372408736-100-40",
+        "mesh--7651222602372408736-101-55",
+        "mesh--7651222602372408736-101-56",
+        "mesh--7651222602372408736-101-57",
+        "mesh--7651222602372408736-101-58",
+        "mesh--7651222602372408736-101-61",
+        "mesh--7651222602372408736-101-62",
+        "mesh--7651222602372408736-101-65",
+        "mesh--7651222602372408736-101-66"
+      ]
+    },
+    {
+      "id": "mesh--7651222602372408736-14-17",
+      "name": "center2_9 UV emitter 18",
+      "position": [
+        -41.112142695593555,
+        35.25624456610776,
+        63.68420779272645
+      ],
+      "direction": [
+        0.6582985639629998,
+        -0.3650848880027465,
+        -0.6582978241163147
+      ],
+      "color": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "range": 250.0,
+      "angle": 100.0,
+      "intensity": 320.0,
+      "meshDistance": 0.0,
+      "sourceGeometry": {
+        "mesh": "center2_9",
+        "material": "terrain_grass_artificial_02_gray_clean_newyork_color 4",
+        "triangle": 14,
+        "uv": [
+          0.439453125,
+          0.544921875
+        ]
+      },
+      "representedIds": [
+        "mesh--7651222602372408736-14-6",
+        "mesh--7651222602372408736-14-7",
+        "mesh--7651222602372408736-14-8",
+        "mesh--7651222602372408736-14-9",
+        "mesh--7651222602372408736-14-10",
+        "mesh--7651222602372408736-14-11",
+        "mesh--7651222602372408736-14-12",
+        "mesh--7651222602372408736-14-13",
+        "mesh--7651222602372408736-14-14",
+        "mesh--7651222602372408736-14-15",
+        "mesh--7651222602372408736-14-16",
+        "mesh--7651222602372408736-14-17"
+      ]
+    },
+    {
+      "id": "mesh--7651222602372408736-281-127",
+      "name": "center2_9 UV emitter 128",
+      "position": [
+        -43.6571170399334,
+        35.25811317189618,
+        -61.13814960524229
+      ],
+      "direction": [
+        0.6582958263390201,
+        -0.3650827541977232,
+        0.658301745107843
+      ],
+      "color": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "range": 250.0,
+      "angle": 100.0,
+      "intensity": 320.0,
+      "meshDistance": 0.0,
+      "sourceGeometry": {
+        "mesh": "center2_9",
+        "material": "terrain_grass_artificial_02_gray_clean_newyork_color 4",
+        "triangle": 281,
+        "uv": [
+          0.064453125,
+          0.544921875
+        ]
+      },
+      "representedIds": [
+        "mesh--7651222602372408736-280-109",
+        "mesh--7651222602372408736-280-110",
+        "mesh--7651222602372408736-280-111",
+        "mesh--7651222602372408736-280-112",
+        "mesh--7651222602372408736-280-115",
+        "mesh--7651222602372408736-280-116",
+        "mesh--7651222602372408736-280-117",
+        "mesh--7651222602372408736-280-120",
+        "mesh--7651222602372408736-280-121",
+        "mesh--7651222602372408736-281-127",
+        "mesh--7651222602372408736-281-128",
+        "mesh--7651222602372408736-281-129",
+        "mesh--7651222602372408736-281-130"
+      ]
+    },
+    {
+      "id": "mesh--7651222602372408736-229-91",
+      "name": "center2_9 UV emitter 92",
+      "position": [
+        43.65710970870768,
+        35.2581204586368,
+        61.13814960524229
+      ],
+      "direction": [
+        -0.6582962638827498,
+        -0.3650838443937663,
+        -0.6583007029623175
+      ],
+      "color": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "range": 250.0,
+      "angle": 100.0,
+      "intensity": 320.0,
+      "meshDistance": 0.0,
+      "sourceGeometry": {
+        "mesh": "center2_9",
+        "material": "terrain_grass_artificial_02_gray_clean_newyork_color 4",
+        "triangle": 229,
+        "uv": [
+          0.064453125,
+          0.544921875
+        ]
+      },
+      "representedIds": [
+        "mesh--7651222602372408736-228-73",
+        "mesh--7651222602372408736-228-74",
+        "mesh--7651222602372408736-228-75",
+        "mesh--7651222602372408736-228-76",
+        "mesh--7651222602372408736-228-79",
+        "mesh--7651222602372408736-228-80",
+        "mesh--7651222602372408736-228-81",
+        "mesh--7651222602372408736-228-84",
+        "mesh--7651222602372408736-228-85",
+        "mesh--7651222602372408736-229-91",
+        "mesh--7651222602372408736-229-92",
+        "mesh--7651222602372408736-229-93",
+        "mesh--7651222602372408736-229-94"
+      ]
+    },
+    {
+      "id": "mesh--7651222602372408736-15-18",
+      "name": "center2_9 UV emitter 19",
+      "position": [
+        -42.47507153451443,
+        39.52153192460537,
+        59.95580103993416
+      ],
+      "direction": [
+        0.6582980607926745,
+        -0.3650840344811518,
+        -0.6582988006396256
+      ],
+      "color": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "range": 250.0,
+      "angle": 100.0,
+      "intensity": 320.0,
+      "meshDistance": 0.0,
+      "sourceGeometry": {
+        "mesh": "center2_9",
+        "material": "terrain_grass_artificial_02_gray_clean_newyork_color 4",
+        "triangle": 15,
+        "uv": [
+          0.064453125,
+          0.962890625
+        ]
+      },
+      "representedIds": [
+        "mesh--7651222602372408736-15-18",
+        "mesh--7651222602372408736-15-19",
+        "mesh--7651222602372408736-15-20",
+        "mesh--7651222602372408736-15-23",
+        "mesh--7651222602372408736-15-24",
+        "mesh--7651222602372408736-15-25",
+        "mesh--7651222602372408736-15-27",
+        "mesh--7651222602372408736-15-28",
+        "mesh--7651222602372408736-15-29",
+        "mesh--7651222602372408736-15-31",
+        "mesh--7651222602372408736-15-32",
+        "mesh--7651222602372408736-15-33",
+        "mesh--7651222602372408736-15-34",
+        "mesh--7651222602372408736-15-35"
+      ]
+    },
+    {
+      "id": "mesh--7651222602372408736-280-126",
+      "name": "center2_9 UV emitter 127",
+      "position": [
+        -39.92921693623066,
+        39.52153192460537,
+        -62.501597225666046
+      ],
+      "direction": [
+        0.6582968326840615,
+        -0.3650844612403556,
+        0.658299792069671
+      ],
+      "color": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "range": 250.0,
+      "angle": 100.0,
+      "intensity": 320.0,
+      "meshDistance": 0.0,
+      "sourceGeometry": {
+        "mesh": "center2_9",
+        "material": "terrain_grass_artificial_02_gray_clean_newyork_color 4",
+        "triangle": 280,
+        "uv": [
+          0.439453125,
+          0.962890625
+        ]
+      },
+      "representedIds": [
+        "mesh--7651222602372408736-280-108",
+        "mesh--7651222602372408736-280-113",
+        "mesh--7651222602372408736-280-114",
+        "mesh--7651222602372408736-280-118",
+        "mesh--7651222602372408736-280-119",
+        "mesh--7651222602372408736-280-122",
+        "mesh--7651222602372408736-280-123",
+        "mesh--7651222602372408736-280-124",
+        "mesh--7651222602372408736-280-125",
+        "mesh--7651222602372408736-280-126",
+        "mesh--7651222602372408736-281-131",
+        "mesh--7651222602372408736-281-135",
+        "mesh--7651222602372408736-281-139",
+        "mesh--7651222602372408736-281-140"
+      ]
+    },
+    {
+      "id": "mesh--7651222602372408736-228-90",
+      "name": "center2_9 UV emitter 91",
+      "position": [
+        39.92920948565006,
+        39.5215360224247,
+        62.501597225666046
+      ],
+      "direction": [
+        -0.6582965154698995,
+        -0.3650842711566093,
+        -0.6583002147001289
+      ],
+      "color": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "range": 250.0,
+      "angle": 100.0,
+      "intensity": 320.0,
+      "meshDistance": 0.0,
+      "sourceGeometry": {
+        "mesh": "center2_9",
+        "material": "terrain_grass_artificial_02_gray_clean_newyork_color 4",
+        "triangle": 228,
+        "uv": [
+          0.439453125,
+          0.962890625
+        ]
+      },
+      "representedIds": [
+        "mesh--7651222602372408736-228-72",
+        "mesh--7651222602372408736-228-77",
+        "mesh--7651222602372408736-228-78",
+        "mesh--7651222602372408736-228-82",
+        "mesh--7651222602372408736-228-83",
+        "mesh--7651222602372408736-228-86",
+        "mesh--7651222602372408736-228-87",
+        "mesh--7651222602372408736-228-88",
+        "mesh--7651222602372408736-228-89",
+        "mesh--7651222602372408736-228-90",
+        "mesh--7651222602372408736-229-95",
+        "mesh--7651222602372408736-229-99",
+        "mesh--7651222602372408736-229-103",
+        "mesh--7651222602372408736-229-104"
+      ]
+    },
+    {
+      "id": "mesh--7651222602372408736-101-71",
+      "name": "center2_9 UV emitter 72",
+      "position": [
+        39.929395124316216,
+        39.5215360224247,
+        -62.50147059559822
+      ],
+      "direction": [
+        -0.6582982467490591,
+        -0.3650846979184826,
+        0.6582982467490591
+      ],
+      "color": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "range": 250.0,
+      "angle": 100.0,
+      "intensity": 320.0,
+      "meshDistance": 0.0,
+      "sourceGeometry": {
+        "mesh": "center2_9",
+        "material": "terrain_grass_artificial_02_gray_clean_newyork_color 4",
+        "triangle": 101,
+        "uv": [
+          0.439453125,
+          0.962890625
+        ]
+      },
+      "representedIds": [
+        "mesh--7651222602372408736-100-41",
+        "mesh--7651222602372408736-100-45",
+        "mesh--7651222602372408736-100-49",
+        "mesh--7651222602372408736-100-50",
+        "mesh--7651222602372408736-101-54",
+        "mesh--7651222602372408736-101-59",
+        "mesh--7651222602372408736-101-60",
+        "mesh--7651222602372408736-101-63",
+        "mesh--7651222602372408736-101-64",
+        "mesh--7651222602372408736-101-67",
+        "mesh--7651222602372408736-101-68",
+        "mesh--7651222602372408736-101-69",
+        "mesh--7651222602372408736-101-70",
+        "mesh--7651222602372408736-101-71"
+      ]
+    },
+    {
+      "id": "mesh--7651222602372408736-100-52",
+      "name": "center2_9 UV emitter 53",
+      "position": [
+        40.8800052456889,
+        36.09338662130226,
+        -63.452075409828076
+      ],
+      "direction": [
+        -0.6582984983338389,
+        -0.36508512467930654,
+        0.6582977584872275
+      ],
+      "color": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "range": 250.0,
+      "angle": 100.0,
+      "intensity": 320.0,
+      "meshDistance": 0.0,
+      "sourceGeometry": {
+        "mesh": "center2_9",
+        "material": "terrain_grass_artificial_02_gray_clean_newyork_color 4",
+        "triangle": 100,
+        "uv": [
+          0.439453125,
+          0.626953125
+        ]
+      },
+      "representedIds": [
+        "mesh--7651222602372408736-100-42",
+        "mesh--7651222602372408736-100-43",
+        "mesh--7651222602372408736-100-44",
+        "mesh--7651222602372408736-100-46",
+        "mesh--7651222602372408736-100-47",
+        "mesh--7651222602372408736-100-48",
+        "mesh--7651222602372408736-100-51",
+        "mesh--7651222602372408736-100-52",
+        "mesh--7651222602372408736-100-53"
+      ]
+    },
+    {
+      "id": "mesh--7651222602372408736-281-142",
+      "name": "center2_9 UV emitter 143",
+      "position": [
+        -40.87981733738736,
+        36.09337995931848,
+        -63.452199833359316
+      ],
+      "direction": [
+        0.6582958263390201,
+        -0.3650827541977232,
+        0.658301745107843
+      ],
+      "color": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "range": 250.0,
+      "angle": 100.0,
+      "intensity": 320.0,
+      "meshDistance": 0.0,
+      "sourceGeometry": {
+        "mesh": "center2_9",
+        "material": "terrain_grass_artificial_02_gray_clean_newyork_color 4",
+        "triangle": 281,
+        "uv": [
+          0.439453125,
+          0.626953125
+        ]
+      },
+      "representedIds": [
+        "mesh--7651222602372408736-281-132",
+        "mesh--7651222602372408736-281-133",
+        "mesh--7651222602372408736-281-134",
+        "mesh--7651222602372408736-281-136",
+        "mesh--7651222602372408736-281-137",
+        "mesh--7651222602372408736-281-138",
+        "mesh--7651222602372408736-281-141",
+        "mesh--7651222602372408736-281-142",
+        "mesh--7651222602372408736-281-143"
+      ]
+    },
+    {
+      "id": "mesh--7651222602372408736-229-106",
+      "name": "center2_9 UV emitter 107",
+      "position": [
+        40.87981447869385,
+        36.09338662130226,
+        63.452199833359316
+      ],
+      "direction": [
+        -0.6582962638827498,
+        -0.3650838443937663,
+        -0.6583007029623175
+      ],
+      "color": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "range": 250.0,
+      "angle": 100.0,
+      "intensity": 320.0,
+      "meshDistance": 0.0,
+      "sourceGeometry": {
+        "mesh": "center2_9",
+        "material": "terrain_grass_artificial_02_gray_clean_newyork_color 4",
+        "triangle": 229,
+        "uv": [
+          0.439453125,
+          0.626953125
+        ]
+      },
+      "representedIds": [
+        "mesh--7651222602372408736-229-96",
+        "mesh--7651222602372408736-229-97",
+        "mesh--7651222602372408736-229-98",
+        "mesh--7651222602372408736-229-100",
+        "mesh--7651222602372408736-229-101",
+        "mesh--7651222602372408736-229-102",
+        "mesh--7651222602372408736-229-105",
+        "mesh--7651222602372408736-229-106",
+        "mesh--7651222602372408736-229-107"
+      ]
+    },
+    {
+      "id": "mesh--7651222602372408736-15-22",
+      "name": "center2_9 UV emitter 23",
+      "position": [
+        -43.42524729669094,
+        36.09493713080883,
+        60.90597167611122
+      ],
+      "direction": [
+        0.6582980607926745,
+        -0.3650840344811518,
+        -0.6582988006396256
+      ],
+      "color": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "range": 250.0,
+      "angle": 100.0,
+      "intensity": 320.0,
+      "meshDistance": 0.0,
+      "sourceGeometry": {
+        "mesh": "center2_9",
+        "material": "terrain_grass_artificial_02_gray_clean_newyork_color 4",
+        "triangle": 15,
+        "uv": [
+          0.064453125,
+          0.626953125
+        ]
+      },
+      "representedIds": [
+        "mesh--7651222602372408736-14-0",
+        "mesh--7651222602372408736-14-1",
+        "mesh--7651222602372408736-14-2",
+        "mesh--7651222602372408736-14-3",
+        "mesh--7651222602372408736-14-4",
+        "mesh--7651222602372408736-14-5",
+        "mesh--7651222602372408736-15-21",
+        "mesh--7651222602372408736-15-22",
+        "mesh--7651222602372408736-15-26",
+        "mesh--7651222602372408736-15-30"
+      ]
+    }
+  ],
+  "verifiedFixtureCount": 144,
+  "limits": [
+    "Source meshes and UVs; simplified browser materials, not original Unity shaders.",
+    "Provided lightmap indices and probes retained as evidence; no full baked-lighting reconstruction.",
+    "Four original tower panels: 144 photo-texture UV emitter samples, 12 runtime fixtures.",
+    "Unity point-light components are not adopted: their type/range/directions do not define pitch floodlights.",
+    "Emitter locations/normals follow original textured triangles; runtime range/angle/intensity are schematic.",
+    "Original far-context mesh center2_2 replaced by fresh mapped OSM surroundings; source assets unchanged.",
+    "Schematic crowd envelopes, not official numbered block boundaries or an individual seat survey.",
+    "North main stand is source -x, home east end +z, guest west end -z.",
+    "Terrain is explicitly flat schematic y=0; no measured Schlossberg terrain surface.",
+    "Fresh OSM surroundings; mapped footprints and tree positions, mostly schematic heights.",
+    "Terrain is flat at the source apron level, not a measured DEM.",
+    "Source bowl opening protects lower seats and pitch; underground foundations remain buried.",
+    "OSM pitch polygon includes runoff; original painted lines remain 105x68m."
+  ],
+  "assetSha256": {
+    "geometry.bin": "2dbf1b0e74778aee71d3e54be153b33fea1f63fe1b95bdb744301d951f9b998e",
+    "texture--3801619612690254329.webp": "77d4d43a08ffbf00cc4f8de9b3fe956183ec5ca2fc5ef589d6e3082467741923",
+    "texture-7839539149927720678.webp": "6fc37ba10f2bb6c85b4a68f023db679658b4e19d29e45233b54a13feeb5c58fb",
+    "texture--176535787237494136.webp": "abc420dea1be7f606ad425c8f0a98de9ac08ac098f92cc23868c400da3d96953",
+    "texture-4321197874579585975.webp": "ab6081bc7f3a77907f24c83882cdf7edcee91d079a7a66152d17d3478ead7faf",
+    "texture--8014282648861575920.webp": "64a931d96dd827d28862602540a02564fcb2170261079764c2a4fec21348f358",
+    "texture-3293647554866940380.webp": "f791f1e35f085fad5edf46acbca510b4f6c181e34cc5293924f845b4f4851079",
+    "texture-7766939008036917318.webp": "e6d7969d2c77790a98af3785cac6adb1031622c1f21c308554841754f624c801",
+    "texture--8418034599560809732.webp": "10d64155d42c97e10b504da46f08dc37746cef0c517c550daace4ae7294fb90b",
+    "texture-2255690620462212964.webp": "1ef4e540eeea717bcf9a5b595ab4a11bf5d3119363f156be886a859be6e5adc2",
+    "texture--2275004737771964962.webp": "a9614b35b9fe8bbb25a54e6baf953f17f615fc88e7ec947338f3f8e8a9bb5eb2",
+    "texture--7299600711769920717.webp": "bb315975315b810b74582284611362b66b3b222850e7dd2dfa7c6e049646fe7f",
+    "texture--4058065077612911543.webp": "80cbb9a1b54b46f90bba23bff640cdd5f7d8ac911288aafbe09c28b21eb6cdec",
+    "texture--90284191801784478.webp": "3e2f46e1a62346f5fccf8b85b42f66d1f49ea61689bf217d1908b15b8aae3182",
+    "texture-8584201628268135415.webp": "b3b80077e1955111c15e6cff76ac21f4be02769f3bb0c9c1b0063c74a4ce9c2d",
+    "texture--7227545526968421632.webp": "b38e4a8ac3614a8e04c6a0473cb3cadc31bdef95c0a5040fed98292afb73e1c9",
+    "texture--7346565461789816325.webp": "9558db8eb2558eb3807293030263fa8e3af24b2ee8008deb6c86b9f829484a4e",
+    "texture-5149818586115429441.webp": "6ef8d4a9eccd2b89073ba80815571aa5ab6e0df62fef490e8cbb8bd0c597f58d",
+    "texture--9099586508026664555.webp": "35eaa67f003b5a44fc9aae9a370a979b8f840a538fec2acbce14d944f112917f",
+    "texture-5853353018763637615.webp": "397b2cb3f175e14dd265288f5ae07bc16ca06683ffba9514ef97e51982720afa",
+    "texture-1005570292943473535.webp": "8b178d1edc220b6fcfb1e9d4d97e01fc4ec7dc272f373d1fee4112cf20c97456",
+    "texture-8396520302001932045.webp": "ca145ca308471aa0f5970599faa72ee39826c43edd3ef9a817ed448de407c8af",
+    "texture-4237214104592536735.webp": "f2c5e2bab2fedd4e2680624ecd9a9bfdd30e443d824dde1a055f272f62619288",
+    "texture--3120813598682035713.webp": "23decafd61d6caff7023ff793fcbf45bbd6bc55534fdcadca9ff1e79b555ac22",
+    "texture-8625320668301070027.webp": "f23e56c10e32ba71af67dca4f508a0a85866a86fe8f1d02c89d10aebbcfebf61",
+    "texture-7741725615414109625.webp": "0d842ddd6cc3412de8a607fe9632878fd535fb99d9d92007e0846a5aebf58408",
+    "texture-6178632576032910043.webp": "f545c0f04d2bdd145128463b9c2dccd372080ab436c4d89b2476a6c3cc287d21",
+    "texture--5296624983508636997.webp": "a8a280d7177c76d1b4856d08d561d8cd9bb9c9937cb2d0d111fb93c13da586d1",
+    "texture--286775031294682104.webp": "7280ad7ada8004916f322f1c59b8794a772a753662a0540d0ab28f996ff68238",
+    "texture--2485462018741777862.webp": "287a31d167f9ad4fd1f9461398917893faaa11ff9395c18b4a2e44fd2d9b2177",
+    "texture-2049134651936989917.webp": "72a5a253a94f18af963c3ab5da6ea39af5d0f089e70d658fa7280e81c4d0d3d3",
+    "texture--1636729374270870682.webp": "68c0a227b998859ee667a1890d3955223e1306b03a3bbd1211a33dc2b31a0cf4",
+    "texture--6284408302541231691.webp": "188b806153be3c601714bc28d4b4fe87b41d35e5e624dcff6702b0540c94af53",
+    "texture-8539801630633446906.webp": "c6970f6357844c57c2bf5d83250a73a265952a5591369117da2b8225cb6f996b",
+    "texture--7554497896290103511.webp": "8cd974f4bba6d9b79d74264a81b2996ccf496681d969d01711f841881ed79773",
+    "texture-8580422419987079132.webp": "fcf823bc0f1b845b72321ea2a51131d5edd734335f592686a156e9e3a5263730",
+    "texture-2195472113036983707.webp": "1bd7bbded55602cea9fa5b652d5705aa2a67a823dab5073f2877df432fc19f3f",
+    "texture--8605461347660624817.webp": "3801757f4a165a2d68b760e49dc98e05d796f2169e8fdf37cb458d0a27a9aa99",
+    "texture-6836107134859275710.webp": "55328d718e5f89fcc39172ff3d90fc89becc166dc02a4db46f8017f624416ac4"
+  },
+  "sourceEvidence": {
+    "heidenheim_lightmaps_1792607899714.json": {
+      "sha256": "bdf815d95ef5552304509d7f6b80f71c17752a752bbf0655a188eb0eec8bf890",
+      "count": 76
+    },
+    "heidenheim_lightprobes_1792607899713.json": {
+      "sha256": "d7533fded55f055b63e613b56e42d1fc1c291c885f665dc4abd8626004c98d28",
+      "count": 140
+    },
+    "fixture-samples.json": {
+      "sha256": "ca9c225270aee32fdde2ef434de2077d60bd3f876b944915610ce56a5254919b",
+      "count": 144
+    }
+  },
+  "seatView": {
+    "position": [
+      2.338099999999996,
+      3.0569,
+      65.4242
+    ],
+    "sourceIndex": 5063,
+    "sourceFrameRotationY": 90
+  },
+  "assetVersion": "6a57a298f8fec1a3"
+}
