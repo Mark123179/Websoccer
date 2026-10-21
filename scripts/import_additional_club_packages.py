@@ -121,9 +121,14 @@ def import_batch(paths, owner_exceptions, apply=False):
                     defaults={
                         "package_id": result["run"], "last_seen_package_id": result["run"],
                         "severity": "info",
-                        "note": "Freigegeben: bestehende Bayern-Eigentümerschaft (TM 27) "
-                                "beibehalten. KSC-Quelle nennt Bayern II (TM 28). "
-                                "Spieleridentität identisch; Leihe zum KSC übernommen.",
+                        "note": (
+                            f"Freigegeben: bestehende Eigentümerschaft "
+                            f"{preserved[tm]['owner_club_original_name']} "
+                            f"(TM {preserved[tm]['owner_club_tm_id']}) beibehalten. "
+                            f"Paketquelle nennt {pdata['squad']['owner_club']['name']} "
+                            f"(TM {pdata['squad']['owner_club']['tm_id']}). "
+                            f"Spieleridentität identisch; Leihe zu {club.name} übernommen."
+                        ),
                         "external_reference": {"package_owner": pdata["squad"]["owner_club"],
                                                "preserved_owner": preserved[tm]},
                     })

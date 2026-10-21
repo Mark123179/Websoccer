@@ -1,6 +1,6 @@
 ---
-name: Freigegebener Stammvereinskonflikt beim KSC-Import
-description: Bestehende Bayern-Eigentümerschaft trotz abweichender Bayern-II-Referenz im KSC-Paket erhalten.
+name: Freigegebene Stammvereinskonflikte bei Vereinsimporten
+description: Einzelfallfreigaben für Hauptvereins-Eigentümerschaft trotz abweichender Zweitmannschaftsreferenz im Paket.
 ---
 
 Für den ausdrücklich besprochenen KSC-Leihfall die vorhandene
@@ -17,3 +17,13 @@ Gleichsetzung von Haupt- und Zweitmannschaften. Bei neuen Quellkonflikten
 die Eigentümer-IDs getrennt von der Spieleridentität prüfen. Keine
 zusätzlichen Mini-Vereine erzeugen oder vorhandene Eigentümer überschreiben,
 um einen Import ohne Rückfrage durchlaufen zu lassen.
+
+Für Elias Benkara Dortmund (TM 16) als Eigentümer beibehalten und die
+Leihe nach Greuther Fürth übernehmen. Die Paketangabe Dortmund II (TM 17)
+als Quellenabweichung dokumentieren, nicht als Eigentümerwechsel.
+
+**Why:** Auf die Rückfrage zum Eigentümerkonflikt stellte der Nutzer klar:
+„Ist Leuhspieler von Dortmund zu Fürth“.
+
+**How to apply:** Diese zusätzliche Einzelfallfreigabe betrifft Benkara;
+sie erlaubt keine pauschale Gleichsetzung anderer Zweitmannschaften.
