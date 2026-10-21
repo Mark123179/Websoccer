@@ -31,3 +31,15 @@ Tribünenfotos samt direktem Einbau frei.
 Stadiongeometrie oder Kapazitäten. Bei vergleichbaren Korrekturen Muster
 über die tatsächlichen UV-Flächen abgleichen und im Stadion ansehen;
 ein sauberes Wappenbild allein beweist keine unverzerrte Projektion.
+
+Bei Sitzschriftzügen nicht voraussetzen, dass jeder UV-Punkt genau einer
+Welthöhe entspricht. Crowd-Atlanten können dieselbe Bildstelle für Tritt-
+und Setzflächen wiederverwenden; die Schrift muss trotzdem eine Zeile bleiben.
+
+**Why:** Bei der Veltins-Quelle führte eine höhenabhängige Neuzeichnung zu
+widersprüchlichen Schriftzeilen auf gemeinsam genutzten Atlasflächen.
+
+**How to apply:** Vor einer weltkoordinatenbasierten Sitzbemalung die
+UV-Wiederverwendung prüfen. Bei geteilter Registrierung den belegten
+Schriftbereich des Atlasses erhalten und die fertigen Buchstaben am
+Quellmodell prüfen, nicht nur als flaches Texturbild.

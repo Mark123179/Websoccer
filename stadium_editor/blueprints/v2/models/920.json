@@ -14066,7 +14066,7 @@
     "texture-8323246850093375496.webp": "8205bf7d11e5508d52670ecdb8d000ed6fc434b8c20a8f1d12799eeba95a2ed8",
     "texture--7963365619547171129.webp": "cc38c4cf47691b88e33e575e5a2c796d39534553237216f5428fa88c1474d3e3",
     "texture--2644601034514636668.webp": "c1c5a37c919bb0086b3837d0269c7fe6cbcdb5f53fd7551ffe65f8dc07f0ebe4",
-    "texture--3116212797608367091.webp": "db9ccb9c5e43546377d7f24947c5013702eeec43126d010a5e2e3b50649c87dc",
+    "texture--3116212797608367091.webp": "a7108affb4e98d73d25f71fab6d1d3931e41d7d2322519246f77a95f03813306",
     "texture--5140511699075444989.webp": "baafc3e505cfdcb723a76a38693435e9694a1ea9213b1ea2d8024a1bff7284e6",
     "texture-2213840005992654787.webp": "4451abf8cc7aabbc0bbb1c662eef78f35f074006a6873214ba83be5461158490",
     "texture-3959140684382484096.webp": "ff28c0c533fe8d8ec02ef5171d0717d0311719f828c5e6df01e4650ea6e42f21",
@@ -14172,5 +14172,13 @@
     "sourceIndex": 43990,
     "sourceFrameRotationY": 90
   },
-  "assetVersion": "793d58380ba0e28a"
+  "seatingArtworkRevision": {
+    "baselineAssetVersion": "793d58380ba0e28a",
+    "baselineManifestSha256": "3d7661e93ae240aa4b5d27efbe07341462d9ad226061cb1228d50fb5755135e0",
+    "reference": "https://www.ruhr24.de/assets/images/42/863/42863053-blick-in-die-veltins-arena-des-fc-schalke-04-2lNTlb0qML7a.jpg",
+    "scope": "Clean photo-informed FC SCHALKE 04 seat letters through original west lower-tier UVs.",
+    "limits": "Photo-informed seat artwork, not an exact surveyed per-seat arrangement.",
+    "geometryUnchanged": true
+  },
+  "assetVersion": "dbe2985ce064db74"
 }
