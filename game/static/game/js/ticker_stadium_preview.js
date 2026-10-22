@@ -1,9 +1,9 @@
 const sceneURL = new URL('../../stadium_editor/dortmund_editor_scene.js', import.meta.url);
 sceneURL.searchParams.set('v', `ticker-${new URL(import.meta.url).searchParams.get('v') || '18'}`);
 const adapterURL = new URL('../../stadium_editor/stadium_stage_adapter.js', import.meta.url);
-adapterURL.searchParams.set('v', 'ticker-4');
+adapterURL.searchParams.set('v', 'ticker-5');
 const liveSceneURL = new URL('../../stadium_editor/live_mode.js', import.meta.url);
-liveSceneURL.searchParams.set('v', 'ticker-4');
+liveSceneURL.searchParams.set('v', 'ticker-5');
 
 const canvasHost = document.getElementById('ticker-stadium-preview');
 const statusHost = document.getElementById('ticker-stadium-status');
