@@ -170,3 +170,27 @@ class PlayerIdentityAuditTests(TestCase):
         self.assertIn("1136001", text.getvalue())
         self.assertIn("rein lesender Prüfbericht", text.getvalue())
         self.assertEqual(fingerprint(), before)
+
+    def test_saved_audit_comparison_tracks_manual_correction_without_queries(self):
+        from game.club_import.identity_audit_diff import compare_reports
+
+        player = self.player(transfermarkt_id=1136001, date_of_birth=date(1999, 1, 1))
+        person = self.person(linked_player=player, birth_date=date(1998, 1, 1))
+        row = self.external(person, "TM", "1136002")
+        before = json.loads(json.dumps(audit_player_identities()))
+        row.external_id = "1136001"
+        row.save(update_fields=["external_id"])
+        person.birth_date = None
+        person.save(update_fields=["birth_date"])
+        after = json.loads(json.dumps(audit_player_identities()))
+        saved = fingerprint()
+        with CaptureQueriesContext(connection) as queries:
+            comparison = compare_reports(before, after)
+        self.assertEqual(len(queries), 0)
+        self.assertEqual(fingerprint(), saved)
+        self.assertEqual(comparison["summary"]["added"], 0)
+        self.assertEqual(comparison["summary"]["removed"], 3)
+        self.assertEqual(
+            {p["problem"]["code"] for p in comparison["findings"]["removed"]},
+            {"conflicting_ids", "conflicting_birth_dates", "missing_canonical"},
+        )
