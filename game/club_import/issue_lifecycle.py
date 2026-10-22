@@ -59,6 +59,8 @@ def conflicting_providers(ids, model):
         if model is m.Player:
             rows = rows.filter(identity_kind="spieler")
         owners = set(rows.values_list(owner, flat=True))
+        if model is m.Player:
+            owners.update(rows.values_list("person__linked_player_id", flat=True))
         if provider in ("fmi", "tm"):
             mirror = "fm_inside_id" if provider == "fmi" else "transfermarkt_id"
             owners.update(model.objects.filter(**{mirror: value}).values_list("pk", flat=True))
@@ -213,7 +215,11 @@ def reconcile(run, desired, field=None):
 
 
 def lock_reasons(player):
-    ids = {r.source.code: r for r in player.external_ids.select_related("source").all()}
+    from django.db.models import Q
+    rows = m.PlayerExternalId.objects.filter(
+        Q(player=player) | Q(person__linked_player=player)).select_related("source")
+    ids = {r.source.code: r for r in sorted(
+        rows, key=lambda r: (r.external_id is not None, r.person_id is not None))}
     ratings = {r.source: r.rating for r in player.source_ratings.all()}
     reasons = []
     for code in ("FM", "TM", "CMTRACKER"):

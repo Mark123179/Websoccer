@@ -19,30 +19,40 @@ aktiven Spieler verknüpfen; Quellnachweise und bestehende Rekordbezüge bewahre
 Keine Zusammenführung anhand des Namens. Mehrdeutigkeit oder abweichende
 Quell-IDs bleiben ein harter Stopp. Nach jedem Import alle erwarteten TM-IDs,
 kanonischen Quell-IDs und Wiederholbarkeit prüfen, nicht nur die Laufmeldung
-oder Gesamtzahl. Der reguläre Paketimport übernimmt diesen Übergang noch nicht
-zuverlässig; eine erfolgreiche abgesicherte Bestandsverknüpfung beweist keine
+oder Gesamtzahl. Eine erfolgreiche abgesicherte Bestandsverknüpfung beweist keine
 allgemeine Importer-Korrektur.
 
-Für den St.-Pauli-Import hat der Nutzer die Verknüpfung von Hrgota mit der
-vorhandenen Rekordperson ausdrücklich freigegeben, obwohl deren historische
-FM-ID und Geburtsdatum fehlten; die kanonische TM-Identität war eindeutig.
+Fehlende historische FM-IDs oder Geburtsdaten allein sind kein Widerspruch,
+wenn eine identische kanonische TM-Identität eindeutig belegt ist.
 
-**Why:** Der Nutzer wählte „Verknüpfen und St. Pauli importieren“ nach
-Erläuterung dieses Falls.
+**Why:** Historische Quellbelege können unvollständig sein, ohne dass die
+bekannte kanonische Identität dadurch ihre Aussagekraft verliert.
 
-**How to apply:** Diesen Fall als freigegebene Verknüpfung behandeln, nicht
-als allgemeine Erlaubnis für Namensmatching oder das Auflösen widersprüchlicher
-Quellidentitäten. Historische Personen und ihre Rekordbezüge erhalten.
+**How to apply:** Bekannte IDs und Geburtsdaten auf Widersprüche prüfen,
+fehlende Belege nicht mit abweichenden Belegen verwechseln. Niemals Namen
+allein verwenden oder widersprüchliche Quellidentitäten auflösen.
 
 Identitätsvorprüfungen einer gesamten Lieferung bleiben nach Teilimporten
 nicht automatisch gültig: Ein zuvor importierter Verein kann neue historische
 Rekordpersonen für einen noch ausstehenden Kader anlegen.
 
-**Why:** Erst das Magdeburger Paket legte eine Rekordperson an, deren aktive
-Identität anschließend beim St.-Pauli-Import benötigt wurde. Die anfängliche
-Gesamtvorprüfung konnte diesen späteren Bestand noch nicht berücksichtigen.
+**Why:** Ein früheres Paket kann eine Rekordperson anlegen, deren aktive
+Identität erst ein späteres Paket benötigt. Eine anfängliche Gesamtvorprüfung
+kann diesen späteren Bestand noch nicht berücksichtigen.
 
 **How to apply:** Noch ausstehende Pakete gegen den aktuellen Bestand erneut
 prüfen und die Verknüpfung in der abschließenden Schreibtransaktion absichern.
 Neu auflösbare Vereinsreferenzen getrennt von unveränderlichen historischen
 Quellfakten vergleichen.
+
+Kanonische IDs einer historischen Person bleiben bei dieser Person; die aktive
+Identität wird über ihre Verknüpfung aufgelöst. Keine Übertragung oder Verdopplung
+der ursprünglichen ID-Zeilen, auch wenn eine aktive Spiegel-ID ergänzt wird.
+
+**Why:** Die XOR-Eigentümerbedingung erlaubt nur einen direkten Eigentümer.
+Das Beibehalten der historischen Eigentümerschaft erhält zudem ursprüngliche
+Quellbelege und vermeidet das Umschreiben geschützter Rekordbezüge.
+
+**How to apply:** Verbraucher kanonischer Spieler-IDs müssen auch verknüpfte
+historische Eigentümer berücksichtigen. Ein fehlender Eintrag direkt am aktiven
+Spieler ist deshalb kein Beweis für eine freie oder unbekannte ID.

@@ -23,6 +23,7 @@ from game.club_import.package_service import (
 )
 from game.club_import.package_validation import read_package, PackageError
 from stadium_editor.models import StadiumDesign, StadiumGeometry
+from game.club_import.historical_identity import historical_plan
 
 
 def fingerprint(queryset):
@@ -119,18 +120,19 @@ def import_batch(paths, owner_exceptions, apply=False):
         before = {key: fingerprint(q) for key, q in protected.items()}
         existing_player_ids = set(m.Player.objects.values_list("pk", flat=True))
         incoming_existing = {}
+        historical_links = {}
         for _, manifest, data in packages:
+            links = historical_plan(data, lock=True)
+            historical_links[manifest["club"]["tm_id"]] = links
             club = identity(data["club"]["ids"], m.Club)
             if club and club.league_id != league.pk:
                 raise PackageError("Existing target club belongs to another league")
             for pdata in data["players"]:
                 player = identity(pdata["ids"], m.Player)
+                link = next((row for row in links if row["tm"] == pdata["ids"]["tm"]["value"]), None)
+                if link and link["player_id"]:
+                    player = m.Player.objects.get(pk=link["player_id"])
                 if not player:
-                    # Historic identities must never be silently stolen.
-                    if m.PlayerExternalId.objects.filter(
-                        source__code="TM", external_id=str(pdata["ids"]["tm"]["value"]),
-                        identity_kind="spieler", person__isnull=False).exists():
-                        raise PackageError("Historical identity needs explicit reconciliation")
                     continue
                 if str(player.date_of_birth) != pdata["date_of_birth"]:
                     raise PackageError("Existing player has a contradictory birth date")
@@ -194,11 +196,14 @@ def import_batch(paths, owner_exceptions, apply=False):
                 tm = pdata["ids"]["tm"]["value"]
                 player = m.Player.objects.get(transfermarkt_id=tm)
                 for provider, code, field in (("tm", "TM", "transfermarkt_id"),
-                                               ("fmi", "FM", "fm_inside_id")):
-                    value = pdata["ids"][provider]["value"]
+                                               ("fmi", "FM", "fm_inside_id"),
+                                               ("cmtracker", "CMTRACKER", None),
+                                               ("api_football", "API_FOOTBALL", "api_football_id")):
+                    value = (pdata["ids"].get(provider) or {}).get("value")
                     if value is not None:
-                        if getattr(player, field) != value or not m.PlayerExternalId.objects.filter(
-                                player=player, source__code=code, external_id=str(value),
+                        if (field and getattr(player, field) != value) or not m.PlayerExternalId.objects.filter(
+                                Q(player=player) | Q(person__linked_player=player),
+                                source__code=code, external_id=str(value),
                                 identity_kind="spieler").exists():
                             raise PackageError("Imported player identity is incomplete")
                 squad = pdata["squad"]
@@ -219,6 +224,9 @@ def import_batch(paths, owner_exceptions, apply=False):
                 "players": len(players), "new_players": sum(p.pk not in existing_player_ids for p in players),
                 "first_team": manifest["counts"]["first_team"], "u21": manifest["counts"]["u21"],
                 "persons": len(data["persons"]), "records": len(data["records"]),
+                "historical_links": [
+                    {key: row[key] for key in ("name", "tm", "person_id", "player_id")}
+                    for row in historical_links[manifest["club"]["tm_id"]]],
                 "titles": len(data["titles"]), "locked_players": locked,
                 "strength_profiles": m.PlayerStrengthProfile.objects.filter(player__in=players).count(),
                 "issues": dict(Counter(m.ImportIssue.objects.filter(club=club,
@@ -232,7 +240,8 @@ def import_batch(paths, owner_exceptions, apply=False):
             missing_ids = {provider: entry for provider, entry in ids.items()
                            if entry["value"] is not None
                            and not m.PlayerExternalId.objects.filter(
-                               player=player, source__code=PROVIDERS[provider],
+                               Q(player=player) | Q(person__linked_player=player),
+                               source__code=PROVIDERS[provider],
                                external_id=str(entry["value"]),
                                identity_kind="spieler").exists()}
             if missing_ids:
@@ -255,7 +264,8 @@ def import_batch(paths, owner_exceptions, apply=False):
                 if value is not None and (
                         (field is not None and getattr(player, field) != value)
                         or not m.PlayerExternalId.objects.filter(
-                            player=player, source__code=code, external_id=str(value),
+                            Q(player=player) | Q(person__linked_player=player),
+                            source__code=code, external_id=str(value),
                             identity_kind="spieler").exists()):
                     raise PackageError(f"Imported reciprocal loan identity is incomplete: TM {tm}")
         if fingerprint(untouched) != untouched_before:

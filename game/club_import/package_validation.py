@@ -71,6 +71,7 @@ def validate_package(manifest, data, raw_checksum):
         seen = set()
         locks = {g["ref"] for g in data["gaps"] if g["severity"] == "player_lock"}
         positions = {v for v, _ in Player.POSITION_CHOICES}
+        external_seen = set()
         for player in data["players"]:
             tm = player["ids"]["tm"]["value"]
             if type(tm) is not int or tm <= 0 or tm in seen:
@@ -90,6 +91,11 @@ def validate_package(manifest, data, raw_checksum):
                     raise PackageError("Unknown external identity status.")
                 if value is None and entry["status"] in ("gefunden", "von_hand"):
                     raise PackageError("Found identity has no ID.")
+                if value is not None:
+                    key = (provider, value)
+                    if key in external_seen:
+                        raise PackageError("Duplicate player source identity: " + provider)
+                    external_seen.add(key)
             if player["squad"]["team"] not in ("first", "u21"):
                 raise PackageError("Unknown squad.")
             if player["squad"]["status"] not in ("own", "loaned_in", "loaned_out"):
@@ -130,6 +136,25 @@ def validate_package(manifest, data, raw_checksum):
         refs = [p["ref"] for p in data["persons"]]
         if len(set(refs)) != len(refs):
             raise PackageError("Duplicate package-local person reference.")
+        for person in data["persons"]:
+            if person.get("date_of_birth"):
+                date.fromisoformat(person["date_of_birth"])
+            for field in ("tm_id", "fmi_id"):
+                value = person.get(field)
+                if value is not None and (type(value) is not int or value <= 0):
+                    raise PackageError("Invalid historical source identity.")
+            if person.get("tm_type", "spieler") != "spieler":
+                continue
+            for player in data["players"]:
+                pairs = [(person.get(field), player["ids"][provider]["value"])
+                         for field, provider in (("tm_id", "tm"), ("fmi_id", "fmi"))]
+                if not any(a is not None and a == b for a, b in pairs):
+                    continue
+                if any(a is not None and b is not None and a != b for a, b in pairs):
+                    raise PackageError("Historical person and squad source IDs disagree.")
+                if (person.get("date_of_birth")
+                        and person["date_of_birth"] != player["date_of_birth"]):
+                    raise PackageError("Historical person and squad birth dates disagree.")
         for record in data["records"]:
             ref = (record.get("holder") or {}).get("person_ref")
             if ref is not None and ref not in refs:

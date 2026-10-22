@@ -70,6 +70,8 @@ def identity(ids, model, kind="spieler"):
                 source__code=PROVIDERS[provider], external_id=str(value), identity_kind=kind)
             found.update(rows.values_list(
                 "player_id" if model is m.Player else "person_id", flat=True))
+            if model is m.Player:
+                found.update(rows.values_list("person__linked_player_id", flat=True))
             if provider == "tm" and model is m.Player:
                 found.update(m.Player.objects.filter(transfermarkt_id=value).values_list("pk", flat=True))
             if provider == "fmi" and model is m.Player:
@@ -93,6 +95,24 @@ def sync_ids(obj, ids, run, kind="spieler"):
     for provider, entry in ids.items():
         ds = source(PROVIDERS[provider])
         value = entry.get("value")
+        if isinstance(obj, m.Player):
+            if provider == "fmi" and value is None:
+                person = m.HistoricCoach.objects.filter(
+                    linked_player=obj, person_kind=kind, fm_inside_id__isnull=False).first()
+                if person and person.fm_inside_id:
+                    value = int(person.fm_inside_id)
+                    entry = dict(entry, value=value, status="gefunden")
+            historical = table.objects.filter(
+                person__linked_player=obj, identity_kind=kind, source=ds,
+                external_id__isnull=False).first()
+            if historical:
+                if value is not None and historical.external_id != str(value):
+                    raise PackageError("Historische Quell-ID widerspricht dem Paket.")
+                # Keep original owner, status, URLs and match evidence intact.
+                if any(f.name == mirror[provider] for f in obj._meta.fields):
+                    setattr(obj, mirror[provider], int(historical.external_id))
+                    obj.save(update_fields=[mirror[provider]])
+                continue
         old = table.objects.filter(**{owner_key: obj}, source=ds).first()
         if value is None and old and old.status == "von_hand":
             continue
@@ -341,9 +361,11 @@ def persons_and_facts(data, club, run, after_start):
         active = m.Player.objects.filter(transfermarkt_id=person.get("tm_id")).first() if kind == "spieler" and person.get("tm_id") else None
         row = (m.HistoricCoach.objects.filter(linked_player=active).first() if active
                else identity(ids, m.HistoricCoach, kind))
+        existing_link = bool(row and active)
         row = row or m.HistoricCoach(person_kind=kind, linked_player=active)
-        patch(row, {"name": person["name"], "nationality": person.get("nationality") or "",
-                    "birth_date": person.get("date_of_birth") or None}, after_start)
+        if not existing_link:
+            patch(row, {"name": person["name"], "nationality": person.get("nationality") or "",
+                        "birth_date": person.get("date_of_birth") or None}, after_start)
         if not active:
             sync_ids(row, ids, run, kind)
         persons[person["ref"]] = row
@@ -433,6 +455,8 @@ def apply_package(path_or_bytes, target_league, *, user=None):
         # Keep original package evidence; only the projection uses preserved manual values.
         original_data = data
         data = effective
+        from .historical_identity import historical_plan
+        historical_links = {row["tm"]: row for row in historical_plan(data, lock=True)}
         if club is None:
             if after_start:
                 raise PackageError("New club initialization is not allowed after league start.")
@@ -479,9 +503,12 @@ def apply_package(path_or_bytes, target_league, *, user=None):
         reconcile(run, candidates(data, club))
         included = set()
         for pdata in data["players"]:
+            historical = historical_links.get(pdata["ids"]["tm"]["value"])
             try:
                 player = identity(pdata["ids"], m.Player)
             except PackageError:
+                if historical:
+                    raise
                 from .issue_lifecycle import conflicting_providers, refresh_lock
                 player = m.Player.objects.select_for_update().filter(
                     transfermarkt_id=pdata["ids"]["tm"]["value"]).first()
@@ -493,6 +520,8 @@ def apply_package(path_or_bytes, target_league, *, user=None):
                             defaults={"status": "nicht_gefunden"})
                     refresh_lock(player)
                 continue
+            if historical and historical["player_id"]:
+                player = m.Player.objects.get(pk=historical["player_id"])
             if player is None and after_start:
                 issue(run, "player", f"tm:{pdata['ids']['tm']['value']}", "identity",
                       "New player ignored after league start.")
@@ -507,6 +536,9 @@ def apply_package(path_or_bytes, target_league, *, user=None):
                 "nationalities": ", ".join(pdata.get("nationalities") or []),
                 "height_cm": pdata.get("height_cm"), "strong_foot": pdata.get("foot") or "",
                 "age": age}, after_start)
+            if historical:
+                m.HistoricCoach.objects.filter(pk=historical["person_id"]).update(
+                    linked_player=player)
             sync_ids(player, pdata["ids"], run)
             included.add(player.pk)
             if not after_start:

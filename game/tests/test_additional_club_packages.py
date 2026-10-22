@@ -10,9 +10,10 @@ from django.test import TestCase, override_settings
 
 from game import models as m
 from game.club_import.package_service import apply_package
-from game.club_import.package_validation import PackageError, read_package
+from game.club_import.package_validation import PackageError
 from game.economy.booking import book
-from game.tests.test_package_security import V2, archive
+from game.tests.test_package_security import archive
+from game.tests.package_identity_fixture import identity_package_fixture
 from scripts.import_additional_club_packages import fingerprint, import_batch
 from stadium_editor.models import StadiumDesign, StadiumGeometry
 
@@ -20,7 +21,7 @@ from stadium_editor.models import StadiumDesign, StadiumGeometry
 @override_settings(IMPORT_PACKAGE_MODE=True, IMPORT_PACKAGE_IMAGE_CHECK_ENABLED=False)
 class AdditionalClubPackageTests(TestCase):
     def setUp(self):
-        self.manifest, self.data = read_package(V2)
+        self.manifest, self.data = identity_package_fixture()
         self.data["players"] = [deepcopy(next(
             p for p in self.data["players"]
             if p["squad"]["status"] == "own" and p["squad"]["team"] == "first"
@@ -116,6 +117,40 @@ class AdditionalClubPackageTests(TestCase):
 
     def test_borrower_then_owner_and_exact_repetition(self):
         self.check_import(reverse=True)
+
+    def check_historical_loan(self, reverse):
+        person = m.HistoricCoach.objects.create(
+            name="Historischer Quellname", person_kind="spieler",
+            birth_date=self.data["players"][0]["date_of_birth"])
+        source = m.DataSource.objects.get_or_create(code="TM", defaults={"name": "TM"})[0]
+        external = m.PlayerExternalId.objects.create(
+            person=person, source=source, external_id=str(self.tm),
+            identity_kind="spieler", status="gefunden",
+            source_url="https://example.org/original", match_evidence={"original": True})
+        external_before = m.PlayerExternalId.objects.filter(pk=external.pk).values().get()
+        record = m.ClubRecord.objects.create(
+            club=self.anchor, record_key="top_scorer", source="SEED",
+            value_numeric=42, value_display="42", holder_name=person.name,
+            holder_coach=person, source_note="Geschützter Originalbeleg")
+        record_before = m.ClubRecord.objects.filter(pk=record.pk).values().get()
+        paths = self.paths[::-1] if reverse else self.paths
+        before = self.snapshot()
+        self.assertFalse(import_batch(paths, {}, apply=False)["applied"])
+        self.assertEqual(before, self.snapshot())
+        player = self.check_import(reverse=reverse)
+        person.refresh_from_db()
+        self.assertEqual(person.linked_player_id, player.pk)
+        self.assertEqual(external_before, m.PlayerExternalId.objects.filter(pk=external.pk).values().get())
+        self.assertEqual(record_before, m.ClubRecord.objects.filter(pk=record.pk).values().get())
+        self.assertFalse(m.PlayerExternalId.objects.filter(
+            player=player, source=source, external_id=str(self.tm)).exists())
+        self.assertEqual(player.fm_inside_id, self.data["players"][0]["ids"]["fmi"]["value"])
+
+    def test_historical_tm_owner_then_borrower_and_exact_repetition(self):
+        self.check_historical_loan(reverse=False)
+
+    def test_historical_tm_borrower_then_owner_and_exact_repetition(self):
+        self.check_historical_loan(reverse=True)
 
     def test_missing_number_in_owner_package(self):
         del self.sources[0][1]["players"][0]["squad"]["shirt_number"]

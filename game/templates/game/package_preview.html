@@ -19,6 +19,15 @@
         <div><span>Spielbarkeit</span><strong>{% if league.is_playable %}Spielbar{% else %}Nicht spielbar{% endif %}</strong></div>
     </section>
 
+    {% if preview.historical_links %}
+    <section class="package-preview-card">
+        <h2>Historische Spieleridentitäten verknüpfen</h2>
+        <p>Abgleich über identische Quell-IDs ohne widersprechendes bekanntes Geburtsdatum. Rekordpersonen, bestehende Rekorde und ihre Quellbelege bleiben erhalten; IDs bleiben bei ihrem bisherigen Eigentümer.</p>
+        <ul>{% for link in preview.historical_links %}
+            <li>{{ link.name }} (TM {{ link.tm }}) → {{ link.person_name }} · historische Person #{{ link.person_id }}{% if link.player_id %} · aktiver Spieler #{{ link.player_id }}{% else %} · aktiver Spieler wird angelegt{% endif %}</li>
+        {% endfor %}</ul>
+    </section>
+    {% endif %}
     <div class="package-preview-grid">
         <section class="package-preview-card">
             <p class="package-preview-kicker">Kaderübersicht</p>

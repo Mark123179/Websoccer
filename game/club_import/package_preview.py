@@ -120,6 +120,8 @@ def preview_package(raw, league):
     manifest, data = read_package(raw)
     club = m.Club.objects.filter(transfermarkt_id=manifest["club"]["tm_id"]).first()
     effective, manual_changes = preserved_manual(data, club)
+    from .historical_identity import historical_plan
+    historical_links = historical_plan(effective)
     rows = candidates(effective, club)
     _, _, balance = plan(club, rows)
     changes = list(manual_changes)
@@ -163,6 +165,7 @@ def preview_package(raw, league):
     state = dict(league=(league.pk, league.is_playable, league_started(league)),
                  package=last.data_sha256 if last else "")
     state["plan"] = rows
+    state["historical_links"] = historical_links
     state["image_check_enabled"] = image_check_enabled()
     state["images"] = image_gaps(data)
     state["title_changes"] = title_changes
@@ -179,5 +182,6 @@ def preview_package(raw, league):
         image_check_enabled=image_check_enabled(),
         missing_images=image_gaps(data), players_to_review=review,
         new_strengths=new_strength, new_strength_players=new_strength_players, guard=guard,
+        historical_links=historical_links,
         baseline=last.data_sha256 if last else "",
         effective=effective)
