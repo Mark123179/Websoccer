@@ -3,7 +3,7 @@ import {applyStudyCamera} from './study_camera.js?v=3';
 import {buildDortmundSurroundings} from './dortmund_surroundings.js?v=58';
 import {validateCalibration, standForCenter, tickerQuaternion} from './unity_calibration.js?v=2';
 import {mountBridgeHeightNotice} from './bridge_height_evidence.js?v=1';
-import {mountHeidenheimFloodlightVisuals} from './heidenheim_floodlight_visuals.js?v=1';
+import {mountHeidenheimFloodlightVisuals} from './heidenheim_floodlight_visuals.js?v=2';
 
 /** Original source geometry, with its own club-scoped runtime presentation. */
 export async function mountUnityStadium({element, presentation, tickerPreview = false, onOrbitChange}) {

@@ -67,8 +67,8 @@ const glowFragment = `
   void main() {
     float r = length(discUv);
     float core = 1.0 - smoothstep(0.20, 0.35, r);
-    float halo = exp(-r * r * 6.0) * (1.0 - smoothstep(0.7, 1.0, r));
-    float alpha = strength * (core * 0.96 + halo * 0.22);
+    float halo = exp(-r * r * 5.2) * (1.0 - smoothstep(0.7, 1.0, r));
+    float alpha = strength * (core * 0.96 + halo * 0.34);
     gl_FragColor = vec4(0.92, 0.96, 1.0, alpha);
   }`;
 const beamVertex = `
@@ -134,7 +134,7 @@ export function mountHeidenheimFloodlightVisuals(scene, manifest, buffer) {
     geometry.translate(0, -length / 2, 0);
     const material = new THREE.ShaderMaterial({...options, side: THREE.DoubleSide,
       vertexShader: beamVertex, fragmentShader: beamFragment,
-      uniforms: {strength: {value: .035}, lengthMeters: {value: length}}});
+      uniforms: {strength: {value: .065}, lengthMeters: {value: length}}});
     const beam = new THREE.Mesh(geometry, material);
     beam.name = `SOURCE_LIGHT_CONE_${fixture.id}`;
     beam.position.fromArray(fixture.position).addScaledVector(direction, .03);
@@ -149,7 +149,7 @@ export function mountHeidenheimFloodlightVisuals(scene, manifest, buffer) {
       if (disposed) return;
       group.visible = enabled;
       glowMaterial.uniforms.strength.value = day ? .65 : 1;
-      for (const beam of beams) beam.material.uniforms.strength.value = day ? .006 : .035;
+      for (const beam of beams) beam.material.uniforms.strength.value = day ? .01 : .065;
     },
     dispose() {
       if (disposed) return;

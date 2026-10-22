@@ -2916,3 +2916,31 @@ mtime_ms = 1792654995451
 storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:6e4eaecc-e6c5-4f64-8de5-e8845034f33b/2ac0c4fd-ca03-4595-9cbb-c18ca283c292/5402ebdc-87ce-4f6e-a611-395676e2fe09"
 storage_version_token = "1792655031078922"
 content_type = "text/html"
+
+[[outputs]]
+id = "4uc77V1NX1hBDcDmaMvr-"
+uri = "file://generated-artifacts/heidenheim-floodlight-review/nacht-an.png"
+type = "image"
+title = "Voith-Arena – stärkere Lichtwirkung"
+description = "Deutlichere Lichtkegel und kräftigerer Lampenschein bei unveränderter Spielfeldbeleuchtung."
+logical_id = "2e113bdc-9ce8-4a79-9849-c0b32a333069"
+content_hash = "sha256:64c6e3d4ff6e5a550d9a40d80e92988634baf16d8db6c27680af09693ae42669"
+size = 1196218
+mtime_ms = 1792655358986
+storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:6e4eaecc-e6c5-4f64-8de5-e8845034f33b/2e113bdc-9ce8-4a79-9849-c0b32a333069/d73f6785-d272-4644-a31f-c4d57c0e3437"
+storage_version_token = "1792655431697917"
+content_type = "image/png"
+
+[[outputs]]
+id = "M-eCjGBqQtNAZ8sgCPIvi"
+uri = "file://generated-artifacts/heidenheim-floodlight-review/lichtwirkung-staerker-vergleich.jpg"
+type = "image"
+title = "Lichtwirkung – vorher und stärker"
+description = "Oben die zurückhaltende Fassung, unten die verstärkte Lichtwirkung mit identischer Kamera."
+logical_id = "eb030035-1bad-44ca-ad05-0d7f2644baf4"
+content_hash = "sha256:234bd9d32bfe96c66a927c0a55c20341f6666e85d84b1b4d365edf2885d347e7"
+size = 511282
+mtime_ms = 1792655410262
+storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:6e4eaecc-e6c5-4f64-8de5-e8845034f33b/eb030035-1bad-44ca-ad05-0d7f2644baf4/2dfbaead-dd2c-45f6-92f3-79813ac0d031"
+storage_version_token = "1792655432745610"
+content_type = "image/jpeg"

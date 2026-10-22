@@ -6,11 +6,13 @@ description: Regeln für unabhängigen Flutlichtzustand und begrenzte Three.js-L
 Flutlichter müssen aus dem jeweiligen Modell erkannt und ausdrücklich deklariert werden; Nachtlicht darf nicht aus willkürlich verteilten Lichtquellen stammen.
 
 Bei der Voith-Arena sollen eingeschaltete Masten sichtbar leuchtende
-Lampenflächen und dezente, weich auslaufende Lichtkegel haben.
+Lampenflächen und gut sichtbare, weich auslaufende Lichtkegel haben.
 
 **Why:** Nach der Stadionabnahme wirkte die Nachtansicht für den Nutzer,
 als seien die Masten ausgeschaltet. Er wählte ausdrücklich „Leuchtende
 Lampen und dezente Lichtkegel“ statt ausschließlich leuchtender Lampen.
+Die erste zurückhaltende Darstellung sollte laut Nutzer „ruhig etwas stärker“
+ausfallen.
 
 **How to apply:** Sichtbare Lampen und Luftstreuung an belegten
 Quellflächen/-achsen ergänzen, unabhängig vom Tag/Nacht-Zustand über den
