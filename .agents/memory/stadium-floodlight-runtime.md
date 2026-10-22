@@ -12,7 +12,8 @@ Lampenflächen und gut sichtbare, weich auslaufende Lichtkegel haben.
 als seien die Masten ausgeschaltet. Er wählte ausdrücklich „Leuchtende
 Lampen und dezente Lichtkegel“ statt ausschließlich leuchtender Lampen.
 Die erste zurückhaltende Darstellung sollte laut Nutzer „ruhig etwas stärker“
-ausfallen.
+ausfallen. Die daraufhin verstärkte Lichtwirkung bestätigte er ausdrücklich
+mit „Ja, so lassen“; diese Darstellung ist visuell abgenommen.
 
 **How to apply:** Sichtbare Lampen und Luftstreuung an belegten
 Quellflächen/-achsen ergänzen, unabhängig vom Tag/Nacht-Zustand über den
