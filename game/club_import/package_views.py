@@ -2,7 +2,7 @@ import base64
 from functools import wraps
 from django.contrib.auth.decorators import login_required
 from django.core import signing
-from django.db import transaction
+from django.db import IntegrityError, transaction
 from django.http import Http404, HttpResponseForbidden, HttpResponseBadRequest, HttpResponseNotFound
 from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import path
@@ -117,7 +117,14 @@ def issue(request, pk):
                 row.entity == "club_reference" and row.field == "tm_id" and request.POST.get("action") in ("value", "link")):
             return HttpResponseBadRequest("Nach Ligastart ist diese Nachpflege gesperrt.")
         action = request.POST.get("action")
-        player = m.Player.objects.filter(transfermarkt_id=row.entity_ref.removeprefix("tm:")).first() if row.entity == "player" and row.entity_ref.startswith("tm:") else None
+        player = None
+        if row.entity == "player" and row.entity_ref.startswith("tm:"):
+            from .package_service import identity
+            try:
+                player = identity({"tm": {"value": int(row.entity_ref[3:])}}, m.Player)
+            except (PackageError, ValueError):
+                return HttpResponseBadRequest(
+                    "TM-Quell-ID ist ungültig oder gehört zu widersprüchlichen aktiven Identitäten.")
         if action == "resolve":
             if row.severity == "player_lock":
                 return HttpResponseBadRequest("Einzelsperren schließen sich ausschließlich aus dem Datenstand.")
@@ -139,25 +146,31 @@ def issue(request, pk):
             if row.field.startswith("ids."):
                 if row.entity not in ("player", "club"):
                     return HttpResponseBadRequest("Diese Gegenstandsart hat keine direkte ID-Nachpflege.")
+                if row.entity == "player" and player is None:
+                    return HttpResponseBadRequest("Aktiver Spieler wurde nicht gefunden.")
                 provider = row.field.split(".")[1]
                 codes = {"fmi": "FM", "tm": "TM", "cmtracker": "CMTRACKER", "api_football": "API_FOOTBALL"}
                 if provider not in codes:
                     return HttpResponseBadRequest("Unbekannte Quelle.")
-                table = m.PlayerExternalId if player else m.ClubExternalId
-                owner = {"player": player} if player else {"club": row.club}
-                ds = source(codes[provider])
-                conflicts = table.objects.filter(source=ds, external_id=str(value))
-                if player:
-                    conflicts = conflicts.filter(identity_kind="spieler")
-                if conflicts.exclude(**owner).exists():
-                    return HttpResponseBadRequest("ID gehört bereits einer anderen Identität.")
-                table.objects.update_or_create(**owner, source=ds,
-                    defaults=dict(external_id=str(value), status="von_hand", checked_at=timezone.now().date()))
-                target = player or row.club
                 mirror = {"fmi": "fm_inside_id", "tm": "transfermarkt_id",
                           "cmtracker": "cmtracker_id", "api_football": "api_football_id"}[provider]
-                setattr(target, mirror, value)
-                target.save(update_fields=[mirror])
+                if player:
+                    from .manual_identity import supplement_player_id
+                    try:
+                        supplement_player_id(player, codes[provider], value, mirror)
+                    except PackageError as exc:
+                        return HttpResponseBadRequest(str(exc))
+                    except IntegrityError:
+                        return HttpResponseBadRequest(
+                            "ID-Konflikt beim Speichern. Bitte Datenstand prüfen.")
+                else:
+                    ds = source(codes[provider])
+                    if m.ClubExternalId.objects.filter(source=ds, external_id=str(value)).exclude(club=row.club).exists():
+                        return HttpResponseBadRequest("ID gehört bereits einer anderen Identität.")
+                    m.ClubExternalId.objects.update_or_create(club=row.club, source=ds,
+                        defaults=dict(external_id=str(value), status="von_hand", checked_at=timezone.now().date()))
+                    setattr(row.club, mirror, value)
+                    row.club.save(update_fields=[mirror])
             elif row.entity == "club_reference" and row.field == "tm_id":
                 name = row.entity_ref
                 reference = m.Club.objects.filter(transfermarkt_id=value).first()
@@ -221,7 +234,7 @@ def issue(request, pk):
             row.manual_value = value
         else:
             return HttpResponseBadRequest("Unbekannte Aktion.")
-        if row.severity != "player_lock":
+        if row.severity != "player_lock" and row.resolution_status != "resolved":
             row.resolution_status = "resolved"
             row.resolved_at = timezone.now()
             row.resolved_by = request.user
