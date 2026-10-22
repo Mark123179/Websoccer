@@ -87,6 +87,7 @@
 - [Nation-Badge-ID Calibration](nation-badge-id-calibration.md) — Badge-Lücken 56–105/803–1434; 46 IDs korrigiert; Bild-Erkennung ±1 unzuverlässig → User-Textliste bevorzugen.
 - [Finanz-Kalibrierung V1](finance-calibration-v1.md) — nur EconomyParameter justieren; nicht_messbar statt stilles ok; UI-Save bewahrt KI_KAEUFER.dry_run; Typcheck gegen get_param (bool vor int).
 - [Django atomic-Raise-Rollback](django-atomic-raise-rollback.md) — Status-Save + raise im selben atomic-Block wird zurückgerollt; erst committen, dann raisen; Tests müssen persistierten Status asserten.
+- [Django-Sperren und Sortier-Joins](django-lock-ordering.md) — Meta.ordering über nullable Relationen kann FOR UPDATE auch ohne select_related verhindern.
 - [potential_200 Skalenregel](potential-200-scale.md) — Player.potential ist 100er-Rohwert; Ökonomie vergleicht Potential↔Stärke NUR via potential_200(); Snapshot-Median jetzt 200er-Skala.
 - [KI-Käufer Phase 6](ki-kaeufer-phase6.md) — KI-zu-KI-Clearing dealt gegen die Reserve (Schmerzgrenze), nie gegen die 1,1–1,3×-Forderung (nur Ranking-Heuristik); dry_run-Altbestand beim Scharfschalten stornieren.
 - [Insolvenz & Zwangsversteigerung V1](finance-insolvency-forced-auction.md) — Vermerk-Hooks als Vorzeichen-Guards im Buchungspfad; Konto bereinigt → Auktion cancelled; nur Scouting-Auktion vernichtet Geld; Verbandsabgabe hart disabled per Seed.

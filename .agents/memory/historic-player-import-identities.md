@@ -22,3 +22,27 @@ kanonischen Quell-IDs und Wiederholbarkeit prüfen, nicht nur die Laufmeldung
 oder Gesamtzahl. Der reguläre Paketimport übernimmt diesen Übergang noch nicht
 zuverlässig; eine erfolgreiche abgesicherte Bestandsverknüpfung beweist keine
 allgemeine Importer-Korrektur.
+
+Für den St.-Pauli-Import hat der Nutzer die Verknüpfung von Hrgota mit der
+vorhandenen Rekordperson ausdrücklich freigegeben, obwohl deren historische
+FM-ID und Geburtsdatum fehlten; die kanonische TM-Identität war eindeutig.
+
+**Why:** Der Nutzer wählte „Verknüpfen und St. Pauli importieren“ nach
+Erläuterung dieses Falls.
+
+**How to apply:** Diesen Fall als freigegebene Verknüpfung behandeln, nicht
+als allgemeine Erlaubnis für Namensmatching oder das Auflösen widersprüchlicher
+Quellidentitäten. Historische Personen und ihre Rekordbezüge erhalten.
+
+Identitätsvorprüfungen einer gesamten Lieferung bleiben nach Teilimporten
+nicht automatisch gültig: Ein zuvor importierter Verein kann neue historische
+Rekordpersonen für einen noch ausstehenden Kader anlegen.
+
+**Why:** Erst das Magdeburger Paket legte eine Rekordperson an, deren aktive
+Identität anschließend beim St.-Pauli-Import benötigt wurde. Die anfängliche
+Gesamtvorprüfung konnte diesen späteren Bestand noch nicht berücksichtigen.
+
+**How to apply:** Noch ausstehende Pakete gegen den aktuellen Bestand erneut
+prüfen und die Verknüpfung in der abschließenden Schreibtransaktion absichern.
+Neu auflösbare Vereinsreferenzen getrennt von unveränderlichen historischen
+Quellfakten vergleichen.
