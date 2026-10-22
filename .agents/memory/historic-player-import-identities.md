@@ -56,3 +56,14 @@ Quellbelege und vermeidet das Umschreiben geschützter Rekordbezüge.
 **How to apply:** Verbraucher kanonischer Spieler-IDs müssen auch verknüpfte
 historische Eigentümer berücksichtigen. Ein fehlender Eintrag direkt am aktiven
 Spieler ist deshalb kein Beweis für eine freie oder unbekannte ID.
+
+Auch die umgekehrte Bestandslage ist zulässig: Eine historische Person mit
+passendem `linked_player` kann ihre Spiegel-ID durch einen ursprünglich beim
+aktiven Spieler gespeicherten kanonischen Beleg nachweisen. Nicht allein wegen
+der Eigentümerrichtung eine Identitätslücke oder einen Übertragungsbedarf melden.
+
+**Why:** Ein lesender Bestandsabgleich würde sonst eine vollständig belegte
+Verknüpfung fälschlich als fehlenden kanonischen Beleg einstufen.
+
+**How to apply:** Gegenbelege in beiden Richtungen entlang der expliziten
+Verknüpfung prüfen; bestehende kanonische Eigentümerschaft unverändert lassen.
