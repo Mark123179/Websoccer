@@ -27,3 +27,16 @@ behandelte die gültige Lieferung dennoch als Konflikt.
 über beide Pakete vergleichen. Am Ende muss genau ein Spieler mit korrektem
 Stamm- und Einsatzverein bestehen; Paketquellen und Rückennummer des
 aufnehmenden Vereins erhalten.
+
+Unbekannte optionale Quell-IDs in einer Leihperspektive sind kein Widerspruch
+zu bekannten IDs in der anderen. Das gemeinsame Spielerobjekt muss die
+bekannten IDs behalten; zwei verschiedene bekannte Werte bleiben ein Konflikt.
+Sind in beiden Perspektiven Rückennummern gesetzt, müssen sie übereinstimmen.
+
+**Why:** Beide Perspektiven ergänzen dieselbe Identität. Fehlende Angaben
+dürfen vorhandene Identitätsbelege nicht löschen; abweichende bekannte Werte
+sollen nicht durch die zufällige Paketreihenfolge entschieden werden.
+
+**How to apply:** Quellen unverändert archivieren und bekannte Identitätsbelege
+zusammenführen. Widersprüche vor dem ersten Paketimport prüfen und den
+gemeinsamen Spielerzustand nach allen Paketen nochmals abgleichen.

@@ -4,7 +4,7 @@ Uses the canonical package service unchanged. A batch is committed only after
 identity, ownership, protected-state and exact-replay checks all succeed.
 """
 import argparse
-from collections import Counter
+from collections import Counter, defaultdict
 import hashlib
 import json
 import os
@@ -18,7 +18,9 @@ from django.apps import apps
 from django.contrib.auth.models import User
 from django.db import transaction
 from game import models as m
-from game.club_import.package_service import apply_package, identity, league_started
+from game.club_import.package_service import (
+    PROVIDERS, apply_package, identity, league_started, sync_ids,
+)
 from game.club_import.package_validation import read_package, PackageError
 from stadium_editor.models import StadiumDesign, StadiumGeometry
 
@@ -46,13 +48,67 @@ def protected_queries():
     return {q.model._meta.label: q for q in queries}
 
 
+def validate_batch_players(packages):
+    """Only reciprocal views of one loan may share a TM identity.
+
+    Keep all source rows. Missing provider IDs are not contradictions, but every
+    known ID must agree and must not identify a different TM player in the batch.
+    """
+    rows = defaultdict(list)
+    external_ids = {}
+    for _, manifest, data in packages:
+        for player in data["players"]:
+            tm = player["ids"]["tm"]["value"]
+            rows[tm].append((manifest["club"]["tm_id"], player))
+            for provider, entry in player["ids"].items():
+                value = entry["value"]
+                if value is None:
+                    continue
+                key = (provider, value)
+                if external_ids.setdefault(key, tm) != tm:
+                    raise PackageError(f"Conflicting {provider} identity in batch: {value}")
+
+    shared = {}
+    for tm, entries in rows.items():
+        if len(entries) == 1:
+            continue
+        if len(entries) != 2:
+            raise PackageError(f"Duplicate player identity is not a reciprocal loan: TM {tm}")
+        by_status = {player["squad"]["status"]: (club, player) for club, player in entries}
+        if set(by_status) != {"loaned_in", "loaned_out"}:
+            raise PackageError(f"Duplicate player identity is not a reciprocal loan: TM {tm}")
+        owner_tm, outgoing = by_status["loaned_out"]
+        borrower_tm, incoming = by_status["loaned_in"]
+        for _, player in entries:
+            squad = player["squad"]
+            if ((squad.get("owner_club") or {}).get("tm_id") != owner_tm
+                    or (squad.get("loan_club") or {}).get("tm_id") != borrower_tm
+                    or squad["loan_until"] != incoming["squad"]["loan_until"]):
+                raise PackageError(f"Contradictory loan partners or end date: TM {tm}")
+        for field in ("first_name", "last_name", "date_of_birth"):
+            if outgoing[field] != incoming[field]:
+                raise PackageError(f"Contradictory player {field}: TM {tm}")
+        ids = {}
+        for provider in incoming["ids"]:
+            known = [player["ids"][provider] for _, player in entries
+                     if player["ids"][provider]["value"] is not None]
+            if len({entry["value"] for entry in known}) > 1:
+                raise PackageError(f"Contradictory player {provider} identity: TM {tm}")
+            ids[provider] = known[-1] if known else incoming["ids"][provider]
+        numbers = {player["squad"].get("shirt_number") for _, player in entries
+                   if player["squad"].get("shirt_number") not in (None, "")}
+        if len(numbers) > 1:
+            raise PackageError(f"Contradictory loan shirt numbers: TM {tm}")
+        shared[tm] = (borrower_tm, incoming, ids, next(iter(numbers), None))
+    return shared
+
+
 def import_batch(paths, owner_exceptions, apply=False):
     packages = [(Path(path), *read_package(Path(path))) for path in paths]
     club_tms = [manifest["club"]["tm_id"] for _, manifest, _ in packages]
-    all_players = [p for _, _, data in packages for p in data["players"]]
-    player_tms = [p["ids"]["tm"]["value"] for p in all_players]
-    if len(set(club_tms)) != len(club_tms) or len(set(player_tms)) != len(player_tms):
-        raise PackageError("Duplicate club/player identities in the submitted batch")
+    if len(set(club_tms)) != len(club_tms):
+        raise PackageError("Duplicate club identities in the submitted batch")
+    shared_players = validate_batch_players(packages)
     report = {"applied": apply, "packages": [], "owner_exceptions": owner_exceptions}
     with transaction.atomic():
         league = m.League.objects.select_for_update().get(
@@ -168,6 +224,40 @@ def import_batch(paths, owner_exceptions, apply=False):
                 "issues": dict(Counter(m.ImportIssue.objects.filter(club=club,
                             resolution_status="open").values_list("severity", flat=True))),
             })
+        # A later source row may omit an ID known by the other package.
+        # Preserve that knowledge through the canonical ID writer, without
+        # changing either archived source or re-importing a synthetic package.
+        for tm, (borrower_tm, incoming, ids, number) in shared_players.items():
+            player = m.Player.objects.get(transfermarkt_id=tm)
+            missing_ids = {provider: entry for provider, entry in ids.items()
+                           if entry["value"] is not None
+                           and not m.PlayerExternalId.objects.filter(
+                               player=player, source__code=PROVIDERS[provider],
+                               external_id=str(entry["value"]),
+                               identity_kind="spieler").exists()}
+            if missing_ids:
+                run = m.SourceImportRun.objects.get(
+                    pk=next(item["run"] for item in report["packages"]
+                            if item["club_id"] == player.loan_club_id))
+                sync_ids(player, missing_ids, run)
+                player.refresh_from_db()
+            if (not player.club_id or player.club.transfermarkt_id != borrower_tm
+                    or player.owner_club_tm_id != incoming["squad"]["owner_club"]["tm_id"]
+                    or player.loan_club_tm_id != borrower_tm
+                    or str(player.loan_until) != incoming["squad"]["loan_until"]
+                    or number is not None and player.shirt_number != number):
+                raise PackageError(f"Imported reciprocal loan is incomplete: TM {tm}")
+            for provider, code, field in (
+                    ("tm", "TM", "transfermarkt_id"), ("fmi", "FM", "fm_inside_id"),
+                    ("cmtracker", "CMTRACKER", None),
+                    ("api_football", "API_FOOTBALL", "api_football_id")):
+                value = ids[provider]["value"]
+                if value is not None and (
+                        (field is not None and getattr(player, field) != value)
+                        or not m.PlayerExternalId.objects.filter(
+                            player=player, source__code=code, external_id=str(value),
+                            identity_kind="spieler").exists()):
+                    raise PackageError(f"Imported reciprocal loan identity is incomplete: TM {tm}")
         if fingerprint(untouched) != untouched_before:
             raise PackageError("Unrelated existing players changed")
         if any(fingerprint(q) != before[key] for key, q in protected.items()):
