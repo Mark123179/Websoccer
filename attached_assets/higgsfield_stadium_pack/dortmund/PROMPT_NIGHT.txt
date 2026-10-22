@@ -1,7 +1,0 @@
-Use the APPROVED DAY IMAGE for this club as the only structural base. This is a RELIGHT, not a new scene.
-Keep every pixel-level edge of the field, buildings, roofs, roads, curbs, trees and parking geometry registered to the daytime image. Keep exactly the same camera, crop, perspective and 1880 x 940 canvas. Do not regenerate, move, add or remove structures.
-Change only the time of day to a restrained realistic German evening/night: dim blue ambient light on ground and trees, a few subtle warm windows and existing ordinary street-light locations ONLY where supported by the daytime/site reference. Do not invent a stadium floodlight installation, light masts, searchlights, beams or stadium light glow; the runtime supplies the real stadium lighting independently.
-The MAIN STADIUM remains absent. Do not draw crowds, goalposts, players or a ball. Do not introduce a visible sky band or horizon. Preserve the game field region's exact shape and registration; its final rendered lighting is controlled by the 3D game, not this background.
-
-NEGATIVE CONSTRAINTS:
-main stadium, grandstands, stand roof, floodlight mast, stadium bowl, duplicate pitch, resized pitch, new perspective, zoom change, camera roll, fisheye lens, visible skyline band, sky strip, mountains, ocean, neon fantasy, city skyscrapers, invented landmark, legible text, logo, watermark, interface, border, split-screen, football players, ball, crowds
