@@ -32,14 +32,16 @@ def audit_player_identities():
     """
     mirrors = {code: field for code, field in PROVIDERS.values() if field}
     players = {r["id"]: r for r in m.Player.objects.order_by("pk").values(
-        "id", "first_name", "last_name", "club_id", "date_of_birth", *mirrors.values())}
+        "id", "first_name", "last_name", "club_id", "owner_club_id", "loan_club_id",
+        "date_of_birth", *mirrors.values())}
     people = {r["id"]: r for r in m.HistoricCoach.objects.order_by("pk").values(
         "id", "name", "person_kind", "birth_date", "fm_inside_id", "linked_player_id")}
     rows = list(m.PlayerExternalId.objects.order_by("pk").values(
         "id", "player_id", "person_id", "identity_kind", "source__code",
         "external_id", "status", "source_url", "profile_url", "match_evidence"))
     records = list(m.ClubRecord.objects.order_by("pk").values(
-        "id", "club_id", "record_key", "source", "holder_player_id", "holder_coach_id"))
+        "id", "club_id", "record_key", "source", "holder_player_id", "holder_coach_id",
+        "holder_name", "value_display", "source_note", "context_line", "competition", "season"))
     records_by_owner = defaultdict(dict)
     for record in records:
         for kind, field in (("player", "holder_player_id"), ("person", "holder_coach_id")):

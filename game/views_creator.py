@@ -12,6 +12,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils import timezone
 from django.views.decorators.http import require_POST
+from django.views.decorators.http import require_safe
 
 from .models import (
     Club, COUNTRY_FLAG_ASSETS, DataSource, League, Player,
@@ -684,8 +685,21 @@ def creator_vereinslose(request):
 
 
 @staff_member_required
+@require_safe
 def creator_club_edit(request, club_id):
     club = get_object_or_404(Club, id=club_id)
+    # Bypass legacy editor get_or_create and all unrelated editor work.
+    # The audit tab must remain SELECT-only even for clubs without a profile.
+    if request.GET.get('tab') == 'identitaeten':
+        from .club_import.identity_audit_display import club_identity_audit_context
+        request.creator_read_only = True
+        response = render(request, 'creator/club_edit.html', {
+            'club': club,
+            'active_tab': 'identitaeten',
+            **club_identity_audit_context(club.pk, request.GET.get('page')),
+        })
+        response['Cache-Control'] = 'private, no-store'
+        return response
     profile, _ = ClubPublicProfile.objects.get_or_create(club=club)
 
     players = list(

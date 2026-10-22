@@ -67,3 +67,15 @@ Verknüpfung fälschlich als fehlenden kanonischen Beleg einstufen.
 
 **How to apply:** Gegenbelege in beiden Richtungen entlang der expliziten
 Verknüpfung prüfen; bestehende kanonische Eigentümerschaft unverändert lassen.
+
+Vereinsbezogene Identitätsberichte dürfen nur vollständige zusammenhängende
+Befunde auswählen, niemals die enthaltenen Fremdvereins-Identitäten beschneiden.
+Die Creator-Ansicht bleibt eine lesende Prüfung gespeicherter Prüfstände, ohne
+Reparaturaktionen, ID-Übertragung oder Paketimporte.
+
+**Why:** Der Nutzer verlangt ausdrücklich, dass Vereinsfilter Widersprüche nicht
+wegfiltern und große Gesamtscans nicht bei jedem Seitenaufruf wiederholen.
+
+**How to apply:** Vereinszugehörigkeit zur Auswahl eines Befunds verwenden;
+anschließend sämtliche Beteiligten, Quellbelege und Rekordbezüge erhalten.
+Prüfzeitpunkt sichtbar machen und fehlenden Bericht von fehlenden Befunden trennen.

@@ -1,0 +1,69 @@
+<section class="identity-audit" aria-labelledby="identity-audit-title">
+  <div class="creator-card">
+    <div class="creator-card-head"><h2 id="identity-audit-title">Identitätsbefunde · {{ club.name }}</h2></div>
+    <div class="creator-card-body">
+      <p>Rein lesende Bestandsprüfung. Keine Reparatur, ID-Übertragung oder Paketimporte.</p>
+      <p>Die Vereinsauswahl zeigt vollständige zusammenhängende Befunde, einschließlich aller Fremdvereins-Identitäten und Widersprüche. Zuordnung über aktuellen Verein, Stamm-/Leihverein oder Rekordbezüge.</p>
+      {% if identity_snapshot %}
+        <p><strong>Prüfstand: {{ identity_snapshot.generated_at|date:"d.m.Y H:i:s T" }}</strong> · gespeicherter Bericht, keine Live-Prüfung.</p>
+        <p>{{ identity_page.paginator.count }} Befunde für diesen Verein · {{ identity_summary.affected_components }} im Gesamtbericht.
+          Geprüft: {{ identity_summary.players_scanned }} Spieler, {{ identity_summary.people_scanned }} historische Personen, {{ identity_summary.external_rows_scanned }} kanonische Quellbelege.</p>
+        <p>Änderungen nach diesem Prüfstand sind nicht enthalten. Aktualisierung ausschließlich per <code>python manage.py audit_player_identities --save</code> außerhalb dieser Ansicht.</p>
+      {% else %}
+        <p><strong>Noch kein gespeicherter Prüfbericht vorhanden.</strong> Es wurde kein Scan gestartet.</p>
+        <p>Bericht außerhalb der Webansicht erstellen: <code>python manage.py audit_player_identities --save</code>. Dabei wird nur der Bericht gespeichert; Spielerdaten, IDs und Rekorde bleiben unverändert.</p>
+      {% endif %}
+    </div>
+  </div>
+
+  {% for finding in identity_page %}
+  <article class="creator-card">
+    <div class="creator-card-head"><h3>Befund {{ finding.report_number }}</h3></div>
+    <div class="creator-card-body">
+      <p>Verbundene Vereine:
+        {% for related_club in finding.clubs %}
+          <a href="{% url 'creator_club_edit' club_id=related_club.id %}?tab=identitaeten">{{ related_club.name }} (#{{ related_club.id }})</a>{% if not forloop.last %} · {% endif %}
+        {% endfor %}
+      </p>
+      <h4>Festgestellte Probleme</h4>
+      <ul>{% for problem in finding.problems %}<li><code>{{ problem.code }}</code> — {{ problem.message }}</li>{% endfor %}</ul>
+      <details><summary>Problembelege mit IDs und widersprechenden Werten</summary><pre>{{ finding.problems_json }}</pre></details>
+      <h4>Aktive Spieler</h4>
+      <ul>
+        {% for player in finding.players %}
+        <li>{{ player.first_name }} {{ player.last_name }} · Spieler #{{ player.id }} · Geburtsdatum {{ player.date_of_birth|default:"nicht belegt" }}
+          · Verein #{{ player.club_id|default_if_none:"–" }} · Stammverein #{{ player.owner_club_id|default_if_none:"–" }} · Leihverein #{{ player.loan_club_id|default_if_none:"–" }}</li>
+        {% empty %}<li>Keine aktive Spieleridentität im Befund.</li>{% endfor %}
+      </ul>
+      <h4>Historische / Rekordpersonen</h4>
+      <ul>
+        {% for person in finding.people %}
+        <li>{{ person.name }} · Person #{{ person.id }} · Typ {{ person.person_kind }} · Geburtsdatum {{ person.birth_date|default:"nicht belegt" }}
+          · verknüpfter Spieler #{{ person.linked_player_id|default_if_none:"–" }} · FM-ID {{ person.fm_inside_id|default:"nicht belegt" }}</li>
+        {% empty %}<li>Keine historische Person im Befund.</li>{% endfor %}
+      </ul>
+      <details><summary>Alle Quell- und Spiegelbelege ({{ finding.evidence|length }})</summary><pre>{{ finding.evidence_json }}</pre></details>
+      <details><summary>Kanonische Quellzeilen mit Eigentümern, URLs, Status und Matchingbelegen ({{ finding.canonical_rows|length }})</summary><pre>{{ finding.canonical_rows_json }}</pre></details>
+      <details><summary>Rekordbezüge und Quellnotizen aller beteiligten Vereine ({{ finding.record_references|length }})</summary><pre>{{ finding.record_references_json }}</pre></details>
+    </div>
+  </article>
+  {% empty %}
+    {% if identity_snapshot %}<p>Im gespeicherten Prüfbericht liegen keine relevanten Befunde für diesen Verein vor.</p>{% endif %}
+  {% endfor %}
+  {% if identity_page.has_other_pages %}
+  <nav aria-label="Befundseiten">
+    {% if identity_page.has_previous %}<a href="?tab=identitaeten&amp;page={{ identity_page.previous_page_number }}">← Zurück</a>{% endif %}
+    <span>Seite {{ identity_page.number }} von {{ identity_page.paginator.num_pages }}</span>
+    {% if identity_page.has_next %}<a href="?tab=identitaeten&amp;page={{ identity_page.next_page_number }}">Weiter →</a>{% endif %}
+  </nav>
+  {% endif %}
+</section>
+<style>
+  .identity-audit .creator-card{margin-top:1rem}
+  .identity-audit p,.identity-audit li{overflow-wrap:anywhere}
+  .identity-audit h4{margin:1rem 0 .5rem}
+  .identity-audit details{margin:.75rem 0}
+  .identity-audit summary{cursor:pointer;color:var(--cyan,#22d3ee)}
+  .identity-audit pre{max-height:28rem;overflow:auto;white-space:pre-wrap;overflow-wrap:anywhere;font-size:.8rem;padding:.75rem;border:1px solid var(--line,#0d2035)}
+  .identity-audit nav{display:flex;gap:1rem;align-items:center;margin-top:1rem}
+</style>

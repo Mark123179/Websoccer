@@ -63,12 +63,17 @@
     <a class="creator-tab {% if active_tab == 'sponsoring' %}active{% endif %}" href="?tab=sponsoring">Sponsoring <span class="creator-tab-badge">{{ sponsors|length }}</span></a>
     <a class="creator-tab {% if active_tab == 'saisonziele' %}active{% endif %}" href="?tab=saisonziele">Saisonziele</a>
     <a class="creator-tab {% if active_tab == 'rekorde' %}active{% endif %}" href="?tab=rekorde">Rekorde</a>
+    <a class="creator-tab {% if active_tab == 'identitaeten' %}active{% endif %}" href="?tab=identitaeten">Identitätsbefunde</a>
     <a class="creator-tab {% if active_tab == 'kader' %}active{% endif %}" href="?tab=kader">Kader <span class="creator-tab-badge">{{ players|length }}</span></a>
     <a class="creator-tab {% if active_tab == 'import_defekte' %}active{% endif %} {% if import_defekte %}creator-tab-has-errors{% endif %}" href="?tab=import_defekte">Import-Defekte{% if import_defekte %} <span class="creator-tab-badge creator-tab-badge-error">{{ import_defekte|length }}</span>{% endif %}</a>
   </nav>
 
   {% if active_tab == 'importstand' and package_mode %}
     {% include 'creator/club_importstand.html' %}
+  {% endif %}
+
+  {% if active_tab == 'identitaeten' %}
+    {% include 'creator/club_identity_audit.html' %}
   {% endif %}
 
   <!-- ═══ TAB: REKORDE ══════════════════════════════════════════════════════ -->

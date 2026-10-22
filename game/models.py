@@ -6022,6 +6022,14 @@ class HistoricCoach(models.Model):
         return self.name
 
 
+class PlayerIdentityAuditSnapshot(models.Model):
+    """Latest explicitly published inventory report, never rebuilt by a GET."""
+
+    id = models.PositiveSmallIntegerField(primary_key=True, default=1, editable=False)
+    generated_at = models.DateTimeField()
+    report = models.JSONField()
+
+
 class ClubRecord(models.Model):
     """Materialisierter Rekordstand je Verein, Rekord und Quelle.
 

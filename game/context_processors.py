@@ -54,7 +54,7 @@ def _stadium_asset_url(club):
     return resolve_stadium_url(_STADIUM_ASSETS.get(club.fm_inside_id, ''))
 
 
-def _build_global_calendar(club, calendar_offset, live_rounds=None):
+def _build_global_calendar(club, calendar_offset, live_rounds=None, read_only=False):
     today = date.today()
     game_date = today + timedelta(days=calendar_offset)
     window_start = game_date - timedelta(days=3)
@@ -182,7 +182,7 @@ def _build_global_calendar(club, calendar_offset, live_rounds=None):
             }
 
     # Tageswetter: Vergangenheit gedimmt, heute..+7 voll, ab +8 kein Icon
-    from .weather_service import ensure_weather_for_day, weather_context
+    from .weather_service import ensure_weather_for_day, get_weather_for_date, weather_context
     _wx_horizon = today + timedelta(days=7)
 
     calendar_days = []
@@ -192,8 +192,11 @@ def _build_global_calendar(club, calendar_offset, live_rounds=None):
         weather_dimmed = False
         if day <= _wx_horizon:
             try:
-                dw, _ = ensure_weather_for_day(day)
-                day_weather = weather_context(dw)
+                if read_only:
+                    dw = get_weather_for_date(day)
+                else:
+                    dw, _ = ensure_weather_for_day(day)
+                day_weather = weather_context(dw) if dw is not None else None
             except Exception:
                 day_weather = None
             weather_dimmed = day < today
@@ -215,13 +218,20 @@ def _build_global_calendar(club, calendar_offset, live_rounds=None):
 
 
 def current_manager(request):
+    read_only = getattr(request, 'creator_read_only', False)
     if request.user.is_authenticated:
-        manager_profile_obj, _ = ManagerProfile.objects.get_or_create(
-            user=request.user,
-            defaults={'name': request.user.username},
-        )
+        if read_only:
+            manager_profile_obj = ManagerProfile.objects.filter(user=request.user).first()
+        else:
+            manager_profile_obj, _ = ManagerProfile.objects.get_or_create(
+                user=request.user,
+                defaults={'name': request.user.username},
+            )
         try:
-            club = Club.objects.select_related('league').get(managed_by=manager_profile_obj)
+            club = (
+                Club.objects.select_related('league').get(managed_by=manager_profile_obj)
+                if manager_profile_obj is not None else None
+            )
         except Club.DoesNotExist:
             club = None
     else:
@@ -283,7 +293,8 @@ def current_manager(request):
             'nationality_flag': nationality_flag_url,
         },
         'global_calendar': _build_global_calendar(
-            club, calendar_offset, getattr(request, '_story_active_rounds', None)),
+            club, calendar_offset, getattr(request, '_story_active_rounds', None),
+            read_only=read_only),
         'default_player_url': _dp_url(),
     }
 
