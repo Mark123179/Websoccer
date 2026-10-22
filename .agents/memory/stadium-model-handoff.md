@@ -161,3 +161,18 @@ explizite Heimkurvenmetadaten und Kapazitätsdaten getrennt vergleichen.
 Ein technisch gültiges Achsenpaar beweist nur Labelkonsistenz, nicht die
 richtige reale Lage. Quelle: offizieller Blockplan auf
 https://www.mhparena-stuttgart.de/arena/arenaplan .
+
+## Voith-Arena: visuelle Abnahme
+
+Der Nutzer hat die eingebaute Heidenheimer Voith-Arena in allen fünf
+Ansichten abgenommen: tatsächlicher 2D-Editor, 3D-Editor, Liveticker mit
+Dach, ohne Dach und bei Nacht. Die gezeigte Fassung enthält die bestehende
+Vereinsfarb-Vorgabe des Editors und schematische 2D-Blöcke sowie flaches
+Gelände statt eines vermessenen Schlossberg-Höhenmodells.
+
+**Why:** Auf „Passt die Voith-Arena in diesen fünf Ansichten?“ antwortete
+der Nutzer ausdrücklich „Ja, diesen Stand abnehmen“.
+
+**How to apply:** Diese eingebaute Darstellung als visuell abgenommene
+Referenz behandeln; die Abnahme nicht mit einer Bestätigung unveränderter
+Rohfarben oder eines vermessenen Gelände-/Blockplans verwechseln.
