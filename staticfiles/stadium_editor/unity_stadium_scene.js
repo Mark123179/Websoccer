@@ -3,6 +3,7 @@ import {applyStudyCamera} from './study_camera.js?v=3';
 import {buildDortmundSurroundings} from './dortmund_surroundings.js?v=58';
 import {validateCalibration, standForCenter, tickerQuaternion} from './unity_calibration.js?v=2';
 import {mountBridgeHeightNotice} from './bridge_height_evidence.js?v=1';
+import {mountHeidenheimFloodlightVisuals} from './heidenheim_floodlight_visuals.js?v=2';
 
 /** Original source geometry, with its own club-scoped runtime presentation. */
 export async function mountUnityStadium({element, presentation, tickerPreview = false, onOrbitChange}) {
@@ -45,6 +46,7 @@ export async function mountUnityStadium({element, presentation, tickerPreview = 
   const textures = new Map(), materials = [], geometries = [], roof = [], crowd = [];
   const loader = new THREE.TextureLoader();
   let disposed = false, day = true, floodlight = false, roofVisible = true;
+  let floodlightVisuals;
   let {azimuth, elevation, distance} = calibration.orbitDefault;
   let cameraMode = 'orbit';
   const frontCut = new THREE.Plane(
@@ -138,6 +140,7 @@ export async function mountUnityStadium({element, presentation, tickerPreview = 
       scene.add(light,target);
       return light;
     });
+    floodlightVisuals = mountHeidenheimFloodlightVisuals(scene, manifest, buffer);
     const pose = () => {
       if(tickerPreview) {
         applyStudyCamera(camera,'approved-elversberg',element.clientWidth,element.clientHeight);
@@ -220,6 +223,7 @@ export async function mountUnityStadium({element, presentation, tickerPreview = 
       hemisphere.intensity=day?1.35:.08; sun.intensity=day?1.5:0;
       scene.background.set(day?'#071316':'#02070b');scene.fog.color.copy(scene.background);
       sources.forEach(light=>{light.intensity=floodlight?light.userData.onIntensity:0;});
+      floodlightVisuals.update({enabled:floodlight, day});
       roof.forEach(mesh=>{mesh.visible=roofVisible;});
       render();
     };
@@ -231,6 +235,7 @@ export async function mountUnityStadium({element, presentation, tickerPreview = 
       lightingEvidence:()=>manifest.fixtures,
       dispose(){
         if(disposed) return; disposed=true;observer.disconnect();
+        floodlightVisuals.dispose();
         controls.removeEventListener('pointerdown',down);controls.removeEventListener('pointermove',move);
         controls.removeEventListener('pointerup',up);controls.removeEventListener('pointercancel',up);
         controls.removeEventListener('wheel',wheel);
@@ -241,6 +246,7 @@ export async function mountUnityStadium({element, presentation, tickerPreview = 
       },
     };
   } catch(error) {
+    floodlightVisuals?.dispose();
     geometries.forEach(g=>g.dispose());materials.forEach(m=>m.dispose());
     textures.forEach(p=>p.then(t=>t.dispose()));environment.dispose();renderer.dispose();
     removeBridgeNotice();
