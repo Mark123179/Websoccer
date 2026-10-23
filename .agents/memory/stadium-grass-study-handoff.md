@@ -27,3 +27,16 @@ Stadion keine echte Flutlichtprüfung durchführen konnte.
 **How to apply:** Vor einer Laufzeitabnahme dieselben Materialien im
 gemeinsamen Stadionrenderer bei Tag und echtem Flutlicht beurteilen.
 Feldprojektion, separate Linien und bestehende Lichtfaktoren bewahren.
+
+## Verbindliche Reihenfolge der Nutzerabnahme
+
+„nur eine kleine Testvariante mit einem Stadion das wir schon haben. Wenn
+der 2D-Modus passt, dann schauen wir nocheinmal in dne Stadioneditor und
+dann rollen wir das aus.“
+
+**Why:** Der Nutzer hat die Vorschau ausdrücklich auf diesen kleinen Pilot
+begrenzt und die weitere Reihenfolge festgelegt.
+
+**How to apply:** Zuerst nur ein vorhandenes Stadion im 2D-Modus testen und
+den heutigen Standard erhalten. Die Zustimmung zur Vorschau ist weder eine
+Freigabe für Änderungen am Stadioneditor noch für einen allgemeinen Rollout.
