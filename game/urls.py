@@ -2,6 +2,7 @@ from django.urls import path
 from . import views_story
 from . import views_story_test
 from . import views_stadium_study
+from . import views_grass_pilot
 from .views_news_images import club_news_legacy_image
 from .news_archive import club_news_data
 from .views import (
@@ -251,6 +252,9 @@ urlpatterns = [
     path('kalender/', calendar_view, name='calendar'),
     path('live/test/', views_story_test.ticker_page, name='story_test_start'),
     path('live/stadium-study/', views_stadium_study.stadium_study, name='stadium_study'),
+    path('live/rasen-test/', views_grass_pilot.grass_pilot, name='grass_pilot'),
+    path('live/rasen-test/assets/<str:name>/', views_grass_pilot.grass_pilot_asset,
+         name='grass_pilot_asset'),
     path('live/test/matches/<int:slot>/', views_story_test.ticker_page, name='story_test_ticker'),
     path('live/test/conference/', views_story_test.conference_page, name='story_test_conference'),
     path('live/test/reset/', views_story_test.reset, name='story_test_reset'),

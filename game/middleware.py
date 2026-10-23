@@ -66,6 +66,10 @@ class LastSeenMiddleware:
         self.get_response = get_response
 
     def __call__(self, request):
+        # The isolated material pilot must not grant rewards or touch activity.
+        # Authentication/authorization are still enforced by its normal views.
+        if request.path.startswith('/live/rasen-test/'):
+            return self.get_response(request)
         if request.user.is_authenticated:
             try:
                 mp = request.user.manager_profile

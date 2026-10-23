@@ -1,0 +1,132 @@
+{% load static %}
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#03070c">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%2303070c'/%3E%3Cpath d='M8 7h9a5 5 0 0 1 0 10H8V7zm0 10h10a4 4 0 0 1 0 8H8v-8z' fill='none' stroke='%2322e6ff' stroke-width='2'/%3E%3C/svg%3E">
+  <title>Rasenpilot · BLUEPRINT Football Manager</title>
+  <link rel="stylesheet" href="{% static 'game/css/grass_pilot.css' %}?v=1">
+  <script type="importmap">{"imports":{"three":"{% static 'stadium_editor/stage/vendor/three.module.js' %}","three/addons/":"{% static 'stadium_editor/stage/vendor/addons/' %}"}}</script>
+</head>
+<body class="grass-pilot">
+  <main class="gp-shell">
+    <header class="gp-topbar">
+      <a class="gp-brand" href="/" aria-label="BLUEPRINT Football Manager – Startseite">
+        <span class="gp-brand-mark" aria-hidden="true">B</span>
+        <span>BLUEPRINT<small>FOOTBALL MANAGER</small></span>
+      </a>
+      <div class="gp-top-meta"><span class="gp-live-mark" aria-hidden="true"></span><span>Isolierter Admin-Test</span></div>
+    </header>
+
+    <section class="gp-heading" aria-labelledby="pilot-title">
+      <div>
+        <p class="gp-eyebrow">LIVE · RASEN · VARIANTENSTUDIE</p>
+        <h1 id="pilot-title">Ein Platz.<br><span>Zwölf Rasenbilder.</span></h1>
+      </div>
+      <div class="gp-intro-copy">
+        <p>Dieselbe feste 2D-Matchperspektive im Signal Iduna Park. Vergleiche zwölf gelieferte Rasenvarianten mit dem aktuellen Standard.</p>
+        <p class="gp-scope-note"><strong>Nur Vorschau:</strong> Änderungen werden nicht gespeichert. Normaler Spielrasen und Stadion-Editor bleiben unverändert.</p>
+      </div>
+    </section>
+
+    <section class="gp-match" aria-labelledby="stadium-title">
+      <header class="gp-match-heading">
+        <div class="gp-match-title">
+          <span class="gp-stage-index" aria-hidden="true">01</span>
+          <div>
+            <p class="gp-section-label">FESTE MATCHPERSPEKTIVE</p>
+            <h2 id="stadium-title">Signal Iduna Park</h2>
+          </div>
+        </div>
+        <span class="gp-stage-tag">Dortmund</span>
+      </header>
+      <div id="grass-stage" class="gp-stage-surface" role="img" aria-label="2D-Matchansicht des Signal Iduna Parks in Dortmund; Rasenvarianten-Vorschau">
+        <div class="gp-stage-placeholder" aria-hidden="true">
+          <span class="gp-placeholder-mark">B</span>
+          <span>Stadionansicht wird geladen</span>
+        </div>
+      </div>
+      <div id="grass-status" class="gp-status" role="status" aria-live="polite">Dortmund-Matchansicht wird geladen …</div>
+      <div id="grass-error" class="gp-error" role="alert" hidden></div>
+    </section>
+
+    <section class="gp-controls" aria-labelledby="controls-title">
+      <div class="gp-controls-intro">
+        <div>
+          <p class="gp-section-label">VORSCHAU-STEUERUNG</p>
+          <h2 id="controls-title">Rasenbild wählen</h2>
+        </div>
+        <span class="gp-variant-count">12 VARIANTEN <i aria-hidden="true"></i> 1 STANDARD</span>
+      </div>
+      <div class="gp-controls-grid">
+        <div class="gp-control gp-variant-control">
+          <label class="gp-control-heading" for="grass-variant">Rasenvariante</label>
+          <div class="gp-select-wrap">
+            <select id="grass-variant" name="grass-variant" aria-describedby="grass-variant-hint">
+              <option value="bestand" selected>Bestand · aktueller Spielrasen</option>
+              <option value="A1">A1 · feine, kurze Schnittstruktur</option>
+              <option value="A2">A2 · dichter Schnitt mit klaren Bahnen</option>
+              <option value="A3">A3 · satte, gleichmäßige Fläche</option>
+              <option value="A4">A4 · kräftige Querstreifen</option>
+              <option value="B1">B1 · längs gestreift, kontrastreich</option>
+              <option value="B2">B2 · längs gestreift, weich abgestuft</option>
+              <option value="B3">B3 · breites Streifenmuster</option>
+              <option value="C1">C1 · dezentes Schachbrettmuster</option>
+              <option value="C2">C2 · deutliches Schachbrettmuster</option>
+              <option value="D1">D1 · feines diagonales Muster</option>
+              <option value="D2">D2 · breite diagonale Bahnen</option>
+              <option value="D3">D3 · dichter diagonaler Schnitt</option>
+            </select>
+          </div>
+          <p class="gp-control-hint" id="grass-variant-hint">Bestand zeigt den derzeitigen Standardrasen.</p>
+        </div>
+
+        <fieldset class="gp-control gp-toggle-control">
+          <legend class="gp-control-heading">Tageszeit</legend>
+          <label class="gp-switch" for="grass-night">
+            <input id="grass-night" type="checkbox" role="switch">
+            <span class="gp-switch-track" aria-hidden="true"></span><span>Nachtansicht</span>
+          </label>
+          <p class="gp-control-hint">Nur visuelle Umgebungsoption.</p>
+        </fieldset>
+
+        <fieldset class="gp-control gp-toggle-control">
+          <legend class="gp-control-heading">Stadion</legend>
+          <label class="gp-switch" for="grass-roof">
+            <input id="grass-roof" type="checkbox" role="switch" checked>
+            <span class="gp-switch-track" aria-hidden="true"></span><span>Dach zeigen</span>
+          </label>
+          <p class="gp-control-hint">Dortmunder Dachgeometrie.</p>
+        </fieldset>
+
+        <fieldset class="gp-control gp-toggle-control">
+          <legend class="gp-control-heading">Beleuchtung</legend>
+          <label class="gp-switch" for="grass-floodlight">
+            <input id="grass-floodlight" type="checkbox" role="switch" checked>
+            <span class="gp-switch-track" aria-hidden="true"></span><span>Flutlicht zeigen</span>
+          </label>
+          <p class="gp-control-hint">Modell-Flutlicht in der Vorschau.</p>
+        </fieldset>
+      </div>
+    </section>
+
+    <aside class="gp-notice" aria-label="Geltungsbereich des Rasenpiloten">
+      <span class="gp-notice-mark" aria-hidden="true">i</span>
+      <p><strong>Abgegrenzter Test.</strong> Diese Vorschau betrifft ausschließlich den Signal Iduna Park auf dieser Seite. Sie speichert nichts und verändert weder den normalen Platz im Liveticker noch den Stadion-Editor.</p>
+    </aside>
+
+    <footer class="gp-footer">
+      <span>BLUEPRINT · Rasenpilot</span>
+      <nav aria-label="Weitere BLUEPRINT-Seiten">
+        <a href="/live/stadium-study/">Zur Stadionstudie</a>
+        <a href="/">Zur Startseite</a>
+      </nav>
+    </footer>
+  </main>
+
+  {{ grass_config|json_script:"grass-pilot-config" }}
+  <script type="module" src="{% static 'game/js/grass_pilot.js' %}?v=1"></script>
+</body>
+</html>
