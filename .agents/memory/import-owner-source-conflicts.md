@@ -37,3 +37,21 @@ Quellenabweichung dokumentieren, nicht als Eigentümerwechsel.
 **How to apply:** Auch diese Freigabe ist spielerbezogen. Den ursprünglichen
 Paketbeleg erhalten und keinen zusätzlichen U21-Verein zur Umgehung des
 Quellenkonflikts anlegen.
+
+Für Djylian N’Guessan Liverpool als Stammverein beibehalten und die Leihe
+zu Brest übernehmen, obwohl das Brest-Paket AS Saint-Étienne nennt.
+
+**Why:** Der Nutzer wählte Liverpool und ergänzte:
+„01.01.27 wird er zu Liverpool wechseln, also Liverppol.“
+
+**How to apply:** Diese Freigabe betrifft N’Guessan. Den Wechseltermin als
+2027-01-01 verstehen; aus dem Quellenhinweis keine zusätzliche automatische
+Transferbuchung oder weitere Eigentümeränderung ableiten.
+
+Für Genesis Antwi Chelsea als Stammverein beibehalten und die Leihe zu
+Straßburg übernehmen. Chelsea U21 im Paket als Quellenabweichung markieren.
+
+**Why:** Der Nutzer bestätigte ausdrücklich, Chelsea beizubehalten.
+
+**How to apply:** Spielerbezogene Ausnahme; keine allgemeine Gleichsetzung
+von Chelsea und Chelsea U21 und keinen zusätzlichen U21-Verein anlegen.

@@ -148,7 +148,8 @@
 - [Historische Spieleridentitäten](historic-player-import-identities.md) — Rekord-Personen können IDs neuer Kaderspieler belegen; Bezüge erhalten und Vollständigkeit unabhängig prüfen.
 - [Zweite Bundesliga](second-league-import-scope.md) — Weitere Vereinspakete in zusätzlicher, zunächst nicht spielbarer Liga; bestehende 18er-Bundesliga nicht erweitern.
 - [Englische Vereinsimporte](english-league-import-scope.md) — Eigene, zunächst nicht spielbare Premier League im Workspace; aktive Leihspieler nicht auf Paketwerte zurücksetzen.
-- [Stammvereins-Quellenkonflikte](import-owner-source-conflicts.md) — Einzelfreigaben für Ofli, Benkara und Mfuni; Hauptvereine erhalten, Zweitmannschaftsabweichungen markieren.
+- [Stammvereins-Quellenkonflikte](import-owner-source-conflicts.md) — Spielerbezogene Freigaben für abweichende Paket-Eigentümer; keine pauschale Gleichsetzung von Haupt-/Zweitmannschaften.
+- [Französische Vereinsimporte](french-league-import-scope.md) — Komplette Ligue 1 separat und zunächst nicht spielbar; beide Samba Diop bis zur Quellenklärung in Quarantäne.
 - [Kölner Planregistrierung](koln-plan-registration.md) — Offizielle Namen und Fanbereiche belegen; schematische Innenaufteilung niemals als vermessene Unity-Gänge ausgeben.
 - [Native Geodaten-Importe](native-geodata-imports.md) — Größere Aufbereitungsläufe können fehlende native Bibliotheken durch Importreihenfolge verdecken; Offline-Prüfer eigenständig starten.
 - [Sitzquellen und Fangruppen](stadium-seat-source-semantics.md) — Sitz-JSON und Unity können Fangruppen unterschiedlich aufteilen; Editor-Hüllen bei Widersprüchen aus dem Originalmodell ableiten.
