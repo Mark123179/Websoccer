@@ -151,6 +151,7 @@
 - [Creator-Importstand](creator-importstand-visibility.md) — Importierter Vereinsstand ausschließlich im eigenen Creator-Tab des Vereins, niemals im öffentlichen Profil.
 - [Historische Spieleridentitäten](historic-player-import-identities.md) — Rekord-Personen können IDs neuer Kaderspieler belegen; Bezüge erhalten und Vollständigkeit unabhängig prüfen.
 - [Zweite Bundesliga](second-league-import-scope.md) — Weitere Vereinspakete in zusätzlicher, zunächst nicht spielbarer Liga; bestehende 18er-Bundesliga nicht erweitern.
+- [Englische Vereinsimporte](english-league-import-scope.md) — Eigene, zunächst nicht spielbare Premier League im Workspace; aktive Leihspieler nicht auf Paketwerte zurücksetzen.
 - [Stammvereins-Quellenkonflikte](import-owner-source-conflicts.md) — Freigegebene Einzelfälle: Ofli bei Bayern, Benkara bei Dortmund; Zweitmannschaftsabweichungen markieren.
 - [Kölner Planregistrierung](koln-plan-registration.md) — Offizielle Namen und Fanbereiche belegen; schematische Innenaufteilung niemals als vermessene Unity-Gänge ausgeben.
 - [Native Geodaten-Importe](native-geodata-imports.md) — Größere Aufbereitungsläufe können fehlende native Bibliotheken durch Importreihenfolge verdecken; Offline-Prüfer eigenständig starten.

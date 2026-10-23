@@ -86,6 +86,23 @@ def identity(ids, model, kind="spieler"):
     return row
 
 
+def assert_live_loan_compatible(player, data, owner_tm):
+    """A dormant owner package may reference, but not reset, a live loanee."""
+    squad = data["squad"]
+    borrower_tm = player.club.transfermarkt_id
+    if (
+        str(player.date_of_birth) != data["date_of_birth"]
+        or squad["status"] != "loaned_out"
+        or (squad.get("owner_club") or {}).get("tm_id") != owner_tm
+        or player.owner_club_tm_id != owner_tm
+        or (squad.get("loan_club") or {}).get("tm_id") != borrower_tm
+        or player.loan_club_tm_id != borrower_tm
+        or player.loan_status != "loaned_in"
+        or str(player.loan_until) != squad.get("loan_until")
+    ):
+        raise PackageError("Cannot initialize an active first-league player: existing loan does not match.")
+
+
 def sync_ids(obj, ids, run, kind="spieler"):
     table = m.ClubExternalId if isinstance(obj, m.Club) else m.PlayerExternalId
     owner_key = "club" if table is m.ClubExternalId else (
@@ -513,6 +530,8 @@ def apply_package(path_or_bytes, target_league, *, user=None):
                 player = m.Player.objects.select_for_update().filter(
                     transfermarkt_id=pdata["ids"]["tm"]["value"]).first()
                 if player:
+                    if player.club_id and player.club.league.is_playable and not league.is_playable:
+                        raise PackageError("Conflicting identities for an active first-league player.")
                     included.add(player.pk)
                     for provider in conflicting_providers(pdata["ids"], m.Player):
                         m.PlayerExternalId.objects.update_or_create(player=player,
@@ -522,6 +541,13 @@ def apply_package(path_or_bytes, target_league, *, user=None):
                 continue
             if historical and historical["player_id"]:
                 player = m.Player.objects.get(pk=historical["player_id"])
+            if (player and player.club_id and player.club.league.is_playable
+                    and not league.is_playable):
+                assert_live_loan_compatible(player, pdata, club.transfermarkt_id)
+                included.add(player.pk)
+                issue(run, "player", f"tm:{player.transfermarkt_id}", "live_loan",
+                      "Existing active loanee preserved; owner package archived without reinitializing the player.")
+                continue
             if player is None and after_start:
                 issue(run, "player", f"tm:{pdata['ids']['tm']['value']}", "identity",
                       "New player ignored after league start.")
@@ -549,6 +575,10 @@ def apply_package(path_or_bytes, target_league, *, user=None):
         if not after_start:
             missing = m.Player.objects.filter(Q(club=club) | Q(owner_club=club)).exclude(pk__in=included)
             for player in missing:
+                if player.club_id and player.club.league.is_playable and not league.is_playable:
+                    issue(run, "player", f"tm:{player.transfermarkt_id}", "live_loan",
+                          "Active loanee omitted by owner package; live squad retained for explicit review.")
+                    continue
                 player.club = None
                 player.review_pool = True
                 player.pool_status = "unavailable"

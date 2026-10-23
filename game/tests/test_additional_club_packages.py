@@ -115,6 +115,119 @@ class AdditionalClubPackageTests(TestCase):
     def test_owner_then_borrower_and_exact_repetition(self):
         self.check_import()
 
+    def foreign_league(self):
+        return m.League.objects.create(
+            name="Premier League", country="England", level=1,
+            max_teams=20, is_playable=False)
+
+    def prepare_live_foreign_loan(self):
+        # The borrower was imported previously; its competition is now live.
+        apply_package(self.paths[1], self.league)
+        player = m.Player.objects.get(transfermarkt_id=self.tm)
+        m.Club.objects.filter(pk=player.club_id).update(league=self.first)
+        m.Player.objects.filter(pk=player.pk).update(
+            age=35, shirt_number=99, salary_per_match=777)
+        m.PlayerTransferHistory.objects.create(
+            player=player, origin="real", source_row_key="protected-live-loan",
+            transfer_date="2026-01-01", from_tm_id=1001, from_original_name="Owner",
+            to_tm_id=1002, to_club=player.club, to_original_name="Borrower",
+            is_loan=True, fee_text="Protected source evidence")
+        self.sources[0][1]["club"]["country"] = "England"
+        self.write_packages()
+        return player
+
+    def test_explicit_foreign_target_keeps_german_leagues_unchanged(self):
+        league = self.foreign_league()
+        for _, data in self.sources:
+            data["club"]["country"] = "England"
+        self.write_packages()
+        before = fingerprint(m.League.objects.all())
+        report = import_batch(self.paths, {}, apply=True, target_league_id=league.pk)
+        self.assertEqual(report["league_id"], league.pk)
+        self.assertEqual(report["league_name"], "Premier League")
+        self.assertEqual(m.Club.objects.filter(league=league).count(), 2)
+        self.assertEqual(m.Club.objects.filter(league=self.league).count(), 0)
+        self.assertEqual(before, fingerprint(m.League.objects.all()))
+
+    def test_explicit_playable_target_is_rejected_without_writes(self):
+        before = self.snapshot()
+        with self.assertRaises(PackageError):
+            import_batch(self.paths, {}, apply=True, target_league_id=self.first.pk)
+        self.assertEqual(before, self.snapshot())
+
+    def test_wrong_country_target_is_rejected_without_writes(self):
+        league = self.foreign_league()
+        before = self.snapshot()
+        with self.assertRaises(PackageError):
+            import_batch(self.paths, {}, apply=True, target_league_id=league.pk)
+        self.assertEqual(before, self.snapshot())
+
+    def test_live_foreign_loan_preserves_player_ratings_history_and_replay(self):
+        league = self.foreign_league()
+        player = self.prepare_live_foreign_loan()
+        original = m.Player.objects.filter(pk=player.pk).values().get()
+        before = self.snapshot()
+        report = import_batch(
+            self.paths[:1], {}, apply=False, target_league_id=league.pk)
+        self.assertFalse(report["applied"])
+        self.assertEqual(before, self.snapshot())
+        report = import_batch(
+            self.paths[:1], {}, apply=True, target_league_id=league.pk)
+        player.refresh_from_db()
+        self.assertEqual(report["preserved_live_loans"], [self.tm])
+        expected = dict(original, owner_club_id=player.owner_club_id,
+                        loan_partner_club_id=player.owner_club_id)
+        self.assertEqual(expected, m.Player.objects.filter(pk=player.pk).values().get())
+        self.assertEqual(player.owner_club.league_id, league.pk)
+        self.assertEqual(player.club.league_id, self.first.pk)
+        self.assertEqual(player.shirt_number, 99)
+        self.assertTrue(report["replay_unchanged"])
+        self.assertTrue(report["protected_state_unchanged"])
+        self.assertEqual(m.SourceImportRun.objects.get(pk=report["packages"][0]["run"]).package_data,
+                         self.sources[0][1])
+
+    def test_conflicting_live_loan_blocks_helper_and_direct_import_without_writes(self):
+        league = self.foreign_league()
+        player = self.prepare_live_foreign_loan()
+        m.Player.objects.filter(pk=player.pk).update(loan_until="2028-06-30")
+        before = self.snapshot()
+        for run in (
+            lambda: import_batch(self.paths[:1], {}, apply=True, target_league_id=league.pk),
+            lambda: apply_package(self.paths[0], league),
+        ):
+            with self.assertRaises(PackageError):
+                run()
+            self.assertEqual(before, self.snapshot())
+
+    def test_direct_import_identity_conflict_never_invalidates_live_player_ids(self):
+        league = self.foreign_league()
+        self.prepare_live_foreign_loan()
+        foreign_id = 99999001
+        m.Player.objects.create(
+            first_name="Other", last_name="Identity", age=20, fm_inside_id=foreign_id)
+        self.sources[0][1]["players"][0]["ids"]["fmi"]["value"] = foreign_id
+        self.write_packages()
+        before = self.snapshot()
+        with self.assertRaises(PackageError):
+            apply_package(self.paths[0], league)
+        self.assertEqual(before, self.snapshot())
+
+    def test_owner_reupload_cannot_remove_omitted_loanee_from_live_squad(self):
+        league = self.foreign_league()
+        player = self.prepare_live_foreign_loan()
+        apply_package(self.paths[0], league)
+        before = m.Player.objects.filter(pk=player.pk).values().get()
+        replacement = deepcopy(self.sources[0][1]["players"][0])
+        replacement.update(first_name="Another", last_name="Player", display_name="Another Player")
+        for entry in replacement["ids"].values():
+            if entry["value"] is not None:
+                entry["value"] += 9000000
+        replacement["squad"].update(status="own", loan_club=None, loan_until=None)
+        self.sources[0][1]["players"] = [replacement]
+        self.write_packages()
+        apply_package(self.paths[0], league)
+        self.assertEqual(before, m.Player.objects.filter(pk=player.pk).values().get())
+
     def test_borrower_then_owner_and_exact_repetition(self):
         self.check_import(reverse=True)
 

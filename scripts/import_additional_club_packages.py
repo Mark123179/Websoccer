@@ -1,4 +1,4 @@
-"""Guarded additive Workspace imports into the non-playable second league.
+"""Guarded additive Workspace imports into a non-playable target league.
 
 Uses the canonical package service unchanged. A batch is committed only after
 identity, ownership, protected-state and exact-replay checks all succeed.
@@ -19,7 +19,7 @@ from django.contrib.auth.models import User
 from django.db import transaction
 from game import models as m
 from game.club_import.package_service import (
-    PROVIDERS, apply_package, identity, league_started, sync_ids,
+    PROVIDERS, apply_package, assert_live_loan_compatible, identity, league_started, sync_ids,
 )
 from game.club_import.package_validation import read_package, PackageError
 from stadium_editor.models import StadiumDesign, StadiumGeometry
@@ -104,7 +104,7 @@ def validate_batch_players(packages):
     return shared
 
 
-def import_batch(paths, owner_exceptions, apply=False):
+def import_batch(paths, owner_exceptions, apply=False, *, target_league_id=None):
     packages = [(Path(path), *read_package(Path(path))) for path in paths]
     club_tms = [manifest["club"]["tm_id"] for _, manifest, _ in packages]
     if len(set(club_tms)) != len(club_tms):
@@ -112,14 +112,24 @@ def import_batch(paths, owner_exceptions, apply=False):
     shared_players = validate_batch_players(packages)
     report = {"applied": apply, "packages": [], "owner_exceptions": owner_exceptions}
     with transaction.atomic():
-        league = m.League.objects.select_for_update().get(
-            name="2. Bundesliga", country="Deutschland", level=2, is_playable=False)
+        if target_league_id is None:
+            league = m.League.objects.select_for_update().get(
+                name="2. Bundesliga", country="Deutschland", level=2, is_playable=False)
+        else:
+            league = m.League.objects.select_for_update().get(pk=target_league_id)
+        if league.is_playable or league.competition_type != m.League.COMPETITION_TYPE_LEAGUE:
+            raise PackageError("Target must be a non-playable league.")
+        if any(data["club"].get("country") != league.country for _, _, data in packages):
+            raise PackageError("Package country does not match the target league.")
         if league_started(league):
-            raise PackageError("Second league has already started")
+            raise PackageError("Target league has already started")
         protected = protected_queries()
         before = {key: fingerprint(q) for key, q in protected.items()}
         existing_player_ids = set(m.Player.objects.values_list("pk", flat=True))
         incoming_existing = {}
+        live_loans = {}
+        live_related = (m.PlayerExternalId, m.PlayerSourceRating, m.PlayerStrengthProfile,
+                        m.PlayerMarketValueSnapshot, m.PlayerTransferHistory, m.PlayerClubHistory)
         historical_links = {}
         for _, manifest, data in packages:
             links = historical_plan(data, lock=True)
@@ -137,7 +147,11 @@ def import_batch(paths, owner_exceptions, apply=False):
                 if str(player.date_of_birth) != pdata["date_of_birth"]:
                     raise PackageError("Existing player has a contradictory birth date")
                 if player.club_id and player.club.league.is_playable:
-                    raise PackageError("Cannot initialize an active first-league player")
+                    assert_live_loan_compatible(player, pdata, manifest["club"]["tm_id"])
+                    live_loans[player.pk] = (
+                        m.Player.objects.filter(pk=player.pk).values().get(),
+                        {model: list(model.objects.filter(player=player).order_by("pk").values())
+                         for model in live_related})
                 tm = player.transfermarkt_id
                 incoming_existing[tm] = player.pk
                 expected_owner = (pdata["squad"].get("owner_club") or {}).get("tm_id")
@@ -270,6 +284,28 @@ def import_batch(paths, owner_exceptions, apply=False):
                     raise PackageError(f"Imported reciprocal loan identity is incomplete: TM {tm}")
         if fingerprint(untouched) != untouched_before:
             raise PackageError("Unrelated existing players changed")
+        for player_id, (original, related) in live_loans.items():
+            expected = dict(original)
+            owner = m.Club.objects.get(transfermarkt_id=original["owner_club_tm_id"])
+            expected.update(owner_club_id=owner.pk, loan_partner_club_id=owner.pk)
+            if m.Player.objects.filter(pk=player_id).values().get() != expected:
+                raise PackageError("Existing active loanee was modified beyond resolving its owner.")
+            for model, previous in related.items():
+                expected_rows = []
+                for old in previous:
+                    row = dict(old)
+                    for field, tm_field in (
+                            ("club_id", "club_tm_id"), ("from_club_id", "from_tm_id"),
+                            ("to_club_id", "to_tm_id")):
+                        if (field in row and row[field] is None
+                                and row.get(tm_field) in club_tms):
+                            row[field] = m.Club.objects.get(
+                                transfermarkt_id=row[tm_field]).pk
+                    expected_rows.append(row)
+                actual_rows = list(model.objects.filter(player_id=player_id).order_by("pk").values())
+                if actual_rows != expected_rows:
+                    raise PackageError(
+                        f"Existing active loanee {model._meta.label} changed beyond resolving club references.")
         if any(fingerprint(q) != before[key] for key, q in protected.items()):
             raise PackageError("Protected club, season, stadium or financial state changed")
         # Replay must not alter any game/import row, not merely return a flag.
@@ -282,7 +318,9 @@ def import_batch(paths, owner_exceptions, apply=False):
         if any(fingerprint(model.objects.all()) != first[model._meta.label] for model in game_models):
             raise PackageError("Package replay changed persisted data")
         report.update(protected_state_unchanged=True, replay_unchanged=True,
-                      unrelated_players_unchanged=True, league_playable=False)
+                      unrelated_players_unchanged=True, league_playable=False,
+                      league_id=league.pk, league_name=league.name,
+                      preserved_live_loans=[row["transfermarkt_id"] for row, _ in live_loans.values()])
         if not apply:
             transaction.set_rollback(True)
     return report
@@ -292,12 +330,14 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("packages", nargs="+")
     parser.add_argument("--apply", action="store_true")
+    parser.add_argument("--league-id", type=int,
+                        help="Explicit non-playable target league; defaults to the German second league.")
     parser.add_argument("--preserve-owner", action="append", default=[],
                         help="Explicitly approved PLAYER_TM:OWNER_TM mapping")
     parser.add_argument("--report", type=Path, required=True)
     args = parser.parse_args()
     exceptions = dict(tuple(map(int, value.split(":"))) for value in args.preserve_owner)
-    report = import_batch(args.packages, exceptions, apply=args.apply)
+    report = import_batch(args.packages, exceptions, apply=args.apply, target_league_id=args.league_id)
     args.report.parent.mkdir(parents=True, exist_ok=True)
     args.report.write_text(json.dumps(report, ensure_ascii=False, indent=2) + "\n")
     print(json.dumps(report, ensure_ascii=False, indent=2))
