@@ -63,6 +63,10 @@ def normalize_design_payload(payload, *, geometry=None, stadium_name=None, blick
     legacy mode is retained for old callers and old files only.
     """
     payload = sanitize_design_payload(payload)
+    from .grass import normalize_grass_variant
+    grass = {}
+    if 'grass_variant' in payload:
+        grass['grass_variant'] = normalize_grass_variant(payload['grass_variant'])
     palette = payload.get('palette', [])
     blocks = payload.get('blocks', [])
     if not isinstance(palette, list) or not isinstance(blocks, list):
@@ -95,7 +99,7 @@ def normalize_design_payload(payload, *, geometry=None, stadium_name=None, blick
             clean_rle.append(pair)
         clean_blocks.append({'id': block['id'], 'rle': clean_rle})
     if geometry is None:
-        return {'version': 1, 'palette': clean_palette, 'blocks': clean_blocks}
+        return {'version': 1, 'palette': clean_palette, 'blocks': clean_blocks, **grass}
 
     from .contracts import geometry_blocks, project_rle, rle_length
     trusted = geometry_blocks(geometry)
@@ -140,4 +144,4 @@ def normalize_design_payload(payload, *, geometry=None, stadium_name=None, blick
     if direction not in ('NORD', 'SUED', 'OST', 'WEST'):
         raise InvalidImageData('Blickrichtung muss NORD, SUED, OST oder WEST sein.')
     return {'version': 2, 'stadium': stadium_name or payload.get('stadium', ''),
-            'blickrichtung': direction, 'palette': clean_palette, 'blocks': result}
+            'blickrichtung': direction, 'palette': clean_palette, 'blocks': result, **grass}

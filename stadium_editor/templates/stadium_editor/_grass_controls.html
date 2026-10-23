@@ -1,0 +1,26 @@
+{% load static %}
+<link rel="stylesheet" href="{% static 'stadium_editor/grass_editor.css' %}?v=74">
+<section class="grass-editor-controls" aria-label="Rasenvorschau">
+  <label class="grass-editor-controls__label" for="grassVariant">Rasenvariante</label>
+  <select class="grass-editor-controls__select" id="grassVariant" name="grassVariant" aria-describedby="grassPreviewState" disabled>
+    <option value="bestand" selected>Bestand · aktueller Spielrasen</option>
+    <option value="A1">A1 · Längsstreifen</option>
+    <option value="A2">A2 · Querstreifen</option>
+    <option value="A3">A3 · Schachbrett</option>
+    <option value="A4">A4 · Diagonalrauten</option>
+    <option value="B1">B1 · Längsstreifen · Farbton 2</option>
+    <option value="B2">B2 · Längsstreifen · Farbton 3</option>
+    <option value="B3">B3 · Längsstreifen · Farbton 4</option>
+    <option value="C1">C1 · Längsstreifen · leichte Abnutzung</option>
+    <option value="C2">C2 · Längsstreifen · starke Abnutzung</option>
+    <option value="D1">D1 · Querstreifen · Farbton 2 · leicht abgenutzt</option>
+    <option value="D2">D2 · Schachbrett · Farbton 3</option>
+    <option value="D3">D3 · Diagonalrauten · Farbton 4 · stark abgenutzt</option>
+  </select>
+  <p class="grass-editor-controls__state" id="grassPreviewState" role="status" aria-live="polite">
+    Änderungen sind Vorschau und werden erst mit Speichern übernommen.
+  </p>
+  <button class="grass-editor-controls__reset" type="button" id="grassReset" disabled>
+    Gespeicherte Auswahl wiederherstellen
+  </button>
+</section>

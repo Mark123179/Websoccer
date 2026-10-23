@@ -447,8 +447,11 @@ def apply_package(path_or_bytes, target_league, *, user=None):
             status="applied").order_by("-applied_at", "-pk").first()
         if existing and existing.data_sha256 == manifest["data_sha256"]:
             return {"run": existing.pk, "club": existing.club_id, "unchanged": True}
-        if existing and dict(existing.package_data, titles=data["titles"]) == data:
-            # A category-only upload must not resave players, records or strengths.
+        if existing and dict(existing.package_data, titles=data["titles"],
+                             persons=data["persons"], records=data["records"]) == data:
+            # Historical fact corrections must not reinitialize an identical squad.
+            facts_changed = any(existing.package_data.get(key) != data[key]
+                                for key in ("persons", "records"))
             run = m.SourceImportRun.objects.create(source="club_package", club=existing.club,
                 target_league=league, manifest=manifest, package_data=data,
                 data_sha256=manifest["data_sha256"], format=manifest["format"],
@@ -456,7 +459,11 @@ def apply_package(path_or_bytes, target_league, *, user=None):
                 collected_at=existing.collected_at, titles_through_season=manifest["titles_through_season"],
                 source_versions=manifest["source_versions"], position_window=manifest["position_window"],
                 status="validated", created_by=user, total_rows=len(data["players"]))
-            sync_titles(data, existing.club, run)
+            if facts_changed:
+                persons_and_facts(data, existing.club, run, league_started(league))
+            else:
+                # Preserve the narrower category-only update without record rewrites.
+                sync_titles(data, existing.club, run)
             run.status, run.applied_at = "applied", timezone.now()
             run.save(update_fields=["status", "applied_at"])
             return {"run": run.pk, "club": existing.club_id, "unchanged": False}

@@ -507,7 +507,7 @@ export async function mountDortmundScene({
     };
     animate(performance.now());
     return {
-      kind: 'three', stage: {renderer, render}, dispose,
+      kind: 'three', stage: {renderer, render, sceneRoot: modelRoot}, dispose,
       lightingEvidence: () => declaredLighting?.evidence.map(({light, ...item}) => ({
         ...item, position: light.position.toArray(),
         direction: light.target.position.clone().sub(light.position).normalize().toArray(),

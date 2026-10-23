@@ -1,10 +1,11 @@
 import json
+import logging
 from copy import deepcopy
 from zipfile import BadZipFile
 
 from django.contrib.auth.decorators import login_required
 from django.db import transaction
-from django.http import HttpResponse, JsonResponse
+from django.http import Http404, HttpResponse, JsonResponse
 from django.shortcuts import render
 from django.urls import reverse
 from django.views.decorators.http import require_GET, require_POST
@@ -22,6 +23,9 @@ from .surroundings import with_dortmund_mapped_trees
 from .elversberg_environment import with_editor_surroundings
 from .scene_service import current_live_scene
 from .model_registry import model_manifest
+from .grass import GRASS_ASSETS
+
+logger = logging.getLogger(__name__)
 from .live_scene import (
     LiveSceneError,
     build_live_scene,
@@ -79,6 +83,8 @@ def stadium_editor(request):
             stadium=stadium, applied=True,
         ).count() if stadium.club.fm_inside_id == 907 else 0,
         'attribution': geometry.attribution,
+        'grass_assets': {name: reverse('stadium_editor_grass_asset', args=[name])
+                         for name in GRASS_ASSETS},
         'game_header': build_game_header('Stadion', 'Editor', reverse('stadium_detail')),
     })
 
@@ -137,6 +143,11 @@ def stadium_editor_save_design(request):
         payload = json.loads(request.body.decode('utf-8'))
         if not isinstance(payload, dict):
             raise ValueError
+        # An older open editor tab must not erase a choice it cannot display.
+        if 'grass_variant' not in payload:
+            previous = StadiumDesign.objects.filter(stadium=stadium).first()
+            if previous and 'grass_variant' in previous.design:
+                payload['grass_variant'] = previous.design['grass_variant']
         geometry = _geometry_payload(
             stadium, StadiumGeometry.objects.select_for_update().get(stadium=stadium).geometry)
         sanitized = normalize_design_payload(
@@ -152,6 +163,29 @@ def stadium_editor_save_design(request):
     design.blickrichtung = sanitized['blickrichtung']
     design.save(update_fields=['design', 'blickrichtung', 'updated_at'])
     return JsonResponse({'ok': True, 'updated_at': design.updated_at.isoformat()})
+
+
+@login_required(login_url='/auth/login/')
+@require_GET
+def stadium_editor_grass_asset(request, name):
+    """Whitelist-only access for managers; the isolated admin pilot stays private."""
+    if not _owned_stadium(request):
+        return HttpResponse('Kein eigenes Stadion.', status=403)
+    asset = GRASS_ASSETS.get(name)
+    if asset is None:
+        raise Http404
+    from game.object_storage_backend import get_client
+    try:
+        data = get_client().download_as_bytes(asset[0])
+    except Exception:
+        logger.error('Stadioneditor: Rasenmaterial %s nicht verfügbar.', name)
+        response = HttpResponse('Rasenmaterial nicht verfügbar.', status=503)
+        response['Cache-Control'] = 'private, no-store'
+        return response
+    response = HttpResponse(data, content_type=asset[1])
+    response['Cache-Control'] = 'private, max-age=3600'
+    response['X-Content-Type-Options'] = 'nosniff'
+    return response
 
 
 @require_GET

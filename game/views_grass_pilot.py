@@ -9,12 +9,9 @@ from django.views.decorators.http import require_GET
 
 from .object_storage_backend import get_client
 from .views_story_test import admin_only
+from stadium_editor.grass import GRASS_ASSETS
 
 logger = logging.getLogger(__name__)
-GRASS_ASSETS = {
-    "basis": ("studies/grass-pilot/v1/rasen_basis.webp", "image/webp"),
-    "abnutzung": ("studies/grass-pilot/v1/rasen_abnutzung.png", "image/png"),
-}
 
 
 @admin_only

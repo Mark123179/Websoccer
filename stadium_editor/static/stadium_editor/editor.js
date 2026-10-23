@@ -3,6 +3,7 @@
 'use strict';
 
 const EDITOR = window.STADIUM_EDITOR;
+let grassDraft = null, grassPreview = null, grassLoading = null;
 const viewportPreferences = window.StadiumEditorViewport;
 const viewportKey = `stadium-editor:2d-view:v1:${EDITOR.liveSceneUrl}`;
 let viewportStorage = null;
@@ -460,12 +461,21 @@ function drawPitch(ctx, toScreen, alpha){
   /* Auslaufzone */
   poly([[-57,-38.5],[57,-38.5],[57,38.5],[-57,38.5]]);
   ctx.fillStyle = '#07301b'; ctx.fill();
-  /* Mähstreifen */
-  const NS = 14, SW = 105/NS;
-  for(let i=0;i<NS;i++){
-    const u0=-52.5+i*SW, u1=u0+SW;
-    poly([[u0,-34],[u1,-34],[u1,34],[u0,34]]);
-    ctx.fillStyle = i%2 ? '#0d4526' : '#0a3a20'; ctx.fill();
+  /* Approved albedo in the same field frame; markings remain separate. */
+  if(grassPreview?.canvas){
+    const image=grassPreview.canvas;
+    const p=F(-52.5,-34), x=F(52.5,-34), y=F(-52.5,34);
+    ctx.save();
+    ctx.transform((x[0]-p[0])/image.width,(x[1]-p[1])/image.width,
+      (y[0]-p[0])/image.height,(y[1]-p[1])/image.height,p[0],p[1]);
+    ctx.drawImage(image,0,0); ctx.restore();
+  }else{
+    const NS = 14, SW = 105/NS;
+    for(let i=0;i<NS;i++){
+      const u0=-52.5+i*SW, u1=u0+SW;
+      poly([[u0,-34],[u1,-34],[u1,34],[u0,34]]);
+      ctx.fillStyle = i%2 ? '#0d4526' : '#0a3a20'; ctx.fill();
+    }
   }
   /* Linien */
   ctx.strokeStyle = 'rgba(244,251,255,.78)'; ctx.lineWidth = 1.2;
@@ -1240,6 +1250,59 @@ function editorModuleUrl(path){
 }
 const STADIUM_STAGE_ADAPTER_URL = editorModuleUrl('./stadium_stage_adapter.js');
 
+function syncGrassControls(){
+  if(!grassDraft) return;
+  document.getElementById('grassVariant').value=grassDraft.selected;
+  document.getElementById('grassReset').disabled=!grassDraft.dirty;
+  document.getElementById('grassPreviewState').textContent=grassDraft.dirty
+    ? 'Nur Vorschau in 2D und 3D · erst mit Speichern übernehmen.'
+    : 'Gespeicherte Auswahl · neue Änderungen sind zunächst nur Vorschau.';
+}
+function showGrassError(error){
+  document.getElementById('grassPreviewState').textContent=
+    `Rasenvorschau nicht verfügbar: ${error.message || 'Ladefehler'}.`;
+}
+async function ensureGrassPreview(){
+  if(grassPreview) return grassPreview;
+  if(!grassLoading){
+    grassLoading=import(editorModuleUrl('./grass_editor.js')).then(({createEditorGrass}) =>
+      createEditorGrass(JSON.parse(document.getElementById('editor-grass-assets').textContent))
+    ).then(preview => {
+      grassPreview=preview; preview.select(grassDraft.selected); return preview;
+    }).finally(()=>{grassLoading=null;});
+  }
+  return grassLoading;
+}
+async function applyGrassToStage(){
+  if(!stageThree || (!grassPreview && grassDraft?.selected==='bestand')) return;
+  const preview=await ensureGrassPreview();
+  preview.select(grassDraft.selected);
+  await preview.apply(stageThree);
+}
+async function previewGrass(value){
+  if(!grassDraft) return;
+  grassDraft.select(value); syncGrassControls();
+  try{
+    if(value!=='bestand' || grassPreview){
+      document.getElementById('grassPreviewState').textContent='Rasenvorschau wird geladen …';
+      const preview=await ensureGrassPreview();
+      preview.select(grassDraft.selected);
+      if(stageThree) await preview.apply(stageThree);
+    }
+    if(view==='2d'){renderBase();renderBlocks();renderOverlay();}
+    else if(!stageThree) render3D();
+    syncGrassControls();
+  }catch(error){showGrassError(error);}
+}
+document.getElementById('grassVariant').addEventListener('change', e=>previewGrass(e.target.value));
+document.getElementById('grassReset').addEventListener('click', ()=>{
+  if(grassDraft) previewGrass(grassDraft.saved);
+});
+document.getElementById('stageThree').addEventListener('stadiumstage:ready', ()=>{
+  applyGrassToStage().catch(showGrassError);
+});
+window.addEventListener('pagehide',()=>grassPreview?.dispose());
+
 /* ── Renderdispatch ───────────────────────────────────────────── */
 function renderAll(){
   if(!D) return;
@@ -1272,7 +1335,7 @@ function updateDortmundStage(){
       weights, designColors, roofVisible: roofOn, fullConcept: dortmundFullConcept,
       day: Boolean(document.getElementById('stageDay')?.checked),
       floodlight: Boolean(document.getElementById('stageFloodlight')?.checked),
-    });
+    }).then(applyGrassToStage).catch(showGrassError);
     const delta = Math.max(0, previewCapacity() - baseDisplayCapacity);
     const label = document.getElementById('deSceneData');
     if(label) label.textContent = dortmundFullConcept
@@ -1310,7 +1373,7 @@ function scheduleStageDesignUpdate(){
         day: Boolean(document.getElementById('stageDay')?.checked),
         floodlight: Boolean(document.getElementById('stageFloodlight')?.checked),
         orbit: {azimuth: yaw3d, elevation: 90 - tilt3d},
-      }).catch(useLegacyThreePreview);
+      }).then(applyGrassToStage).catch(useLegacyThreePreview);
     }).catch(()=>{});
   }, 180);
 }
@@ -1360,7 +1423,7 @@ async function ensureThreeStage(){
       activateThreeStage();
       mounted.update({day:Boolean(document.getElementById('stageDay')?.checked),
         floodlight:Boolean(document.getElementById('stageFloodlight')?.checked),
-        roofVisible:roofOn});
+        roofVisible:roofOn}).then(applyGrassToStage).catch(showGrassError);
       return;
     }
     if(isDortmundScene){
@@ -1400,6 +1463,7 @@ async function ensureThreeStage(){
     if(mounted.kind === 'three'){
       stageThree = mounted;
       activateThreeStage();
+      await applyGrassToStage();
     }else{
       stageAdapter = null;
     }
@@ -2155,6 +2219,7 @@ syncMenuHandoff();
 /* ── Export ───────────────────────────────────────────────────── */
 async function exportDesign(){
   const out = {version:2, stadium:D.meta.name, blickrichtung, palette:PALETTE.map(p=>p[0]),
+    grass_variant:grassDraft?.selected || 'bestand',
     blocks: expansionGeometry.persistentBlockEntries(blocks).flatMap(({block:b,index:i})=>{
       const shape = designBlockShape.get(b.sourceId);
       if(!shape) return [];
@@ -2174,9 +2239,11 @@ async function exportDesign(){
   button.disabled = true;
   setEditorSaveState('Speichert …');
   try{
+    if(out.grass_variant!=='bestand') await ensureGrassPreview();
     const response = await fetch(EDITOR.saveUrl, {method:'POST', credentials:'same-origin', headers:{'Content-Type':'application/json','X-CSRFToken':EDITOR.csrfToken}, body:JSON.stringify(out)});
     const body = await response.json();
     if(!response.ok) throw new Error(body.error || 'Speichern fehlgeschlagen.');
+    grassDraft?.commit(out.grass_variant); syncGrassControls();
     toast('Gestaltung gespeichert.');
     setEditorSaveState(blocks.some(block => block.simulated)
       ? 'Gestaltung gespeichert · Ausbauvorschau nur in dieser Sitzung'
@@ -2486,10 +2553,15 @@ if(window.ResizeObserver){
     if(!geometryResponse.ok) throw new Error(geometry.error || 'Geometrie konnte nicht geladen werden.');
     if(!designResponse.ok) throw new Error('Gespeicherter Entwurf konnte nicht geladen werden.');
     const design = await designResponse.json();
+    const {createGrassDraft}=await import(editorModuleUrl('./grass_editor.js'));
+    grassDraft=createGrassDraft(design.grass_variant || 'bestand');
+    syncGrassControls();
+    document.getElementById('grassVariant').disabled=false;
     initStadium(geometry, design);
     if(geometry.surroundings?.warning) toast(geometry.surroundings.warning);
     buildPaletteUI(); syncPal(); resize();
     requestAnimationFrame(() => requestAnimationFrame(resize));
+    if(grassDraft.selected!=='bestand') await previewGrass(grassDraft.selected);
   }catch(error){
     const title = document.getElementById('stadiumTitle');
     if(title) title.textContent = error.message || 'Editor nicht verfügbar';

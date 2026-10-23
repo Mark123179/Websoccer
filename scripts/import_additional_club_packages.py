@@ -36,6 +36,17 @@ def fingerprint(queryset):
     return count, checksum.hexdigest()
 
 
+def protected_field_fingerprints(queryset):
+    """Diagnose changed anchors without logging personal or credential values."""
+    return {
+        row["id"]: {
+            field: hashlib.sha256(json.dumps(value, sort_keys=True, default=str).encode()).hexdigest()
+            for field, value in row.items()
+        }
+        for row in queryset.values().iterator(chunk_size=500)
+    }
+
+
 def protected_queries():
     # Existing anchors must not be overwritten even when real references become
     # resolvable. New club/stadium rows are permitted.
@@ -125,6 +136,10 @@ def import_batch(paths, owner_exceptions, apply=False, *, target_league_id=None)
             raise PackageError("Target league has already started")
         protected = protected_queries()
         before = {key: fingerprint(q) for key, q in protected.items()}
+        small_anchors = {"game.League", "game.Club", "game.Stadium",
+                         "game.ManagerProfile", "auth.User"}
+        before_fields = {key: protected_field_fingerprints(q)
+                         for key, q in protected.items() if key in small_anchors}
         existing_player_ids = set(m.Player.objects.values_list("pk", flat=True))
         incoming_existing = {}
         live_loans = {}
@@ -306,8 +321,24 @@ def import_batch(paths, owner_exceptions, apply=False, *, target_league_id=None)
                 if actual_rows != expected_rows:
                     raise PackageError(
                         f"Existing active loanee {model._meta.label} changed beyond resolving club references.")
-        if any(fingerprint(q) != before[key] for key, q in protected.items()):
-            raise PackageError("Protected club, season, stadium or financial state changed")
+        changes = []
+        for key, q in protected.items():
+            if fingerprint(q) == before[key]:
+                continue
+            details = {}
+            if key in before_fields:
+                after_fields = protected_field_fingerprints(q)
+                for pk in before_fields[key].keys() | after_fields.keys():
+                    old, new = before_fields[key].get(pk, {}), after_fields.get(pk, {})
+                    fields = sorted(field for field in old.keys() | new.keys()
+                                    if old.get(field) != new.get(field))
+                    if fields:
+                        details[pk] = fields
+            changes.append({"model": key, "changed_fields": details})
+        if changes:
+            raise PackageError(
+                "Protected club, season, stadium or financial state changed: "
+                + json.dumps(changes, sort_keys=True))
         # Replay must not alter any game/import row, not merely return a flag.
         game_models = [model for model in apps.get_models()
                        if model._meta.app_label in ("game", "stadium_editor")]

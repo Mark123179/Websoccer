@@ -29,3 +29,14 @@ Bestehende Daten und Belege erhalten; lediglich bereits belegte, zuvor
 unaufgelöste Vereinsverweise ergänzen. Widersprüche stoppen den Import.
 Eine Auslassung im Stammvereinspaket darf den aktiven Spieler nicht aus
 dem Kader entfernen.
+
+Historische Nachlieferungen sind keine Freigabe, einen ansonsten identischen
+Kader erneut zu initialisieren.
+
+**Why:** Eine erneut gelieferte englische Vereinsdatei korrigierte nur einen
+historischen Trainerrekord. Die Spieler-, Vereins- und Stadionquellen waren
+identisch und mussten für diese Berichtigung nicht erneut angewendet werden.
+
+**How to apply:** Bei solchen Nachlieferungen nur die geänderten historischen
+Fakten samt Quellenarchiv übernehmen. Bestehende Spielerzustände, Stärken
+und Bezüge erhalten; frühere historische Personen nicht global löschen.

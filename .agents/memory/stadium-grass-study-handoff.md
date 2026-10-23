@@ -50,3 +50,16 @@ den Rasenvarianten ausdrücklich abgenommen.
 **How to apply:** Die Varianten als abgenommene Grundlage für den nächsten
 Stadioneditor-Schritt verwenden, nicht erneut eine Materialstudie vorschalten.
 Die vereinbarte Reihenfolge bleibt: Editor ansehen, danach ausrollen.
+
+## Auswahl- und Speichervertrag
+
+„Also die Rasenauswahl soll im Stadion-Editor erfolgen. Vorschau dann im
+2D und 3D Modus und genua, erst bei Übernahme, bzw. speichern übernehmen.“
+
+**Why:** Der Nutzer hat den Ort der Auswahl und den Zeitpunkt der Übernahme
+ausdrücklich festgelegt.
+
+**How to apply:** Eine gemeinsame, ungespeicherte Auswahl in beiden
+Editoransichten zeigen. Weder Auswählen noch Ansichtswechsel dürfen
+automatisch speichern. Erst die bewusste Übernahme-/Speichern-Aktion
+ändert die gespeicherte Vereinsauswahl.
