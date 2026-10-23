@@ -7,7 +7,7 @@
   <meta name="theme-color" content="#03070c">
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%2303070c'/%3E%3Cpath d='M8 7h9a5 5 0 0 1 0 10H8V7zm0 10h10a4 4 0 0 1 0 8H8v-8z' fill='none' stroke='%2322e6ff' stroke-width='2'/%3E%3C/svg%3E">
   <title>Stadionstudie · BLUEPRINT Football Manager</title>
-  <link rel="stylesheet" href="{% static 'game/css/stadium_study.css' %}?v=6">
+  <link rel="stylesheet" href="{% static 'game/css/stadium_study.css' %}?v=7">
   <script type="importmap">{"imports":{"three":"{% static 'stadium_editor/stage/vendor/three.module.js' %}","three/addons/":"{% static 'stadium_editor/stage/vendor/addons/' %}"}}</script>
 </head>
 <body class="stadium-study">
@@ -181,6 +181,6 @@
   </main>
 
   {{ study_config|json_script:"stadium-study-config" }}
-  <script type="module" src="{% static 'game/js/stadium_study.js' %}?v=6"></script>
+  <script type="module" src="{% static 'game/js/stadium_study.js' %}?v=7"></script>
 </body>
 </html>

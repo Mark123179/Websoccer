@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import {previewSupportsMaterial, sourceOpaqueColor} from './dortmund_source_materials.js';
+import {previewSupportsMaterial, sourceOpaqueColor} from './dortmund_source_materials.js?v=2';
 import {ORDER, countState, nextStep, warpPositions, addedChairPositions, terraceTriangles}
   from './dortmund_expansion_model.mjs?v=2';
 

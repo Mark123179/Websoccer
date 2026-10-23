@@ -37,6 +37,16 @@ dann rollen wir das aus.“
 **Why:** Der Nutzer hat die Vorschau ausdrücklich auf diesen kleinen Pilot
 begrenzt und die weitere Reihenfolge festgelegt.
 
-**How to apply:** Zuerst nur ein vorhandenes Stadion im 2D-Modus testen und
-den heutigen Standard erhalten. Die Zustimmung zur Vorschau ist weder eine
-Freigabe für Änderungen am Stadioneditor noch für einen allgemeinen Rollout.
+**How to apply:** Den heutigen Standard erhalten. Die Zustimmung zur Vorschau
+allein ist keine Freigabe für einen allgemeinen Rollout.
+
+## 2D-Abnahme
+
+„Perfekt, kann so übernommen werden mit den Rasenvarianten.“
+
+**Why:** Der Nutzer hat die tatsächlich gerenderte Dortmund-Testseite mit
+den Rasenvarianten ausdrücklich abgenommen.
+
+**How to apply:** Die Varianten als abgenommene Grundlage für den nächsten
+Stadioneditor-Schritt verwenden, nicht erneut eine Materialstudie vorschalten.
+Die vereinbarte Reihenfolge bleibt: Editor ansehen, danach ausrollen.

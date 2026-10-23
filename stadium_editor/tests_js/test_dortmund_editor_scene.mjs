@@ -8,6 +8,19 @@ import {
   RECONSTRUCTED_FACADE_SPANS, reconstructedFacadeVisible,
 } from '../static/stadium_editor/dortmund_reconstructed_facade.js';
 
+test('verified Dortmund catch-net assemblies are hidden, goal nets stay supported', () => {
+  const manifest = JSON.parse(readFileSync(
+    new URL('../static/stadium_editor/dortmund_original/manifest.json', import.meta.url), 'utf8'));
+  const nets = manifest.meshes.flatMap(mesh =>
+    mesh.parts.filter(part => /^st051_nett001_/.test(part.material)));
+  assert.equal(nets.length, 8, 'source catch-net assembly count');
+  nets.forEach(part => assert.equal(previewSupportsMaterial(part), false));
+  for (const material of ['goal_net', 'st081_goalnet', 'st051_goal_net',
+    'st051_nett002_NC.002', 'seat_yellow', 'pitch_lines']) {
+    assert.equal(previewSupportsMaterial({material}), true, material);
+  }
+});
+
 test('editor stands map to the exported Unity world axes', () => {
   assert.deepEqual(SIDES, {
     SUED: 'PLUS_X', NORD: 'MINUS_X', OST: 'PLUS_Z', WEST: 'MINUS_Z',
