@@ -173,6 +173,16 @@ def live_loan_preview(data, original, club, league, historical_links):
     return protected, states
 
 
+def _has_strength_source(player):
+    # project_ratings discards source blocks without a rating, including their
+    # potential. Only a retained source can make the strength computable.
+    return any(
+        block.get("rating") is not None and block.get("potential") is not None
+        for provider in ("fminside", "cmtracker")
+        if (block := player.get("ratings", {}).get(provider))
+    )
+
+
 def preview_package(raw, league):
     manifest, data = read_package(raw)
     club = m.Club.objects.filter(transfermarkt_id=manifest["club"]["tm_id"]).first()
@@ -212,12 +222,12 @@ def preview_package(raw, league):
                   .exclude(transfermarkt_id__in=incoming)
                   .exclude(pk__in=[p["player_id"] for p in live_loans])
                   .values_list("display_name", flat=True)) if club else []
+    from .package_service import league_started
+    after_start = league_started(league)
     new_strength_players = [p["display_name"] for p in data["players"] if
-        p["ids"]["tm"]["value"] not in protected_tms
-        and p["ids"]["tm"]["value"] in previous
-        and not any((previous[p["ids"]["tm"]["value"]]["ratings"].get(s) or {}).get("potential") is not None
-                    for s in ("fminside", "cmtracker"))
-        and any((p["ratings"].get(s) or {}).get("potential") is not None for s in ("fminside", "cmtracker"))
+        not after_start and p["ids"]["tm"]["value"] not in protected_tms
+        and not _has_strength_source(previous.get(p["ids"]["tm"]["value"], {}))
+        and _has_strength_source(p)
         ]
     new_strength = len(new_strength_players)
     severity_counts = Counter(g["severity"] for g in rows)
@@ -226,8 +236,7 @@ def preview_package(raw, league):
         manifest["counts"]["loaned_out"] + manifest["counts"].get("u21_loaned_out", 0),
         gaps_by_severity=[dict(label=label, severity=label, count=count)
                           for label, count in sorted(severity_counts.items())])
-    from .package_service import league_started
-    state = dict(league=(league.pk, league.is_playable, league_started(league)),
+    state = dict(league=(league.pk, league.is_playable, after_start),
                  package=last.data_sha256 if last else "")
     state["plan"] = rows
     state["historical_links"] = historical_links

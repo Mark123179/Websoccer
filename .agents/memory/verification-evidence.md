@@ -3,6 +3,15 @@ name: Verification evidence boundaries
 description: User-required controls for parity, regression, baseline tests and diagnostic counts.
 ---
 
+Kleine Import-Fixtures dürfen keine global leere Testdatenbank voraussetzen.
+
+**Why:** Auch isolierte Django-Tests können bereits durch Migrationen angelegte
+Spieler enthalten; absolute Gesamtzahlen verwechseln diesen Ausgangsbestand mit
+Seiteneffekten des getesteten Imports.
+
+**How to apply:** Eigene externe Identitäten und Vorher-/Nachher-Differenzen
+prüfen. Bestand nicht löschen, nur um eine globale Sollzahl zu erreichen.
+
 Bei additiven Vereinsimporten unveränderte Bestandsdaten über die vorab
 festgehaltene Menge bestehender IDs vergleichen, nicht über eine nach dem Import
 neu ausgewertete Ausschlussmenge. Neu angelegte Spieler gehören nicht zum
