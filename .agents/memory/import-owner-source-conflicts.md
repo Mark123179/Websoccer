@@ -27,3 +27,13 @@ als Quellenabweichung dokumentieren, nicht als Eigentümerwechsel.
 
 **How to apply:** Diese zusätzliche Einzelfallfreigabe betrifft Benkara;
 sie erlaubt keine pauschale Gleichsetzung anderer Zweitmannschaften.
+
+Für Stephen Mfuni Manchester City als Eigentümer beibehalten und die Leihe
+zu Coventry City übernehmen. Die Paketangabe Manchester City U21 als
+Quellenabweichung dokumentieren, nicht als Eigentümerwechsel.
+
+**Why:** Der Nutzer bestätigte: „Stephen Mfuni ist geliehen von city.“
+
+**How to apply:** Auch diese Freigabe ist spielerbezogen. Den ursprünglichen
+Paketbeleg erhalten und keinen zusätzlichen U21-Verein zur Umgehung des
+Quellenkonflikts anlegen.
