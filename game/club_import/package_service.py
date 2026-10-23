@@ -54,7 +54,7 @@ def issue(run, entity, ref, field, note, severity="info", reference=None):
                   "severity": severity, "external_reference": reference or {}})[0]
 
 
-def identity(ids, model, kind="spieler"):
+def identity(ids, model, kind="spieler", *, lock=True):
     """All external IDs must agree. No matching by name, birth date or local ref."""
     found = set()
     for provider, entry in ids.items():
@@ -79,7 +79,8 @@ def identity(ids, model, kind="spieler"):
         found.discard(None)
     if len(found) > 1:
         raise PackageError("Conflicting external identities; no automatic merge.")
-    row = model.objects.select_for_update().filter(pk=next(iter(found))).first() if found else None
+    queryset = model.objects.select_for_update() if lock else model.objects
+    row = queryset.filter(pk=next(iter(found))).first() if found else None
     tm = (ids.get("tm") or {}).get("value")
     if row and model in (m.Player, m.Club) and tm is not None and row.transfermarkt_id not in (None, tm):
         raise PackageError("A known TM identity cannot be changed through another source ID.")

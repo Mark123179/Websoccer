@@ -6,9 +6,12 @@ from unittest.mock import patch
 
 from django.apps import apps
 from django.contrib.auth.models import User
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase, override_settings
+from django.urls import reverse
 
 from game import models as m
+from game.club_import.package_preview import preview_package
 from game.club_import.package_service import apply_package
 from game.club_import.package_validation import PackageError
 from game.economy.booking import book
@@ -136,6 +139,131 @@ class AdditionalClubPackageTests(TestCase):
         self.write_packages()
         return player
 
+    def login_creator(self):
+        user = User.objects.create_user(username="loan-preview-creator", is_staff=True)
+        self.client.force_login(user)
+        # Warm up global login rewards/activity and calendar weather before
+        # measuring the package preview, rather than hiding those writes.
+        self.assertEqual(self.client.get(reverse("package_creator:hub")).status_code, 200)
+
+    def render_owner_preview(self, league):
+        return self.client.post(reverse("package_creator:preview"), {
+            "league": league.pk,
+            "package": SimpleUploadedFile("owner.zip", self.paths[0].read_bytes()),
+        })
+
+    def test_live_loan_preview_is_read_only_and_matches_confirmed_projection(self):
+        league = self.foreign_league()
+        player = self.prepare_live_foreign_loan()
+        self.login_creator()
+        before = self.snapshot()
+        preview = preview_package(self.paths[0], league)
+        self.assertEqual(before, self.snapshot())
+        self.assertEqual(len(preview["protected_live_loans"]), 1)
+        loan = preview["protected_live_loans"][0]
+        self.assertEqual(
+            (loan["player_id"], loan["owner"], loan["owner_tm"],
+             loan["borrower"], loan["borrower_tm"], str(loan["loan_until"]), loan["omitted"]),
+            (player.pk, "Owner", 1001, "Borrower", 1002, "2027-06-30", False))
+        self.assertEqual(preview["players_to_review"], [])
+        self.assertEqual(preview["changes"], [])
+        self.assertEqual(preview["new_strengths"], 0)
+        response = self.render_owner_preview(league)
+        for text in ("Geschützte aktive Leihspieler", player.full_name,
+                     "Owner (TM 1001)", "Borrower (TM 1002)", "30.06.2027",
+                     "Spielerwerte, IDs, Stärke und Historien bleiben unverändert",
+                     "Originalpaket als Quellenbeleg", "Nur belegte offene Vereinsreferenzen"):
+            self.assertContains(response, text)
+        self.assertNotContains(response, "Wird beim Import berechnet")
+        self.assertEqual(before, self.snapshot())
+        original = m.Player.objects.filter(pk=player.pk).values().get()
+        result = self.client.post(reverse("package_creator:confirm"),
+                                  {"token": response.context["token"]})
+        self.assertEqual(result.status_code, 302)
+        player.refresh_from_db()
+        self.assertEqual(
+            dict(original, owner_club_id=player.owner_club_id,
+                 loan_partner_club_id=player.owner_club_id),
+            m.Player.objects.filter(pk=player.pk).values().get())
+        run = m.SourceImportRun.objects.get(club=player.owner_club, status="applied")
+        self.assertEqual(run.package_data, self.sources[0][1])
+
+    def test_live_loan_reupload_does_not_offer_static_changes_or_new_strength(self):
+        league = self.foreign_league()
+        player = self.prepare_live_foreign_loan()
+        source_player = self.sources[0][1]["players"][0]
+        ratings = deepcopy(source_player["ratings"])
+        for block in source_player["ratings"].values():
+            if block:
+                block["potential"] = None
+        self.write_packages()
+        apply_package(self.paths[0], league)
+        source_player["ratings"] = ratings
+        source_player["display_name"] = "<em>Statischer Paketname</em>"
+        for block in source_player["ratings"].values():
+            if block and block.get("rating") is not None:
+                block["rating"] = 1
+                block["potential"] = 100
+        self.write_packages()
+        self.login_creator()
+        before = self.snapshot()
+        response = self.render_owner_preview(league)
+        preview = response.context["preview"]
+        self.assertEqual(preview["changes"], [])
+        self.assertEqual(preview["new_strengths"], 0)
+        self.assertEqual(preview["new_strength_players"], [])
+        self.assertEqual(preview["data"]["players"][0], source_player)
+        self.assertEqual(preview["protected_live_loans"][0]["name"], player.full_name)
+        self.assertContains(response, "Abweichende statische Paketwerte werden nicht übernommen")
+        self.assertContains(response, "&lt;em&gt;Statischer Paketname&lt;/em&gt;")
+        self.assertNotContains(response, "<em>Statischer Paketname</em>")
+        self.assertNotContains(response, "Geänderte Werte vor Übernahme")
+        self.assertNotContains(response, "Wird beim Import berechnet")
+        self.assertEqual(before, self.snapshot())
+        original = m.Player.objects.filter(pk=player.pk).values().get()
+        apply_package(self.paths[0], league)
+        self.assertEqual(original, m.Player.objects.filter(pk=player.pk).values().get())
+        player.refresh_from_db()
+        self.assertEqual(m.SourceImportRun.objects.filter(club=player.owner_club)
+                         .latest("pk").package_data, self.sources[0][1])
+
+    def test_live_loan_preview_guard_tracks_player_before_owner_exists(self):
+        league = self.foreign_league()
+        player = self.prepare_live_foreign_loan()
+        self.login_creator()
+        response = self.render_owner_preview(league)
+        guard = response.context["preview"]["guard"]
+        m.Player.objects.filter(pk=player.pk).update(shirt_number=98)
+        before = self.snapshot()
+        self.assertNotEqual(guard, preview_package(self.paths[0], league)["guard"])
+        result = self.client.post(reverse("package_creator:confirm"),
+                                  {"token": response.context["token"]})
+        self.assertContains(result, "Datenstand geändert", status_code=400)
+        self.assertEqual(before, self.snapshot())
+
+    def test_live_loan_preview_blocks_conflicting_loan_facts_without_writes(self):
+        league = self.foreign_league()
+        self.prepare_live_foreign_loan()
+        self.login_creator()
+        original = deepcopy(self.sources[0][1]["players"][0])
+        variants = [
+            {"date_of_birth": "2000-01-01"},
+            {"squad": dict(original["squad"], loan_until="2028-06-30")},
+            {"squad": dict(original["squad"], owner_club={"tm_id": 999, "name": "Other"})},
+            {"squad": dict(original["squad"], loan_club={"tm_id": 999, "name": "Other"})},
+        ]
+        for changes in variants:
+            with self.subTest(changes=changes):
+                self.sources[0][1]["players"][0] = dict(deepcopy(original), **changes)
+                self.write_packages()
+                before = self.snapshot()
+                with self.assertRaises(PackageError):
+                    preview_package(self.paths[0], league)
+                response = self.render_owner_preview(league)
+                self.assertEqual(response.status_code, 400)
+                self.assertNotContains(response, "Paket jetzt übernehmen", status_code=400)
+                self.assertEqual(before, self.snapshot())
+
     def test_explicit_foreign_target_keeps_german_leagues_unchanged(self):
         league = self.foreign_league()
         for _, data in self.sources:
@@ -207,7 +335,12 @@ class AdditionalClubPackageTests(TestCase):
             first_name="Other", last_name="Identity", age=20, fm_inside_id=foreign_id)
         self.sources[0][1]["players"][0]["ids"]["fmi"]["value"] = foreign_id
         self.write_packages()
+        self.login_creator()
         before = self.snapshot()
+        with self.assertRaises(PackageError):
+            preview_package(self.paths[0], league)
+        self.assertEqual(self.render_owner_preview(league).status_code, 400)
+        self.assertEqual(before, self.snapshot())
         with self.assertRaises(PackageError):
             apply_package(self.paths[0], league)
         self.assertEqual(before, self.snapshot())
@@ -225,6 +358,18 @@ class AdditionalClubPackageTests(TestCase):
         replacement["squad"].update(status="own", loan_club=None, loan_until=None)
         self.sources[0][1]["players"] = [replacement]
         self.write_packages()
+        self.login_creator()
+        database_before = self.snapshot()
+        response = self.render_owner_preview(league)
+        preview = response.context["preview"]
+        self.assertEqual(len(preview["protected_live_loans"]), 1)
+        self.assertTrue(preview["protected_live_loans"][0]["omitted"])
+        self.assertEqual(preview["protected_live_loans"][0]["source_json"], "")
+        self.assertNotIn(player.display_name, preview["players_to_review"])
+        self.assertContains(response, player.full_name)
+        self.assertContains(response, "Fehlt im Stammvereinspaket; aktiver Kader bleibt erhalten")
+        self.assertNotContains(response, "Fehlt im Paket; vorhandene Daten bleiben im Prüfpool erhalten")
+        self.assertEqual(database_before, self.snapshot())
         apply_package(self.paths[0], league)
         self.assertEqual(before, m.Player.objects.filter(pk=player.pk).values().get())
 

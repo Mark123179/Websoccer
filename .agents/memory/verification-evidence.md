@@ -62,3 +62,15 @@ während dieselbe Fläche im lokalen Bestand den gemeinsamen Renderer stoppte.
 **How to apply:** Vorschau-Transformationen mit der tatsächlichen Laufzeiteingabe
 vergleichen. Ungültige Flächen melden; genehmigte Ausnahmen exakt auf Inhalt
 und Verein begrenzen, statt Gebäude oder andere Defekte pauschal zu entfernen.
+
+Schreibfreie Fachvorschauen getrennt von globalen Request-Nebenwirkungen messen.
+
+**Why:** Authentifizierte Requests können auch ohne Fachänderung Login-XP,
+Aktivitätszeit und Kalenderwetter schreiben. Ein einzelner Gesamt-Fingerprint
+kann diese Effekte nicht von Schreibzugriffen der Vorschau unterscheiden.
+
+**How to apply:** In isolierten HTTP-Tests globale Initialisierung vor der
+Messung durchführen; danach alle Fachmodelle vergleichen. Den Vorschau-Service
+zusätzlich direkt ohne Initialisierung auf Schreibfreiheit prüfen. Bei einem
+Unterschied konkrete Tabellen oder Schreibabfragen untersuchen, nicht pauschal
+Modelle vom Vergleich ausschließen.

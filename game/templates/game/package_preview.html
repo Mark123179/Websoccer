@@ -19,6 +19,27 @@
         <div><span>Spielbarkeit</span><strong>{% if league.is_playable %}Spielbar{% else %}Nicht spielbar{% endif %}</strong></div>
     </section>
 
+    {% if preview.protected_live_loans %}
+    <section class="package-preview-card package-preview-wide">
+        <p class="package-preview-kicker">Aktiver Simulationskader</p>
+        <h2>Geschützte aktive Leihspieler · {{ preview.protected_live_loans|length }}</h2>
+        <p>Keine Neuinitialisierung: Spielerwerte, IDs, Stärke und Historien bleiben unverändert. Abweichende statische Paketwerte werden nicht übernommen. Nur belegte offene Vereinsreferenzen werden aufgelöst.</p>
+        <div class="package-change-table-wrap"><table class="package-change-table">
+            <thead><tr><th>Spieler</th><th>Stammverein</th><th>Aktiver Einsatzverein</th><th>Leihende</th><th>Entscheidung</th></tr></thead>
+            <tbody>{% for loan in preview.protected_live_loans %}
+                <tr><td>{{ loan.name }} (TM {{ loan.tm }})</td><td>{{ loan.owner }} (TM {{ loan.owner_tm }})</td><td>{{ loan.borrower }} (TM {{ loan.borrower_tm }})</td><td>{{ loan.loan_until|date:"d.m.Y" }}</td><td>{% if loan.omitted %}Fehlt im Stammvereinspaket; aktiver Kader bleibt erhalten. Keine Verschiebung in den Prüfpool; ausdrückliche Nachsicht erforderlich.{% else %}Übereinstimmende aktive Leihe geschützt; Simulationsdaten unverändert.{% endif %}</td></tr>
+            {% endfor %}</tbody>
+        </table></div>
+        {% for loan in preview.protected_live_loans %}{% if not loan.omitted %}
+        <details>
+            <summary>Originalpaket als Quellenbeleg · {{ loan.name }} (TM {{ loan.tm }})</summary>
+            <p class="package-muted">Unveränderter Paketstand, keine Vorschau einer Übernahme dieser Spielerwerte.</p>
+            <div class="package-change-table-wrap"><pre>{{ loan.source_json }}</pre></div>
+        </details>
+        {% endif %}{% endfor %}
+    </section>
+    {% endif %}
+
     {% if preview.historical_links %}
     <section class="package-preview-card">
         <h2>Historische Spieleridentitäten verknüpfen</h2>
