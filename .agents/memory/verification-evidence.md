@@ -28,6 +28,17 @@ gelieferten Spieleraktualisierungen belegen. Explizite abweichende Quellbezüge
 offenlegen; fehlt ihr Zielverein lokal, externe Identität und Originalnamen
 erhalten, statt durch Namensähnlichkeit einen Ersatzverein zuzuordnen.
 
+Bei vollständigen Datenvergleichsprüfungen gelten erlaubte Änderungen für
+physische Datenzeilen, nicht nur für einen Django-Modellnamen.
+
+**Why:** Proxy-Modelle können dieselbe Spielerzeile nochmals abfragen. Eine
+korrekt begrenzte Spieleränderung erscheint sonst unter dem Proxy-Namen
+fälschlich als Änderung an geschützten Fremddaten.
+
+**How to apply:** Jede konkrete Tabelle einmal prüfen oder dieselbe
+zeilenbezogene Ausnahme konsequent auf ihre Proxy-Abfragen anwenden.
+Die erlaubten Felder des betroffenen Spielers trotzdem separat vergleichen.
+
 Verifikationsbehauptungen müssen die tatsächlich identischen Startbedingungen nennen: Seed-Satz, Saisonanzahl, sämtliche verwendeten Zufallszustände und bei Tests den Zustand der Testdatenbank.
 
 **Why:** Der Nutzer korrigierte eine Abnahme, die unterschiedliche Saisonumfänge als Vorher/Nachher-Beleg verwendete, lokale Seeds mit vollständig kontrolliertem Zufall gleichsetzte und Testfehler ohne Baseline-Lauf als vorbestehend bezeichnete.
