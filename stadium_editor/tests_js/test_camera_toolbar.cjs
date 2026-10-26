@@ -26,12 +26,16 @@ function fixture() {
     after(element) { this.next = element; }
   }
   const nodes = Object.fromEntries(
-    ['rot3d', 'stageCamera', 'yawSlider', 'tiltSlider', 'stageDay', 'stageFloodlight', 'roofChk']
+    ['rot3d', 'stageCamera', 'yawSlider', 'tiltSlider', 'stageDay', 'stageFloodlight', 'roofChk',
+      'seatDesignMode', 'clearSeatDesign', 'grassReset', 'grassVariant', 'grassPanel', 'seatPanel']
       .map(id => [id, new Element(id)]),
   );
   nodes.roofChk.checked = true;
   nodes.yawSlider.value = '35';
   nodes.tiltSlider.value = '54';
+  nodes.clearSeatDesign.textContent = 'Eigenen Entwurf löschen';
+  nodes.grassReset.textContent = 'Gespeicherte Auswahl wiederherstellen';
+  nodes.grassPanel.append(nodes.grassVariant, nodes.grassReset);
   const toolbar = new Element('toolbar');
   return {
     nodes, toolbar,
@@ -39,7 +43,11 @@ function fixture() {
       getElementById: id => nodes[id] || null,
       createElement: () => new Element(),
       createElementNS: () => new Element(),
-      querySelector: () => toolbar,
+      querySelector: selector => ({
+        '.editor-toolbar': toolbar,
+        '.grass-editor-controls': nodes.grassPanel,
+        '.seat-design-panel': nodes.seatPanel,
+      })[selector],
     },
   };
 }
@@ -49,8 +57,10 @@ test('camera toolbar preserves original inputs, values, listeners and visibility
   const listener = () => {};
   f.nodes.stageDay.onchange = listener;
   vm.runInNewContext(source, {document: f.document});
-  assert.equal(f.toolbar.next, original.rot3d);
-  const [camera, angles, switches] = f.nodes.rot3d.children;
+  const row = f.toolbar.next;
+  assert.equal(row.children[0], original.rot3d);
+  const [camera, angles] = f.nodes.rot3d.children;
+  const switches = row.children.at(-1);
   assert.equal(camera.children.at(-1), original.stageCamera);
   assert.equal(angles.children[0].children.at(-1), original.yawSlider);
   assert.equal(angles.children[1].children.at(-1), original.tiltSlider);
@@ -62,6 +72,13 @@ test('camera toolbar preserves original inputs, values, listeners and visibility
   assert.equal(original.rot3d.style.display, 'none');
   assert.equal(original.stageDay.attrs.role, 'switch');
   assert.equal(switches.attrs['aria-label'], 'Licht und Dach');
+  assert.equal(row.children[1], original.grassPanel);
+  assert.equal(row.children[2], original.seatPanel);
+  assert.equal(original.seatPanel.children[1], original.seatDesignMode);
+  assert.equal(original.seatPanel.children[2], original.clearSeatDesign);
+  assert.equal(original.clearSeatDesign.attrs['aria-label'], 'Eigenen Entwurf löschen');
+  assert.equal(original.grassReset.attrs.title, 'Gespeicherte Auswahl wiederherstellen');
+  assert.equal(original.grassPanel.children[0], original.grassVariant);
   vm.runInNewContext(source, {document: f.document});
   assert.equal(f.nodes.rot3d.children[0], camera);
 });

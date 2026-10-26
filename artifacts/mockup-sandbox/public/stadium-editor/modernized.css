@@ -32,7 +32,8 @@ body {
 
 .stadium-editor-content {
   position: relative;
-  width: 100%;
+  width: calc(100% - 56px);
+  margin-inline: 28px;
   height: 100dvh;
   min-height: 600px;
   overflow: hidden;
