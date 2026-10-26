@@ -1,5 +1,6 @@
 import json
 from copy import deepcopy
+from unittest.mock import patch
 
 from django.contrib.auth.models import User
 from django.test import TestCase
@@ -63,6 +64,31 @@ class ManagerSeatModeTests(TestCase):
         self.assertNotContains(response, 'id="btnExpand"')
         self.assertNotContains(response, 'id="expStand"')
         self.assertContains(response, "isAdmin: false")
+
+    @patch("stadium_editor.views.max_kapazitaet", return_value=120000)
+    def test_modern_editor_keeps_live_functions_and_excludes_preview_stubs(self, _capacity):
+        from bs4 import BeautifulSoup
+
+        for source_id in (None, 915, 907):
+            with self.subTest(source_id=source_id):
+                self.club.fm_inside_id = source_id
+                self.club.save(update_fields=["fm_inside_id"])
+                response = self.client.get(reverse("stadium_editor"))
+                self.assertEqual(response.status_code, 200)
+                soup = BeautifulSoup(response.content, "html.parser")
+                self.assertIsNotNone(soup.select_one(".stadium-editor-content.editor-modern"))
+                self.assertContains(response, "editor_modern.css")
+                self.assertIsNotNone(soup.select_one(".modern-identity"))
+                for control in ("btnSave", "btn3d", "btnPress", "seatDesignMode",
+                                "grassVariant", "roofChk", "stageDay", "stageFloodlight",
+                                "btnUndo", "btnRedo", "imgInput", "textBg"):
+                    self.assertIsNotNone(soup.find(id=control), control)
+                self.assertFalse(soup.find(id="btn3d").has_attr("disabled"))
+                self.assertNotContains(response, "Vorschau · nur lokal")
+                self.assertNotContains(response, "/__mockup/")
+                self.assertNotContains(response, "three-unavailable")
+                self.assertNotContains(response, 'id="btnExpand"')
+                self.assertContains(response, reverse("stadium_editor_save_design"))
 
     def test_admin_retains_expansion_simulator_and_mode_selector(self):
         self.user.is_staff = True

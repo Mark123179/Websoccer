@@ -45,3 +45,9 @@ Die Umschaltung Punkte/Flächen entfällt; Sitzplätze bleiben als Punkte darges
 **Why:** Der Nutzer wählte auf ausdrückliche Rückfrage nur „Umschaltung Punkte/Flächen“ zur Entfernung.
 
 **How to apply:** Beim Modernisieren der Oberfläche den Flächenmodus nicht wieder einführen oder mit der Text-Hintergrundoption verwechseln.
+
+Die dunkle, ruhigere Werkbank-Gestaltung des modernisierten Canvas-Entwurfs ist zur Übernahme in den echten Stadioneditor freigegeben.
+
+**Why:** Der Nutzer bestätigte die konkrete Übernahme mit „ja“.
+
+**How to apply:** Gestaltung auf den Editor begrenzen. Echte 3D-, Speicher- und Berechtigungsfunktionen erhalten; lokale Vorschau-Sperren und Sandbox-Hinweise nicht ins Spiel übernehmen.

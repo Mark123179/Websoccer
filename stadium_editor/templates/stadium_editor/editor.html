@@ -183,21 +183,17 @@
   .admin-tools{order:3}
 }
 </style>
+<link rel="stylesheet" href="{% static 'stadium_editor/editor_modern.css' %}?v=92">
 {% endblock %}
 
 {% block content %}
-<div class="stadium-editor-content{% if is_dortmund_editor %} is-dortmund{% endif %}">
-{% if is_dortmund_editor %}
-<header class="de-hero">
-  <div><span class="de-eyebrow">SIGNAL IDUNA PARK · AUSBAUEDITOR</span>
-    <h1>Rundum planen.</h1>
-    <p>2D-Rangflächen bearbeiten, Ausbaugrößen simulieren und den Entwurf in 3D prüfen.</p>
-  </div>
-  <div class="de-hero-status"><i></i> Dortmund · {% if is_editor_admin %}Admin-Entwurf{% else %}Manager-Entwurf{% endif %}</div>
-</header>
-{% endif %}
+<div class="stadium-editor-content editor-modern{% if is_dortmund_editor %} is-dortmund{% endif %}">
 <div class="editor-toolbar">
   <a class="editor-back" href="{% url 'stadium_detail' %}">← {% if is_dortmund_editor %}STADION-MENÜ{% else %}ZUR STADIONVERWALTUNG{% endif %}</a>
+  <div class="modern-identity">
+    <span class="modern-identity__eyebrow">STADIONVERWALTUNG</span>
+    <strong>Sitzplatz-Design</strong>
+  </div>
   <div class="editor-toolbar-spacer"></div>
   <div class="editor-zoom" id="zoom2dControls" role="group" aria-label="2D-Zoom">
     <button type="button" class="btn" id="zoom2dOut" aria-label="2D herauszoomen" title="Herauszoomen">−</button>
@@ -458,5 +454,5 @@ window.STADIUM_EDITOR = {
 <script src="{% static 'stadium_editor/editor_viewport.js' %}?v=1"></script>
 <script src="{% static 'stadium_editor/source_seats.js' %}?v=3"></script>
 <script src="{% static 'stadium_editor/seat_design_modes.js' %}?v=1"></script>
-<script src="{% static 'stadium_editor/editor.js' %}?v=91"></script>
+<script src="{% static 'stadium_editor/editor.js' %}?v=92"></script>
 {% endblock %}
