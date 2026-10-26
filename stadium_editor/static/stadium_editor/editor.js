@@ -1414,6 +1414,11 @@ async function ensureThreeStage(){
       stageScene=await response.json();
       const runtime=stageScene.presentation;
       const mounted=await mountUnityStadium({element:host,presentation:runtime,
+        initialState:{
+          day:Boolean(document.getElementById('stageDay')?.checked),
+          floodlight:Boolean(document.getElementById('stageFloodlight')?.checked),
+          roofVisible:roofOn,
+        },
         onOrbitChange:orbit=>{
           yaw3d=orbit.azimuth;tilt3d=90-orbit.elevation;
           document.getElementById('yawSlider').value=yaw3d;

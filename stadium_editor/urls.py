@@ -1,5 +1,6 @@
 from django.urls import path
 from .model_assets import model_asset
+from .allianz_pilot import allianz_pilot, allianz_pilot_scene
 
 from .views import (
     stadium_editor,
@@ -17,6 +18,8 @@ from .views import (
 
 
 urlpatterns = [
+    path('stadion/allianz/pilot/', allianz_pilot, name='allianz_pilot'),
+    path('stadion/allianz/pilot/scene/', allianz_pilot_scene, name='allianz_pilot_scene'),
     path('stadion/model-assets/<int:fmi_id>/<str:version>/<str:name>',
          model_asset,
          name='stadium_model_asset'),

@@ -113,7 +113,9 @@ if (canvasHost && statusHost) {
         const unityURL=new URL('../../stadium_editor/unity_stadium_scene.js',import.meta.url);
         unityURL.search=new URL(import.meta.url).search;
         const {mountUnityStadium}=await import(unityURL);
-        const mounted=await mountUnityStadium({element:canvasHost,presentation:runtime,tickerPreview:true});
+        const initialDay = dayControl?.checked ?? true;
+        const mounted=await mountUnityStadium({element:canvasHost,presentation:runtime,tickerPreview:true,
+          initialState:{day:initialDay,floodlight:!initialDay,roofVisible:roofControl?.checked ?? true}});
         if(stopped||thisAttempt!==attempt){mounted.dispose();return;}
         sceneHandle=mounted;controlsEnabled(true);
         updateRoof();updateDay();

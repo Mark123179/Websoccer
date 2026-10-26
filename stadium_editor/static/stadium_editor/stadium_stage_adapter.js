@@ -363,6 +363,7 @@ export async function mountStadiumStage({
     const {mountUnityStadium}=await import(url.href);
     const mounted=await mountUnityStadium({
       element,presentation:scene.presentation,tickerPreview:camera==='match',
+      initialState:{day:Boolean(day),floodlight:Boolean(floodlight),roofVisible:Boolean(roofVisible)},
     });
     await mounted.update({camera,day,floodlight,roofVisible,exposure});
     onReady?.(mounted);

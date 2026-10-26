@@ -37,3 +37,13 @@ das Innenleben.“
 **How to apply:** Kein Umbau von Gelände, Straßen oder Vegetation im Rahmen
 dieser Verbesserung. Die gelieferte Aufnahme dient als Referenz für den
 Lichtwechsel, nicht als Detailbeleg für Sitze oder Innenraumgeometrie.
+
+Den freigegebenen Licht-, Fassaden- und Innenraumansatz zunächst an der
+Allianz Arena als Pilot erproben. Den vorherigen Darstellungsstand sichern.
+
+**Why:** Der Nutzer wählte ausdrücklich „Ja, Allianz Arena als Pilot“ und
+ergänzte „Den jetzigen Stand speichern, falls wir uns verennen.“
+
+**How to apply:** Nicht ungefragt auf andere Stadien ausrollen. Bestehende
+Modellquelle und Ortsumgebung als unveränderte Vergleichsbasis bewahren;
+schematische Fassaden-Nähte nicht als vermessene Originalkissen ausgeben.
