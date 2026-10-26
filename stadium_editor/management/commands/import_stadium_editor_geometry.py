@@ -1,6 +1,7 @@
 from pathlib import Path
 
 from django.core.management.base import BaseCommand, CommandError
+from django.db import transaction
 
 from game.models import Stadium
 from stadium_editor.models import StadiumGeometry
@@ -17,6 +18,10 @@ class Command(BaseCommand):
         )
         parser.add_argument('--stadium', type=int, help='Nur diese Stadium-ID importieren')
         parser.add_argument('--dry-run', action='store_true')
+        parser.add_argument(
+            '--missing-only', action='store_true',
+            help='Nur fehlende Verknüpfungen ergänzen; bestehende Geometrien und Entwürfe unverändert lassen.',
+        )
 
     def handle(self, *args, **options):
         try:
@@ -29,8 +34,12 @@ class Command(BaseCommand):
         stadiums = Stadium.objects.select_related('club').order_by('pk')
         if options['stadium']:
             stadiums = stadiums.filter(pk=options['stadium'])
-        imported = skipped = 0
+        imported = skipped = unchanged = 0
         for stadium in stadiums:
+            if options.get('missing_only') and StadiumGeometry.objects.filter(stadium=stadium).exists():
+                unchanged += 1
+                self.stdout.write(f'Unverändert: {stadium.name} (Blaupause bereits vorhanden)')
+                continue
             blueprint = by_club.get(_key(stadium.club.name))
             if not blueprint:
                 skipped += 1
@@ -38,17 +47,29 @@ class Command(BaseCommand):
                 continue
             geometry = normalise_block_types(stadium, blueprint)
             if not options['dry_run']:
-                StadiumGeometry.objects.update_or_create(
-                    stadium=stadium,
-                    defaults={
+                with transaction.atomic():
+                    defaults = {
                         'geometry': geometry,
                         'schema_version': 2,
                         'source': 'OpenStreetMap/BLUEPRINT-Import',
                         'attribution': 'Blaupause: OpenStreetMap-Daten (ODbL)',
-                    },
-                )
+                    }
+                    if options.get('missing_only'):
+                        # Serialize against concurrent editor/activation operations.
+                        Stadium.objects.select_for_update().order_by('pk').get(pk=stadium.pk)
+                        _, created = StadiumGeometry.objects.get_or_create(
+                            stadium=stadium, defaults=defaults,
+                        )
+                        if created:
+                            from stadium_editor.scene_service import current_live_scene
+                            current_live_scene(stadium)
+                    else:
+                        StadiumGeometry.objects.update_or_create(
+                            stadium=stadium, defaults=defaults,
+                        )
             imported += 1
-            self.stdout.write(f'Importiert: {stadium.name}')
+            self.stdout.write(f'{"Geprüft" if options["dry_run"] else "Importiert"}: {stadium.name}')
         self.stdout.write(self.style.SUCCESS(
-            f'Fertig: {imported} importiert, {skipped} ohne passende Blaupause.'
+            f'Fertig: {imported} {"geprüft" if options["dry_run"] else "importiert"}, '
+            f'{unchanged} unverändert, {skipped} ohne passende Blaupause.'
         ))
