@@ -39,3 +39,9 @@ Unter der Modusauswahl keine Erklärungstexte anzeigen; den PNG-Export im Editor
 **Why:** Der Nutzer verlangte ausdrücklich, die gezeigten Texte und den im Screenshot markierten PNG-Button zu entfernen.
 
 **How to apply:** Die Auswahl bleibt erhalten, aber ohne erklärende Absätze oder technische Statusberichte.
+
+Die Umschaltung Punkte/Flächen entfällt; Sitzplätze bleiben als Punkte dargestellt. „Fläche in Zweitfarbe“ beim Textwerkzeug bleibt erhalten.
+
+**Why:** Der Nutzer wählte auf ausdrückliche Rückfrage nur „Umschaltung Punkte/Flächen“ zur Entfernung.
+
+**How to apply:** Beim Modernisieren der Oberfläche den Flächenmodus nicht wieder einführen oder mit der Text-Hintergrundoption verwechseln.

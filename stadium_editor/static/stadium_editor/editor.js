@@ -66,7 +66,7 @@ let pressings = [];            // gepresste Objekte
 let pressId = 1;
 const selection = new Set();
 let tool = 'fill', col1 = 3, col2 = 1;           // Start: Rot / Weiß
-let view = '2d', yaw3d = 0, tilt3d = 54, roofOn = true, dotMode = true;
+let view = '2d', yaw3d = 0, tilt3d = 54, roofOn = true;
 let stageAdapter = null, stageThree = null, stageScene = null, stageUpdateTimer = 0;
 let seatDesignMode='original', sourceSeatColors=null;
 let sourceSeatIds=null;
@@ -665,13 +665,8 @@ function renderBlocks(){
   for(let i=0;i<blocks.length;i++){
     const b = blocks[i];
     const p = b.quad.map(pt => w2s(pt[0],pt[1]));
-    if(dotMode){
-      drawBlockDots(ctx, i, (u,v)=>{ const w=quadPoint(b.quad,u,v); return w2s(w[0],w[1]); });
-      strokeBlockBorder(ctx, b, p, .5);
-    } else {
-      drawTexturedQuad(ctx, texCache[i], p);
-      strokeBlockBorder(ctx, b, p, 1);
-    }
+    drawBlockDots(ctx, i, (u,v)=>{ const w=quadPoint(b.quad,u,v); return w2s(w[0],w[1]); });
+    strokeBlockBorder(ctx, b, p, .5);
     if(b.officialBlock){
       const cx = p.reduce((sum, pt)=>sum+pt[0],0)/4;
       const cy = p.reduce((sum, pt)=>sum+pt[1],0)/4;
@@ -1310,16 +1305,11 @@ function render3D(){
     }
     const p = [ to3(A[0],A[1],b.z1), to3(B[0],B[1],b.z1),      // außen = hoch
                 to3(C[0],C[1],b.z0), to3(Dq[0],Dq[1],b.z0) ];  // innen = tief
-    if(dotMode){
-      drawBlockDots(ctx, it.i, (u,v)=>{
-        const w = quadPoint(b.quad,u,v);
-        return to3(w[0], w[1], b.z0 + v*(b.z1-b.z0));
-      });
-      strokeBlockBorder(ctx, b, p, .4);
-    } else {
-      drawTexturedQuad(ctx, texCache[it.i], p);
-      strokeBlockBorder(ctx, b, p, .7);
-    }
+    drawBlockDots(ctx, it.i, (u,v)=>{
+      const w = quadPoint(b.quad,u,v);
+      return to3(w[0], w[1], b.z0 + v*(b.z1-b.z0));
+    });
+    strokeBlockBorder(ctx, b, p, .4);
   }
 
 }
@@ -2558,12 +2548,6 @@ document.getElementById('btnRedo').onclick = ()=> applySnap(redoStack, undoStack
 document.getElementById('btnSave').onclick = exportDesign;
 
 /* Ansicht */
-document.getElementById('btnDots').onclick = ()=>{
-  dotMode = !dotMode;
-  document.getElementById('btnDots').classList.toggle('active', dotMode);
-  document.getElementById('btnDots').textContent = dotMode ? '⣿ PUNKTE' : '■ FLÄCHEN';
-  renderAll();
-};
 let r3dPending = false;
 function requestRender3D(){
   if(r3dPending) return;

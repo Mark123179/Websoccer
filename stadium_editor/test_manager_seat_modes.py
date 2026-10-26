@@ -50,6 +50,8 @@ class ManagerSeatModeTests(TestCase):
         self.assertNotContains(response, 'id="expStand"')
         self.assertContains(response, "isAdmin: false")
         self.assertNotContains(response, 'id="btnShot"')
+        self.assertNotContains(response, 'id="btnDots"')
+        self.assertContains(response, 'id="textBg"')
         self.assertNotContains(response, 'id="seatSourceStatus"')
         self.assertNotContains(response, "Der Wechsel blendet")
 
