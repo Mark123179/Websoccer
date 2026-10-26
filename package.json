@@ -8,6 +8,7 @@
   "scripts": {
     "test": "node --test stadium_editor/tests_js/*.mjs",
     "test:stadium-ground": "node --test stadium_editor/tests_js/test_unity_ground_renderer.mjs",
+    "test:grass-render": "node --test stadium_editor/static/stadium_editor/grass_surface_study.test.mjs",
     "test:stadium-seat-view": "node --test stadium_editor/tests_js/test_seat_view_browser.mjs"
   },
   "keywords": [],

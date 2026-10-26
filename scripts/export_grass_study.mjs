@@ -2,6 +2,15 @@
 import fs from 'node:fs';
 import {createHash} from 'node:crypto';
 import {chromium} from 'playwright-core';
+import {GRASS_STUDY_CAMERA as camera} from '../stadium_editor/static/stadium_editor/grass_study_camera.js';
+
+// No manifest, generated textures, dev host or DB needed for the pixel gate.
+if (process.argv.includes('--diagnostic')) {
+  const {checkGrassRender} = await import('./check_grass_render.mjs');
+  const result = await checkGrassRender();
+  console.log(`${result.states.length} rendered diagnostic checks passed.`);
+  process.exit(0);
+}
 
 const out='generated-artifacts/grass-study';
 const club=process.argv.includes('--elversberg')?'elversberg':'dortmund';
@@ -9,8 +18,6 @@ const manifest=JSON.parse(fs.readFileSync(`${out}/manifest.json`));
 const source=JSON.parse(fs.readFileSync(`${out}/elversberg-scene.json`));
 const fixtures=JSON.parse(fs.readFileSync('stadium_editor/static/stadium_editor/study_assets/dortmund_lights.json'));
 // This is the selected, 75% compromise, not a new automatic stadium fit.
-const camera={focal:1337.4782524186542,cx:940,cy:681.3221103379157,
-  position:[0,98,110],tilt:44,format:[1880,940]};
 const base=`https://${process.env.REPLIT_DEV_DOMAIN}`;
 if(!process.env.REPLIT_DEV_DOMAIN)throw new Error('Dev host required.');
 const browser=await chromium.launch({executablePath:'/repl/tools/bin/chromium',
@@ -31,7 +38,7 @@ try {
   await page.setContent(`<!doctype html><style>body{margin:0}#host{position:relative;width:1880px;height:940px}</style>
     <script type="importmap">{"imports":{"three":"${base}/static/stadium_editor/stage/vendor/three.module.js",
     "three/addons/":"${base}/static/stadium_editor/stage/vendor/addons/"}}</script><div id="host"></div>`);
-  await page.evaluate(async({base,source,fixtures,club,camera})=>{
+  await page.evaluate(async({base,source,fixtures,club})=>{
     // Fixed offline capture surface; no interactive-frame behaviour is changed.
     window.requestAnimationFrame=()=>0;
     window.ResizeObserver=class{observe(){}disconnect(){}unobserve(){}};
@@ -39,6 +46,7 @@ try {
     const {createStudyLighting}=await import(`${base}/static/stadium_editor/study_lighting.js?v=grass-study`);
     const {mountGrassSurfaceStudy}=await import(`${base}/static/stadium_editor/grass_surface_study.js?v=1`);
     const {projectStudy}=await import(`${base}/static/stadium_editor/study_camera.js?v=3`);
+    const {applyGrassStudyCamera}=await import(`${base}/static/stadium_editor/grass_study_camera.js`);
     const handle=await mountStudyModel({host:document.getElementById('host'),club,source,concept:'cutaway'});
     // Elversberg's production adapter owns additional preview lights. The
     // isolated comparison uses only the same explicit study daylight for both.
@@ -50,15 +58,7 @@ try {
     handle.setRoof(true);
     lighting.setState(false,false,false);
     const stage=handle.stage;
-    stage.renderer.setPixelRatio(1);
-    stage.renderer.setSize(1880,940,false);
-    stage.camera.position.fromArray(camera.position);
-    const tilt=camera.tilt*Math.PI/180;
-    stage.camera.lookAt(0,98-Math.sin(tilt),110-Math.cos(tilt));
-    stage.camera.updateMatrixWorld(true);
-    stage.camera.projectionMatrix.makePerspective(-camera.cx/camera.focal,
-      (1880-camera.cx)/camera.focal,camera.cy/camera.focal,-(940-camera.cy)/camera.focal,1,6000);
-    stage.camera.projectionMatrixInverse.copy(stage.camera.projectionMatrix).invert();
+    applyGrassStudyCamera(stage);
     const coordinates=[[-52.5,-34],[52.5,-34],[52.5,34],[-52.5,34],[0,0],[16,10]];
     const corners=()=>coordinates.map(([x,y])=>projectStudy(stage.camera,1880,940,x,y));
     const baseline=corners();
@@ -73,7 +73,7 @@ try {
     window.capture={handle,lighting,stage,mountGrassSurfaceStudy,corners,baseline,
       positionDigest,positions:positionDigest(),projection:stage.camera.projectionMatrix.toArray(),
       active:null,base,proof:[]};
-  },{base,source,fixtures,club,camera});
+  },{base,source,fixtures,club});
   async function render(id,night=false) {
     const data=await page.evaluate(async({id,night})=>{
       const c=window.capture;

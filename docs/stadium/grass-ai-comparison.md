@@ -83,3 +83,44 @@ Die Verifikationsdateien binden jeden tatsächlichen Render mit SHA-256 an
 Kamera, identische Eckpunktprojektionen, Flächenzahl und Lichtzustand.
 Der Export bricht bei veränderter Feldgeometrie, Projektionsmatrix,
 Quellleuchtenausrichtung oder einem Shaderfehler ab.
+
+## Gerenderte Orientierungs- und Farbraumprüfung
+
+`npm run test:grass-render` ergänzt die numerischen UV-Tests um echte
+WebGL-Pixelauslesungen. Derselbe Prüflauf ist ohne Testshell über
+`node scripts/export_grass_study.mjs --diagnostic` ausführbar. Beide Aufrufe
+benötigen weder laufenden Django-Server noch Datenbank, Dev-Domain, KI-Bilder
+oder frühere Dateien aus `generated-artifacts/grass-study/`.
+
+Voraussetzungen sind die installierten Node-Abhängigkeiten (`playwright-core`),
+Python für den rein lesenden Elversberg-Umfeldaufbau sowie lokales Chromium
+unter `/repl/tools/bin/chromium` oder `CHROMIUM_PATH`. Fehlende Assets,
+WebGL-Kontexte oder Shaderfehler führen zum Fehler, nicht zum Überspringen.
+Der Browser arbeitet offline mit den eingecheckten Originalmodulen und Assets:
+Dortmund-Originalmodell und Elversberg-V2-Blaupause mit kanonischem Umfeld.
+
+Die asymmetrische 4×4-Diagnosetextur enthält unterschiedliche mittlere
+sRGB-Farben. Sie durchläuft denselben `TextureLoader`, dieselbe UV-Zuordnung
+und dasselbe Lambert-Material wie die isolierte Rasenstudie. 18 unabhängige
+Weltkoordinaten prüfen alle Farbfelder sowie beide Seiten einer Streifengrenze.
+Die Bildoberkante entspricht bei `flipY=true` positivem Welt-Z; die
+Bildlinke positivem Welt-X. Die Sollpunkte werden ausdrücklich nicht aus den
+getesteten UVs berechnet.
+
+Neutrales weißes Umgebungslicht (Lambert-Irradianz π), ausgeschaltete Schatten
+und deaktiviertes Tonemapping isolieren Dekodierung und Orientierung von
+künstlerischen Tag-/Nachtprofilen. Der Sollvergleich nutzt den Median eines
+3×3-Pixelfensters mit höchstens fünf sRGB-Bytewerten Abweichung je Kanal.
+Dies ist **keine** Abnahme der produktiven Beleuchtung oder neuer Materialien.
+
+Je Stadion bestehen ein unveränderter Lauf und ein abschließender
+Wiederholungslauf. Dazwischen müssen drei unabhängige Negativkontrollen
+scheitern: umgeschaltetes `flipY`, horizontal gespiegelte Textur und
+fälschlich als linear markierte sRGB-Albedo. Alle zehn Durchläufe verwenden
+die unveränderte gemeinsame 75%-Kamera; Projektionsmatrix, Kamerapose und
+Pixelpositionen müssen in beiden Stadionrahmen identisch bleiben.
+
+PNG-Belege und `verification.json` mit Soll-/Ist-Farben, Fehlerpunkten,
+Kameramatrizen und Bild-Prüfsummen liegen ausschließlich im ignorierten
+`generated-artifacts/grass-render-check/`. Produktive Materialien, gespeicherte
+Rasenauswahlen und Datenbankinhalte werden nicht verändert.
