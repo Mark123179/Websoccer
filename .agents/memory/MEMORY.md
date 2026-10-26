@@ -140,6 +140,7 @@
 - [Luftfoto und Grundriss](orthophoto-stadium-removal.md) — Stadionbild separat entfernen: Dächer, Pylone und Schatten reichen über Bodenmasken hinaus.
 - [Stadionmodell-Übergabe](stadium-model-handoff.md) — Registry als Übergabestelle für Claude; weitere Stadien ohne erneute vereinsbezogene Codearbeit.
 - [Allianz-Arena Darstellung](allianz-arena-presentation.md) — Korrigierte Arena für Bayern abgenommen; Choreo/Fangnetze ausblenden, Tore/Tornetze erhalten.
+- [Original und eigene Rangbemalung](stadium-seat-design-modes.md) — Originalmotive auch in 2D; Manager sollen Originalbemalung reversibel durch eigene Entwürfe ersetzen können.
 - [Dortmunder Fangnetze](dortmund-catch-nets.md) — Hohe Fangnetze hinter den Toren ausblenden; Tore und eigentliche Tornetze erhalten.
 - [Stadion-Texturmasken](stadium-texture-alpha.md) — Bodenartefakte sichtbar isolieren; Meshnamen und Raycasts beweisen die Ursache nicht. Markierungen erhalten und Rasenangleichung bewahren.
 - [Red Bull Arena Abnahme](leipzig-stadium-presentation.md) — Gästeblock-Netz bleibt erhalten; Zentralstadion-Wall und Brücken bleiben ausgeschlossen.
