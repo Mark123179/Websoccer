@@ -562,7 +562,11 @@ async function mount(stage) {
     const mounted = await mountStadiumStage({
       element: stage.querySelector('[data-stadium-stage]'), canvas, scene, ...controls,
       mode: stage.dataset.mode || 'live',
-      fallback: fallbackCanvas => new StadiumLiveRenderer(fallbackCanvas, scene),
+      fallback: fallbackCanvas => {
+        if(scene.presentation?.seatDesign?.mode==='original')
+          throw new Error('Die Original-Sitzmotive benötigen die Original-3D-Ansicht; eine schematische Ersatzzeichnung wäre irreführend.');
+        return new StadiumLiveRenderer(fallbackCanvas,scene);
+      },
     });
     stage._stadiumStage = mounted;
     const camera = stage.querySelector('[data-stage-camera]');

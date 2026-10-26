@@ -8,5 +8,8 @@ export function sourceOpaqueColor(part) {
 }
 
 export function previewSupportsMaterial(part) {
+  // Verified 8–10 m catch-net assemblies behind the goal lines, not goal nets.
+  // Keep their original geometry in the source export; omit only presentation.
+  if (/^st051_nett001(?:_|$)/i.test(part.material)) return false;
   return !/^NoDraw(?:_|\.|$)/i.test(part.material) || sourceOpaqueColor(part) !== null;
 }

@@ -1,4 +1,4 @@
-import {mountStudyModel, disposeStudySourceCache} from '../../stadium_editor/study_models.js?v=6';
+import {mountStudyModel, disposeStudySourceCache} from '../../stadium_editor/study_models.js?v=7';
 import {createStudyLighting} from '../../stadium_editor/study_lighting.js?v=3';
 import {applyStudyCamera} from '../../stadium_editor/study_camera.js?v=3';
 import {createGrassPilotMaterial} from '../../stadium_editor/grass_pilot_material.js?v=1';

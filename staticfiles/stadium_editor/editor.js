@@ -3,6 +3,7 @@
 'use strict';
 
 const EDITOR = window.STADIUM_EDITOR;
+let grassDraft = null, grassPreview = null, grassLoading = null;
 const viewportPreferences = window.StadiumEditorViewport;
 const viewportKey = `stadium-editor:2d-view:v1:${EDITOR.liveSceneUrl}`;
 let viewportStorage = null;
@@ -67,6 +68,47 @@ const selection = new Set();
 let tool = 'fill', col1 = 3, col2 = 1;           // Start: Rot / Weiß
 let view = '2d', yaw3d = 0, tilt3d = 54, roofOn = true, dotMode = true;
 let stageAdapter = null, stageThree = null, stageScene = null, stageUpdateTimer = 0;
+let seatDesignMode='original', sourceSeatColors=null;
+let sourceSeatIds=null;
+let originalSeatStatus='Originalzuordnung wird geladen …';
+function showSeatStatus(){
+  const status=document.getElementById('seatSourceStatus');
+  if(status){
+    const coverage=stageThree?.seatCoverage?.();
+    const extra=coverage && seatDesignMode==='custom' ?
+      ` · 3D: ${((100*coverage.covered/coverage.total)||0).toFixed(1)} % Modellpunkte zugeordnet; übrige Ränge neutral.` : '';
+    status.textContent=originalSeatStatus+extra;
+  }
+}
+function seatDesignDraft(){
+  return {version:1,mode:seatDesignMode,palette:PALETTE.map(p=>p[0]),
+    blocks:blocks.map((b,i)=>({...b,id:b.sourceId,values:seatData[i]}))};
+}
+function syncSeatMode(){
+  const select=document.getElementById('seatDesignMode');
+  if(select)select.value=seatDesignMode;
+}
+function refreshSeatMode(){
+  syncSeatMode();
+  showSeatStatus();
+  blocks.forEach((_,i)=>updateTexture(i));
+  fillPreviewCache.clear();renderAll();
+}
+async function loadOriginalSeats(){
+  if(!EDITOR.sourceSeats)return;
+  try{
+    const response=await fetch(EDITOR.liveSceneUrl,{credentials:'same-origin'});
+    if(!response.ok)throw Error('Originalzuordnung nicht verfügbar.');
+    const live=await response.json();
+    const source=await StadiumSourceSeats.load(live.presentation);
+    const result=StadiumSourceSeats.originalColors(source,blocks,D.meta);
+    sourceSeatColors=result.rgb;
+    sourceSeatIds=blocks.map(b=>b.sourceId);
+    const percent=(100*result.mapped/result.total).toFixed(1);
+    originalSeatStatus=`Originaltexturen · ${percent} % Rasterpunkte zugeordnet. Graue Punkte ohne Quelltreffer sind nicht originalbelegt. Zuordnung im vorhandenen Editorraster, keine vermessenen Einzelsitze.`;
+    refreshSeatMode();
+  }catch(error){originalSeatStatus=error.message;showSeatStatus();toast(error.message);}
+}
 const isDortmundScene = Boolean(EDITOR.dortmundScene);
 let dortmundFullConcept = false;
 // The Dortmund blueprint kept model-local stand IDs; mapped OSM north is
@@ -282,6 +324,10 @@ function initStadium(stadium, savedDesign){
   seatData = blocks.map(b => new Uint8Array(b.rows * b.seats));
   baseData = blocks.map(b => new Uint8Array(b.rows * b.seats));
   restoreSavedDesign(savedDesign);
+  if(EDITOR.sourceSeats){
+    seatDesignMode=savedDesign.seat_mode || (savedDesign.blocks?.length ? 'custom' : 'original');
+    syncSeatMode();
+  }
   baseData = seatData.map(data => data.slice());
   pressings = [];
   texCache = blocks.map(b => {
@@ -320,7 +366,10 @@ function updateTexture(i){
   const img = ctx.createImageData(b.seats, b.rows);
   const data = seatData[i];
   for(let r=0; r<b.rows; r++) for(let s=0; s<b.seats; s++){
-    const ci = isRenderableSeat(b, r, s) ? data[r*b.seats+s] : 0, [R,G,Bc] = PAL_RGB[ci];
+    const ci = isRenderableSeat(b, r, s) ? data[r*b.seats+s] : 0;
+    const original=EDITOR.sourceSeats && seatDesignMode==='original' &&
+      sourceSeatIds?.[i]===b.sourceId && sourceSeatColors?.[i];
+    const [R,G,Bc] = original ? original.subarray((r*b.seats+s)*3,(r*b.seats+s)*3+3) : PAL_RGB[ci];
     const o = ((b.rows-1-r)*b.seats + s)*4;       // Zeile 0 (innen) unten im Bild
     img.data[o]=R; img.data[o+1]=G; img.data[o+2]=Bc; img.data[o+3]=255;
   }
@@ -381,7 +430,12 @@ function drawBlockDots(ctx, i, proj){
       if(!isRenderableSeat(b, r, s)) continue;
       const ci = d[r*b.seats+s];
       const p = proj((s+.5)/b.seats, v);
-      if(ci!==last){ ctx.fillStyle = ci===0 ? 'rgba(96,106,116,.8)' : PALETTE[ci][0]; last=ci; }
+      const original=EDITOR.sourceSeats && seatDesignMode==='original' &&
+        sourceSeatIds?.[i]===b.sourceId && sourceSeatColors?.[i];
+      if(original){
+        const at=(r*b.seats+s)*3;
+        ctx.fillStyle=`rgb(${original[at]},${original[at+1]},${original[at+2]})`;
+      }else if(ci!==last){ ctx.fillStyle = ci===0 ? 'rgba(96,106,116,.8)' : PALETTE[ci][0]; last=ci; }
       ctx.fillRect(p[0]-h, p[1]-h, dot, dot);
     }
   }
@@ -460,12 +514,21 @@ function drawPitch(ctx, toScreen, alpha){
   /* Auslaufzone */
   poly([[-57,-38.5],[57,-38.5],[57,38.5],[-57,38.5]]);
   ctx.fillStyle = '#07301b'; ctx.fill();
-  /* Mähstreifen */
-  const NS = 14, SW = 105/NS;
-  for(let i=0;i<NS;i++){
-    const u0=-52.5+i*SW, u1=u0+SW;
-    poly([[u0,-34],[u1,-34],[u1,34],[u0,34]]);
-    ctx.fillStyle = i%2 ? '#0d4526' : '#0a3a20'; ctx.fill();
+  /* Approved albedo in the same field frame; markings remain separate. */
+  if(grassPreview?.canvas){
+    const image=grassPreview.canvas;
+    const p=F(-52.5,-34), x=F(52.5,-34), y=F(-52.5,34);
+    ctx.save();
+    ctx.transform((x[0]-p[0])/image.width,(x[1]-p[1])/image.width,
+      (y[0]-p[0])/image.height,(y[1]-p[1])/image.height,p[0],p[1]);
+    ctx.drawImage(image,0,0); ctx.restore();
+  }else{
+    const NS = 14, SW = 105/NS;
+    for(let i=0;i<NS;i++){
+      const u0=-52.5+i*SW, u1=u0+SW;
+      poly([[u0,-34],[u1,-34],[u1,34],[u0,34]]);
+      ctx.fillStyle = i%2 ? '#0d4526' : '#0a3a20'; ctx.fill();
+    }
   }
   /* Linien */
   ctx.strokeStyle = 'rgba(244,251,255,.78)'; ctx.lineWidth = 1.2;
@@ -1240,6 +1303,59 @@ function editorModuleUrl(path){
 }
 const STADIUM_STAGE_ADAPTER_URL = editorModuleUrl('./stadium_stage_adapter.js');
 
+function syncGrassControls(){
+  if(!grassDraft) return;
+  document.getElementById('grassVariant').value=grassDraft.selected;
+  document.getElementById('grassReset').disabled=!grassDraft.dirty;
+  document.getElementById('grassPreviewState').textContent=grassDraft.dirty
+    ? 'Nur Vorschau in 2D und 3D · erst mit Speichern übernehmen.'
+    : 'Gespeicherte Auswahl · neue Änderungen sind zunächst nur Vorschau.';
+}
+function showGrassError(error){
+  document.getElementById('grassPreviewState').textContent=
+    `Rasenvorschau nicht verfügbar: ${error.message || 'Ladefehler'}.`;
+}
+async function ensureGrassPreview(){
+  if(grassPreview) return grassPreview;
+  if(!grassLoading){
+    grassLoading=import(editorModuleUrl('./grass_editor.js')).then(({createEditorGrass}) =>
+      createEditorGrass(JSON.parse(document.getElementById('editor-grass-assets').textContent))
+    ).then(preview => {
+      grassPreview=preview; preview.select(grassDraft.selected); return preview;
+    }).finally(()=>{grassLoading=null;});
+  }
+  return grassLoading;
+}
+async function applyGrassToStage(){
+  if(!stageThree || (!grassPreview && grassDraft?.selected==='bestand')) return;
+  const preview=await ensureGrassPreview();
+  preview.select(grassDraft.selected);
+  await preview.apply(stageThree);
+}
+async function previewGrass(value){
+  if(!grassDraft) return;
+  grassDraft.select(value); syncGrassControls();
+  try{
+    if(value!=='bestand' || grassPreview){
+      document.getElementById('grassPreviewState').textContent='Rasenvorschau wird geladen …';
+      const preview=await ensureGrassPreview();
+      preview.select(grassDraft.selected);
+      if(stageThree) await preview.apply(stageThree);
+    }
+    if(view==='2d'){renderBase();renderBlocks();renderOverlay();}
+    else if(!stageThree) render3D();
+    syncGrassControls();
+  }catch(error){showGrassError(error);}
+}
+document.getElementById('grassVariant').addEventListener('change', e=>previewGrass(e.target.value));
+document.getElementById('grassReset').addEventListener('click', ()=>{
+  if(grassDraft) previewGrass(grassDraft.saved);
+});
+document.getElementById('stageThree').addEventListener('stadiumstage:ready', ()=>{
+  applyGrassToStage().catch(showGrassError);
+});
+window.addEventListener('pagehide',()=>grassPreview?.dispose());
+
 /* ── Renderdispatch ───────────────────────────────────────────── */
 function renderAll(){
   if(!D) return;
@@ -1272,7 +1388,7 @@ function updateDortmundStage(){
       weights, designColors, roofVisible: roofOn, fullConcept: dortmundFullConcept,
       day: Boolean(document.getElementById('stageDay')?.checked),
       floodlight: Boolean(document.getElementById('stageFloodlight')?.checked),
-    });
+    }).then(applyGrassToStage).catch(showGrassError);
     const delta = Math.max(0, previewCapacity() - baseDisplayCapacity);
     const label = document.getElementById('deSceneData');
     if(label) label.textContent = dortmundFullConcept
@@ -1290,6 +1406,11 @@ function showDortmundSceneError(error){
   if(fallback) fallback.hidden = false;
 }
 function scheduleStageDesignUpdate(){
+  if(EDITOR.sourceSeats){
+    if(stageThree)stageThree.update({seatDesign:seatDesignDraft()})
+      .then(showSeatStatus).catch(error=>toast(error.message));
+    return;
+  }
   if(isDortmundScene){
     if(!stageThree) return;
     clearTimeout(stageUpdateTimer);
@@ -1310,7 +1431,7 @@ function scheduleStageDesignUpdate(){
         day: Boolean(document.getElementById('stageDay')?.checked),
         floodlight: Boolean(document.getElementById('stageFloodlight')?.checked),
         orbit: {azimuth: yaw3d, elevation: 90 - tilt3d},
-      }).catch(useLegacyThreePreview);
+      }).then(applyGrassToStage).catch(useLegacyThreePreview);
     }).catch(()=>{});
   }, 180);
 }
@@ -1351,6 +1472,11 @@ async function ensureThreeStage(){
       stageScene=await response.json();
       const runtime=stageScene.presentation;
       const mounted=await mountUnityStadium({element:host,presentation:runtime,
+        initialState:{
+          day:Boolean(document.getElementById('stageDay')?.checked),
+          floodlight:Boolean(document.getElementById('stageFloodlight')?.checked),
+          roofVisible:roofOn,
+        },
         onOrbitChange:orbit=>{
           yaw3d=orbit.azimuth;tilt3d=90-orbit.elevation;
           document.getElementById('yawSlider').value=yaw3d;
@@ -1358,9 +1484,13 @@ async function ensureThreeStage(){
         }});
       stageAdapter=mounted;stageThree=mounted;
       activateThreeStage();
+      if(EDITOR.sourceSeats){
+        await mounted.update({seatDesign:seatDesignDraft()});
+        showSeatStatus();
+      }
       mounted.update({day:Boolean(document.getElementById('stageDay')?.checked),
         floodlight:Boolean(document.getElementById('stageFloodlight')?.checked),
-        roofVisible:roofOn});
+        roofVisible:roofOn}).then(applyGrassToStage).catch(showGrassError);
       return;
     }
     if(isDortmundScene){
@@ -1400,6 +1530,7 @@ async function ensureThreeStage(){
     if(mounted.kind === 'three'){
       stageThree = mounted;
       activateThreeStage();
+      await applyGrassToStage();
     }else{
       stageAdapter = null;
     }
@@ -1412,6 +1543,7 @@ async function ensureThreeStage(){
 /* ── Undo / Redo ──────────────────────────────────────────────── */
 function currentSnapshot(){
   return {
+    seatMode:seatDesignMode,
     blocks: expansionGeometry.snapshotBlocks(blocks),
     base: baseData.map(a=>a.slice()),
     press: pressings.map(p=>({...p})),
@@ -1424,6 +1556,7 @@ function snapshotFull(){
   redoStack.length = 0; syncUndoButtons();
 }
 function restoreSnapshot(snap){
+  seatDesignMode=snap.seatMode || seatDesignMode;syncSeatMode();
   blocks = structuredClone(snap.blocks);
   baseData = snap.base.map(a=>a.slice());
   seatData = blocks.map(block=>new Uint8Array(block.rows*block.seats));
@@ -2155,6 +2288,7 @@ syncMenuHandoff();
 /* ── Export ───────────────────────────────────────────────────── */
 async function exportDesign(){
   const out = {version:2, stadium:D.meta.name, blickrichtung, palette:PALETTE.map(p=>p[0]),
+    grass_variant:grassDraft?.selected || 'bestand',
     blocks: expansionGeometry.persistentBlockEntries(blocks).flatMap(({block:b,index:i})=>{
       const shape = designBlockShape.get(b.sourceId);
       if(!shape) return [];
@@ -2170,13 +2304,16 @@ async function exportDesign(){
         rows:shape.rows, seats:shape.seats, rle
       }];
     })};
+  if(EDITOR.sourceSeats)out.seat_mode=seatDesignMode;
   const button = document.getElementById('btnSave');
   button.disabled = true;
   setEditorSaveState('Speichert …');
   try{
+    if(out.grass_variant!=='bestand') await ensureGrassPreview();
     const response = await fetch(EDITOR.saveUrl, {method:'POST', credentials:'same-origin', headers:{'Content-Type':'application/json','X-CSRFToken':EDITOR.csrfToken}, body:JSON.stringify(out)});
     const body = await response.json();
     if(!response.ok) throw new Error(body.error || 'Speichern fehlgeschlagen.');
+    grassDraft?.commit(out.grass_variant); syncGrassControls();
     toast('Gestaltung gespeichert.');
     setEditorSaveState(blocks.some(block => block.simulated)
       ? 'Gestaltung gespeichert · Ausbauvorschau nur in dieser Sitzung'
@@ -2277,6 +2414,25 @@ document.getElementById('btnErase').onclick = ()=>{
   for(const id of selection) baseData[id].fill(0);
   recompose(); toast('Grundschicht der Auswahl auf Beton — Objekte bleiben, „Gepresst“-Liste zum Entfernen.');
 };
+
+document.getElementById('seatDesignMode')?.addEventListener('change',event=>{
+  snapshotFull();seatDesignMode=event.target.value;refreshSeatMode();
+  toast('Ansicht gewechselt. Eigener Entwurf bleibt erhalten; zum Übernehmen speichern.');
+});
+document.getElementById('clearSeatDesign')?.addEventListener('click',()=>{
+  if(!window.confirm('Eigenen Entwurf wirklich leeren? Das Stadionoriginal bleibt erhalten. Erst Speichern übernimmt die Änderung.'))return;
+  snapshotFull();
+  baseData.forEach(data=>data.fill(0));pressings=[];seatDesignMode='custom';syncSeatMode();
+  recompose();syncPressList();refreshSeatMode();toast('Eigener Entwurf geleert – noch nicht gespeichert.');
+});
+for(const id of ['btnPress','btnErase']){
+  document.getElementById(id).addEventListener('click',event=>{
+    if(EDITOR.sourceSeats && seatDesignMode==='original'){
+      event.stopImmediatePropagation();event.preventDefault();
+      toast('Zum Bemalen zuerst „Eigener Entwurf“ wählen. Das Original bleibt unverändert.');
+    }
+  },true);
+}
 
 /* Palette */
 const palEl = document.getElementById('palette');
@@ -2486,10 +2642,16 @@ if(window.ResizeObserver){
     if(!geometryResponse.ok) throw new Error(geometry.error || 'Geometrie konnte nicht geladen werden.');
     if(!designResponse.ok) throw new Error('Gespeicherter Entwurf konnte nicht geladen werden.');
     const design = await designResponse.json();
+    const {createGrassDraft}=await import(editorModuleUrl('./grass_editor.js'));
+    grassDraft=createGrassDraft(design.grass_variant || 'bestand');
+    syncGrassControls();
+    document.getElementById('grassVariant').disabled=false;
     initStadium(geometry, design);
+    loadOriginalSeats();
     if(geometry.surroundings?.warning) toast(geometry.surroundings.warning);
     buildPaletteUI(); syncPal(); resize();
     requestAnimationFrame(() => requestAnimationFrame(resize));
+    if(grassDraft.selected!=='bestand') await previewGrass(grassDraft.selected);
   }catch(error){
     const title = document.getElementById('stadiumTitle');
     if(title) title.textContent = error.message || 'Editor nicht verfügbar';

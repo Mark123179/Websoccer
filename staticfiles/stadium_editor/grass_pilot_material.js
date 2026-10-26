@@ -1,5 +1,5 @@
-/** Supplied grass study, adapted only for the isolated pilot.
- * Canonical pitch coordinates, not per-stripe UVs. No runtime/editor patch.
+/** Approved grass study, shared by the isolated pilot and editor previews.
+ * Canonical pitch coordinates, not per-stripe UVs.
  */
 import * as THREE from 'three';
 
@@ -87,29 +87,39 @@ export async function createGrassPilotMaterial(stage, assets) {
     uBasis: {value: basis}, uWear: {value: wear}, uPattern: {value: 1},
     uTone: {value: toneMatrix(0,1,1)}, uMatt: {value: 0}, uEarth: {value: 0},
   };
-  const material = new THREE.MeshLambertMaterial({color: 0xffffff, side: THREE.DoubleSide});
+  const material = stage.grassUnlit
+    ? new THREE.MeshBasicMaterial({color: 0xffffff, side: THREE.DoubleSide})
+    : new THREE.MeshLambertMaterial({color: 0xffffff, side: THREE.DoubleSide});
   material.onBeforeCompile = shader => {
     Object.assign(shader.uniforms, uniforms);
     shader.vertexShader = 'varying vec2 vGrassUv;\n' + shader.vertexShader;
     shader.vertexShader = shader.vertexShader.replace('#include <begin_vertex>',
-      '#include <begin_vertex>\nvGrassUv=vec2((52.5-position.x)/105.0,(position.z+34.0)/68.0);');
+      '#include <begin_vertex>\nvGrassUv=' + (stage.grassProjection ||
+        'vec2((52.5-position.x)/105.0,(position.z+34.0)/68.0)') + ';');
     shader.fragmentShader = shader.fragmentShader
       .replace('#include <map_pars_fragment>', '#include <map_pars_fragment>\n' + FRAGMENT)
       .replace('#include <map_fragment>', 'diffuseColor.rgb *= pilotGrass(vGrassUv);');
   };
-  material.customProgramCacheKey = () => 'blueprint-isolated-grass-v1';
-  const original = [];
-  stage.sceneRoot.traverse(mesh => {
+  material.customProgramCacheKey = () => 'blueprint-grass-v2:' + (stage.grassProjection || 'canonical');
+  const original = stage.pitchTargets
+    ? stage.pitchTargets.map(({mesh, slot}) => ({
+      mesh, slot, material: slot === undefined ? mesh.material : mesh.material[slot],
+    })) : [];
+  if (!stage.pitchTargets) stage.sceneRoot.traverse(mesh => {
     if (mesh.isMesh && stage.pitchMaterials.has(mesh.material))
       original.push({mesh, material: mesh.material});
   });
+  const assign = (row, next) => {
+    if (row.slot === undefined) row.mesh.material = next;
+    else row.mesh.material[row.slot] = next;
+  };
   if (!original.length) {
     basis.dispose(); wear.dispose(); material.dispose();
     throw new Error('Das kanonische Spielfeld fehlt; keine Ersatzfläche erzeugt.');
   }
   function select(id) {
     if (id === 'bestand') {
-      original.forEach(row => { row.mesh.material = row.material; });
+      original.forEach(row => assign(row, row.material));
       return;
     }
     const preset = GRASS_PRESETS[id];
@@ -118,7 +128,7 @@ export async function createGrassPilotMaterial(stage, assets) {
     uniforms.uPattern.value = pattern;
     uniforms.uTone.value.copy(toneMatrix(...TONES[tone - 1]));
     [uniforms.uMatt.value, uniforms.uEarth.value] = WEAR[condition - 1];
-    original.forEach(row => { row.mesh.material = material; });
+    original.forEach(row => assign(row, material));
   }
   return {select, dispose() {
     select('bestand'); material.dispose(); basis.dispose(); wear.dispose();

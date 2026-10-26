@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import {mountStudyModel, disposeStudySourceCache} from '../../stadium_editor/study_models.js?v=6';
+import {mountStudyModel, disposeStudySourceCache} from '../../stadium_editor/study_models.js?v=7';
 import {createStudyLighting} from '../../stadium_editor/study_lighting.js?v=3';
 import {applyStudyCamera, projectStudy, STUDY_FRAME} from '../../stadium_editor/study_camera.js?v=3';
 

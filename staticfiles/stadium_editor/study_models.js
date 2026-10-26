@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import {createStadiumStage} from './stage/stadium_stage.js?v=study-3';
-import {previewSupportsMaterial, sourceOpaqueColor} from './dortmund_source_materials.js';
+import {previewSupportsMaterial, sourceOpaqueColor} from './dortmund_source_materials.js?v=2';
 import {TICKER_ROOF_NAMES} from './dortmund_ticker_roof.js?v=1';
 import {studyPreset, dortmundAdapter} from './study_camera.js?v=3';
 import {addStudyGoals} from './study_pitch_details.js?v=1';

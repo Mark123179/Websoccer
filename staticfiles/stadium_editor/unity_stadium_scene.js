@@ -1,12 +1,20 @@
 import * as THREE from './stage/vendor/three.module.js';
+import './source_seats.js?v=2';
 import {applyStudyCamera} from './study_camera.js?v=3';
 import {buildDortmundSurroundings} from './dortmund_surroundings.js?v=58';
 import {validateCalibration, standForCenter, tickerQuaternion} from './unity_calibration.js?v=2';
 import {mountBridgeHeightNotice} from './bridge_height_evidence.js?v=1';
 import {mountHeidenheimFloodlightVisuals} from './heidenheim_floodlight_visuals.js?v=2';
+import {
+  createTransitionController, isConfirmedAllianzFacadeMaterial, isConfirmedAllianzLowerFacade,
+  projectFacadeUv, runtimeFixtureIntensity, sourceMaterialFinish, splitFacadeTriangles,
+  splitLowerFacadeTriangles, supportsAllianzPresentation,
+} from './allianz_presentation.js?v=10';
 
 /** Original source geometry, with its own club-scoped runtime presentation. */
-export async function mountUnityStadium({element, presentation, tickerPreview = false, onOrbitChange}) {
+export async function mountUnityStadium({
+  element, presentation, tickerPreview = false, onOrbitChange, initialState = {},
+}) {
   if (presentation.renderer !== 'unity-spatial')
     throw new Error('Unpassendes Original-Stadionmodell.');
   const response = await fetch(presentation.modelUrl);
@@ -16,10 +24,18 @@ export async function mountUnityStadium({element, presentation, tickerPreview = 
       manifest.sourceSha256 !== presentation.sourceSha256)
     throw new Error('Modellquelle gehört nicht zum gewählten Verein.');
   const calibration = validateCalibration(manifest.calibration);
+  const allianz = supportsAllianzPresentation(presentation, manifest);
+  if(presentation.seatDesign && !allianz)
+    throw new Error('FCB-Sitzbemalung passt nicht zum freigegebenen Originalmodell.');
   const base = new URL('.', new URL(presentation.modelUrl, location.href));
-  const binaryResponse = await fetch(new URL('geometry.bin', base));
-  if (!binaryResponse.ok) throw new Error('Original-Stadiongeometrie fehlt.');
-  const buffer = await binaryResponse.arrayBuffer();
+  const seatSource = allianz ? await globalThis.StadiumSourceSeats.load(presentation) : null;
+  let buffer;
+  if(seatSource)buffer=seatSource.buffer;
+  else {
+    const binaryResponse = await fetch(new URL('geometry.bin', base));
+    if (!binaryResponse.ok) throw new Error('Original-Stadiongeometrie fehlt.');
+    buffer = await binaryResponse.arrayBuffer();
+  }
   const renderer = new THREE.WebGLRenderer({antialias:true, alpha:false});
   renderer.setPixelRatio(Math.min(devicePixelRatio || 1, 1.6));
   renderer.outputColorSpace = THREE.SRGBColorSpace;
@@ -42,11 +58,56 @@ export async function mountUnityStadium({element, presentation, tickerPreview = 
   const sun = new THREE.DirectionalLight(0xfff3d4, 1.5);
   sun.position.set(-135, 210, 100);
   scene.add(hemisphere, sun);
+  const nightFill = allianz ? new THREE.DirectionalLight(0xb7cce0, 0) : null;
+  if (nightFill) {
+    nightFill.position.set(70, 95, -110);
+    scene.add(nightFill);
+  }
+  let skyTexture = null, skyCanvas = null, skyContext = null, facadeTexture = null;
+  const facadeMaterials = [];
+  if (allianz) {
+    skyCanvas = document.createElement('canvas');
+    skyCanvas.width = 512;
+    skyCanvas.height = 256;
+    skyContext = skyCanvas.getContext('2d');
+    skyTexture = new THREE.CanvasTexture(skyCanvas);
+    skyTexture.mapping = THREE.EquirectangularReflectionMapping;
+    skyTexture.colorSpace = THREE.SRGBColorSpace;
+    scene.background = skyTexture;
+    const membraneCanvas = document.createElement('canvas');
+    membraneCanvas.width = 1024;
+    membraneCanvas.height = 512;
+    const membraneContext = membraneCanvas.getContext('2d');
+    membraneContext.fillStyle = '#f2f3ef';
+    membraneContext.fillRect(0, 0, membraneCanvas.width, membraneCanvas.height);
+    membraneContext.strokeStyle = 'rgba(86,96,100,.14)';
+    membraneContext.lineWidth = 1;
+    const cellWidth = 32, cellHeight = 28;
+    for (let y = -cellHeight; y < membraneCanvas.height + cellHeight; y += cellHeight) {
+      const offset = (Math.round(y / cellHeight) % 2) * cellWidth / 2;
+      for (let x = -cellWidth; x < membraneCanvas.width + cellWidth; x += cellWidth) {
+        const cx = x + offset;
+        membraneContext.beginPath();
+        membraneContext.moveTo(cx + cellWidth / 2, y);
+        membraneContext.lineTo(cx + cellWidth, y + cellHeight / 2);
+        membraneContext.lineTo(cx + cellWidth / 2, y + cellHeight);
+        membraneContext.lineTo(cx, y + cellHeight / 2);
+        membraneContext.closePath();
+        membraneContext.stroke();
+      }
+    }
+    facadeTexture = new THREE.CanvasTexture(membraneCanvas);
+    facadeTexture.colorSpace = THREE.SRGBColorSpace;
+  }
   const camera = new THREE.PerspectiveCamera(42, 1, 1, 2400);
   const textures = new Map(), materials = [], geometries = [], roof = [], crowd = [];
   const loader = new THREE.TextureLoader();
-  let disposed = false, day = true, floodlight = false, roofVisible = true;
+  let disposed = false, day = allianz ? initialState.day !== false : true;
+  let floodlight = Boolean(initialState.floodlight), roofVisible = initialState.roofVisible !== false;
   let floodlightVisuals;
+  let presentationTransition = null;
+  let exposureMultiplier = 1;
+  let renderTransitionFrame = () => {};
   let {azimuth, elevation, distance} = calibration.orbitDefault;
   let cameraMode = 'orbit';
   const frontCut = new THREE.Plane(
@@ -57,6 +118,50 @@ export async function mountUnityStadium({element, presentation, tickerPreview = 
     }));
     return textures.get(name);
   };
+  const paintSky = night => {
+    if (!skyContext || !skyTexture) return;
+    const mixColor = (dayColor, nightColor) => {
+      const a = dayColor.match(/[a-f\d]{2}/gi).map(value => parseInt(value, 16));
+      const b = nightColor.match(/[a-f\d]{2}/gi).map(value => parseInt(value, 16));
+      return `rgb(${a.map((value, index) => Math.round(value + (b[index] - value) * night)).join(',')})`;
+    };
+    const gradient = skyContext.createLinearGradient(0, 0, 0, skyCanvas.height);
+    gradient.addColorStop(0, mixColor('#6ca8d7', '#06162d'));
+    gradient.addColorStop(.43, mixColor('#a8c9da', '#102b45'));
+    gradient.addColorStop(.54, mixColor('#d8d5c7', '#294455'));
+    gradient.addColorStop(1, mixColor('#a5c4d2', '#0a1d32'));
+    skyContext.fillStyle = gradient;
+    skyContext.fillRect(0, 0, skyCanvas.width, skyCanvas.height);
+    const glow = skyContext.createRadialGradient(330, 137, 2, 330, 137, 170);
+    glow.addColorStop(0, `rgba(255,221,174,${.24 * (1 - night)})`);
+    glow.addColorStop(1, 'rgba(255,221,174,0)');
+    skyContext.fillStyle = glow;
+    skyContext.fillRect(150, 0, 360, 256);
+    skyTexture.needsUpdate = true;
+  };
+  const applyAllianzMood = blend => {
+    if (!allianz) return;
+    const night = 1 - blend;
+    paintSky(night);
+    hemisphere.intensity = 1.35 + (.46 - 1.35) * night;
+    hemisphere.color.set('#dcecf2').lerp(new THREE.Color('#8da4bb'), night);
+    hemisphere.groundColor.set('#344045').lerp(new THREE.Color('#263542'), night);
+    sun.intensity = 1.5 * blend;
+    if (nightFill) nightFill.intensity = .32 * night;
+    renderer.toneMappingExposure = (1.08 + (.9 - 1.08) * night) * exposureMultiplier;
+    scene.fog.color.set('#b3c5c8').lerp(new THREE.Color('#102638'), night);
+    for (const material of facadeMaterials)
+      material.emissiveIntensity = .82 * night;
+  };
+  if (allianz) {
+    presentationTransition = createTransitionController({
+      initial: {day: initialState.day === false ? 0 : 1},
+      apply: state => applyAllianzMood(state.day),
+      onFrame: () => renderTransitionFrame(),
+      durationMs: 1500,
+      reducedMotion: () => window.matchMedia?.('(prefers-reduced-motion: reduce)').matches === true,
+    });
+  }
   try {
     // Bound download concurrency instead of opening all source texture requests at once.
     const names = [...manifest.textures];
@@ -90,6 +195,45 @@ export async function mountUnityStadium({element, presentation, tickerPreview = 
           depthWrite: part.transparent !== true,
           clippingPlanes: tickerPreview && !entry.name.startsWith(calibration.pitchPrefix) ? [frontCut] : [],
         });
+        material.name = part.material || `source:${entry.name}`;
+        const sourceFinish = allianz ? sourceMaterialFinish(part.material) : null;
+        if (sourceFinish) {
+          material.roughness = sourceFinish.roughness;
+          material.metalness = sourceFinish.metalness;
+          material.userData.sourceRole = sourceFinish.role;
+        }
+        const isLowerFacade = allianz && isConfirmedAllianzLowerFacade(entry, part);
+        const isFacadeSource = isLowerFacade || (allianz && isConfirmedAllianzFacadeMaterial(entry, part));
+        let facadeMaterial = null, facadeInteriorMaterial = null;
+        if (isFacadeSource) {
+          if (!isLowerFacade) {
+            material.roughness = .58;
+            material.metalness = .04;
+          }
+          facadeMaterial = material.clone();
+          facadeMaterial.name = 'Allianz membrane · approximate seams';
+          if (!isLowerFacade) {
+            facadeMaterial.color.set('#f4f5f1');
+            facadeMaterial.roughness = .4;
+            facadeMaterial.metalness = .08;
+          }
+          facadeMaterial.side = THREE.FrontSide;
+          facadeMaterial.map = facadeTexture;
+          facadeMaterial.emissiveMap = facadeTexture;
+          facadeMaterial.emissive.set('#f01836');
+          facadeMaterial.emissiveIntensity = 0;
+          facadeMaterial.userData.sourceRole = 'confirmed existing cover shell · schematic finish';
+          facadeInteriorMaterial = material.clone();
+          facadeInteriorMaterial.name = 'Allianz membrane · neutral interior';
+          facadeInteriorMaterial.side = THREE.BackSide;
+          if (!isLowerFacade) {
+            facadeInteriorMaterial.roughness = .58;
+            facadeInteriorMaterial.metalness = .04;
+          }
+          materials.push(facadeMaterial);
+          materials.push(facadeInteriorMaterial);
+          facadeMaterials.push(facadeMaterial);
+        }
         materials.push(material);
         const indices = new Uint32Array(buffer,part.indexOffset,part.indexCount);
         const bodyIndices = [], roofIndices = [];
@@ -102,17 +246,32 @@ export async function mountUnityStadium({element, presentation, tickerPreview = 
             indices.slice(i,i+3).every(index=>position[index*3+1]>=calibration.roofMinHeight);
           (isRoof ? roofIndices : bodyIndices).push(indices[i],indices[i+1],indices[i+2]);
         }
-        for (const [list,isRoof] of [[bodyIndices,false],[roofIndices,true]]) {
-          if (!list.length) continue;
+        let bodyGeometryIndices = bodyIndices, roofGeometryIndices = roofIndices, facadeIndices = [];
+        if (isLowerFacade) {
+          const split = splitLowerFacadeTriangles(position, bodyIndices);
+          facadeIndices = split.facadeIndices;
+          bodyGeometryIndices = split.remainingIndices;
+        } else if (isFacadeSource) {
+          const split = splitFacadeTriangles(position, roofIndices);
+          facadeIndices = split.facadeIndices;
+          roofGeometryIndices = split.remainingIndices;
+        }
+        if (isFacadeSource && facadeIndices.length) {
           const geometry = new THREE.BufferGeometry();
           geometry.setAttribute('position',new THREE.BufferAttribute(position,3));
-          geometry.setAttribute('uv',new THREE.BufferAttribute(partUv,2));
-          geometry.setIndex(list); geometry.computeVertexNormals();
-          const mesh = new THREE.Mesh(geometry,material);
-          mesh.name = `SOURCE_${entry.name}_${isRoof?'roof':'body'}`;
+          geometry.setAttribute('uv',new THREE.BufferAttribute(isLowerFacade
+            ? projectFacadeUv(position,29.1,34.52) : projectFacadeUv(position),2));
+          const shellIndices = [...bodyGeometryIndices,...roofGeometryIndices];
+          geometry.setIndex([...shellIndices,...facadeIndices,...facadeIndices]);
+          if (shellIndices.length) geometry.addGroup(0,shellIndices.length,0);
+          geometry.addGroup(shellIndices.length,facadeIndices.length,1);
+          geometry.addGroup(shellIndices.length + facadeIndices.length,facadeIndices.length,2);
+          geometry.computeVertexNormals();
+          const mesh = new THREE.Mesh(geometry,[material,facadeMaterial,facadeInteriorMaterial]);
+          mesh.name = `SOURCE_${entry.name}_${isLowerFacade?'body':'roof'}`;
           mesh.userData.sourcePathId = entry.pathId;
           model.add(mesh); geometries.push(geometry);
-          if(isRoof) roof.push(mesh);
+          if (!isLowerFacade) roof.push(mesh);
           if(entry.name.startsWith(calibration.crowdPrefix)) {
             geometry.computeBoundingBox();
             const center=geometry.boundingBox.getCenter(new THREE.Vector3());
@@ -121,10 +280,32 @@ export async function mountUnityStadium({element, presentation, tickerPreview = 
             mesh.userData.sourceColor=material.color.clone();
             crowd.push(mesh);
           }
+        } else {
+          for (const [list,isRoof] of [[bodyIndices,false],[roofGeometryIndices,true]]) {
+            if (!list.length) continue;
+            const geometry = new THREE.BufferGeometry();
+            geometry.setAttribute('position',new THREE.BufferAttribute(position,3));
+            geometry.setAttribute('uv',new THREE.BufferAttribute(partUv,2));
+            geometry.setIndex(list); geometry.computeVertexNormals();
+            const mesh = new THREE.Mesh(geometry,material);
+            mesh.name = `SOURCE_${entry.name}_${isRoof?'roof':'body'}`;
+            mesh.userData.sourcePathId = entry.pathId;
+            model.add(mesh); geometries.push(geometry);
+            if(isRoof) roof.push(mesh);
+            if(entry.name.startsWith(calibration.crowdPrefix)) {
+              geometry.computeBoundingBox();
+              const center=geometry.boundingBox.getCenter(new THREE.Vector3());
+              // Same right-handed native frame as the surrounding map adapter.
+              mesh.userData.stand = standForCenter(center, calibration.standAxes);
+              mesh.userData.sourceColor=material.color.clone();
+              crowd.push(mesh);
+            }
+          }
         }
       }
     }
     if(!roof.length) throw new Error('Original-Dachgeometrie fehlt.');
+    if (allianz) applyAllianzMood(presentationTransition.current.day);
     const sources = manifest.fixtures.map(fixture=>{
       if(!Number.isFinite(fixture.meshDistance)||fixture.meshDistance>2 ||
          !fixture.position.every(Number.isFinite)||!fixture.direction.every(Number.isFinite))
@@ -136,7 +317,7 @@ export async function mountUnityStadium({element, presentation, tickerPreview = 
         THREE.MathUtils.degToRad(fixture.angle/2),.5,2);
       light.position.fromArray(fixture.position); light.target=target;
       light.userData.fixture=fixture;
-      light.userData.onIntensity=fixture.intensity*8*Math.min(4,Math.sqrt(fixture.representedIds.length));
+       light.userData.onIntensity=runtimeFixtureIntensity(fixture, allianz);
       scene.add(light,target);
       return light;
     });
@@ -157,6 +338,10 @@ export async function mountUnityStadium({element, presentation, tickerPreview = 
       }
     };
     const render = () => { if(!disposed) {pose();renderer.render(scene,camera);} };
+    // The controller is created before render to snap the initial sky/lights.
+    // Install the live renderer callback only once it exists; transitions then
+    // render on demand, with no perpetual animation loop.
+    renderTransitionFrame = render;
     const resize = () => {
       const w=element.clientWidth,h=element.clientHeight;
       if(!w||!h||disposed) return;
@@ -190,14 +375,71 @@ export async function mountUnityStadium({element, presentation, tickerPreview = 
     controls.addEventListener('pointerdown',down);controls.addEventListener('pointermove',move);
     controls.addEventListener('pointerup',up);controls.addEventListener('pointercancel',up);
     controls.addEventListener('wheel',wheel,{passive:false});
+    let seatGeometryKey=null, seatSourceRing=null;
+    let seatCoverage=null;
+    // The source footprint and schematic 2D blueprint have different radial
+    // extents. Both directions use the same source-derived registration.
+    if(allianz)seatSourceRing=seatSource.index.ring;
+    const applySeatDesign = design => {
+      if(!allianz || !design)return;
+      const custom=design.mode==='custom';
+      const blocks=(design.blocks || []).map((b,i)=>({...b,_index:i}));
+      const key=JSON.stringify(blocks.map(b=>[b.id,b.quad,b.rows,b.seats]));
+      const registration=custom ? globalThis.StadiumSourceSeats.registration(
+        blocks,presentation.frame,calibration.surroundingsAxes) : null;
+      const palette=(design.palette || []).map(hex=>new THREE.Color(hex));
+      const neutral=new THREE.Color('#606a74');
+      let covered=0,total=0;
+      for(const mesh of crowd) {
+        const material=mesh.material;
+        if(!Object.hasOwn(mesh.userData,'sourceMap'))mesh.userData.sourceMap=material.map;
+        const changed=material.vertexColors!==custom;
+        material.map=custom ? null : mesh.userData.sourceMap;
+        material.vertexColors=custom;
+        material.color.copy(custom ? new THREE.Color('#ffffff') : mesh.userData.sourceColor);
+        if(custom) {
+          const positions=mesh.geometry.getAttribute('position');
+          if(!mesh.userData.seatAddresses || key!==seatGeometryKey) {
+            const addresses=new Int32Array(positions.count*2).fill(-1);
+            const tier=globalThis.StadiumSourceSeats.tierOf(mesh.name.replace(/^SOURCE_/,''));
+            for(let i=0;i<positions.count;i++){
+              const point=globalThis.StadiumSourceSeats.warp(
+                [positions.getX(i),positions.getZ(i)],tier,seatSourceRing,registration.ring);
+              const hit=point && registration.lookup(...point,tier);
+              if(hit){addresses[i*2]=hit.block._index;addresses[i*2+1]=hit.index;}
+            }
+            mesh.userData.seatAddresses=addresses;
+          }
+          let colors=mesh.geometry.getAttribute('color');
+          if(!colors){colors=new THREE.BufferAttribute(new Float32Array(positions.count*3),3);mesh.geometry.setAttribute('color',colors);}
+          const addresses=mesh.userData.seatAddresses;
+          for(let i=0;i<positions.count;i++){
+            const bi=addresses[i*2],si=addresses[i*2+1];
+            total++;
+            if(bi>=0)covered++;
+            const ci=bi<0 ? 0 : registration.blocks[bi].values[si];
+            const c=ci>0 && palette[ci] ? palette[ci] : neutral;
+            colors.setXYZ(i,c.r,c.g,c.b);
+          }
+          colors.needsUpdate=true;
+        }
+        if(changed)material.needsUpdate=true;
+      }
+      if(custom)seatCoverage={covered,total};
+      seatGeometryKey=key;
+    };
     const update = async (next={})=>{
       if(disposed) return;
       if(typeof next.day==='boolean') day=next.day;
       if(typeof next.floodlight==='boolean') floodlight=next.floodlight;
       if(typeof next.roofVisible==='boolean') roofVisible=next.roofVisible;
       if(next.camera) cameraMode=next.camera==='seat'?'seat':'orbit';
-      if(Number.isFinite(next.exposure))
-        renderer.toneMappingExposure=Math.max(.25,Math.min(3,next.exposure));
+      if(Number.isFinite(next.exposure)) {
+        if (allianz) {
+          exposureMultiplier=Math.max(.25,Math.min(3,next.exposure));
+          applyAllianzMood(presentationTransition.current.day);
+        } else renderer.toneMappingExposure=Math.max(.25,Math.min(3,next.exposure));
+      }
       if(next.orbit) {
         azimuth=THREE.MathUtils.degToRad(Number(next.orbit.azimuth));
         elevation=THREE.MathUtils.degToRad(Math.max(10,Math.min(80,Number(next.orbit.elevation))));
@@ -215,40 +457,50 @@ export async function mountUnityStadium({element, presentation, tickerPreview = 
           return keys.length ? [[stand,next.scene.palette[keys.sort((a,b)=>table[b]-table[a])[0]]]] : [];
         }));
       }
-      if(colors) crowd.forEach(mesh=>{
+      if(allianz) {
+        if(next.seatDesign)applySeatDesign(next.seatDesign);
+      } else if(colors) crowd.forEach(mesh=>{
         mesh.material.color.copy(mesh.userData.sourceColor);
         if(/^#[0-9a-f]{6}$/i.test(colors[mesh.userData.stand]||''))
           mesh.material.color.set(colors[mesh.userData.stand]);
       });
-      hemisphere.intensity=day?1.35:.08; sun.intensity=day?1.5:0;
-      scene.background.set(day?'#071316':'#02070b');scene.fog.color.copy(scene.background);
+      if(allianz) presentationTransition?.set({day:day?1:0});
+      else {
+        hemisphere.intensity=day?1.35:.08; sun.intensity=day?1.5:0;
+        scene.background.set(day?'#071316':'#02070b');scene.fog.color.copy(scene.background);
+      }
       sources.forEach(light=>{light.intensity=floodlight?light.userData.onIntensity:0;});
       floodlightVisuals.update({enabled:floodlight, day});
       roof.forEach(mesh=>{mesh.visible=roofVisible;});
       render();
     };
     resize();
-    await update({designColors:presentation.designColors});
+    await update({designColors:presentation.designColors,seatDesign:presentation.seatDesign});
     return {
       kind:'three', stage:{renderer,render,camera,scene,model}, update,
+      seatCoverage:()=>seatCoverage,
       setActive(){}, setTickerRoofVisible(value){return update({roofVisible:value});},
       lightingEvidence:()=>manifest.fixtures,
       dispose(){
         if(disposed) return; disposed=true;observer.disconnect();
+        presentationTransition?.dispose();
         floodlightVisuals.dispose();
         controls.removeEventListener('pointerdown',down);controls.removeEventListener('pointermove',move);
         controls.removeEventListener('pointerup',up);controls.removeEventListener('pointercancel',up);
         controls.removeEventListener('wheel',wheel);
         geometries.forEach(g=>g.dispose());materials.forEach(m=>m.dispose());
-        textures.forEach(p=>p.then(t=>t.dispose()));environment.dispose();renderer.dispose();
+        textures.forEach(p=>p.then(t=>t.dispose()));
+        skyTexture?.dispose();facadeTexture?.dispose();environment.dispose();renderer.dispose();
         removeBridgeNotice();
         renderer.domElement.remove();
       },
     };
   } catch(error) {
+    presentationTransition?.dispose();
     floodlightVisuals?.dispose();
     geometries.forEach(g=>g.dispose());materials.forEach(m=>m.dispose());
-    textures.forEach(p=>p.then(t=>t.dispose()));environment.dispose();renderer.dispose();
+    textures.forEach(p=>p.then(t=>t.dispose()));
+    skyTexture?.dispose();facadeTexture?.dispose();environment.dispose();renderer.dispose();
     removeBridgeNotice();
     renderer.domElement.remove(); throw error;
   }
