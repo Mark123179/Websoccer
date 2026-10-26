@@ -77,3 +77,14 @@ werden für den FCB“.
 Dachrand, rotem unterem Fassadenstreifen und Innenbeleuchtung beibehalten.
 Keine Freigabe für andere Vereine ableiten; Kapazitäten, Ausbauten und explizit
 gespeicherte Managerentwürfe bei der Anbindung erhalten.
+
+Die Außenfassade soll auch den offenen Bereich zwischen den vorhandenen
+unteren Modellbändern schließen; eine bloße Rotfärbung des oberen Mantels
+erfüllt die gewünschte Darstellung nicht.
+
+**Why:** Der Nutzer zeigte die schwebend wirkende Hülle und beauftragte:
+„Fassade korrigieren, bitte.“
+
+**How to apply:** Notwendige Ergänzungen an belegten Quellkonturen ausrichten
+und als Rekonstruktion kennzeichnen. Umgebung, Innenraum und gespeicherte
+Rangentwürfe dabei unverändert lassen.

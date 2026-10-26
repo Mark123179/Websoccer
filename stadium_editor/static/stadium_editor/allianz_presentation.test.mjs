@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
   createTransitionController,
+  buildAllianzLowerFacadeClosure,
   interpolate,
   isConfirmedAllianzFacadeMaterial,
   isConfirmedAllianzLowerFacade,
@@ -149,6 +150,26 @@ test('lower facade lights the upper perimeter only, with exterior-facing winding
   const split = splitLowerFacadeTriangles(positions,[0,1,2,3,4,5,6,7,8]);
   assert.deepEqual(split.facadeIndices,[0,2,1]);
   assert.deepEqual(split.remainingIndices,[3,4,5,6,7,8]);
+});
+
+test('derived lower facade closes only the gap between source wall profile bands', () => {
+  const profile = [];
+  for (let i = 0; i < 16; i++) {
+    const a = i * Math.PI * 2 / 16;
+    const r = 90 + 12 * Math.cos(a * 2);
+    profile.push(r * Math.cos(a), 15.3734, r * Math.sin(a));
+    profile.push(r * Math.cos(a), 29.1077, r * Math.sin(a));
+  }
+  const result = buildAllianzLowerFacadeClosure([new Float32Array(profile)], {samples: 64});
+  assert.equal(result.positions.length, 64 * 2 * 3);
+  assert.equal(result.uvs.length, 64 * 2 * 2);
+  assert.equal(result.indices.length, 64 * 6);
+  const heights = result.positions.filter((_, i) => i % 3 === 1);
+  assert.ok(heights.slice(0, 64).every(value => Math.abs(value - 29.1077) < 1e-5));
+  assert.ok(heights.slice(64).every(value => Math.abs(value - 15.3734) < 1e-5));
+  assert.deepEqual(result.sourceProfile, {
+    lowerY: 15.3734, upperY: 29.1077, lowerSamples: 16, upperSamples: 16,
+  });
 });
 
 test('presentation support is exact to source and club; other clubs are a no-op', () => {

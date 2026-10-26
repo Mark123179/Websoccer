@@ -1,6 +1,9 @@
 const ALLIANZ_SOURCE_SHA256 = '52c0d0916cc4e780bd9d3d4cc60363b134195125ce95cd7a34a87b2c4a48c0b3';
 const ALLIANZ_ASSET_VERSION = '7bc8ec0fcf20c166';
 const ALLIANZ_COVER_PATH_ID = '-2079065756245898804';
+// These exact, source-exported wall meshes define the lower perimeter profile
+// and the existing top/bottom bands. Their IDs are the only accepted anchors
+// for the small derived closure between the two source bands.
 const ALLIANZ_LOWER_WALLS = {
   'back1_probe_notdemo_1.003': ['-3161811761645632254', 'st011_wall200.012'],
   'front1_probe_notdemo_0.003': ['8201821662781557974', 'st011_wall200.013'],
@@ -33,6 +36,78 @@ export function splitLowerFacadeTriangles(positions, indices) {
     } else remainingIndices.push(a,b,c);
   }
   return {facadeIndices,remainingIndices};
+}
+
+/**
+ * Reconstruct the omitted vertical interval between the two source wall bands.
+ * The ring profiles are sampled from the exact lower-wall source meshes at
+ * y≈15.37 and y≈29.11; interpolation is a rendering closure, not survey data.
+ */
+export function buildAllianzLowerFacadeClosure(positionArrays, {
+  lowerY = 15.3734,
+  upperY = 29.1077,
+  samples = 256,
+  levelTolerance = 0.025,
+} = {}) {
+  const profileAt = level => {
+    const points = [];
+    for (const positions of positionArrays || []) {
+      for (let i = 0; i < positions.length; i += 3) {
+        const x = positions[i], y = positions[i + 1], z = positions[i + 2];
+        if (!Number.isFinite(x) || !Number.isFinite(y) || !Number.isFinite(z) ||
+            Math.abs(y - level) > levelTolerance) continue;
+        const angle = (Math.atan2(z, x) + Math.PI * 2) % (Math.PI * 2);
+        points.push({angle, radius: Math.hypot(x, z)});
+      }
+    }
+    points.sort((a, b) => a.angle - b.angle);
+    const unique = [];
+    for (const point of points) {
+      const previous = unique.at(-1);
+      if (previous && Math.abs(previous.angle - point.angle) < 1e-5) {
+        previous.radius = Math.max(previous.radius, point.radius);
+      } else unique.push({...point});
+    }
+    return unique;
+  };
+  const lower = profileAt(lowerY), upper = profileAt(upperY);
+  if (lower.length < 8 || upper.length < 8 || samples < 16)
+    throw new Error('Allianz lower-facade source profile is incomplete.');
+  const radiusAt = (profile, angle) => {
+    let nextIndex = profile.findIndex(point => point.angle > angle);
+    if (nextIndex < 0) nextIndex = 0;
+    const next = profile[nextIndex];
+    const previous = profile[(nextIndex + profile.length - 1) % profile.length];
+    const a0 = previous.angle;
+    const a1 = next.angle + (nextIndex === 0 ? Math.PI * 2 : 0);
+    const a = angle + (angle < a0 ? Math.PI * 2 : 0);
+    const t = a1 === a0 ? 0 : (a - a0) / (a1 - a0);
+    return previous.radius + (next.radius - previous.radius) * t;
+  };
+  const positions = new Float32Array(samples * 2 * 3);
+  const indices = new Uint32Array(samples * 6);
+  for (let i = 0; i < samples; i++) {
+    const angle = (i / samples) * Math.PI * 2;
+    const c = Math.cos(angle), s = Math.sin(angle);
+    const topRadius = radiusAt(upper, angle) + .035;
+    const bottomRadius = radiusAt(lower, angle) + .035;
+    const top = i * 3, bottom = (samples + i) * 3;
+    positions[top] = topRadius * c;
+    positions[top + 1] = upperY;
+    positions[top + 2] = topRadius * s;
+    positions[bottom] = bottomRadius * c;
+    positions[bottom + 1] = lowerY;
+    positions[bottom + 2] = bottomRadius * s;
+    const next = (i + 1) % samples;
+    const offset = i * 6;
+    indices.set([i, next, samples + i, samples + i, next, samples + next], offset);
+  }
+  return {
+    positions,
+    uvs: projectFacadeUv(positions, lowerY, upperY),
+    indices,
+    sourceProfile: {lowerY, upperY, lowerSamples: lower.length, upperSamples: upper.length},
+  };
 }
 
 export function supportsAllianzPresentation(presentation, manifest) {

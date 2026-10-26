@@ -7,9 +7,10 @@ import {mountBridgeHeightNotice} from './bridge_height_evidence.js?v=1';
 import {mountHeidenheimFloodlightVisuals} from './heidenheim_floodlight_visuals.js?v=2';
 import {
   createTransitionController, isConfirmedAllianzFacadeMaterial, isConfirmedAllianzLowerFacade,
+  buildAllianzLowerFacadeClosure,
   projectFacadeUv, runtimeFixtureIntensity, sourceMaterialFinish, splitFacadeTriangles,
   splitLowerFacadeTriangles, supportsAllianzPresentation,
-} from './allianz_presentation.js?v=10';
+} from './allianz_presentation.js?v=11';
 
 /** Original source geometry, with its own club-scoped runtime presentation. */
 export async function mountUnityStadium({
@@ -101,6 +102,7 @@ export async function mountUnityStadium({
   }
   const camera = new THREE.PerspectiveCamera(42, 1, 1, 2400);
   const textures = new Map(), materials = [], geometries = [], roof = [], crowd = [];
+  const lowerFacadeSourceProfiles = [];
   const loader = new THREE.TextureLoader();
   let disposed = false, day = allianz ? initialState.day !== false : true;
   let floodlight = Boolean(initialState.floodlight), roofVisible = initialState.roofVisible !== false;
@@ -203,6 +205,7 @@ export async function mountUnityStadium({
           material.userData.sourceRole = sourceFinish.role;
         }
         const isLowerFacade = allianz && isConfirmedAllianzLowerFacade(entry, part);
+        if (isLowerFacade) lowerFacadeSourceProfiles.push(position);
         const isFacadeSource = isLowerFacade || (allianz && isConfirmedAllianzFacadeMaterial(entry, part));
         let facadeMaterial = null, facadeInteriorMaterial = null;
         if (isFacadeSource) {
@@ -303,6 +306,30 @@ export async function mountUnityStadium({
           }
         }
       }
+    }
+    if (allianz && lowerFacadeSourceProfiles.length) {
+      const closure = buildAllianzLowerFacadeClosure(lowerFacadeSourceProfiles);
+      const geometry = new THREE.BufferGeometry();
+      geometry.setAttribute('position', new THREE.BufferAttribute(closure.positions, 3));
+      geometry.setAttribute('uv', new THREE.BufferAttribute(closure.uvs, 2));
+      geometry.setIndex(new THREE.BufferAttribute(closure.indices, 1));
+      geometry.computeVertexNormals();
+      const closureMaterial = new THREE.MeshStandardMaterial({
+        color: '#f4f5f1', roughness: .4, metalness: .08,
+        map: facadeTexture, emissiveMap: facadeTexture,
+        emissive: '#f01836', emissiveIntensity: 0, side: THREE.DoubleSide,
+      });
+      closureMaterial.name = 'Allianz lower facade · source-aligned reconstruction';
+      closureMaterial.userData.sourceRole = 'approximate closure between source wall bands';
+      materials.push(closureMaterial);
+      facadeMaterials.push(closureMaterial);
+      const mesh = new THREE.Mesh(geometry, closureMaterial);
+      mesh.name = 'DERIVED_Allianz_lower_facade_closure';
+      mesh.userData.reconstruction = true;
+      mesh.userData.sourceRole = 'radial interpolation of confirmed lower-wall source profiles';
+      mesh.userData.sourceProfile = closure.sourceProfile;
+      model.add(mesh);
+      geometries.push(geometry);
     }
     if(!roof.length) throw new Error('Original-Dachgeometrie fehlt.');
     if (allianz) applyAllianzMood(presentationTransition.current.day);
