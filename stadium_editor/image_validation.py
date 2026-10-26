@@ -65,6 +65,10 @@ def normalize_design_payload(payload, *, geometry=None, stadium_name=None, blick
     payload = sanitize_design_payload(payload)
     from .grass import normalize_grass_variant
     grass = {}
+    if 'seat_mode' in payload:
+        if payload['seat_mode'] not in ('original', 'custom'):
+            raise InvalidImageData('Unbekannter Modus für die Rangbemalung.')
+        grass['seat_mode'] = payload['seat_mode']
     if 'grass_variant' in payload:
         grass['grass_variant'] = normalize_grass_variant(payload['grass_variant'])
     palette = payload.get('palette', [])

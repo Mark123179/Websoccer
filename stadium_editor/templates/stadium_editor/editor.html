@@ -65,6 +65,8 @@
   display:flex;flex-direction:column;gap:14px;grid-column:1;grid-row:1;
   position:relative;z-index:3;
 }
+.tools-source-seats > *{flex-shrink:0}
+.tools-source-seats #seatSourceStatus{overflow-wrap:anywhere}
 .admin-tools{
   min-width:0;background:rgba(9,23,34,.64);
   border-left:1px solid var(--line);padding:14px;overflow-y:auto;
@@ -120,6 +122,13 @@
   color:var(--text);padding:7px 9px;font-size:13px;width:100%;
 }
 .subtools select{background:rgba(3,7,12,.8);border:1px solid var(--line);border-radius:5px;color:var(--text);padding:6px}
+.seat-design-panel{display:flex;flex-direction:column;gap:8px}
+.seat-design-panel label{font-size:11px;color:var(--muted)}
+.seat-design-panel select{display:block;width:100%;margin-top:5px;background:rgba(3,7,12,.8);border:1px solid var(--line-strong);border-radius:5px;color:var(--text);padding:8px}
+.seat-design-panel p{font-size:10px;line-height:1.45;color:var(--muted);margin:0}
+.seat-design-panel [role=status]{font-size:11px;line-height:1.4;color:var(--cyan);min-height:16px}
+.seat-design-panel .btn{width:100%;padding:7px 9px;font-size:10px}
+.seat-design-panel :focus-visible{outline:2px solid var(--gold);outline-offset:2px}
 .filebtn{position:relative;overflow:hidden}
 .filebtn input{position:absolute;inset:0;opacity:0;cursor:pointer}
 /* Press button */
@@ -210,7 +219,7 @@
 {% include 'stadium_editor/_grass_controls.html' %}
 
 <div class="main{% if is_editor_admin %} has-admin{% endif %}">
-  <div class="tools" id="toolsPanel">
+  <div class="tools{% if is_source_seat_editor %} tools-source-seats{% endif %}" id="toolsPanel">
     {% if is_dortmund_editor %}
     <div class="de-inspector">
       <span class="de-eyebrow">GRUNDRISS · RANGBEARBEITUNG</span>
@@ -224,6 +233,21 @@
       </div>
       <p class="de-stand-note">Kartenorientierte Näherung (Modellachse zur OSM-Karte um etwa 16° gedreht), keine Vermessung. Zahlen: aktuelle wirtschaftliche Plätze · Vorschauplätze nicht enthalten.</p>
     </div>
+    {% endif %}
+
+    {% if is_source_seat_editor %}
+    <section class="panel seat-design-panel" aria-labelledby="seatDesignHeading">
+      <h3 id="seatDesignHeading">Sitzplatz-Design</h3>
+      <label for="seatDesignMode">Zuordnung der Sitzplätze
+        <select id="seatDesignMode">
+          <option value="original">Stadionoriginal</option>
+          <option value="custom">Eigener Entwurf</option>
+        </select>
+      </label>
+      <p>Beim Wechsel zwischen Original und Entwurf bleibt dein eigener Entwurf erhalten.</p>
+      <div id="seatSourceStatus" role="status" aria-live="polite">Originalzuordnung wird geladen …</div>
+      <button type="button" class="btn" id="clearSeatDesign">Eigenen Entwurf löschen</button>
+    </section>
     {% endif %}
 
     <div class="panel">
@@ -420,11 +444,13 @@ window.STADIUM_EDITOR = {
   maxPreviewCapacity: {{ preview_capacity_limit }},
   isAdmin: {{ is_editor_admin|yesno:'true,false' }},
   dortmundScene: {{ is_dortmund_editor|yesno:'true,false' }},
-  unityScene: {{ is_unity_editor|yesno:'true,false' }}
+  unityScene: {{ is_unity_editor|yesno:'true,false' }},
+  sourceSeats: {{ is_source_seat_editor|yesno:'true,false' }}
 };
 </script>
 <script src="{% static 'stadium_editor/expansion_geometry.js' %}?v=35"></script>
 <script src="{% static 'stadium_editor/elversberg_canopies.js' %}?v=1"></script>
 <script src="{% static 'stadium_editor/editor_viewport.js' %}?v=1"></script>
-<script src="{% static 'stadium_editor/editor.js' %}?v=82"></script>
+<script src="{% static 'stadium_editor/source_seats.js' %}?v=2"></script>
+<script src="{% static 'stadium_editor/editor.js' %}?v=84"></script>
 {% endblock %}
