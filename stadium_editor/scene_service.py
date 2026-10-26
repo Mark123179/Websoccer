@@ -28,5 +28,8 @@ def current_live_scene(stadium):
         scene["presentation"] = runtime_presentation(stadium, geometry, payload)
     elif (manifest := model_manifest(stadium.club.fm_inside_id)) is not None:
         from .unity_runtime import unity_presentation
-        scene["presentation"] = unity_presentation(stadium, geometry, payload, manifest)
+        # The approved Allianz source seats must not be recoloured by a synthetic
+        # fallback design. Explicitly saved manager designs still take precedence.
+        presentation_design = {} if stadium.club.fm_inside_id == 915 and design is None else payload
+        scene["presentation"] = unity_presentation(stadium, geometry, presentation_design, manifest)
     return scene

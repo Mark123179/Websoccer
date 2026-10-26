@@ -66,3 +66,14 @@ rot beleuchtet“.
 aus Sitzperspektive prüfen. Der Flutlichtschalter bleibt unabhängig von Tag/Nacht;
 nachgewiesene Modellleuchten kalibrieren statt Sitze oder Rasen selbstleuchtend
 zu machen.
+
+Der fertig abgestimmte Licht-/Fassadenstand ist für den FCB zur regulären
+Übernahme freigegeben, nicht mehr nur als Pilot.
+
+**Why:** Der Nutzer bestätigte nach den Korrekturen: „okay, kann so übernommen
+werden für den FCB“.
+
+**How to apply:** Die abgenommene Darstellung einschließlich grauem innerem
+Dachrand, rotem unterem Fassadenstreifen und Innenbeleuchtung beibehalten.
+Keine Freigabe für andere Vereine ableiten; Kapazitäten, Ausbauten und explizit
+gespeicherte Managerentwürfe bei der Anbindung erhalten.

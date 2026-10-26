@@ -47,7 +47,7 @@ class DortmundSharedSceneTests(SimpleTestCase):
         self.assertNotIn("imageBackground", result)
 
     def test_other_clubs_do_not_receive_bvb_and_missing_scene_fails_closed(self):
-        self.assertIsNone(ticker_scene_context(SimpleNamespace(fm_inside_id=915)))
+        self.assertIsNone(ticker_scene_context(SimpleNamespace(fm_inside_id=99999)))
         club = SimpleNamespace(pk=3, name="BVB", fm_inside_id=907, stadium=self.stadium)
         with patch("game.stadium_scene_context.StadiumGeometry.objects") as rows:
             rows.filter.return_value.exists.return_value = False

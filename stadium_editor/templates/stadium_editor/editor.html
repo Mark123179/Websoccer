@@ -196,7 +196,7 @@
     <span>Neigung</span><input type="range" id="tiltSlider" min="28" max="80" value="54" style="width:90px">
     <select id="stageCamera" aria-label="3D-Kamera">{% if is_dortmund_editor %}<option value="exterior">Außen</option><option value="interior">Innen</option><option value="roof-corner">Dach / Ecke</option><option value="opposite">Gegenseite</option><option value="distance">Fernansicht</option>{% else %}<option value="orbit">Orbit</option><option value="seat">Sitz</option>{% endif %}</select>
     <label style="display:flex;align-items:center;gap:6px;cursor:pointer"><input type="checkbox" id="stageDay" style="accent-color:var(--cyan)"> Tag</label>
-    <label style="display:flex;align-items:center;gap:6px;cursor:pointer"><input type="checkbox" id="stageFloodlight" style="accent-color:var(--cyan)"> Flutlicht</label>
+    <label style="display:flex;align-items:center;gap:6px;cursor:pointer"><input type="checkbox" id="stageFloodlight" style="accent-color:var(--cyan)"{% if stadium.club.fm_inside_id == 915 %} checked{% endif %}> Flutlicht</label>
     <label style="display:flex;align-items:center;gap:6px;cursor:pointer"><input type="checkbox" id="roofChk" checked style="accent-color:var(--cyan)"> Dach</label>
     <button class="btn" id="btnShot" title="Aktuelle 3D-Ansicht als PNG speichern">📷 PNG</button></div>
   <button class="btn active" id="btnDots">⣿ PUNKTE</button>
