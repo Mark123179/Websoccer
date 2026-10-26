@@ -1,0 +1,31 @@
+@import url("https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;700&family=IBM+Plex+Sans:wght@400;500;600;700&family=Oswald:wght@400;500;600&family=Cinzel:wght@600&family=Anton&family=Bebas+Neue&family=Archivo+Black&family=Germania+One&family=Permanent+Marker&display=swap");
+
+:root {
+  --app-bg: #03070c;
+  --stadium-bg: #07111a;
+  --panel: rgba(9, 23, 34, .82);
+  --panel-strong: rgba(12, 31, 45, .94);
+  --line: rgba(44, 231, 255, .18);
+  --line-strong: rgba(44, 231, 255, .38);
+  --cyan: #22e6ff;
+  --green: #30f29c;
+  --gold: #E9C783;
+  --red: #ff5570;
+  --text: #f4fbff;
+  --muted: rgba(244, 251, 255, .64);
+  --faint: rgba(244, 251, 255, .38);
+  --radius: 8px;
+}
+
+.stadiumEditorCurrent {
+  min-height: 960px;
+  background: var(--app-bg);
+}
+
+.stadiumEditorCurrent iframe {
+  display: block;
+  width: 100%;
+  height: 960px;
+  border: 0;
+  background: var(--app-bg);
+}

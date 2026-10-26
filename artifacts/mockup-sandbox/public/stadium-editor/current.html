@@ -1,0 +1,465 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<base href="/__mockup/stadium-editor/">
+<title>Stadion-Editor · Current baseline</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;700&family=IBM+Plex+Sans:wght@400;500;600;700&family=Oswald:wght@400;500;600&family=Cinzel:wght@600&family=Anton&family=Bebas+Neue&family=Archivo+Black&family=Germania+One&family=Permanent+Marker&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="./grass_editor.css">
+<style>
+
+:root{
+  --app-bg:#03070c; --stadium-bg:#07111a;
+  --panel:rgba(9,23,34,.82); --panel-strong:rgba(12,31,45,.94);
+  --line:rgba(44,231,255,.18); --line-strong:rgba(44,231,255,.38);
+  --cyan:#22e6ff; --green:#30f29c; --gold:#E9C783; --red:#ff5570;
+  --text:#f4fbff; --muted:rgba(244,251,255,.64); --faint:rgba(244,251,255,.38);
+  --radius:8px;
+}
+.stadium-editor-content{
+  width:100%;height:960px;min-height:960px;overflow:hidden;
+  display:flex;flex-direction:column;
+  color:var(--text);font:13px/1.45 system-ui,'Segoe UI',sans-serif;
+  background:var(--app-bg);
+}
+.stadium-editor-content *{box-sizing:border-box}
+/* ── Editor-Werkzeugleiste ───────────────────────── */
+.editor-toolbar{
+  height:56px;flex:0 0 56px;display:flex;align-items:center;gap:16px;
+  padding:0 20px;background:var(--panel-strong);
+  border-bottom:1px solid var(--line);
+}
+.editor-back{font-family:Oswald,sans-serif;font-size:12px;letter-spacing:.1em;color:var(--muted);text-decoration:none}
+.editor-back:hover{color:var(--cyan)}
+.editor-toolbar-spacer{flex:1}
+.viewtoggle{display:flex;border:1px solid var(--line-strong);border-radius:var(--radius);overflow:hidden}
+.viewtoggle button{
+  font-family:Oswald,sans-serif;font-size:12px;letter-spacing:.1em;padding:8px 18px;
+  background:transparent;color:var(--muted);border:0;cursor:pointer;
+}
+.viewtoggle button.active{background:rgba(34,230,255,.14);color:var(--cyan)}
+.btn{
+  font-family:Oswald,sans-serif;font-size:12px;letter-spacing:.1em;padding:9px 18px;
+  border-radius:var(--radius);border:1px solid var(--line-strong);
+  background:transparent;color:var(--text);cursor:pointer;transition:background .15s;
+}
+.btn:hover{background:rgba(34,230,255,.1)}
+.btn.primary{background:rgba(34,230,255,.16);border-color:var(--cyan);color:var(--cyan)}
+.btn.primary:hover{background:rgba(34,230,255,.26)}
+.btn:disabled{opacity:.35;cursor:default}
+/* ── Layout ─────────────────────────────────────── */
+.stadium-editor-content .main{
+  height:904px;flex:0 0 904px;display:grid;
+  grid-template-columns:282px minmax(0,1fr);grid-template-rows:minmax(0,1fr);min-height:0;
+}
+.stadium-editor-content .main.has-admin{
+  grid-template-columns:282px minmax(0,1fr) 300px;
+}
+.stadium-editor-content .main.has-admin .stage{grid-column:2;grid-row:1}
+.stadium-editor-content .main.has-admin .admin-tools{grid-column:3;grid-row:1}
+.tools{
+  min-width:0;background:var(--panel);
+  border-right:1px solid var(--line);padding:14px;overflow-y:auto;
+  display:flex;flex-direction:column;gap:14px;grid-column:1;grid-row:1;
+  position:relative;z-index:3;
+}
+.tools-source-seats > *{flex-shrink:0}
+.tools-source-seats #seatSourceStatus{overflow-wrap:anywhere}
+.admin-tools{
+  min-width:0;background:rgba(9,23,34,.64);
+  border-left:1px solid var(--line);padding:14px;overflow-y:auto;
+  position:relative;z-index:3;
+}
+.admin-tools .panel{background:rgba(7,17,26,.72)}
+.stage{height:100%;min-width:0;min-height:0;position:relative;background:var(--stadium-bg);grid-column:2;grid-row:1}
+.stage canvas{position:absolute;inset:0}
+#stageThree{position:absolute;inset:0;z-index:0;visibility:hidden;pointer-events:none}
+#stageThree canvas{position:static;width:100%;height:100%}
+.stage-three-ready #stageThree{visibility:visible;pointer-events:auto;z-index:2}
+.stage-three-ready #cvBase,.stage-three-ready #cvBlocks,.stage-three-ready #cvOverlay{z-index:0}
+.stage-source-pending #cvBase,.stage-source-pending #cvBlocks,.stage-source-pending #cvOverlay{visibility:hidden}
+.stage-source-pending #stageThree{visibility:hidden;pointer-events:none}
+#sourceSceneStatus{position:absolute;inset:0;z-index:4;display:flex;align-items:center;justify-content:center;padding:32px;text-align:center;color:var(--muted);font-size:13px;background:var(--stadium-bg)}
+#sourceSceneStatus[hidden]{display:none}
+#cvOverlay{cursor:crosshair}
+.editor-zoom{display:flex;align-items:center;gap:6px;white-space:nowrap}
+.editor-zoom[hidden]{display:none}
+.editor-zoom .btn{padding:6px 9px}
+.editor-zoom output{min-width:42px;text-align:center;color:var(--muted);font-size:11px}
+/* ── Panels ─────────────────────────────────────── */
+.panel{border:1px solid var(--line);border-radius:var(--radius);padding:11px 12px;background:rgba(7,17,26,.5)}
+.panel h3{
+  font-family:Oswald,sans-serif;font-size:10px;font-weight:600;letter-spacing:.24em;
+  text-transform:uppercase;color:var(--faint);margin-bottom:9px;
+}
+.sel-status{font-size:12px;color:var(--muted);min-height:17px}
+.sel-status b{color:var(--cyan);font-weight:600}
+#officialBlockControls{margin-bottom:10px;font-size:11px;color:var(--muted)}
+#officialBlockSelect{display:block;width:100%;margin:5px 0;background:var(--stadium-bg);border:1px solid var(--line);border-radius:5px;color:var(--text);padding:6px}
+#officialBlockControls p{font-size:10px;line-height:1.45;margin:6px 0}
+#officialBlockControls a{color:var(--cyan)}
+.rowbtns{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
+.rowbtns .btn{padding:6px 10px;font-size:10px;flex:1;text-align:center;min-width:70px}
+/* Palette */
+.palette{display:grid;grid-template-columns:repeat(8,1fr);gap:5px}
+.swatch{
+  aspect-ratio:1;border-radius:4px;cursor:pointer;border:2px solid transparent;
+  position:relative;transition:transform .1s;
+}
+.swatch:hover{transform:scale(1.12)}
+.swatch.sel1{border-color:var(--cyan);box-shadow:0 0 6px rgba(34,230,255,.6)}
+.swatch.sel2{border-color:var(--gold);box-shadow:0 0 6px rgba(233,199,131,.6)}
+.pal-hint{font-size:10px;color:var(--faint);margin-top:7px}
+.pal-hint i{font-style:normal;color:var(--cyan)} .pal-hint em{font-style:normal;color:var(--gold)}
+/* Tools */
+.toolgrid{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.toolgrid .btn{padding:8px 6px;font-size:11px;text-align:center}
+.toolgrid .btn.active{background:rgba(34,230,255,.16);border-color:var(--cyan);color:var(--cyan)}
+.subtools{margin-top:9px;display:none;flex-direction:column;gap:8px}
+.subtools.open{display:flex}
+.subtools label{font-size:11px;color:var(--muted);display:flex;align-items:center;gap:8px;justify-content:space-between}
+.subtools input[type=range]{flex:1;accent-color:var(--cyan)}
+.subtools input[type=text]{
+  background:rgba(3,7,12,.8);border:1px solid var(--line);border-radius:5px;
+  color:var(--text);padding:7px 9px;font-size:13px;width:100%;
+}
+.subtools select{background:rgba(3,7,12,.8);border:1px solid var(--line);border-radius:5px;color:var(--text);padding:6px}
+.seat-design-panel{display:flex;flex-direction:column;gap:8px}
+.seat-design-panel label{font-size:11px;color:var(--muted)}
+.seat-design-panel select{display:block;width:100%;margin-top:5px;background:rgba(3,7,12,.8);border:1px solid var(--line-strong);border-radius:5px;color:var(--text);padding:8px}
+.seat-design-panel p{font-size:10px;line-height:1.45;color:var(--muted);margin:0}
+.seat-design-panel [role=status]{font-size:11px;line-height:1.4;color:var(--cyan);min-height:16px}
+.seat-design-panel .btn{width:100%;padding:7px 9px;font-size:10px}
+.seat-design-panel :focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+.filebtn{position:relative;overflow:hidden}
+.filebtn input{position:absolute;inset:0;opacity:0;cursor:pointer}
+/* Press button */
+.pressbtn{
+  font-family:Oswald,sans-serif;font-size:14px;font-weight:600;letter-spacing:.22em;
+  padding:13px;border-radius:var(--radius);width:100%;
+  background:linear-gradient(180deg,rgba(233,199,131,.22),rgba(233,199,131,.1));
+  border:1px solid var(--gold);color:var(--gold);cursor:pointer;transition:all .12s;
+}
+.pressbtn:hover{background:linear-gradient(180deg,rgba(233,199,131,.34),rgba(233,199,131,.16))}
+.pressbtn:active{transform:translateY(2px)}
+.pressbtn:disabled{opacity:.3;cursor:default;transform:none}
+/* Undo bar */
+.undobar{display:flex;gap:6px}
+.undobar .btn{flex:1;text-align:center}
+/* Legende + Statusbar */
+.legend{display:flex;gap:14px;font-size:10px;color:var(--muted);align-items:center}
+.legend .key{display:inline-block;width:16px;height:10px;border-radius:2px;margin-right:5px;vertical-align:-1px}
+.statusbar{
+  position:absolute;left:0;right:0;bottom:0;height:30px;display:flex;align-items:center;
+  gap:18px;padding:0 16px;background:rgba(3,7,12,.72);border-top:1px solid var(--line);
+  font-size:11px;color:var(--muted);backdrop-filter:blur(4px);
+}
+.statusbar .sb-r{margin-left:auto;display:flex;gap:16px;align-items:center}
+/* 3D rotation slider */
+#rot3d{display:none;align-items:center;gap:10px;font-size:11px;color:var(--muted)}
+#rot3d input{width:130px;accent-color:var(--cyan)}
+/* Toast */
+#toast{
+  position:absolute;top:16px;left:50%;transform:translateX(-50%);
+  background:var(--panel-strong);border:1px solid var(--line-strong);border-radius:var(--radius);
+  padding:9px 18px;font-size:12px;opacity:0;pointer-events:none;transition:opacity .25s;
+}
+#toast.show{opacity:1}
+@media (max-width:980px){
+  .stadium-editor-content{
+    height:auto;min-height:1100px;overflow:visible;
+  }
+  .stadium-editor-content .main,
+  .stadium-editor-content .main.has-admin{
+    height:auto;flex:initial;display:flex;flex-direction:column;min-height:0;
+  }
+  .tools,.admin-tools{
+    width:100%;flex:none;overflow:visible;border-left:0;
+    border-right:0;border-bottom:1px solid var(--line);
+  }
+  .stage{height:560px;min-height:560px;flex:none;order:2}
+  .admin-tools{order:3}
+}
+
+html,body{margin:0;padding:0;width:100%;min-height:100%;background:#03070c}
+</style>
+<script type="importmap">{"imports":{"three":"./three-unavailable.js"}}</script>
+<script src="./bootstrap.js"></script>
+</head>
+<body>
+<div class="stadium-editor-content">
+
+<div class="editor-toolbar">
+  <a class="editor-back" href="#">← ZUR STADIONVERWALTUNG</a>
+  <div class="editor-toolbar-spacer"></div>
+  <div class="editor-zoom" id="zoom2dControls" role="group" aria-label="2D-Zoom">
+    <button type="button" class="btn" id="zoom2dOut" aria-label="2D herauszoomen" title="Herauszoomen">−</button>
+    <output id="zoom2dValue" aria-live="polite">100%</output>
+    <button type="button" class="btn" id="zoom2dIn" aria-label="2D hineinzoomen" title="Hineinzoomen">+</button>
+    <button type="button" class="btn" id="zoom2dReset" title="Stadion einpassen und Zoom zurücksetzen">Einpassen</button>
+  </div>
+  <div id="rot3d"><span>Drehung</span><input type="range" id="yawSlider" min="-180" max="180" value="0">
+    <span>Neigung</span><input type="range" id="tiltSlider" min="28" max="80" value="54" style="width:90px">
+    <select id="stageCamera" aria-label="3D-Kamera"><option value="orbit">Orbit</option><option value="seat">Sitz</option></select>
+    <label style="display:flex;align-items:center;gap:6px;cursor:pointer"><input type="checkbox" id="stageDay" style="accent-color:var(--cyan)"> Tag</label>
+    <label style="display:flex;align-items:center;gap:6px;cursor:pointer"><input type="checkbox" id="stageFloodlight" style="accent-color:var(--cyan)"> Flutlicht</label>
+    <label style="display:flex;align-items:center;gap:6px;cursor:pointer"><input type="checkbox" id="roofChk" checked style="accent-color:var(--cyan)"> Dach</label>
+    </div>
+  <div class="viewtoggle">
+    <button id="btn2d" class="active">2D · BEARBEITEN</button>
+    <button id="btn3d">3D · PRÜFEN</button>
+  </div>
+  
+  <button class="btn primary" id="btnSave">SPEICHERN</button>
+</div>
+
+<section class="grass-editor-controls" aria-label="Rasenvorschau">
+  <label class="grass-editor-controls__label" for="grassVariant">Rasenvariante</label>
+  <select class="grass-editor-controls__select" id="grassVariant" name="grassVariant" aria-describedby="grassPreviewState" disabled>
+    <option value="bestand" selected>Bestand · aktueller Spielrasen</option>
+    <option value="A1">A1 · Längsstreifen</option>
+    <option value="A2">A2 · Querstreifen</option>
+    <option value="A3">A3 · Schachbrett</option>
+    <option value="A4">A4 · Diagonalrauten</option>
+    <option value="B1">B1 · Längsstreifen · Farbton 2</option>
+    <option value="B2">B2 · Längsstreifen · Farbton 3</option>
+    <option value="B3">B3 · Längsstreifen · Farbton 4</option>
+    <option value="C1">C1 · Längsstreifen · leichte Abnutzung</option>
+    <option value="C2">C2 · Längsstreifen · starke Abnutzung</option>
+    <option value="D1">D1 · Querstreifen · Farbton 2 · leicht abgenutzt</option>
+    <option value="D2">D2 · Schachbrett · Farbton 3</option>
+    <option value="D3">D3 · Diagonalrauten · Farbton 4 · stark abgenutzt</option>
+  </select>
+  <p class="grass-editor-controls__state" id="grassPreviewState" role="status" aria-live="polite">
+    Änderungen sind Vorschau und werden erst mit Speichern übernommen.
+  </p>
+  <button class="grass-editor-controls__reset" type="button" id="grassReset" disabled>
+    Gespeicherte Auswahl wiederherstellen
+  </button>
+</section>
+
+
+<div class="main">
+  <div class="tools tools-source-seats" id="toolsPanel">
+    
+
+    
+    <section class="panel seat-design-panel" aria-labelledby="seatDesignHeading">
+      <h3 id="seatDesignHeading">Sitzplatz-Design</h3>
+      <label for="seatDesignMode">Zuordnung der Sitzplätze
+        <select id="seatDesignMode">
+          <option value="original">Stadionoriginal</option>
+          <option value="custom">Eigener Entwurf</option>
+        </select>
+      </label>
+      <button type="button" class="btn" id="clearSeatDesign">Eigenen Entwurf löschen</button>
+    </section>
+    
+
+    <div class="panel">
+      <h3>Auswahl · Zauberstab</h3>
+      <div id="officialBlockControls" hidden>
+        <label for="officialBlockSelect">FC-Blockplan 2026/27</label>
+        <select id="officialBlockSelect" aria-label="Offiziellen Stadionblock auswählen"></select>
+        <p>Schematische Plansektoren auf den Unity-Sitzgruppen, keine vermessenen Ganggrenzen. Plätze sind wirtschaftliche Spielwerte, keine Quell-Sitzpunktzahlen.</p>
+        <a href="https://fc.de/club/ueber-den-fc/spiel-und-trainingsstaette/rheinenergiestadion" target="_blank" rel="noopener">Offizieller FC-Stadionplan</a>
+      </div>
+      <div class="sel-status" id="selStatus">Kein Block gewählt — klick ins Stadion.</div>
+      <div class="rowbtns">
+        <button class="btn" id="btnSelTier">+ Rang</button>
+        <button class="btn" id="btnSelStand">+ Tribüne</button>
+        <button class="btn" id="btnSelNone">Leeren</button>
+        <button class="btn" id="btnErase" title="Gestaltung der Auswahl entfernen">↺ Beton</button>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h3>Palette</h3>
+      <div class="palette" id="palette"></div>
+      <div class="pal-hint">Klick = <i>Hauptfarbe</i> · Rechtsklick = <em>Zweitfarbe</em></div>
+      <div style="display:flex;gap:6px;margin-top:8px;align-items:center">
+        <input type="color" id="colorPick" value="#e9c783" style="width:38px;height:28px;border:1px solid var(--line);border-radius:5px;background:transparent;cursor:pointer">
+        <button class="btn" id="btnAddColor" style="flex:1">+ ZUR PALETTE</button>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h3>Werkzeug</h3>
+      <div class="toolgrid">
+        <button class="btn active" data-tool="fill">FÜLLEN</button>
+        <button class="btn" data-tool="pattern">MUSTER</button>
+        <button class="btn" data-tool="text">TEXT</button>
+        <button class="btn filebtn" data-tool="image">BILD<input type="file" id="imgInput" accept="image/*"></button>
+      </div>
+      <div class="subtools" id="subPattern">
+        <label>Art
+          <select id="patternKind">
+            <option value="hstripe">Streifen · quer</option>
+            <option value="vstripe">Streifen · hoch</option>
+            <option value="check">Karo</option>
+            <option value="frame">Rahmen</option>
+          </select>
+        </label>
+        <label>Breite <input type="range" id="patternW" min="1" max="8" value="3"></label>
+      </div>
+      <div class="subtools" id="subText">
+        <input type="text" id="textInput" placeholder="MIA SAN MIA" maxlength="40">
+        <label>Schrift
+          <select id="textFont">
+            <option value="Oswald">Oswald</option>
+            <option value="Anton">Anton (ultrafett)</option>
+            <option value="Bebas Neue">Bebas Neue</option>
+            <option value="Archivo Black">Archivo Black</option>
+            <option value="Cinzel">Cinzel (Serifen)</option>
+            <option value="Germania One">Germania One (Fraktur)</option>
+            <option value="Permanent Marker">Permanent Marker</option>
+          </select>
+        </label>
+        <label>Größe <input type="range" id="textSize" min="8" max="80" value="28"></label>
+        <label>Drehung <input type="range" id="textRot" min="-180" max="180" value="0"></label>
+        <label title="+ wölbt nach oben · − nach unten">Biegung <input type="range" id="textBend" min="-100" max="100" value="0"></label>
+        <label style="justify-content:flex-start;gap:8px"><input type="checkbox" id="textBg" style="accent-color:var(--cyan)"> Fläche in Zweitfarbe</label>
+        <button class="btn" id="btnAlignT">AN TRIBÜNE AUSRICHTEN</button>
+      </div>
+      <div class="subtools" id="subImage">
+        <label>Größe <input type="range" id="imgScale" min="10" max="400" value="100"></label>
+        <label>Drehung <input type="range" id="imgRot" min="-180" max="180" value="0"></label>
+        <label title="Hintergrund entfernen — helle, dunkle und blasse Bereiche werden transparent">Freistellen <input type="range" id="imgCut" min="0" max="100" value="0"></label>
+        <label title="Farben vor dem Pressen kräftiger machen">Farbkraft <input type="range" id="imgBoost" min="0" max="100" value="30"></label>
+        <label title="Weiche Verläufe als feines Muster erhalten (gut für Fotos)">Mischen <input type="range" id="imgDither" min="0" max="100" value="40"></label>
+        <button class="btn" id="btnAlignI">AN TRIBÜNE AUSRICHTEN</button>
+        <div style="font-size:10px;color:var(--faint)">Vorschau zeigt das Press-Ergebnis. Ziehen positioniert. Ohne Auswahl presst die Vorlage auf alle Blöcke darunter.</div>
+      </div>
+    </div>
+
+    <button class="pressbtn" id="btnPress" disabled>PRESSEN</button>
+
+    <div class="panel">
+      <h3>Gepresst</h3>
+      <div id="pressList"></div>
+    </div>
+
+    <div class="undobar">
+      <button class="btn" id="btnUndo" disabled>↶ RÜCKGÄNGIG</button>
+      <button class="btn" id="btnRedo" disabled>↷ WIEDER</button>
+    </div>
+
+    <div class="panel">
+      <h3>Blockarten</h3>
+      <div class="legend" style="flex-direction:column;align-items:flex-start;gap:7px">
+        <span><span class="key" style="border:1.5px solid var(--cyan)"></span>Sitzplätze</span>
+        <span><span class="key" style="border:1.5px dashed var(--cyan)"></span>Stehplätze</span>
+        <span><span class="key" style="border:1.5px solid var(--gold)"></span>VIP / Logen</span>
+      </div>
+    </div>
+
+  </div>
+
+  
+
+  <div class="stage" id="stage">
+    
+    <div id="stageThree" data-stadium-stage aria-label="Interaktive 3D-Stadionansicht"></div>
+    
+    <div id="sourceSceneStatus" role="status" aria-live="polite" hidden></div>
+    
+    
+    <canvas id="cvBase"></canvas>
+    <canvas id="cvBlocks"></canvas>
+    <canvas id="cvOverlay"></canvas>
+    <div class="statusbar">
+      <span id="sbHover">–</span>
+      <div class="sb-r">
+        <span id="sbInfo">Blaupause: OpenStreetMap-Daten (ODbL)</span>
+      </div>
+    </div>
+    <div id="toast"></div>
+  </div>
+</div>
+
+</div>
+
+
+    </main>
+
+    </div><!-- /.dashboard-scaler -->
+    </div><!-- /.gameStageSpacer -->
+    </div><!-- /.gameScroll -->
+    </div><!-- /.gameViewport -->
+
+    
+    <!-- ===== MANAGER-NOTIZEN TABLET ===== -->
+    <!-- Manager-Notizen Tablet — Overlay + Trigger (Task #717) -->
+<button class="nt-fab" data-nt-open aria-label="Notizen öffnen" title="Manager-Notizen">
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+       stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M8 2v4"/><path d="M12 2v4"/><path d="M16 2v4"/>
+    <rect x="4" y="4" width="16" height="18" rx="2"/>
+    <path d="M8 10h8"/><path d="M8 14h8"/><path d="M8 18h5"/>
+  </svg>
+</button>
+
+<div class="nt-overlay" id="nt-overlay" hidden>
+  <div class="nt-device">
+    <div class="nt-cam"></div>
+    <div class="nt-btn-power"></div>
+    <div class="nt-btn-vol up"></div>
+    <div class="nt-btn-vol down"></div>
+    <div class="nt-btn-mute"></div>
+    <div class="nt-home"><span></span></div>
+    <div class="nt-speakers"><i></i><i></i></div>
+
+    <div class="nt-screen">
+      <div class="nt-status">
+        <div id="nt-clock">–:–</div>
+        <div class="right">
+          <div class="nt-signal"><i></i><i></i><i></i><i></i></div>
+          <div class="nt-battery"><i></i></div>
+        </div>
+      </div>
+
+      <div class="nt-header">
+        <div>
+          <div class="nt-kicker">Manager-Notizen</div>
+          <div class="nt-title">Notizen</div>
+        </div>
+        <div class="right">
+          <div class="nt-saved" id="nt-saved" data-state="saved"><i></i><span>Gespeichert</span></div>
+          <button class="nt-close" data-nt-close type="button">✕</button>
+        </div>
+      </div>
+
+      <div class="nt-body">
+        <div class="nt-list-col">
+          <button class="nt-new" id="nt-new" type="button">+ Neue Notiz</button>
+          <div class="nt-list" id="nt-list"></div>
+        </div>
+
+        <div class="nt-editor" id="nt-editor" hidden>
+          <input class="nt-ed-title" id="nt-ed-title" placeholder="Titel">
+          <div class="nt-ed-date" id="nt-ed-date"></div>
+          <textarea class="nt-ed-content" id="nt-ed-content" placeholder="Notiz schreiben …"></textarea>
+          <div class="nt-todos">
+            <div class="label">Checkliste</div>
+            <div class="nt-todo-list" id="nt-todo-list"></div>
+            <div class="nt-todo-new">
+              <input id="nt-todo-input" placeholder="Neuer Punkt …">
+              <button id="nt-todo-add" type="button">Hinzufügen</button>
+            </div>
+          </div>
+          <div class="nt-footer">
+            <button class="nt-delete" id="nt-delete" type="button">Notiz löschen</button>
+          </div>
+        </div>
+        <div class="nt-noselect" id="nt-noselect" hidden>Keine Notiz ausgewählt.</div>
+<script type="application/json" id="editor-grass-assets">{}</script>
+<script src="./expansion_geometry.js"></script>
+<script src="./elversberg_canopies.js"></script>
+<script src="./editor_viewport.js"></script>
+<script src="./source_seats.js"></script>
+<script src="./seat_design_modes.js"></script>
+<script src="./editor.js"></script>
+</body>
+</html>

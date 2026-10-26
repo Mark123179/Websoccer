@@ -1,0 +1,123 @@
+.stadium-modern-shell {
+  width: 100%;
+  height: 100dvh;
+  min-height: 620px;
+  overflow: hidden;
+  background: #07151b;
+  color: #e7f1ef;
+  font-family: 'IBM Plex Sans', sans-serif;
+}
+
+.stadium-modern-shell iframe {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  background: #07151b;
+}
+
+.stadium-modern-loading {
+  position: relative;
+  display: grid;
+  grid-template-columns: 292px minmax(0, 1fr);
+  grid-template-rows: 62px minmax(0, 1fr);
+  gap: 12px;
+  height: 100%;
+  padding: 12px;
+  background: #07151b;
+}
+
+.stadium-modern-loading__top,
+.stadium-modern-loading__side,
+.stadium-modern-loading__field {
+  border: 1px solid rgba(87, 176, 171, .14);
+  background: linear-gradient(110deg, rgba(23, 46, 53, .86), rgba(13, 31, 38, .76), rgba(23, 46, 53, .86));
+  background-size: 220% 100%;
+  animation: stadium-skeleton 1.7s ease-in-out infinite;
+}
+
+.stadium-modern-loading__top {
+  grid-column: 1 / -1;
+  border-radius: 8px;
+}
+
+.stadium-modern-loading__side {
+  border-radius: 8px;
+}
+
+.stadium-modern-loading__field {
+  border-radius: 10px;
+}
+
+.stadium-modern-error {
+  display: grid;
+  justify-items: start;
+  align-content: center;
+  gap: 12px;
+  width: min(460px, calc(100% - 40px));
+  min-height: 220px;
+  margin: 12vh auto 0;
+  padding: 28px;
+  border: 1px solid rgba(107, 194, 186, .24);
+  border-radius: 10px;
+  background: #0d2027;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, .25);
+}
+
+.stadium-modern-error__eyebrow {
+  color: #7ca8a5;
+  font: 500 10px/1 'IBM Plex Mono', monospace;
+  letter-spacing: .16em;
+}
+
+.stadium-modern-error strong {
+  font-size: 17px;
+  font-weight: 500;
+}
+
+.stadium-modern-error button {
+  min-height: 40px;
+  padding: 0 15px;
+  border: 1px solid #4b9e99;
+  border-radius: 5px;
+  background: #153a3d;
+  color: #d8f5ed;
+  font: 600 12px 'IBM Plex Sans', sans-serif;
+  cursor: pointer;
+}
+
+.stadium-modern-error button:hover {
+  background: #1a4c4c;
+}
+
+.stadium-modern-error button:focus-visible {
+  outline: 2px solid #e3bd76;
+  outline-offset: 3px;
+}
+
+@keyframes stadium-skeleton {
+  to { background-position: -220% 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .stadium-modern-loading__top,
+  .stadium-modern-loading__side,
+  .stadium-modern-loading__field {
+    animation: none;
+  }
+}
+
+@media (max-width: 700px) {
+  .stadium-modern-shell {
+    min-height: 540px;
+  }
+
+  .stadium-modern-loading {
+    grid-template-columns: 1fr;
+    grid-template-rows: 54px 180px minmax(280px, 1fr);
+  }
+
+  .stadium-modern-loading__top {
+    grid-column: 1;
+  }
+}

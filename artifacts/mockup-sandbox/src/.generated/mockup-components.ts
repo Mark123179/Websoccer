@@ -8,5 +8,7 @@ export const modules: ModuleMap = {
   "./components/mockups/manager-timeline-tickets/Collector.tsx": () => import("../components/mockups/manager-timeline-tickets/Collector.tsx"),
   "./components/mockups/manager-timeline-tickets/Current.tsx": () => import("../components/mockups/manager-timeline-tickets/Current.tsx"),
   "./components/mockups/manager-timeline-tickets/Panorama.tsx": () => import("../components/mockups/manager-timeline-tickets/Panorama.tsx"),
-  "./components/mockups/manager-timeline-tickets/Retro.tsx": () => import("../components/mockups/manager-timeline-tickets/Retro.tsx")
+  "./components/mockups/manager-timeline-tickets/Retro.tsx": () => import("../components/mockups/manager-timeline-tickets/Retro.tsx"),
+  "./components/mockups/stadium-editor/Current.tsx": () => import("../components/mockups/stadium-editor/Current.tsx"),
+  "./components/mockups/stadium-editor/Modernized.tsx": () => import("../components/mockups/stadium-editor/Modernized.tsx")
 };
