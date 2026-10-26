@@ -2986,3 +2986,17 @@ mtime_ms = 1793017468778
 storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:6e4eaecc-e6c5-4f64-8de5-e8845034f33b/90add004-19ed-487b-af52-7d9687f301ca/44e4d42c-0bf2-427d-890d-5e3f0a30dfbc"
 storage_version_token = "1793017488709215"
 content_type = "image/jpeg"
+
+[[outputs]]
+id = "CGW8eeKH6DqHdJGhJ-TxE"
+uri = "file://generated-artifacts/allianz-pilot-20261026/rot-bis-zur-dachnaht.jpg"
+type = "image"
+title = "Allianz Arena – Rot bis zur inneren Dachnaht"
+description = "Die rote Beleuchtung umfasst nun auch die äußere Dachfläche. Nur der innere Rand zur Spielfeldöffnung bleibt grau."
+logical_id = "afc2db8b-f977-4256-95d5-6c8fe5b8496f"
+content_hash = "sha256:a1e86ef83c5528af5d9722042eacb97bac9c1af09201c746482c1ffb21588158"
+size = 155745
+mtime_ms = 1793017858126
+storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:6e4eaecc-e6c5-4f64-8de5-e8845034f33b/afc2db8b-f977-4256-95d5-6c8fe5b8496f/0e84dbdc-341e-44e1-8d56-5d696b491bc1"
+storage_version_token = "1793017876742657"
+content_type = "image/jpeg"

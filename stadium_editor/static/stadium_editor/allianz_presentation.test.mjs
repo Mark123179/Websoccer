@@ -77,10 +77,10 @@ test('facade source selection is exact to the retained cover mesh and material',
     {material: 'view.006', texture: null}), false);
 });
 
-test('facade partition selects outward near-vertical shell faces only', () => {
+test('facade partition excludes the low inner roof return and inward walls', () => {
   const positions = new Float32Array([
     10,38,0, 10,39,0, 10,38,1,
-    10,50,0, 10,50,1, 11,50,0,
+    10,48,0, 10,48,1, 11,48,0,
     10,38,0, 10,38,1, 10,39,0,
   ]);
   const result = splitFacadeTriangles(positions, new Uint32Array([0,1,2,3,4,5,6,7,8]));
@@ -91,14 +91,16 @@ test('facade partition selects outward near-vertical shell faces only', () => {
   assert.ok(Math.abs(uv[1] - (38 - 36.8) / (52.2 - 36.8)) < .00001);
 });
 
-test('facade includes the next sloped seam row but not the horizontal roof', () => {
+test('facade includes the sloped seam row and outer roof, not inner return or underside', () => {
   const positions = new Float32Array([
     100,51,0, 100,51,1, 99,51.3,0,
     100,52.18,0, 100,52.18,1, 99,52.18,0,
+    60,48,0, 60,48,1, 61,48,0,
+    100,51,0, 100,51,1, 101,51,0,
   ]);
-  const result = splitFacadeTriangles(positions, [0,2,1,3,4,5]);
-  assert.deepEqual(result.facadeIndices, [0,2,1]);
-  assert.deepEqual(result.remainingIndices, [3,4,5]);
+  const result = splitFacadeTriangles(positions, [0,2,1,3,5,4,6,7,8,9,11,10]);
+  assert.deepEqual(result.facadeIndices, [0,2,1,3,5,4]);
+  assert.deepEqual(result.remainingIndices, [6,7,8,9,11,10]);
 });
 
 test('Allianz photometric calibration preserves other stadiums and source values', () => {
