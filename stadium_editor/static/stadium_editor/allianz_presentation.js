@@ -1,6 +1,39 @@
 const ALLIANZ_SOURCE_SHA256 = '52c0d0916cc4e780bd9d3d4cc60363b134195125ce95cd7a34a87b2c4a48c0b3';
 const ALLIANZ_ASSET_VERSION = '7bc8ec0fcf20c166';
 const ALLIANZ_COVER_PATH_ID = '-2079065756245898804';
+const ALLIANZ_LOWER_WALLS = {
+  'back1_probe_notdemo_1.003': ['-3161811761645632254', 'st011_wall200.012'],
+  'front1_probe_notdemo_0.003': ['8201821662781557974', 'st011_wall200.013'],
+  'left1_probe_notdemo_0.003': ['5518027051101940911', 'st011_wall200.014'],
+  'right1_probe_notdemo_0.003': ['571637970219892290', 'st011_wall200.015'],
+};
+
+export function isConfirmedAllianzLowerFacade(entry, part) {
+  const source = ALLIANZ_LOWER_WALLS[entry?.name];
+  return Boolean(source && entry.pathId === source[0] &&
+    part?.material === source[1] && part.texture == null);
+}
+
+export function splitLowerFacadeTriangles(positions, indices) {
+  const facadeIndices = [], remainingIndices = [];
+  for (let i = 0; i < indices.length; i += 3) {
+    const [a,b,c] = indices.slice(i,i+3);
+    const ax=positions[a*3], ay=positions[a*3+1], az=positions[a*3+2];
+    const bx=positions[b*3]-ax, by=positions[b*3+1]-ay, bz=positions[b*3+2]-az;
+    const cx=positions[c*3]-ax, cy=positions[c*3+1]-ay, cz=positions[c*3+2]-az;
+    const nx=by*cz-bz*cy, ny=bz*cx-bx*cz, nz=bx*cy-by*cx;
+    const length=Math.hypot(nx,ny,nz);
+    const minY=Math.min(ay,positions[b*3+1],positions[c*3+1]);
+    const maxY=Math.max(ay,positions[b*3+1],positions[c*3+1]);
+    if (minY >= 29.1 && maxY <= 34.52 && length > 0 && Math.abs(ny/length) < .5) {
+      // These source walls have inward winding. Only their exterior should glow.
+      const radial=nx*(ax+positions[b*3]+positions[c*3]) +
+        nz*(az+positions[b*3+2]+positions[c*3+2]);
+      facadeIndices.push(...(radial < 0 ? [a,c,b] : [a,b,c]));
+    } else remainingIndices.push(a,b,c);
+  }
+  return {facadeIndices,remainingIndices};
+}
 
 export function supportsAllianzPresentation(presentation, manifest) {
   return presentation?.clubFmiId === 915 &&
@@ -33,7 +66,7 @@ export function sourceMaterialFinish(materialName) {
 
 export function splitFacadeTriangles(positions, indices, {
   minHeight = 36.8, maxHeight = 52.25, maxAbsNormalY = .97, minRadialFacing = .25,
-  roofBandMinHeight = 49.65,
+  roofBandMinHeight = 50.05,
 } = {}) {
   const facade = [], remaining = [];
   for (let i = 0; i < indices.length; i += 3) {
@@ -55,7 +88,7 @@ export function splitFacadeTriangles(positions, indices, {
     const exteriorWall = cy >= minHeight && cy <= maxHeight &&
       normalLength > 0 && Math.abs(ny / normalLength) <= maxAbsNormalY &&
       outward >= minRadialFacing;
-    // Follow the existing circumferential source ring (49.670 m), not the
+    // Follow the existing circumferential source ring (50.080 m), not the
     // hand-drawn image contour. The inner return and roof underside stay neutral.
     const exteriorRoof = normalLength > 0 && ny > 0 && cy <= maxHeight &&
       Math.min(ay, positions[ib + 1], positions[ic + 1]) >= roofBandMinHeight;

@@ -1,4 +1,4 @@
-import {mountUnityStadium} from './unity_stadium_scene.js?v=80';
+import {mountUnityStadium} from './unity_stadium_scene.js?v=82';
 
 const root = document.getElementById('allianzPilot');
 const host = document.getElementById('pilotStage');

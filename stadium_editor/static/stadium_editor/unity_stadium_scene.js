@@ -5,9 +5,10 @@ import {validateCalibration, standForCenter, tickerQuaternion} from './unity_cal
 import {mountBridgeHeightNotice} from './bridge_height_evidence.js?v=1';
 import {mountHeidenheimFloodlightVisuals} from './heidenheim_floodlight_visuals.js?v=2';
 import {
-  createTransitionController, isConfirmedAllianzFacadeMaterial, projectFacadeUv,
-  runtimeFixtureIntensity, sourceMaterialFinish, splitFacadeTriangles, supportsAllianzPresentation,
-} from './allianz_presentation.js?v=8';
+  createTransitionController, isConfirmedAllianzFacadeMaterial, isConfirmedAllianzLowerFacade,
+  projectFacadeUv, runtimeFixtureIntensity, sourceMaterialFinish, splitFacadeTriangles,
+  splitLowerFacadeTriangles, supportsAllianzPresentation,
+} from './allianz_presentation.js?v=10';
 
 /** Original source geometry, with its own club-scoped runtime presentation. */
 export async function mountUnityStadium({
@@ -193,16 +194,21 @@ export async function mountUnityStadium({
           material.metalness = sourceFinish.metalness;
           material.userData.sourceRole = sourceFinish.role;
         }
-        const isFacadeSource = allianz && isConfirmedAllianzFacadeMaterial(entry, part);
+        const isLowerFacade = allianz && isConfirmedAllianzLowerFacade(entry, part);
+        const isFacadeSource = isLowerFacade || (allianz && isConfirmedAllianzFacadeMaterial(entry, part));
         let facadeMaterial = null, facadeInteriorMaterial = null;
         if (isFacadeSource) {
-          material.roughness = .58;
-          material.metalness = .04;
+          if (!isLowerFacade) {
+            material.roughness = .58;
+            material.metalness = .04;
+          }
           facadeMaterial = material.clone();
           facadeMaterial.name = 'Allianz membrane · approximate seams';
-          facadeMaterial.color.set('#f4f5f1');
-          facadeMaterial.roughness = .4;
-          facadeMaterial.metalness = .08;
+          if (!isLowerFacade) {
+            facadeMaterial.color.set('#f4f5f1');
+            facadeMaterial.roughness = .4;
+            facadeMaterial.metalness = .08;
+          }
           facadeMaterial.side = THREE.FrontSide;
           facadeMaterial.map = facadeTexture;
           facadeMaterial.emissiveMap = facadeTexture;
@@ -212,8 +218,10 @@ export async function mountUnityStadium({
           facadeInteriorMaterial = material.clone();
           facadeInteriorMaterial.name = 'Allianz membrane · neutral interior';
           facadeInteriorMaterial.side = THREE.BackSide;
-          facadeInteriorMaterial.roughness = .58;
-          facadeInteriorMaterial.metalness = .04;
+          if (!isLowerFacade) {
+            facadeInteriorMaterial.roughness = .58;
+            facadeInteriorMaterial.metalness = .04;
+          }
           materials.push(facadeMaterial);
           materials.push(facadeInteriorMaterial);
           facadeMaterials.push(facadeMaterial);
@@ -230,8 +238,12 @@ export async function mountUnityStadium({
             indices.slice(i,i+3).every(index=>position[index*3+1]>=calibration.roofMinHeight);
           (isRoof ? roofIndices : bodyIndices).push(indices[i],indices[i+1],indices[i+2]);
         }
-        let roofGeometryIndices = roofIndices, facadeIndices = [];
-        if (isFacadeSource) {
+        let bodyGeometryIndices = bodyIndices, roofGeometryIndices = roofIndices, facadeIndices = [];
+        if (isLowerFacade) {
+          const split = splitLowerFacadeTriangles(position, bodyIndices);
+          facadeIndices = split.facadeIndices;
+          bodyGeometryIndices = split.remainingIndices;
+        } else if (isFacadeSource) {
           const split = splitFacadeTriangles(position, roofIndices);
           facadeIndices = split.facadeIndices;
           roofGeometryIndices = split.remainingIndices;
@@ -239,18 +251,19 @@ export async function mountUnityStadium({
         if (isFacadeSource && facadeIndices.length) {
           const geometry = new THREE.BufferGeometry();
           geometry.setAttribute('position',new THREE.BufferAttribute(position,3));
-          geometry.setAttribute('uv',new THREE.BufferAttribute(projectFacadeUv(position),2));
-          const shellIndices = [...bodyIndices,...roofGeometryIndices];
+          geometry.setAttribute('uv',new THREE.BufferAttribute(isLowerFacade
+            ? projectFacadeUv(position,29.1,34.52) : projectFacadeUv(position),2));
+          const shellIndices = [...bodyGeometryIndices,...roofGeometryIndices];
           geometry.setIndex([...shellIndices,...facadeIndices,...facadeIndices]);
           if (shellIndices.length) geometry.addGroup(0,shellIndices.length,0);
           geometry.addGroup(shellIndices.length,facadeIndices.length,1);
           geometry.addGroup(shellIndices.length + facadeIndices.length,facadeIndices.length,2);
           geometry.computeVertexNormals();
           const mesh = new THREE.Mesh(geometry,[material,facadeMaterial,facadeInteriorMaterial]);
-          mesh.name = `SOURCE_${entry.name}_roof`;
+          mesh.name = `SOURCE_${entry.name}_${isLowerFacade?'body':'roof'}`;
           mesh.userData.sourcePathId = entry.pathId;
           model.add(mesh); geometries.push(geometry);
-          roof.push(mesh);
+          if (!isLowerFacade) roof.push(mesh);
           if(entry.name.startsWith(calibration.crowdPrefix)) {
             geometry.computeBoundingBox();
             const center=geometry.boundingBox.getCenter(new THREE.Vector3());

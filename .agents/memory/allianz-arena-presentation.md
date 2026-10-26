@@ -52,12 +52,15 @@ Die Nacht-Abnahme umfasst ausdrücklich einen sichtbar beleuchteten Innenraum,
 nicht nur eine rote Außenhülle. Der rote Bereich soll über die äußere Dachfläche
 bis zur umlaufenden Naht nahe der Spielfeldöffnung reichen; nur der innere
 Dachrand bleibt grau. Die gelbe Handmarkierung ist exemplarisch, nicht maßgenau.
+Auch der untere umlaufende Fassadenstreifen soll nachts rot beleuchtet sein.
 
 **Why:** Der Nutzer korrigierte die erste Nachtvergleichsaufnahme: „Außenbeleuchtung
 rechts würde ich noch einen Strich weiter zeihen, sodass das Grau etwas geringer
 ausfällt. Und die Innenbeleuchtung fehlt aber noch komplett ?!“
 Anschließend präzisierte er anhand seiner Markierung: „Das Rot bitte bis zu der
 markierten Linie. Die ist nur exemplarisch und nicht genua gezeichnet.“
+Zum unteren Abschluss ergänzte er: „der untere Rand des Stadions wird auch nicht
+rot beleuchtet“.
 
 **How to apply:** Nachtvergleiche mit eingeschaltetem Flutlicht und zusätzlich
 aus Sitzperspektive prüfen. Der Flutlichtschalter bleibt unabhängig von Tag/Nacht;

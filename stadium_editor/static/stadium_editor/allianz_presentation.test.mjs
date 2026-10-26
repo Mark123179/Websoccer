@@ -4,11 +4,13 @@ import {
   createTransitionController,
   interpolate,
   isConfirmedAllianzFacadeMaterial,
+  isConfirmedAllianzLowerFacade,
   projectFacadeUv,
   runtimeFixtureIntensity,
   smoothstep,
   sourceMaterialFinish,
   splitFacadeTriangles,
+  splitLowerFacadeTriangles,
   supportsAllianzPresentation,
 } from './allianz_presentation.js';
 
@@ -110,10 +112,10 @@ test('Allianz photometric calibration preserves other stadiums and source values
   assert.deepEqual(fixture, {intensity:25, representedIds:['a','b','c','d']});
 });
 
-test('the innermost formerly red roof row remains neutral after the fine adjustment', () => {
+test('the grey inner roof return extends to the next circumferential source ring', () => {
   const positions = new Float32Array([
-    59,49.24,0, 59,49.24,1, 62,49.67,0,
     62,49.67,0, 62,49.67,1, 65,50.08,0,
+    65,50.08,0, 65,50.08,1, 68,50.5,0,
   ]);
   const result = splitFacadeTriangles(positions, [0,1,2,3,4,5]);
   assert.deepEqual(result.remainingIndices, [0,1,2]);
@@ -127,6 +129,26 @@ test('interior material treatments follow source steel-frame and wall names only
     {role: 'wall', roughness: .92, metalness: 0});
   assert.equal(sourceMaterialFinish('st011_star002.079'), null);
   assert.equal(sourceMaterialFinish('st011_vnyl101.002'), null);
+});
+
+test('lower facade is limited to the confirmed untextured perimeter wall source', () => {
+  const entry = {name:'back1_probe_notdemo_1.003',pathId:'-3161811761645632254'};
+  const part = {material:'st011_wall200.012',texture:null};
+  assert.equal(isConfirmedAllianzLowerFacade(entry,part),true);
+  assert.equal(isConfirmedAllianzLowerFacade({...entry,pathId:'wrong'},part),false);
+  assert.equal(isConfirmedAllianzLowerFacade(entry,{...part,texture:'concrete.webp'}),false);
+  assert.equal(isConfirmedAllianzLowerFacade({name:'back3_0.003'},part),false);
+});
+
+test('lower facade lights the upper perimeter only, with exterior-facing winding', () => {
+  const positions = new Float32Array([
+    100,29.108,0, 100,29.108,1, 100,34.508,0,
+    100,15,0, 100,15,1, 100,29.108,0,
+    100,34.508,0, 100,34.508,1, 101,34.508,0,
+  ]);
+  const split = splitLowerFacadeTriangles(positions,[0,1,2,3,4,5,6,7,8]);
+  assert.deepEqual(split.facadeIndices,[0,2,1]);
+  assert.deepEqual(split.remainingIndices,[3,4,5,6,7,8]);
 });
 
 test('presentation support is exact to source and club; other clubs are a no-op', () => {
