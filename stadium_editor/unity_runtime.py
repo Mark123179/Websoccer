@@ -22,8 +22,9 @@ def unity_presentation(stadium, geometry, design, manifest):
         "calibration": deepcopy(manifest["calibration"]),
     })
     presentation["surroundings"].setdefault("heightQuality", "schematic")
-    if fmi == 915:
-        from .seat_design import source_seat_design
-        presentation["seatDesign"] = source_seat_design(geometry, design)
-        presentation["designColors"] = {}
+    # Per-seat design is shared by all registered source models. Do not tint an
+    # original texture or reinterpret synthetic default RLE as a saved draft.
+    from .seat_design import source_seat_design
+    presentation["seatDesign"] = source_seat_design(geometry, design)
+    presentation["designColors"] = {}
     return presentation

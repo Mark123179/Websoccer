@@ -31,7 +31,7 @@ function fixture() {
   const context = vm.createContext({
     EDITOR: {unityScene: true, sourceSeats: true},
     view: '2d', D: {}, stageThree: null, stageScene: null, stageAdapter: null,
-    stageUpdateTimer: 0, roofOn: true, isDortmundScene: false,
+    stageUpdateTimer: 0, roofOn: true, isDortmundScene: false, seatDesignMode: 'custom',
     seatDesignDraft: () => ({mode: 'custom', blocks: [{id: 1, rle: [3]}]}),
     showSeatStatus() {}, toast: message => errors.push(message),
     renderBase() {}, renderBlocks() {}, renderOverlay() {},

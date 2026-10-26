@@ -2,8 +2,19 @@
 (function(root) {
   'use strict';
   const cache = new Map();
-  const tierOf = name => ({1:'UNTER',2:'MITTEL',3:'OBER'})[
-    /^C_(?:back|front|left|right)([123])_/.exec(name)?.[1]];
+  const tierOf = name => {
+    const explicit=/^C_(?:back|front|left|right)([123])_/.exec(name)?.[1] ||
+      /(?:tier|rang|level|deck)[_-]?([123])/i.exec(name)?.[1];
+    return ({1:'UNTER',2:'MITTEL',3:'OBER'})[explicit];
+  };
+  function tierAtHeight(height, minHeight, maxHeight) {
+    if(!Number.isFinite(height)||!Number.isFinite(minHeight)||!Number.isFinite(maxHeight))
+      return 'UNTER';
+    const span=maxHeight-minHeight;
+    if(span<1e-5)return 'UNTER';
+    const ratio=(height-minHeight)/span;
+    return ratio<.34 ? 'UNTER' : ratio<.68 ? 'MITTEL' : 'OBER';
+  }
   const cell = (x,z) => `${Math.floor(x/1.5)},${Math.floor(z/1.5)}`;
   function nativePoint(point, frame, axes={NORD:'+z',WEST:'-x'}) {
     const [cx,cy]=frame.fieldC || [0,0], a=frame.axisTheta || 0;
@@ -187,5 +198,5 @@
     });
     return {rgb,mapped,total,maxDistance};
   }
-  root.StadiumSourceSeats={tierOf,nativePoint,quadPoint,quadUV,decode,registration,sourceIndex,load,originalColors,warp};
+  root.StadiumSourceSeats={tierOf,tierAtHeight,nativePoint,quadPoint,quadUV,decode,registration,sourceIndex,load,originalColors,warp};
 })(globalThis);

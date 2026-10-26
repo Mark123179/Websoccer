@@ -70,7 +70,10 @@ let view = '2d', yaw3d = 0, tilt3d = 54, roofOn = true, dotMode = true;
 let stageAdapter = null, stageThree = null, stageScene = null, stageUpdateTimer = 0;
 let seatDesignMode='original', sourceSeatColors=null;
 let sourceSeatIds=null;
+let originalSeatData=[];
+let originalSeatPalette=null;
 let originalSeatStatus='Originalzuordnung wird geladen …';
+const seatModeHelpers=window.StadiumSeatDesignModes;
 function showSeatStatus(){
   const status=document.getElementById('seatSourceStatus');
   if(status){
@@ -90,9 +93,13 @@ function syncSeatMode(){
 }
 function refreshSeatMode(){
   syncSeatMode();
+  if(!EDITOR.sourceSeats && seatDesignMode==='original')
+    originalSeatStatus='Originalstandard · Grundbelegung der Blaupause; keine Quelltextur-Projektion belegt.';
+  else if(!EDITOR.sourceSeats)
+    originalSeatStatus='Eigener Entwurf · Farben werden auf die erfassten Sitzflächen projiziert, soweit das Modell eine Zuordnung trägt.';
   showSeatStatus();
   blocks.forEach((_,i)=>updateTexture(i));
-  fillPreviewCache.clear();renderAll();
+  fillPreviewCache.clear();renderAll();scheduleStageDesignUpdate();
 }
 async function loadOriginalSeats(){
   if(!EDITOR.sourceSeats)return;
@@ -108,6 +115,32 @@ async function loadOriginalSeats(){
     originalSeatStatus=`Originaltexturen · ${percent} % Rasterpunkte zugeordnet. Graue Punkte ohne Quelltreffer sind nicht originalbelegt. Zuordnung im vorhandenen Editorraster, keine vermessenen Einzelsitze.`;
     refreshSeatMode();
   }catch(error){originalSeatStatus=error.message;showSeatStatus();toast(error.message);}
+}
+function decodeOriginalDesign(originalDesign){
+  const palette=originalDesign?.palette;
+  originalSeatPalette=Array.isArray(palette) ? palette : null;
+  const canonicalBlocks=Array.isArray(originalDesign) ? originalDesign : originalDesign?.blocks;
+  const byId=new Map((canonicalBlocks || []).map(block=>[Number(block.id ?? block.sourceId),block]));
+  return blocks.map(block=>{
+    const source=byId.get(Number(block.sourceId));
+    const values=new Uint8Array(block.rows*block.seats);
+    if(Array.isArray(source?.values)){
+      values.set(source.values.slice(0,values.length).map(value=>
+        Number.isInteger(Number(value)) ? Math.max(0,Number(value)) : 0));
+    }else{
+      let cursor=0;
+      for(const pair of source?.rle || []){
+        const count=Math.max(0,Number(pair?.[0])||0), color=Math.max(0,Number(pair?.[1])||0);
+        values.fill(color,cursor,Math.min(values.length,cursor+count));
+        cursor+=count;if(cursor>=values.length)break;
+      }
+    }
+    return values;
+  });
+}
+function displayedSeatIndex(blockIndex, seatIndex){
+  if(seatDesignMode!=='original')return seatData[blockIndex][seatIndex];
+  return originalSeatData[blockIndex]?.[seatIndex] ?? 0;
 }
 const isDortmundScene = Boolean(EDITOR.dortmundScene);
 let dortmundFullConcept = false;
@@ -295,7 +328,7 @@ function restoreSavedDesign(savedDesign){
     }
   }
 }
-function initStadium(stadium, savedDesign){
+function initStadium(stadium, savedDesign, liveScene={}){
   D = stadium;
   blocks = D.blocks.map(renderableBlock);
   const officialSelect = document.getElementById('officialBlockSelect');
@@ -324,8 +357,9 @@ function initStadium(stadium, savedDesign){
   seatData = blocks.map(b => new Uint8Array(b.rows * b.seats));
   baseData = blocks.map(b => new Uint8Array(b.rows * b.seats));
   restoreSavedDesign(savedDesign);
-  if(EDITOR.sourceSeats){
-    seatDesignMode=savedDesign.seat_mode || (savedDesign.blocks?.length ? 'custom' : 'original');
+  originalSeatData=decodeOriginalDesign(liveScene.originalDesign || D.originalDesign);
+  if(EDITOR.seatModes){
+    seatDesignMode=seatModeHelpers.inferMode(savedDesign,liveScene.seatMode);
     syncSeatMode();
   }
   baseData = seatData.map(data => data.slice());
@@ -369,7 +403,13 @@ function updateTexture(i){
     const ci = isRenderableSeat(b, r, s) ? data[r*b.seats+s] : 0;
     const original=EDITOR.sourceSeats && seatDesignMode==='original' &&
       sourceSeatIds?.[i]===b.sourceId && sourceSeatColors?.[i];
-    const [R,G,Bc] = original ? original.subarray((r*b.seats+s)*3,(r*b.seats+s)*3+3) : PAL_RGB[ci];
+    const canonical=seatDesignMode==='original' && originalSeatData[i];
+    const canonicalIndex=canonical ? canonical[r*b.seats+s] : ci;
+    const canonicalHex=originalSeatPalette?.[canonicalIndex];
+    const canonicalRgb=typeof canonicalHex==='string' && /^#[0-9a-f]{6}$/i.test(canonicalHex)
+      ? [parseInt(canonicalHex.slice(1,3),16),parseInt(canonicalHex.slice(3,5),16),
+        parseInt(canonicalHex.slice(5,7),16)] : PAL_RGB[canonicalIndex] || PAL_RGB[0];
+    const [R,G,Bc] = original ? original.subarray((r*b.seats+s)*3,(r*b.seats+s)*3+3) : canonicalRgb;
     const o = ((b.rows-1-r)*b.seats + s)*4;       // Zeile 0 (innen) unten im Bild
     img.data[o]=R; img.data[o+1]=G; img.data[o+2]=Bc; img.data[o+3]=255;
   }
@@ -413,7 +453,7 @@ function invAffine(t0,t1,t2, s0,s1,s2){
 
 /* Jeder Sitz als Einzelpunkt — der Kartenchoreo-Look */
 function drawBlockDots(ctx, i, proj){
-  const b = blocks[i], d = seatData[i];
+  const b = blocks[i];
   const P00 = proj(0,0), P10 = proj(1,0), P01 = proj(0,1);
   const dw = Math.hypot(P10[0]-P00[0], P10[1]-P00[1]) / b.seats;
   const dh = Math.hypot(P01[0]-P00[0], P01[1]-P00[1]) / b.rows;
@@ -428,14 +468,18 @@ function drawBlockDots(ctx, i, proj){
     const v = (r+.5)/b.rows;
     for(let s=0;s<b.seats;s++){
       if(!isRenderableSeat(b, r, s)) continue;
-      const ci = d[r*b.seats+s];
+      const ci = displayedSeatIndex(i,r*b.seats+s);
       const p = proj((s+.5)/b.seats, v);
       const original=EDITOR.sourceSeats && seatDesignMode==='original' &&
         sourceSeatIds?.[i]===b.sourceId && sourceSeatColors?.[i];
       if(original){
         const at=(r*b.seats+s)*3;
         ctx.fillStyle=`rgb(${original[at]},${original[at+1]},${original[at+2]})`;
-      }else if(ci!==last){ ctx.fillStyle = ci===0 ? 'rgba(96,106,116,.8)' : PALETTE[ci][0]; last=ci; }
+      }else if(ci!==last){
+        const canonical=seatDesignMode==='original'&&originalSeatPalette?.[ci];
+        ctx.fillStyle = ci===0 ? 'rgba(96,106,116,.8)' : (canonical || PALETTE[ci]?.[0] || PALETTE[0][0]);
+        last=ci;
+      }
       ctx.fillRect(p[0]-h, p[1]-h, dot, dot);
     }
   }
@@ -1375,23 +1419,12 @@ function updateDortmundStage(){
   import(editorModuleUrl('./dortmund_concept.js')).then(({conceptWeights}) => {
     if(!stageThree || view!=='3d') return;
     const weights = conceptWeights(blocks, baseline, dortmundFullConcept);
-    const designColors = {};
-    for(const stand of ['NORD','SUED','OST','WEST']){
-      const counts = new Map();
-      blocks.forEach((block,i) => {
-        if(block.stand!==stand) return;
-        for(const color of seatData[i] || []){
-          if(color) counts.set(color,(counts.get(color) || 0)+1);
-        }
-      });
-      const top = [...counts].sort((a,b)=>b[1]-a[1])[0];
-      if(top) designColors[stand] = PALETTE[top[0]]?.[0];
-    }
     stageThree.update({
-      weights, designColors, roofVisible: roofOn, fullConcept: dortmundFullConcept,
+      weights, seatDesign:seatDesignDraft(), seatMode:seatDesignMode,
+      roofVisible: roofOn, fullConcept: dortmundFullConcept,
       day: Boolean(document.getElementById('stageDay')?.checked),
       floodlight: Boolean(document.getElementById('stageFloodlight')?.checked),
-    }).then(applyGrassToStage).catch(showGrassError);
+    }).then(()=>{showSeatStatus();return applyGrassToStage();}).catch(showGrassError);
     const delta = Math.max(0, previewCapacity() - baseDisplayCapacity);
     const label = document.getElementById('deSceneData');
     if(label) label.textContent = dortmundFullConcept
@@ -1423,9 +1456,10 @@ function showDortmundSceneError(error){
   if(fallback) fallback.hidden = false;
 }
 function scheduleStageDesignUpdate(){
-  if(EDITOR.sourceSeats){
+  if(EDITOR.unityScene){
     if(stageThree)stageThree.update({
       seatDesign:seatDesignDraft(),
+      seatMode:seatDesignMode,
       roofVisible:roofOn,
       day:Boolean(document.getElementById('stageDay')?.checked),
       floodlight:Boolean(document.getElementById('stageFloodlight')?.checked),
@@ -1444,11 +1478,14 @@ function scheduleStageDesignUpdate(){
   clearTimeout(stageUpdateTimer);
   stageUpdateTimer = setTimeout(()=>{
     import(STADIUM_STAGE_ADAPTER_URL).then(({applyEditorDesign})=>{
+      const visibleSeatData=seatDesignMode==='original' ? originalSeatData : seatData;
+      const visiblePalette=seatDesignMode==='original' ? originalSeatPalette || PALETTE : PALETTE;
       const scene = applyEditorDesign(
-        stageScene, blocks, seatData, PALETTE, D, previewCapacity(), previewRoofs());
+        stageScene, blocks, visibleSeatData, visiblePalette, D, previewCapacity(), previewRoofs());
       if(!roofOn) scene.roof = {mode:'explicit', segments:[]};
       stageThree.update({
         scene,
+        designMode:seatDesignMode,
         roofVisible: roofOn,
         camera: document.getElementById('stageCamera')?.value || 'orbit',
         day: Boolean(document.getElementById('stageDay')?.checked),
@@ -1501,6 +1538,7 @@ async function ensureThreeStage(){
           day:Boolean(document.getElementById('stageDay')?.checked),
           floodlight:Boolean(document.getElementById('stageFloodlight')?.checked),
           roofVisible:roofOn,
+          seatMode:stageScene.seatMode,
         },
         onOrbitChange:orbit=>{
           yaw3d=orbit.azimuth;tilt3d=90-orbit.elevation;
@@ -1509,8 +1547,8 @@ async function ensureThreeStage(){
         }});
       stageAdapter=mounted;stageThree=mounted;
       activateThreeStage();
-      if(EDITOR.sourceSeats){
-        await mounted.update({seatDesign:seatDesignDraft()});
+      if(EDITOR.seatModes){
+        await mounted.update({seatDesign:seatDesignDraft(),seatMode:seatDesignMode});
         showSeatStatus();
       }
       mounted.update({day:Boolean(document.getElementById('stageDay')?.checked),
@@ -1531,6 +1569,11 @@ async function ensureThreeStage(){
         runtimeLighting: true,
         onStatus: text => { const node = document.getElementById('deSceneStatus'); if(node) node.textContent = text; },
       });
+      await mounted.update({
+        seatDesign:seatDesignDraft(),seatMode:seatDesignMode,roofVisible:roofOn,
+        day:Boolean(document.getElementById('stageDay')?.checked),
+        floodlight:Boolean(document.getElementById('stageFloodlight')?.checked),
+      });
       stageAdapter = mounted;
       stageThree = mounted;
       document.getElementById('deSceneFallback').hidden = true;
@@ -1543,8 +1586,10 @@ async function ensureThreeStage(){
     const response = await fetch(EDITOR.liveSceneUrl, {credentials:'same-origin'});
     if(!response.ok) throw new Error('Live Scene konnte nicht geladen werden.');
     stageScene = await response.json();
+    const visibleSeatData=seatDesignMode==='original' ? originalSeatData : seatData;
+    const visiblePalette=seatDesignMode==='original' ? originalSeatPalette || PALETTE : PALETTE;
     const initialScene = applyEditorDesign(
-      stageScene, blocks, seatData, PALETTE, D, previewCapacity(), previewRoofs());
+      stageScene, blocks, visibleSeatData, visiblePalette, D, previewCapacity(), previewRoofs());
     const mounted = await mountStadiumStage({
       element: host, scene: initialScene, mode: 'editor', camera: 'orbit',
       day: false,
@@ -2193,6 +2238,7 @@ function addNewTier(refBlocks, seatType, rows, totalCapacity){
   return created;
 }
 function expandStand(stand, seatType, amount){
+  if(!EDITOR.isAdmin) return toast('Der Ausbau-Simulator ist nur für Admins verfügbar.'),0;
   amount = Math.floor(Number(amount) || 0);
   if(amount < MIN_EXPANSION_SEATS){
     toast('Ein Ausbau muss mindestens 1.000 Plätze umfassen.');
@@ -2329,7 +2375,7 @@ async function exportDesign(){
         rows:shape.rows, seats:shape.seats, rle
       }];
     })};
-  if(EDITOR.sourceSeats)out.seat_mode=seatDesignMode;
+  if(EDITOR.seatModes)out.seat_mode=seatDesignMode;
   const button = document.getElementById('btnSave');
   button.disabled = true;
   setEditorSaveState('Speichert …');
@@ -2441,7 +2487,7 @@ document.getElementById('btnErase').onclick = ()=>{
 };
 
 document.getElementById('seatDesignMode')?.addEventListener('change',event=>{
-  snapshotFull();seatDesignMode=event.target.value;refreshSeatMode();
+  snapshotFull();seatDesignMode=seatModeHelpers.switchMode({mode:seatDesignMode},event.target.value).mode;refreshSeatMode();
   toast('Ansicht gewechselt. Eigener Entwurf bleibt erhalten; zum Übernehmen speichern.');
 });
 document.getElementById('clearSeatDesign')?.addEventListener('click',()=>{
@@ -2452,7 +2498,7 @@ document.getElementById('clearSeatDesign')?.addEventListener('click',()=>{
 });
 for(const id of ['btnPress','btnErase']){
   document.getElementById(id).addEventListener('click',event=>{
-    if(EDITOR.sourceSeats && seatDesignMode==='original'){
+    if(EDITOR.seatModes && seatDesignMode==='original'){
       event.stopImmediatePropagation();event.preventDefault();
       toast('Zum Bemalen zuerst „Eigener Entwurf“ wählen. Das Original bleibt unverändert.');
     }
@@ -2660,19 +2706,27 @@ if(window.ResizeObserver){
 }
 (async function boot(){
   try{
-    const [geometryResponse, designResponse] = await Promise.all([
+    const [geometryResponse, designResponse, sceneResponse] = await Promise.all([
       fetch(EDITOR.geometryUrl, {credentials:'same-origin'}),
       fetch(EDITOR.designUrl, {credentials:'same-origin'}),
+      fetch(EDITOR.liveSceneUrl, {credentials:'same-origin'}).catch(()=>null),
     ]);
     const geometry = await geometryResponse.json();
     if(!geometryResponse.ok) throw new Error(geometry.error || 'Geometrie konnte nicht geladen werden.');
     if(!designResponse.ok) throw new Error('Gespeicherter Entwurf konnte nicht geladen werden.');
     const design = await designResponse.json();
+    let liveScene={};
+    if(sceneResponse?.ok){
+      const livePayload=await sceneResponse.json();
+      liveScene=livePayload.presentation ? livePayload : livePayload.scene || livePayload;
+      EDITOR.liveScene=liveScene;
+    }
     const {createGrassDraft}=await import(editorModuleUrl('./grass_editor.js'));
     grassDraft=createGrassDraft(design.grass_variant || 'bestand');
     syncGrassControls();
     document.getElementById('grassVariant').disabled=false;
-    initStadium(geometry, design);
+    initStadium(geometry, design, liveScene);
+    refreshSeatMode();
     loadOriginalSeats();
     if(geometry.surroundings?.warning) toast(geometry.surroundings.warning);
     buildPaletteUI(); syncPal(); resize();

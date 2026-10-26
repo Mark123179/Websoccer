@@ -6,6 +6,7 @@ from .models import StadiumDesign, StadiumGeometry
 from .capacity import distribute_capacities
 from .contracts import geometry_blocks
 from .model_registry import model_manifest
+from .seat_design import seat_mode
 
 
 def current_live_scene(stadium):
@@ -14,22 +15,25 @@ def current_live_scene(stadium):
     if row.steckbrief:
         geometry["steckbrief"] = deepcopy(row.steckbrief)
     design = StadiumDesign.objects.filter(stadium=stadium).first()
-    if design is not None:
-        payload = design.design
-    else:
-        effective = distribute_capacities(stadium, geometry)
-        trusted = {block["id"]: block for block in geometry_blocks(effective)}
-        for position, block in enumerate(effective["blocks"]):
-            block.update(trusted[block.get("id", position)])
-        payload = standard_design_for_geometry(stadium, effective)
+    effective = distribute_capacities(stadium, geometry)
+    trusted = {block["id"]: block for block in geometry_blocks(effective)}
+    for position, block in enumerate(effective["blocks"]):
+        block.update(trusted[block.get("id", position)])
+    original = standard_design_for_geometry(stadium, effective)
+    saved = deepcopy(design.design) if design is not None else {}
+    mode = seat_mode(saved)
+    payload = saved if mode == "custom" else deepcopy(original)
+    if mode == "original" and "grass_variant" in saved:
+        payload["grass_variant"] = saved["grass_variant"]
     scene = build_live_scene(stadium, geometry, payload)
+    scene["seatMode"] = mode
+    scene["originalDesign"] = original
     if stadium.club.fm_inside_id == 907:
         from .dortmund_runtime import runtime_presentation
-        scene["presentation"] = runtime_presentation(stadium, geometry, payload)
+        from .seat_design import source_seat_design
+        scene["presentation"] = runtime_presentation(stadium, geometry, saved)
+        scene["presentation"]["seatDesign"] = source_seat_design(geometry, saved)
     elif (manifest := model_manifest(stadium.club.fm_inside_id)) is not None:
         from .unity_runtime import unity_presentation
-        # The approved Allianz source seats must not be recoloured by a synthetic
-        # fallback design. Explicitly saved manager designs still take precedence.
-        presentation_design = {} if stadium.club.fm_inside_id == 915 and design is None else payload
-        scene["presentation"] = unity_presentation(stadium, geometry, presentation_design, manifest)
+        scene["presentation"] = unity_presentation(stadium, geometry, saved, manifest)
     return scene

@@ -42,7 +42,9 @@ class AllianzRolloutTests(SimpleTestCase):
                      patch("stadium_editor.unity_runtime.unity_presentation", return_value={}) as build:
                     designs.return_value.first.return_value = design
                     scene_service.current_live_scene(stadium)
-                    self.assertEqual(build.call_args.args[2], expected)
+                # Source-backed clubs without saved paint all start with the
+                # real original, never with a synthetic fallback recolouring.
+                self.assertEqual(build.call_args.args[2], design.design if design is not None else {})
 
     def test_activation_is_dry_run_by_default(self):
         with patch("stadium_editor.management.commands.activate_allianz_presentation.model_manifest",

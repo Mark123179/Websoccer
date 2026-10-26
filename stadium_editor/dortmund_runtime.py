@@ -6,6 +6,8 @@ from .surroundings_data import project_surroundings
 
 
 def runtime_presentation(stadium, geometry, design):
+    from .seat_design import seat_mode
+    mode = seat_mode(design)
     enriched = with_dortmund_mapped_trees(deepcopy(geometry), club_id=stadium.club_id)
     surroundings, _ = project_surroundings(enriched)
     palette = design.get("palette") or []
@@ -23,9 +25,10 @@ def runtime_presentation(stadium, geometry, design):
         "renderer": "dortmund-spatial",
         "frame": deepcopy(enriched.get("meta") or {}),
         "surroundings": surroundings,
+        "seatMode": mode,
         "designColors": {
             stand: palette[max(colors, key=colors.get)]
             for stand, colors in totals.items() if colors
-        },
+        } if mode == "custom" else {},
         "capacity": stadium.capacity_total,
     }

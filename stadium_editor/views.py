@@ -52,9 +52,11 @@ def _geometry_payload(stadium, geometry):
             # V2 exports intentionally collapse MITTEL to OBER; the source
             # model has three distinct seating tiers and cannot use that alias.
             block['tier'] = geometry['blocks'][position]['tier']
-    return with_editor_surroundings(
+    payload = with_editor_surroundings(
         with_dortmund_mapped_trees(payload, club_id=stadium.club_id), stadium.club,
     )
+    payload['originalDesign'] = standard_design_for_geometry(stadium, payload)
+    return payload
 
 
 @login_required(login_url='/auth/login/')
@@ -82,6 +84,7 @@ def stadium_editor(request):
         'is_dortmund_editor': stadium.club.fm_inside_id == 907,
         'is_unity_editor': model_manifest(stadium.club.fm_inside_id) is not None,
         'is_source_seat_editor': stadium.club.fm_inside_id == 915,
+        'is_seat_mode_editor': True,
         'preview_capacity_limit': max_kapazitaet() if stadium.club.fm_inside_id == 907 else 150000,
         'pending_expansions': pending_expansions,
         'completed_expansion_count': StadiumExpansion.objects.filter(
@@ -149,8 +152,6 @@ def stadium_editor_save_design(request):
         if not isinstance(payload, dict):
             raise ValueError
         previous = StadiumDesign.objects.filter(stadium=stadium).first()
-        if 'seat_mode' in payload and stadium.club.fm_inside_id != 915:
-            raise ValueError('Originalbemalung ist für dieses Stadion noch nicht zugeordnet.')
         if 'seat_mode' not in payload and previous and 'seat_mode' in previous.design:
             payload['seat_mode'] = previous.design['seat_mode']
         # An older open editor tab must not erase a choice it cannot display.

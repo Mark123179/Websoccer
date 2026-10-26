@@ -7,6 +7,14 @@ const seats=globalThis.StadiumSourceSeats;
 const frame={fieldC:[0,0],axisTheta:0};
 const axes={NORD:'+z',WEST:'-x'};
 
+test('generic tier fallback follows calibrated model height rather than club mesh names',()=>{
+  assert.equal(seats.tierOf('C_back1_block'),'UNTER');
+  assert.equal(seats.tierOf('east_tier3_surface'),'OBER');
+  assert.equal(seats.tierAtHeight(2,0,10),'UNTER');
+  assert.equal(seats.tierAtHeight(5,0,10),'MITTEL');
+  assert.equal(seats.tierAtHeight(9,0,10),'OBER');
+});
+
 test('native/editor registration is reversible and keeps separate tiers',()=>{
   const blocks=['UNTER','MITTEL','OBER'].map((tier,i)=>({
     id:i,tier,rows:2,seats:4,quad:[[7,15],[13,15],[13,10],[7,10]],

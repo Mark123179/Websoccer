@@ -1,5 +1,6 @@
 import * as THREE from './stage/vendor/three.module.js';
-import './source_seats.js?v=2';
+import './source_seats.js?v=3';
+import './seat_design_modes.js?v=1';
 import {applyStudyCamera} from './study_camera.js?v=3';
 import {buildDortmundSurroundings} from './dortmund_surroundings.js?v=58';
 import {validateCalibration, standForCenter, tickerQuaternion} from './unity_calibration.js?v=2';
@@ -26,8 +27,6 @@ export async function mountUnityStadium({
     throw new Error('Modellquelle gehört nicht zum gewählten Verein.');
   const calibration = validateCalibration(manifest.calibration);
   const allianz = supportsAllianzPresentation(presentation, manifest);
-  if(presentation.seatDesign && !allianz)
-    throw new Error('FCB-Sitzbemalung passt nicht zum freigegebenen Originalmodell.');
   const base = new URL('.', new URL(presentation.modelUrl, location.href));
   const seatSource = allianz ? await globalThis.StadiumSourceSeats.load(presentation) : null;
   let buffer;
@@ -402,40 +401,57 @@ export async function mountUnityStadium({
     controls.addEventListener('pointerdown',down);controls.addEventListener('pointermove',move);
     controls.addEventListener('pointerup',up);controls.addEventListener('pointercancel',up);
     controls.addEventListener('wheel',wheel,{passive:false});
-    let seatGeometryKey=null, seatSourceRing=null;
+    let seatSourceRing=null;
     let seatCoverage=null;
     // The source footprint and schematic 2D blueprint have different radial
     // extents. Both directions use the same source-derived registration.
     if(allianz)seatSourceRing=seatSource.index.ring;
-    const applySeatDesign = design => {
-      if(!allianz || !design)return;
-      const custom=design.mode==='custom';
+    for(const mesh of crowd){
+      const source=mesh.material;
+      mesh.material=source.clone();
+      materials.push(mesh.material);
+      mesh.userData.seatSourceMaterial=globalThis.StadiumSeatDesignModes.captureMaterial(mesh.material);
+      mesh.userData.sourceColor=mesh.material.color.clone();
+    }
+    const applySeatDesign = (design, modeOverride) => {
+      if(!design)return;
+      const custom=(modeOverride || design.mode)==='custom';
       const blocks=(design.blocks || []).map((b,i)=>({...b,_index:i}));
       const key=JSON.stringify(blocks.map(b=>[b.id,b.quad,b.rows,b.seats]));
       const registration=custom ? globalThis.StadiumSourceSeats.registration(
-        blocks,presentation.frame,calibration.surroundingsAxes) : null;
+        blocks,presentation.frame,calibration.surroundingsAxes || Object.fromEntries(
+          Object.entries(calibration.standAxes).filter(([,stand])=>stand==='NORD'||stand==='WEST')
+            .map(([axis,stand])=>[stand,axis]))) : null;
       const palette=(design.palette || []).map(hex=>new THREE.Color(hex));
       const neutral=new THREE.Color('#606a74');
+      const heights=crowd.map(mesh=>{
+        mesh.geometry.computeBoundingBox();
+        return mesh.geometry.boundingBox?.getCenter(new THREE.Vector3()).y ?? 0;
+      });
+      const minHeight=Math.min(...heights),maxHeight=Math.max(...heights);
       let covered=0,total=0;
-      for(const mesh of crowd) {
+      for(let meshIndex=0;meshIndex<crowd.length;meshIndex++) {
+        const mesh=crowd[meshIndex];
         const material=mesh.material;
-        if(!Object.hasOwn(mesh.userData,'sourceMap'))mesh.userData.sourceMap=material.map;
-        const changed=material.vertexColors!==custom;
-        material.map=custom ? null : mesh.userData.sourceMap;
-        material.vertexColors=custom;
-        material.color.copy(custom ? new THREE.Color('#ffffff') : mesh.userData.sourceColor);
+        globalThis.StadiumSeatDesignModes.setMaterialMode(
+          material,mesh.userData.seatSourceMaterial,custom?'custom':'original');
         if(custom) {
           const positions=mesh.geometry.getAttribute('position');
-          if(!mesh.userData.seatAddresses || key!==seatGeometryKey) {
+          if(!mesh.userData.seatAddresses || mesh.userData.seatAddressKey!==key) {
             const addresses=new Int32Array(positions.count*2).fill(-1);
-            const tier=globalThis.StadiumSourceSeats.tierOf(mesh.name.replace(/^SOURCE_/,''));
+            const centerHeight=heights[meshIndex];
+            const tier=globalThis.StadiumSourceSeats.tierOf(mesh.name.replace(/^SOURCE_/,''))
+              || globalThis.StadiumSourceSeats.tierAtHeight(centerHeight,minHeight,maxHeight);
             for(let i=0;i<positions.count;i++){
-              const point=globalThis.StadiumSourceSeats.warp(
-                [positions.getX(i),positions.getZ(i)],tier,seatSourceRing,registration.ring);
-              const hit=point && registration.lookup(...point,tier);
+              const point=[positions.getX(i),positions.getZ(i)];
+              const mapped=seatSourceRing
+                ? globalThis.StadiumSourceSeats.warp(point,tier,seatSourceRing,registration.ring)
+                : point;
+              const hit=mapped && registration.lookup(...mapped,tier);
               if(hit){addresses[i*2]=hit.block._index;addresses[i*2+1]=hit.index;}
             }
             mesh.userData.seatAddresses=addresses;
+            mesh.userData.seatAddressKey=key;
           }
           let colors=mesh.geometry.getAttribute('color');
           if(!colors){colors=new THREE.BufferAttribute(new Float32Array(positions.count*3),3);mesh.geometry.setAttribute('color',colors);}
@@ -450,10 +466,8 @@ export async function mountUnityStadium({
           }
           colors.needsUpdate=true;
         }
-        if(changed)material.needsUpdate=true;
       }
-      if(custom)seatCoverage={covered,total};
-      seatGeometryKey=key;
+      seatCoverage=custom?{covered,total}:null;
     };
     const update = async (next={})=>{
       if(disposed) return;
@@ -471,26 +485,7 @@ export async function mountUnityStadium({
         azimuth=THREE.MathUtils.degToRad(Number(next.orbit.azimuth));
         elevation=THREE.MathUtils.degToRad(Math.max(10,Math.min(80,Number(next.orbit.elevation))));
       }
-      let colors=next.designColors;
-      if(next.scene) {
-        const totals={};
-        for(const block of next.scene.blocks || []) {
-          const table=totals[block.stand] ||= {};
-          for(const [count,index] of block.rle || []) if(index>0)
-            table[index]=(table[index]||0)+count;
-        }
-        colors=Object.fromEntries(Object.entries(totals).flatMap(([stand,table])=>{
-          const keys=Object.keys(table);
-          return keys.length ? [[stand,next.scene.palette[keys.sort((a,b)=>table[b]-table[a])[0]]]] : [];
-        }));
-      }
-      if(allianz) {
-        if(next.seatDesign)applySeatDesign(next.seatDesign);
-      } else if(colors) crowd.forEach(mesh=>{
-        mesh.material.color.copy(mesh.userData.sourceColor);
-        if(/^#[0-9a-f]{6}$/i.test(colors[mesh.userData.stand]||''))
-          mesh.material.color.set(colors[mesh.userData.stand]);
-      });
+      if(next.seatDesign)applySeatDesign(next.seatDesign,next.seatMode);
       if(allianz) presentationTransition?.set({day:day?1:0});
       else {
         hemisphere.intensity=day?1.35:.08; sun.intensity=day?1.5:0;
@@ -502,7 +497,8 @@ export async function mountUnityStadium({
       render();
     };
     resize();
-    await update({designColors:presentation.designColors,seatDesign:presentation.seatDesign});
+    await update({designColors:presentation.designColors,seatDesign:presentation.seatDesign,
+      seatMode:presentation.seatMode || initialState.seatMode});
     return {
       kind:'three', stage:{renderer,render,camera,scene,model}, update,
       seatCoverage:()=>seatCoverage,

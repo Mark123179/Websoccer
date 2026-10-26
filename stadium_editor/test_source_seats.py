@@ -1,5 +1,7 @@
 from copy import deepcopy
 from unittest import TestCase
+from unittest.mock import patch
+from types import SimpleNamespace
 
 from stadium_editor.image_validation import InvalidImageData, normalize_design_payload
 from stadium_editor.seat_design import seat_mode, source_seat_design
@@ -39,3 +41,20 @@ class SourceSeatContractTests(TestCase):
             "blocks": [{"id": 9, "rle": [[6, 0]]}],
         })
         self.assertEqual(normalized["seat_mode"], "original")
+
+    def test_other_registered_clubs_receive_reversible_per_seat_design(self):
+        from stadium_editor.unity_runtime import unity_presentation
+        draft = {"seat_mode": "original", "palette": ["#666666", "#ffff00"],
+                 "blocks": [{"id": 9, "rle": [[3, 0], [3, 1]]}]}
+        before = deepcopy(draft)
+        stadium = SimpleNamespace(club=SimpleNamespace(fm_inside_id=912), club_id=42)
+        manifest = {"clubFmiId": 912, "assetVersion": "source",
+                    "stadiumName": "Test Arena", "sourceSha256": "a" * 64,
+                    "calibration": {}}
+        with patch("stadium_editor.unity_runtime.runtime_presentation",
+                   return_value={"surroundings": {}, "designColors": {"NORD": "#ffff00"}}):
+            result = unity_presentation(stadium, self.geometry, draft, manifest)
+        self.assertEqual(result["seatDesign"]["mode"], "original")
+        self.assertEqual(result["seatDesign"]["blocks"][0]["rle"], [[3, 0], [3, 1]])
+        self.assertEqual(result["designColors"], {})
+        self.assertEqual(draft, before)

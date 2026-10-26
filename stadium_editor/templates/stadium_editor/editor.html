@@ -223,7 +223,7 @@
 {% include 'stadium_editor/_grass_controls.html' %}
 
 <div class="main{% if is_editor_admin %} has-admin{% endif %}">
-  <div class="tools{% if is_source_seat_editor %} tools-source-seats{% endif %}" id="toolsPanel">
+  <div class="tools{% if is_seat_mode_editor or is_source_seat_editor %} tools-source-seats{% endif %}" id="toolsPanel">
     {% if is_dortmund_editor %}
     <div class="de-inspector">
       <span class="de-eyebrow">GRUNDRISS · RANGBEARBEITUNG</span>
@@ -239,7 +239,7 @@
     </div>
     {% endif %}
 
-    {% if is_source_seat_editor %}
+    {% if is_seat_mode_editor or is_source_seat_editor %}
     <section class="panel seat-design-panel" aria-labelledby="seatDesignHeading">
       <h3 id="seatDesignHeading">Sitzplatz-Design</h3>
       <label for="seatDesignMode">Zuordnung der Sitzplätze
@@ -248,8 +248,8 @@
           <option value="custom">Eigener Entwurf</option>
         </select>
       </label>
-      <p>Beim Wechsel zwischen Original und Entwurf bleibt dein eigener Entwurf erhalten.</p>
-      <div id="seatSourceStatus" role="status" aria-live="polite">Originalzuordnung wird geladen …</div>
+      <p>Der Wechsel blendet deinen Entwurf nur aus. Im Originalmodus bleibt die gespeicherte Gestaltung erhalten.</p>
+      <div id="seatSourceStatus" role="status" aria-live="polite">Originalstandard wird geladen …</div>
       <button type="button" class="btn" id="clearSeatDesign">Eigenen Entwurf löschen</button>
     </section>
     {% endif %}
@@ -359,7 +359,7 @@
       <h3>Ausbau · {% if is_dortmund_editor %}Vorschau{% else %}Simulator{% endif %} <span style="color:var(--gold)">· Admin</span></h3>
       <div class="subtools open" style="margin-top:0">
         <label>Tribüne
-          <select id="expStand"><option value="OST">Nord</option><option value="SUED">Ost</option><option value="WEST">Süd</option><option value="NORD">West</option></select>
+          <select id="expStand">{% if is_dortmund_editor %}<option value="OST">Nord</option><option value="SUED">Ost</option><option value="WEST">Süd</option><option value="NORD">West</option>{% else %}<option value="NORD">Nord</option><option value="OST">Ost</option><option value="SUED">Süd</option><option value="WEST">West</option>{% endif %}</select>
         </label>
         <label>Sitzart
           <select id="expType"><option value="SITZ">Sitzplätze</option><option value="STEH">Stehplätze</option><option value="VIP">VIP</option></select>
@@ -452,12 +452,14 @@ window.STADIUM_EDITOR = {
   isAdmin: {{ is_editor_admin|yesno:'true,false' }},
   dortmundScene: {{ is_dortmund_editor|yesno:'true,false' }},
   unityScene: {{ is_unity_editor|yesno:'true,false' }},
-  sourceSeats: {{ is_source_seat_editor|yesno:'true,false' }}
+  sourceSeats: {{ is_source_seat_editor|yesno:'true,false' }},
+  seatModes: {{ is_seat_mode_editor|yesno:'true,false' }}
 };
 </script>
 <script src="{% static 'stadium_editor/expansion_geometry.js' %}?v=35"></script>
 <script src="{% static 'stadium_editor/elversberg_canopies.js' %}?v=1"></script>
 <script src="{% static 'stadium_editor/editor_viewport.js' %}?v=1"></script>
-<script src="{% static 'stadium_editor/source_seats.js' %}?v=2"></script>
-<script src="{% static 'stadium_editor/editor.js' %}?v=86"></script>
+<script src="{% static 'stadium_editor/source_seats.js' %}?v=3"></script>
+<script src="{% static 'stadium_editor/seat_design_modes.js' %}?v=1"></script>
+<script src="{% static 'stadium_editor/editor.js' %}?v=89"></script>
 {% endblock %}
