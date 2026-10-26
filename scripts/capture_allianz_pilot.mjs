@@ -73,9 +73,29 @@ try {
     await page.waitForFunction(() => window.ready || window.failure, null, {timeout:180000});
     assert.equal(await page.evaluate(() => window.failure), undefined);
     const evidence = [];
+    if (process.argv.includes('--calibrate')) {
+      for (const scale of [32,64,128]) {
+        const image = await page.evaluate(async scale => {
+          await window.api.update({day:false,floodlight:true,camera:'seat',roofVisible:true});
+          window.api.stage.scene.traverse(light => {
+            const fixture = light.userData.fixture;
+            if (fixture) light.intensity = fixture.intensity * scale *
+              Math.min(4, Math.sqrt(fixture.representedIds.length));
+          });
+          window.api.stage.render();
+          return window.api.stage.renderer.domElement.toDataURL('image/png');
+        }, scale);
+        await writeFile(path.join(out, `calibration-${scale}.png`),
+          Buffer.from(image.split(',')[1], 'base64'));
+        console.log('calibration', scale, 'captured');
+      }
+      await page.close();
+      continue;
+    }
     for (const [name, day, floodlight, camera, roofVisible] of [
       ['day-exterior',true,false,'orbit',true],
-      ['night-exterior',false,false,'orbit',true],
+      ['night-exterior',false,true,'orbit',true],
+      ['night-lights-off',false,false,'orbit',true],
       ['day-interior',true,false,'seat',true],
       ['night-interior',false,true,'seat',true],
       ['night-no-roof',false,true,'orbit',false],
@@ -85,7 +105,16 @@ try {
         await api.update(state);
         api.stage.render();
         const {renderer,camera,model} = api.stage;
+        const lights = [];
+        api.stage.scene.traverse(light => {
+          if (light.userData.fixture) lights.push({
+            id:light.userData.fixture.id, intensity:light.intensity,
+            position:light.position.toArray(),
+            sourcePosition:light.userData.fixture.position,
+          });
+        });
         return {image:renderer.domElement.toDataURL('image/png'),
+          lights,
           modelId:model.uuid,cameraId:camera.uuid,cameraPosition:camera.position.toArray(),
           cameraMatrix:camera.projectionMatrix.toArray(),
           drawCalls:renderer.info.render.calls,triangles:renderer.info.render.triangles};
@@ -96,6 +125,12 @@ try {
       evidence.push({name,...shot});
       console.log(mode, name, 'captured');
     }
+    for (const shot of evidence) {
+      assert.equal(shot.lights.length, 12);
+      shot.lights.forEach(light => assert.deepEqual(light.position,light.sourcePosition));
+    }
+    assert.ok(evidence.find(shot => shot.name === 'night-exterior').lights.every(light => light.intensity > 0));
+    assert.ok(evidence.find(shot => shot.name === 'night-lights-off').lights.every(light => light.intensity === 0));
     assert.equal(evidence[0].modelId, evidence[1].modelId);
     assert.equal(evidence[0].cameraId, evidence[1].cameraId);
     assert.deepEqual(evidence[0].cameraPosition,evidence[1].cameraPosition);

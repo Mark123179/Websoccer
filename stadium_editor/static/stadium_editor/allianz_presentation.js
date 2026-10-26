@@ -32,7 +32,7 @@ export function sourceMaterialFinish(materialName) {
 }
 
 export function splitFacadeTriangles(positions, indices, {
-  minHeight = 36.8, maxHeight = 52.25, maxAbsNormalY = .86, minRadialFacing = .5,
+  minHeight = 36.8, maxHeight = 52.25, maxAbsNormalY = .97, minRadialFacing = .25,
 } = {}) {
   const facade = [], remaining = [];
   for (let i = 0; i < indices.length; i += 3) {
@@ -57,6 +57,14 @@ export function splitFacadeTriangles(positions, indices, {
     (exteriorWall ? facade : remaining).push(indices[i], indices[i + 1], indices[i + 2]);
   }
   return {facadeIndices: facade, remainingIndices: remaining};
+}
+
+export function runtimeFixtureIntensity(fixture, allianz = false) {
+  // Unity source intensities are not Three.js candela. Calibrate only the
+  // confirmed Allianz runtime, retaining the original mount points and cones.
+  const browserScale = allianz ? 64 : 8;
+  return fixture.intensity * browserScale *
+    Math.min(4, Math.sqrt(fixture.representedIds.length));
 }
 
 export function projectFacadeUv(positions, minHeight = 36.8, maxHeight = 52.2) {

@@ -6,8 +6,8 @@ import {mountBridgeHeightNotice} from './bridge_height_evidence.js?v=1';
 import {mountHeidenheimFloodlightVisuals} from './heidenheim_floodlight_visuals.js?v=2';
 import {
   createTransitionController, isConfirmedAllianzFacadeMaterial, projectFacadeUv,
-  sourceMaterialFinish, splitFacadeTriangles, supportsAllianzPresentation,
-} from './allianz_presentation.js?v=4';
+  runtimeFixtureIntensity, sourceMaterialFinish, splitFacadeTriangles, supportsAllianzPresentation,
+} from './allianz_presentation.js?v=6';
 
 /** Original source geometry, with its own club-scoped runtime presentation. */
 export async function mountUnityStadium({
@@ -296,7 +296,7 @@ export async function mountUnityStadium({
         THREE.MathUtils.degToRad(fixture.angle/2),.5,2);
       light.position.fromArray(fixture.position); light.target=target;
       light.userData.fixture=fixture;
-      light.userData.onIntensity=fixture.intensity*8*Math.min(4,Math.sqrt(fixture.representedIds.length));
+       light.userData.onIntensity=runtimeFixtureIntensity(fixture, allianz);
       scene.add(light,target);
       return light;
     });

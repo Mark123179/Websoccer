@@ -5,6 +5,7 @@ import {
   interpolate,
   isConfirmedAllianzFacadeMaterial,
   projectFacadeUv,
+  runtimeFixtureIntensity,
   smoothstep,
   sourceMaterialFinish,
   splitFacadeTriangles,
@@ -88,6 +89,23 @@ test('facade partition selects outward near-vertical shell faces only', () => {
   const uv = projectFacadeUv(positions);
   assert.equal(uv[0], .5);
   assert.ok(Math.abs(uv[1] - (38 - 36.8) / (52.2 - 36.8)) < .00001);
+});
+
+test('facade includes the next sloped seam row but not the horizontal roof', () => {
+  const positions = new Float32Array([
+    100,51,0, 100,51,1, 99,51.3,0,
+    100,52.18,0, 100,52.18,1, 99,52.18,0,
+  ]);
+  const result = splitFacadeTriangles(positions, [0,2,1,3,4,5]);
+  assert.deepEqual(result.facadeIndices, [0,2,1]);
+  assert.deepEqual(result.remainingIndices, [3,4,5]);
+});
+
+test('Allianz photometric calibration preserves other stadiums and source values', () => {
+  const fixture = {intensity:25, representedIds:['a','b','c','d']};
+  assert.equal(runtimeFixtureIntensity(fixture), 400);
+  assert.equal(runtimeFixtureIntensity(fixture, true), 3200);
+  assert.deepEqual(fixture, {intensity:25, representedIds:['a','b','c','d']});
 });
 
 test('interior material treatments follow source steel-frame and wall names only', () => {

@@ -47,3 +47,16 @@ ergänzte „Den jetzigen Stand speichern, falls wir uns verennen.“
 **How to apply:** Nicht ungefragt auf andere Stadien ausrollen. Bestehende
 Modellquelle und Ortsumgebung als unveränderte Vergleichsbasis bewahren;
 schematische Fassaden-Nähte nicht als vermessene Originalkissen ausgeben.
+
+Die Nacht-Abnahme umfasst ausdrücklich einen sichtbar beleuchteten Innenraum,
+nicht nur eine rote Außenhülle. Der rote Bereich soll eine weitere schräge
+Fassadenreihe umfassen; die verbleibende graue Dachfläche soll kleiner werden.
+
+**Why:** Der Nutzer korrigierte die erste Nachtvergleichsaufnahme: „Außenbeleuchtung
+rechts würde ich noch einen Strich weiter zeihen, sodass das Grau etwas geringer
+ausfällt. Und die Innenbeleuchtung fehlt aber noch komplett ?!“
+
+**How to apply:** Nachtvergleiche mit eingeschaltetem Flutlicht und zusätzlich
+aus Sitzperspektive prüfen. Der Flutlichtschalter bleibt unabhängig von Tag/Nacht;
+nachgewiesene Modellleuchten kalibrieren statt Sitze oder Rasen selbstleuchtend
+zu machen.

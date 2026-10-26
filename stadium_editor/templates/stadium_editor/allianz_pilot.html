@@ -16,7 +16,7 @@
 
   <section class="allianz-pilot__controls" aria-label="Lichtpilot-Steuerung">
     <label><input type="checkbox" id="pilotDay" checked> Tag</label>
-    <label><input type="checkbox" id="pilotFloodlight"> Flutlicht</label>
+    <label><input type="checkbox" id="pilotFloodlight" checked> Flutlicht</label>
     <label><input type="checkbox" id="pilotRoof" checked> Dach</label>
     <label class="allianz-pilot__camera">Kamera
       <select id="pilotCamera">
@@ -58,5 +58,5 @@
 {% endblock %}
 
 {% block extra_js %}
-<script type="module" src="{% static 'stadium_editor/allianz_pilot.js' %}?v=2"></script>
+<script type="module" src="{% static 'stadium_editor/allianz_pilot.js' %}?v=4"></script>
 {% endblock %}

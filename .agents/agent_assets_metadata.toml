@@ -2972,3 +2972,17 @@ mtime_ms = 1793016224914
 storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:6e4eaecc-e6c5-4f64-8de5-e8845034f33b/c364670d-6e55-4803-bc51-5b71378b783d/0d95ec6e-22f1-469c-9e3c-4f7b00f5ef1b"
 storage_version_token = "1793016235004294"
 content_type = "image/jpeg"
+
+[[outputs]]
+id = "4Vh3BTgvOVYB1hEal-RJX"
+uri = "file://generated-artifacts/allianz-pilot-20261026/nacht-fassade-innenraum.jpg"
+type = "image"
+title = "Allianz Arena – korrigierte Nachtbeleuchtung"
+description = "Links: rote Fassade um eine Reihe erweitert. Rechts: beleuchteter Innenraum mit den vorhandenen Modellleuchten."
+logical_id = "90add004-19ed-487b-af52-7d9687f301ca"
+content_hash = "sha256:b50c6745a429c8024dff7c439767f44f18fb5171cf9ac21a3756c42fc91347e9"
+size = 156493
+mtime_ms = 1793017468778
+storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:6e4eaecc-e6c5-4f64-8de5-e8845034f33b/90add004-19ed-487b-af52-7d9687f301ca/44e4d42c-0bf2-427d-890d-5e3f0a30dfbc"
+storage_version_token = "1793017488709215"
+content_type = "image/jpeg"
