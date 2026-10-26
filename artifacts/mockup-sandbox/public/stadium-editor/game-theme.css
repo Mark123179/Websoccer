@@ -1,0 +1,58 @@
+/* Color-only companion to stadium_editor/static/stadium_editor/editor_theme.css. */
+.stadium-editor-content.editor-modern {
+  --app-bg:#03070c; --stadium-bg:#07111a;
+  --panel:rgba(9,23,34,.82); --panel-strong:rgba(12,31,45,.94);
+  --line:rgba(44,231,255,.18); --line-strong:rgba(44,231,255,.38);
+  --cyan:#22e6ff; --green:#30f29c; --gold:#e9c783; --red:#ff5570;
+  --text:#f4fbff; --muted:rgba(244,251,255,.64); --faint:rgba(244,251,255,.38);
+  background:var(--app-bg); color:var(--text);
+}
+.stadium-editor-content.editor-modern .editor-toolbar {
+  background:var(--panel-strong); border-color:var(--line); box-shadow:0 5px 24px rgba(0,0,0,.14);
+}
+.stadium-editor-content.editor-modern :is(.grass-editor-controls,.de-footer) { background:var(--stadium-bg); border-color:var(--line); }
+.stadium-editor-content.editor-modern :is(.tools,.admin-tools) {
+  background:var(--app-bg); border-color:var(--line); scrollbar-color:rgba(44,231,255,.28) transparent;
+}
+.stadium-editor-content.editor-modern .stage { background:var(--stadium-bg); }
+.stadium-editor-content.editor-modern .panel { background:var(--panel); border-color:var(--line); }
+.stadium-editor-content.editor-modern :is(.panel h3,.modern-identity__eyebrow,.editor-back,.sel-status,
+  .pal-hint,.seat-design-panel label,.subtools label,.grass-editor-controls__label,.grass-editor-controls__reset,
+  .grass-editor-controls__state,.editor-zoom output,.de-save-state) { color:var(--muted); }
+.stadium-editor-content.editor-modern .modern-identity strong { color:var(--text); }
+.stadium-editor-content.editor-modern .modern-identity { border-color:var(--line-strong); }
+.stadium-editor-content.editor-modern :is(.btn,.viewtoggle,.grass-editor-controls__select) {
+  background:var(--stadium-bg); border-color:var(--line-strong); color:var(--text);
+}
+.stadium-editor-content.editor-modern .btn:hover {
+  background:rgba(34,230,255,.09); border-color:var(--cyan); color:var(--text);
+}
+.stadium-editor-content.editor-modern :is(.btn.primary,.toolgrid .btn.active,.viewtoggle button.active) {
+  background:rgba(34,230,255,.14); border-color:var(--cyan); color:var(--cyan); box-shadow:none;
+}
+.stadium-editor-content.editor-modern .viewtoggle button.active { box-shadow:inset 0 -2px var(--cyan); }
+.stadium-editor-content.editor-modern .viewtoggle button:not(.active) { color:var(--muted); }
+.stadium-editor-content.editor-modern .btn.primary:hover { background:rgba(34,230,255,.22); }
+.stadium-editor-content.editor-modern :is(.subtools select,.subtools input:not([type=checkbox]):not([type=range]),
+  .seat-design-panel select,#officialBlockSelect) {
+  background:var(--app-bg); border-color:var(--line-strong); color:var(--text);
+}
+.stadium-editor-content.editor-modern :is(.pal-hint i,.editor-back:hover,#officialBlockControls a) { color:var(--cyan); }
+.stadium-editor-content.editor-modern :is(.swatch.sel1) {
+  border-color:var(--cyan); box-shadow:0 0 0 1px var(--app-bg),0 0 0 2px rgba(34,230,255,.38);
+}
+.stadium-editor-content.editor-modern .swatch.sel2 {
+  border-color:var(--gold); box-shadow:0 0 0 1px var(--app-bg),0 0 0 2px rgba(233,199,131,.35);
+}
+.stadium-editor-content.editor-modern .pressbtn {
+  background:rgba(34,230,255,.12); border-color:var(--cyan); color:var(--cyan);
+}
+.stadium-editor-content.editor-modern .pressbtn:hover { background:rgba(34,230,255,.2); }
+.stadium-editor-content.editor-modern .statusbar { background:var(--stadium-bg); border-color:var(--line); color:var(--muted); }
+.stadium-editor-content.editor-modern :is(.modern-stage-note,.modern-preview-state) {
+  background:var(--panel-strong); border-color:var(--line); color:var(--muted);
+}
+.stadium-editor-content.editor-modern .modern-stage-note__mark { background:rgba(34,230,255,.14); color:var(--cyan); }
+.stadium-editor-content.editor-modern :is(button,a,input,select):focus-visible { outline-color:var(--cyan); }
+.stadium-editor-content.editor-modern .de-save-state.is-error { color:var(--red); }
+.stadium-editor-content.editor-modern .de-save-state.is-dirty { color:var(--gold); }

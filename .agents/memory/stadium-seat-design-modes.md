@@ -51,3 +51,9 @@ Die dunkle, ruhigere Werkbank-Gestaltung des modernisierten Canvas-Entwurfs ist 
 **Why:** Der Nutzer bestätigte die konkrete Übernahme mit „ja“.
 
 **How to apply:** Gestaltung auf den Editor begrenzen. Echte 3D-, Speicher- und Berechtigungsfunktionen erhalten; lokale Vorschau-Sperren und Sandbox-Hinweise nicht ins Spiel übernehmen.
+
+Die modernisierte Anordnung bleibt, farblich muss der Stadioneditor jedoch zur bestehenden Spieloberfläche passen: Blau-Schwarz und Cyan statt einer separaten grünlichen Palette.
+
+**Why:** Nach der Integration beanstandete der Nutzer ausdrücklich, dass die Farben nicht mehr passen.
+
+**How to apply:** Für Editor und Canvas-Vorschau dieselben Spielfarben verwenden; keine eigenständige Petrol-/Salbei-Palette einführen. Echte Sitzfarben und Stadionmaterialien nicht umfärben.

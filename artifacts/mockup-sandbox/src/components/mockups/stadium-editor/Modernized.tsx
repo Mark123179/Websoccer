@@ -8,6 +8,7 @@ type PreviewState =
 
 const BASELINE_URL = '/__mockup/stadium-editor/current.html';
 const MODERN_STYLE_URL = '/__mockup/stadium-editor/modernized.css';
+const GAME_THEME_URL = '/__mockup/stadium-editor/game-theme.css';
 
 function transformBaseline(markup: string, styles: string) {
   const parsed = new DOMParser().parseFromString(markup, 'text/html');
@@ -15,6 +16,7 @@ function transformBaseline(markup: string, styles: string) {
   style.id = 'stadium-editor-modernized';
   style.textContent = styles;
   parsed.head.append(style);
+  parsed.querySelector('.stadium-editor-content')?.classList.add('editor-modern');
 
   const toolbar = parsed.querySelector('.editor-toolbar');
   const backLink = parsed.querySelector('.editor-back');
@@ -68,9 +70,13 @@ export function Modernized() {
         if (!response.ok) throw new Error('Editor styles could not be loaded');
         return response.text();
       }),
+      fetch(GAME_THEME_URL).then((response) => {
+        if (!response.ok) throw new Error('Game palette could not be loaded');
+        return response.text();
+      }),
     ])
-      .then(([markup, styles]) => {
-        if (active) setPreview({ status: 'ready', document: transformBaseline(markup, styles) });
+      .then(([markup, styles, theme]) => {
+        if (active) setPreview({ status: 'ready', document: transformBaseline(markup, `${styles}\n${theme}`) });
       })
       .catch(() => {
         if (active) setPreview({ status: 'error' });
