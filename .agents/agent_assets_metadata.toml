@@ -3014,3 +3014,45 @@ mtime_ms = 1793018599079
 storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:6e4eaecc-e6c5-4f64-8de5-e8845034f33b/de025e21-37e3-451d-a479-adc0527de8b1/91704583-46da-4df2-8db1-c3df9a0ae865"
 storage_version_token = "1793018626678183"
 content_type = "image/jpeg"
+
+[[outputs]]
+id = "vXyuuavVQeBTtjK72jx7l"
+uri = "file://generated-artifacts/grass-study/vergleich-tag.png"
+type = "image"
+title = "12 Rasenvarianten · Tagvergleich"
+description = "Beschriftete Vergleichstafel: vier Muster, vier Grüntöne und drei Abnutzungsgrade unter identischer Kamera und Tagbeleuchtung."
+logical_id = "1bcd89f6-0bbe-4de4-8b32-9c93a0c12b23"
+content_hash = "sha256:1480e60629f1938849687560a361926fa1a6669b33a0eb571ac23d4d010c2165"
+size = 2526995
+mtime_ms = 1793028362718
+storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:6e4eaecc-e6c5-4f64-8de5-e8845034f33b/1bcd89f6-0bbe-4de4-8b32-9c93a0c12b23/8b292372-5795-4f69-a691-907ca48c87ba"
+storage_version_token = "1793028470846470"
+content_type = "image/png"
+
+[[outputs]]
+id = "iio8dqCntind6Co90E4Qr"
+uri = "file://generated-artifacts/grass-study/vergleich.html"
+type = "html"
+title = "Rasenstudie · Einzelansichten und Direktvergleich"
+description = "Eigenständige interaktive HTML-Studie mit auswählbaren Varianten, neutralen Draufsichten, Nachtaufnahmen und zweitem Stadionrahmen. Enthält auch die einzelnen Texturdownloads."
+logical_id = "0c8480b2-1e7e-420c-b5e8-48886c944efd"
+content_hash = "sha256:2302ddb95f984952a5bae3054c720d557280c4a7a85b21d87ba5d97e58b90008"
+size = 65157425
+mtime_ms = 1793028368122
+storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:6e4eaecc-e6c5-4f64-8de5-e8845034f33b/0c8480b2-1e7e-420c-b5e8-48886c944efd/3a02e9d7-0d81-420b-a5e7-ac3b9724dacd"
+storage_version_token = "1793028472548498"
+content_type = "text/html"
+
+[[outputs]]
+id = "AOAGKEV_yH-ytZN6hY5_l"
+uri = "file://generated-artifacts/grass-study/rasen-materialpaket.zip"
+type = "unspecified"
+title = "Rasenmaterialien · vollständiges Paket"
+description = "Zwölf WebP-Texturen mit 3150 × 2040 Pixeln, getrennte Materiallagen, KI-Basis, hochauflösende Einzelbilder, Parameter, Prüfnachweise und reproduzierbare Aufbereitung; etwa 103 MB."
+logical_id = "93ee0aaf-6425-43fc-a849-6b1ed7f6495d"
+content_hash = "sha256:5001c6f9d4861256467c4128c66da547a69f761d4b2902600bbf0784f0285205"
+size = 102767221
+mtime_ms = 1793028415894
+storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:6e4eaecc-e6c5-4f64-8de5-e8845034f33b/93ee0aaf-6425-43fc-a849-6b1ed7f6495d/3054a9b3-49bb-413b-81f2-195c210a3554"
+storage_version_token = "1793028487516115"
+content_type = "application/octet-stream"

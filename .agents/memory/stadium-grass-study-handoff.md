@@ -51,6 +51,20 @@ den Rasenvarianten ausdrücklich abgenommen.
 Stadioneditor-Schritt verwenden, nicht erneut eine Materialstudie vorschalten.
 Die vereinbarte Reihenfolge bleibt: Editor ansehen, danach ausrollen.
 
+## Zusätzliche direkte KI-Rasenstudie
+
+Für die zusätzliche KI-Rasenserie hat der Nutzer „Texturen direkt hier erzeugen
+und vergleichen“ gewählt. Kein Higgsfield-Zugang oder manueller Zwischenschritt
+ist erforderlich. Das bereits abgenommene gelieferte Materialpaket bleibt davon
+unberührt.
+
+**Why:** Die direkte KI-Serie dient als weiterer visueller Vergleich, nicht als
+stillschweigender Ersatz bereits freigegebener Materialien oder gespeicherter
+Managerauswahlen. Die Higgsfield-Vorgabe für Stadionumfelder gilt nicht für Rasen.
+
+**How to apply:** Quellen der Serien klar auseinanderhalten; eine neue Studie
+nicht als erstmalige Abnahme oder produktive Umstellung der Rasenauswahl ausgeben.
+
 ## Auswahl- und Speichervertrag
 
 „Also die Rasenauswahl soll im Stadion-Editor erfolgen. Vorschau dann im
