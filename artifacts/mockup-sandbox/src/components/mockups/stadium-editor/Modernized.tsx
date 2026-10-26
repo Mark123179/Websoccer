@@ -30,12 +30,18 @@ function transformBaseline(markup: string, styles: string) {
     toolbar.append(previewState);
   }
 
+  const unavailableView3d = parsed.getElementById('btn3d');
+  unavailableView3d?.setAttribute('disabled', '');
+  unavailableView3d?.setAttribute('aria-describedby', 'modern-3d-unavailable');
+  unavailableView3d?.setAttribute('title', '3D ist in dieser Vorschau nicht verfügbar.');
+
   const stage = parsed.querySelector('#stage');
   if (stage) {
     const stageNote = parsed.createElement('div');
     stageNote.className = 'modern-stage-note';
+    stageNote.id = 'modern-3d-unavailable';
     stageNote.setAttribute('aria-label', '3D-Vorschau nicht verfügbar');
-    stageNote.innerHTML = '<span class="modern-stage-note__mark" aria-hidden="true">2D</span><span>3D derzeit nicht verfügbar</span>';
+    stageNote.innerHTML = '<span class="modern-stage-note__mark" aria-hidden="true">2D</span><span>3D-Prüfung nur im Spiel verfügbar</span>';
     stage.append(stageNote);
   }
 

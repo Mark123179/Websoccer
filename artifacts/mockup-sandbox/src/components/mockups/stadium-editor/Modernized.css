@@ -16,6 +16,11 @@
   background: #07151b;
 }
 
+.stadium-modern-shell iframe:focus-visible {
+  outline: 2px solid #e3bd76;
+  outline-offset: -2px;
+}
+
 .stadium-modern-loading {
   position: relative;
   display: grid;
