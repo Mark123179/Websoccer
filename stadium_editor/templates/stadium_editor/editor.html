@@ -79,6 +79,10 @@
 #stageThree canvas{position:static;width:100%;height:100%}
 .stage-three-ready #stageThree{visibility:visible;pointer-events:auto;z-index:2}
 .stage-three-ready #cvBase,.stage-three-ready #cvBlocks,.stage-three-ready #cvOverlay{z-index:0}
+.stage-source-pending #cvBase,.stage-source-pending #cvBlocks,.stage-source-pending #cvOverlay{visibility:hidden}
+.stage-source-pending #stageThree{visibility:hidden;pointer-events:none}
+#sourceSceneStatus{position:absolute;inset:0;z-index:4;display:flex;align-items:center;justify-content:center;padding:32px;text-align:center;color:var(--muted);font-size:13px;background:var(--stadium-bg)}
+#sourceSceneStatus[hidden]{display:none}
 #cvOverlay{cursor:crosshair}
 .editor-zoom{display:flex;align-items:center;gap:6px;white-space:nowrap}
 .editor-zoom[hidden]{display:none}
@@ -386,6 +390,9 @@
     </div>
     {% endif %}
     <div id="stageThree" data-stadium-stage aria-label="Interaktive 3D-Stadionansicht"></div>
+    {% if is_unity_editor %}
+    <div id="sourceSceneStatus" role="status" aria-live="polite" hidden></div>
+    {% endif %}
     {% if is_dortmund_editor %}
     <div class="de-scene-panel" id="deScenePanel" aria-label="3D-Modellstatus">
       <div class="de-scene-switch" role="group" aria-label="Modellzustand">
@@ -452,5 +459,5 @@ window.STADIUM_EDITOR = {
 <script src="{% static 'stadium_editor/elversberg_canopies.js' %}?v=1"></script>
 <script src="{% static 'stadium_editor/editor_viewport.js' %}?v=1"></script>
 <script src="{% static 'stadium_editor/source_seats.js' %}?v=2"></script>
-<script src="{% static 'stadium_editor/editor.js' %}?v=85"></script>
+<script src="{% static 'stadium_editor/editor.js' %}?v=86"></script>
 {% endblock %}

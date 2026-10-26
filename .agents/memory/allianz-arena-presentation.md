@@ -88,3 +88,14 @@ erfüllt die gewünschte Darstellung nicht.
 **How to apply:** Notwendige Ergänzungen an belegten Quellkonturen ausrichten
 und als Rekonstruktion kennzeichnen. Umgebung, Innenraum und gespeicherte
 Rangentwürfe dabei unverändert lassen.
+
+Beim Laden des Originalmodells darf keine alte Blueprint-3D-Ansicht als
+Zwischenbild erscheinen. Stattdessen einen eindeutigen Ladezustand zeigen;
+ein Ladefehler darf nicht still auf die schematische Ansicht zurückfallen.
+
+**Why:** Der Nutzer sah zunächst die alte Ansicht und hielt sie deshalb für
+ein erneut veraltetes Bayern-Modell.
+
+**How to apply:** Lade-, Fehler- und Wiederholungsabläufe genauso beachten
+wie den fertig geladenen Zustand; die korrekte Modelldatei allein belegt
+keinen korrekten Editorablauf.

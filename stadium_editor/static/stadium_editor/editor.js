@@ -739,6 +739,9 @@ function fillPreviewTex(id){
 
 /* ── 3D-Ansicht ───────────────────────────────────────────────── */
 function render3D(){
+  // Registered source models must never flash the schematic canvas renderer,
+  // including during grass loading or resize callbacks.
+  if(EDITOR.unityScene) return;
   const ctx = cvBlocks.getContext('2d');
   const bctx = cvBase.getContext('2d');
   const bg = editorBackground();
@@ -1361,7 +1364,7 @@ function renderAll(){
   if(!D) return;
   if(view==='2d'){ renderBase(); renderBlocks(); renderOverlay(); }
   else {
-    if(!stageAdapter || stageAdapter.kind==='canvas') render3D();
+    if(!EDITOR.unityScene && (!stageAdapter || stageAdapter.kind==='canvas')) render3D();
     scheduleStageDesignUpdate();
   }
 }
@@ -1398,7 +1401,21 @@ function updateDortmundStage(){
         : `Bestand ${baseDisplayCapacity.toLocaleString('de-DE')} Plätze · Unity-Mesh-Auszug + rekonstruierte Gegenseite`;
   }).catch(error => showDortmundSceneError(error));
 }
+function showSourceSceneStatus(message){
+  if(!EDITOR.unityScene) return;
+  const visible = view==='3d' && Boolean(message);
+  document.getElementById('stage').classList.toggle('stage-source-pending', visible);
+  const node = document.getElementById('sourceSceneStatus');
+  if(node){
+    node.textContent = message || '';
+    node.hidden = !visible;
+  }
+}
 function showDortmundSceneError(error){
+  if(EDITOR.unityScene){
+    showSourceSceneStatus(`Originalmodell nicht verfügbar: ${error.message || 'Ladefehler'}. Die 2D-Bearbeitung bleibt verfügbar. Zum erneuten Laden auf 2D und wieder auf 3D wechseln.`);
+    return;
+  }
   if(!isDortmundScene) return;
   const node = document.getElementById('deSceneStatus');
   if(node) node.textContent = `3D nicht verfügbar: ${error.message || 'Ladefehler'}. 2D-Bearbeitung bleibt verfügbar.`;
@@ -1407,7 +1424,13 @@ function showDortmundSceneError(error){
 }
 function scheduleStageDesignUpdate(){
   if(EDITOR.sourceSeats){
-    if(stageThree)stageThree.update({seatDesign:seatDesignDraft()})
+    if(stageThree)stageThree.update({
+      seatDesign:seatDesignDraft(),
+      roofVisible:roofOn,
+      day:Boolean(document.getElementById('stageDay')?.checked),
+      floodlight:Boolean(document.getElementById('stageFloodlight')?.checked),
+      camera:document.getElementById('stageCamera')?.value || 'orbit',
+    })
       .then(showSeatStatus).catch(error=>toast(error.message));
     return;
   }
@@ -1437,7 +1460,7 @@ function scheduleStageDesignUpdate(){
 }
 
 function useLegacyThreePreview(){
-  if(isDortmundScene){
+  if(isDortmundScene || EDITOR.unityScene){
     showDortmundSceneError(new Error('WebGL-Ansicht konnte nicht aktualisiert werden'));
     return;
   }
@@ -1450,6 +1473,7 @@ function useLegacyThreePreview(){
 
 function activateThreeStage(){
   if(view!=='3d' || !stageThree) return;
+  showSourceSceneStatus('');
   document.getElementById('stageThree').style.visibility = 'visible';
   document.getElementById('stage').classList.add('stage-three-ready');
   document.querySelectorAll('#cvBase,#cvBlocks,#cvOverlay').forEach(c=>c.hidden=true);
@@ -1463,6 +1487,7 @@ async function ensureThreeStage(){
   if(stageAdapter || !D) return;
   const host = document.getElementById('stageThree');
   if(!host) return;
+  showSourceSceneStatus('Original-Stadionmodell wird geladen …');
   stageAdapter = {kind:'loading'};
   try{
     if(EDITOR.unityScene){
@@ -2526,7 +2551,7 @@ function requestRender3D(){
       stageThree.update({
         orbit: {azimuth: yaw3d, elevation: 90 - tilt3d},
       }).catch(useLegacyThreePreview);
-    }else if(!stageAdapter){
+    }else if(!stageAdapter && !EDITOR.unityScene){
       render3D();
     }
   });
@@ -2596,6 +2621,7 @@ function setView(v){
     else ensureThreeStage();
   }
   if(v==='2d'){
+    showSourceSceneStatus('');
     document.getElementById('stageThree').style.visibility = 'hidden';
     document.querySelectorAll('#cvBase,#cvBlocks,#cvOverlay').forEach(c=>c.hidden=false);
     document.getElementById('stage').classList.remove('stage-three-ready');
