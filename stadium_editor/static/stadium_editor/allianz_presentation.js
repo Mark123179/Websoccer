@@ -33,7 +33,7 @@ export function sourceMaterialFinish(materialName) {
 
 export function splitFacadeTriangles(positions, indices, {
   minHeight = 36.8, maxHeight = 52.25, maxAbsNormalY = .97, minRadialFacing = .25,
-  roofBandMinHeight = 49.2,
+  roofBandMinHeight = 49.65,
 } = {}) {
   const facade = [], remaining = [];
   for (let i = 0; i < indices.length; i += 3) {
@@ -55,7 +55,7 @@ export function splitFacadeTriangles(positions, indices, {
     const exteriorWall = cy >= minHeight && cy <= maxHeight &&
       normalLength > 0 && Math.abs(ny / normalLength) <= maxAbsNormalY &&
       outward >= minRadialFacing;
-    // Follow the existing circumferential source ring (49.240 m), not the
+    // Follow the existing circumferential source ring (49.670 m), not the
     // hand-drawn image contour. The inner return and roof underside stay neutral.
     const exteriorRoof = normalLength > 0 && ny > 0 && cy <= maxHeight &&
       Math.min(ay, positions[ib + 1], positions[ic + 1]) >= roofBandMinHeight;

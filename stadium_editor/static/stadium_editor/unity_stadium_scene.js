@@ -7,7 +7,7 @@ import {mountHeidenheimFloodlightVisuals} from './heidenheim_floodlight_visuals.
 import {
   createTransitionController, isConfirmedAllianzFacadeMaterial, projectFacadeUv,
   runtimeFixtureIntensity, sourceMaterialFinish, splitFacadeTriangles, supportsAllianzPresentation,
-} from './allianz_presentation.js?v=7';
+} from './allianz_presentation.js?v=8';
 
 /** Original source geometry, with its own club-scoped runtime presentation. */
 export async function mountUnityStadium({

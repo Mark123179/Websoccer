@@ -110,6 +110,16 @@ test('Allianz photometric calibration preserves other stadiums and source values
   assert.deepEqual(fixture, {intensity:25, representedIds:['a','b','c','d']});
 });
 
+test('the innermost formerly red roof row remains neutral after the fine adjustment', () => {
+  const positions = new Float32Array([
+    59,49.24,0, 59,49.24,1, 62,49.67,0,
+    62,49.67,0, 62,49.67,1, 65,50.08,0,
+  ]);
+  const result = splitFacadeTriangles(positions, [0,1,2,3,4,5]);
+  assert.deepEqual(result.remainingIndices, [0,1,2]);
+  assert.deepEqual(result.facadeIndices, [3,4,5]);
+});
+
 test('interior material treatments follow source steel-frame and wall names only', () => {
   assert.deepEqual(sourceMaterialFinish('st011_stfr103.003'),
     {role: 'steel-frame', roughness: .56, metalness: .24});
