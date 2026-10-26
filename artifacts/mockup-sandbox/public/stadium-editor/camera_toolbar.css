@@ -1,0 +1,53 @@
+.editor-modern #rot3d.camera-toolbar {
+  flex:0 0 auto; flex-wrap:wrap; align-items:center; gap:12px 24px;
+  margin:0; padding:10px 20px; border-bottom:1px solid var(--line);
+  background:var(--stadium-bg); color:var(--muted); font:12px 'IBM Plex Sans',sans-serif;
+}
+.editor-modern .camera-toolbar svg {
+  width:18px; height:18px; flex:0 0 18px; fill:none; stroke:currentColor;
+  stroke-width:1.6; stroke-linecap:round; stroke-linejoin:round;
+}
+.editor-modern .camera-preset,
+.editor-modern .camera-angle,
+.editor-modern .camera-switches { display:flex; align-items:center; gap:9px; }
+.editor-modern .camera-preset { color:var(--text); }
+.editor-modern #rot3d .camera-preset select {
+  min-width:125px; min-height:36px; padding:0 28px 0 10px;
+  border:1px solid var(--line-strong); border-radius:6px;
+  background:var(--app-bg); color:var(--text); font:inherit;
+}
+.editor-modern .camera-angles { display:flex; flex-wrap:wrap; align-items:center; gap:18px; }
+.editor-modern .camera-angle { white-space:nowrap; }
+.editor-modern #rot3d .camera-angle input[type=range] {
+  width:100px; min-width:80px; height:24px; margin:0; accent-color:var(--cyan); cursor:pointer;
+}
+.editor-modern .camera-switches { flex-wrap:wrap; gap:8px; margin-left:auto; }
+.editor-modern .camera-toggle {
+  position:relative; display:flex; align-items:center; gap:8px; min-height:38px;
+  padding:0 10px; border:1px solid var(--line); border-radius:7px;
+  background:var(--app-bg); color:var(--muted); cursor:pointer;
+}
+.editor-modern #rot3d .camera-toggle input[type=checkbox] {
+  position:absolute; inset:0; width:100%; height:100%; margin:0; opacity:0; cursor:pointer;
+}
+.editor-modern .camera-toggle-track {
+  position:relative; width:27px; height:16px; flex:0 0 27px;
+  border:1px solid var(--line-strong); border-radius:20px; background:rgba(244,251,255,.08);
+  pointer-events:none;
+}
+.editor-modern .camera-toggle-track::after {
+  content:''; position:absolute; width:10px; height:10px; top:2px; left:2px;
+  border-radius:50%; background:var(--muted); transition:transform .15s ease,background .15s ease;
+}
+.editor-modern .camera-toggle input:checked ~ .camera-toggle-track { background:rgba(34,230,255,.15); border-color:var(--cyan); }
+.editor-modern .camera-toggle input:checked ~ .camera-toggle-track::after { transform:translateX(11px); background:var(--cyan); }
+.editor-modern .camera-toggle:has(input:checked) { color:var(--cyan); border-color:var(--line-strong); }
+.editor-modern .camera-toggle:hover { border-color:var(--cyan); }
+.editor-modern .camera-toggle:has(input:focus-visible) { outline:2px solid var(--cyan); outline-offset:3px; }
+@media (max-width:800px) {
+  .editor-modern #rot3d.camera-toolbar { padding:10px 14px; gap:12px 16px; }
+  .editor-modern .camera-switches { margin-left:0; }
+}
+@media (prefers-reduced-motion:reduce) {
+  .editor-modern .camera-toggle-track::after { transition:none; }
+}

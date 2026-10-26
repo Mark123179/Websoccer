@@ -9,6 +9,7 @@ type PreviewState =
 const BASELINE_URL = '/__mockup/stadium-editor/current.html';
 const MODERN_STYLE_URL = '/__mockup/stadium-editor/modernized.css';
 const GAME_THEME_URL = '/__mockup/stadium-editor/game-theme.css';
+const CAMERA_STYLE_URL = '/__mockup/stadium-editor/camera_toolbar.css';
 
 function transformBaseline(markup: string, styles: string) {
   const parsed = new DOMParser().parseFromString(markup, 'text/html');
@@ -17,6 +18,13 @@ function transformBaseline(markup: string, styles: string) {
   style.textContent = styles;
   parsed.head.append(style);
   parsed.querySelector('.stadium-editor-content')?.classList.add('editor-modern');
+  const cameraScript = parsed.createElement('script');
+  cameraScript.src = '/__mockup/stadium-editor/camera_toolbar.js';
+  const editorScript = parsed.querySelector('script[src="./editor.js"]');
+  editorScript?.before(cameraScript);
+  const showCameraBar = parsed.createElement('script');
+  showCameraBar.textContent = "document.getElementById('rot3d').style.display='flex';";
+  parsed.body.append(showCameraBar);
 
   const toolbar = parsed.querySelector('.editor-toolbar');
   const backLink = parsed.querySelector('.editor-back');
@@ -74,9 +82,13 @@ export function Modernized() {
         if (!response.ok) throw new Error('Game palette could not be loaded');
         return response.text();
       }),
+      fetch(CAMERA_STYLE_URL).then((response) => {
+        if (!response.ok) throw new Error('Camera styles could not be loaded');
+        return response.text();
+      }),
     ])
-      .then(([markup, styles, theme]) => {
-        if (active) setPreview({ status: 'ready', document: transformBaseline(markup, `${styles}\n${theme}`) });
+      .then(([markup, styles, theme, cameraStyles]) => {
+        if (active) setPreview({ status: 'ready', document: transformBaseline(markup, `${styles}\n${theme}\n${cameraStyles}`) });
       })
       .catch(() => {
         if (active) setPreview({ status: 'error' });

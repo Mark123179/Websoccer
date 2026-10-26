@@ -78,6 +78,8 @@ class ManagerSeatModeTests(TestCase):
                 soup = BeautifulSoup(response.content, "html.parser")
                 self.assertIsNotNone(soup.select_one(".stadium-editor-content.editor-modern"))
                 self.assertContains(response, "editor_modern.css")
+                self.assertContains(response, "camera_toolbar.css")
+                self.assertContains(response, "camera_toolbar.js")
                 self.assertIsNotNone(soup.select_one(".modern-identity"))
                 for control in ("btnSave", "btn3d", "btnPress", "seatDesignMode",
                                 "grassVariant", "roofChk", "stageDay", "stageFloodlight",
