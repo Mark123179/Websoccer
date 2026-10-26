@@ -72,17 +72,7 @@ let seatDesignMode='original', sourceSeatColors=null;
 let sourceSeatIds=null;
 let originalSeatData=[];
 let originalSeatPalette=null;
-let originalSeatStatus='Originalzuordnung wird geladen …';
 const seatModeHelpers=window.StadiumSeatDesignModes;
-function showSeatStatus(){
-  const status=document.getElementById('seatSourceStatus');
-  if(status){
-    const coverage=stageThree?.seatCoverage?.();
-    const extra=coverage && seatDesignMode==='custom' ?
-      ` · 3D: ${((100*coverage.covered/coverage.total)||0).toFixed(1)} % Modellpunkte zugeordnet; übrige Ränge neutral.` : '';
-    status.textContent=originalSeatStatus+extra;
-  }
-}
 function seatDesignDraft(){
   return {version:1,mode:seatDesignMode,palette:PALETTE.map(p=>p[0]),
     blocks:blocks.map((b,i)=>({...b,id:b.sourceId,values:seatData[i]}))};
@@ -93,11 +83,6 @@ function syncSeatMode(){
 }
 function refreshSeatMode(){
   syncSeatMode();
-  if(!EDITOR.sourceSeats && seatDesignMode==='original')
-    originalSeatStatus='Originalstandard · Grundbelegung der Blaupause; keine Quelltextur-Projektion belegt.';
-  else if(!EDITOR.sourceSeats)
-    originalSeatStatus='Eigener Entwurf · Farben werden auf die erfassten Sitzflächen projiziert, soweit das Modell eine Zuordnung trägt.';
-  showSeatStatus();
   blocks.forEach((_,i)=>updateTexture(i));
   fillPreviewCache.clear();renderAll();scheduleStageDesignUpdate();
 }
@@ -111,10 +96,8 @@ async function loadOriginalSeats(){
     const result=StadiumSourceSeats.originalColors(source,blocks,D.meta);
     sourceSeatColors=result.rgb;
     sourceSeatIds=blocks.map(b=>b.sourceId);
-    const percent=(100*result.mapped/result.total).toFixed(1);
-    originalSeatStatus=`Originaltexturen · ${percent} % Rasterpunkte zugeordnet. Graue Punkte ohne Quelltreffer sind nicht originalbelegt. Zuordnung im vorhandenen Editorraster, keine vermessenen Einzelsitze.`;
     refreshSeatMode();
-  }catch(error){originalSeatStatus=error.message;showSeatStatus();toast(error.message);}
+  }catch(error){toast(error.message);}
 }
 function decodeOriginalDesign(originalDesign){
   const palette=originalDesign?.palette;
@@ -1424,7 +1407,7 @@ function updateDortmundStage(){
       roofVisible: roofOn, fullConcept: dortmundFullConcept,
       day: Boolean(document.getElementById('stageDay')?.checked),
       floodlight: Boolean(document.getElementById('stageFloodlight')?.checked),
-    }).then(()=>{showSeatStatus();return applyGrassToStage();}).catch(showGrassError);
+    }).then(()=>applyGrassToStage()).catch(showGrassError);
     const delta = Math.max(0, previewCapacity() - baseDisplayCapacity);
     const label = document.getElementById('deSceneData');
     if(label) label.textContent = dortmundFullConcept
@@ -1465,7 +1448,7 @@ function scheduleStageDesignUpdate(){
       floodlight:Boolean(document.getElementById('stageFloodlight')?.checked),
       camera:document.getElementById('stageCamera')?.value || 'orbit',
     })
-      .then(showSeatStatus).catch(error=>toast(error.message));
+      .catch(error=>toast(error.message));
     return;
   }
   if(isDortmundScene){
@@ -1549,7 +1532,6 @@ async function ensureThreeStage(){
       activateThreeStage();
       if(EDITOR.seatModes){
         await mounted.update({seatDesign:seatDesignDraft(),seatMode:seatDesignMode});
-        showSeatStatus();
       }
       mounted.update({day:Boolean(document.getElementById('stageDay')?.checked),
         floodlight:Boolean(document.getElementById('stageFloodlight')?.checked),
@@ -2634,25 +2616,6 @@ document.getElementById('stageFloodlight').addEventListener('change', ()=>{
   const floodlight = Boolean(document.getElementById('stageFloodlight').checked);
   stageThree.update({floodlight}).catch(useLegacyThreePreview);
 });
-document.getElementById('btnShot').addEventListener('click', ()=>{
-  if(stageThree?.stage?.renderer?.domElement){
-    stageThree.stage.render();
-    stageThree.stage.renderer.domElement.toBlob(downloadStagePng, 'image/png');
-    return;
-  }
-  const c = document.createElement('canvas'); c.width=W; c.height=H;
-  const g = c.getContext('2d');
-  g.drawImage(cvBase,0,0); g.drawImage(cvBlocks,0,0);
-  c.toBlob(downloadStagePng, 'image/png');
-});
-function downloadStagePng(blob){
-  if(!blob) return toast('PNG konnte nicht erstellt werden.');
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = `${D.meta.name.replace(/\s+/g,'_')}_ansicht.png`; a.click();
-  window.setTimeout(()=>URL.revokeObjectURL(a.href), 1000);
-  toast('Ansicht als PNG gespeichert.');
-}
 function setView(v){
   view = v;
   if(isDortmundScene) document.getElementById('stage').classList.toggle('de-view-3d', v==='3d');

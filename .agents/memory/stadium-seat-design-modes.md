@@ -7,7 +7,7 @@ Manager sollen grundsätzlich den Originalstandard ihres Stadions verwenden kön
 
 **Why:** Der Nutzer beschrieb dies ausdrücklich als Intention nach einem gelben 2D-Testentwurf, unter dem in 3D die ursprünglichen FCB-Motive erhalten blieben.
 
-**How to apply:** Originalmotive nicht mit bloßer Farbtönung als ersetzte Bemalung ausgeben. Reversible Originaldarstellung und räumliche Übereinstimmung zwischen 2D und 3D berücksichtigen. Wo eine belegte Quelltextur-Projektion fehlt, den Blaupausenstandard ausdrücklich als solchen kennzeichnen.
+**How to apply:** Originalmotive nicht mit bloßer Farbtönung als ersetzte Bemalung ausgeben. Reversible Originaldarstellung und räumliche Übereinstimmung zwischen 2D und 3D berücksichtigen. Fehlende belegte Quelltextur-Projektion nicht als verifiziertes Original ausgeben; der Nutzer möchte jedoch keine Erklärungstexte unter der Modusauswahl.
 
 Die Auswahl „Stadionoriginal“ / „Eigener Entwurf“ ist für alle Manager
 freigegeben, nicht nur für Bayern oder Admins. Der eigene Entwurf muss beim
@@ -27,3 +27,15 @@ Der Ausbausimulator darf ausschließlich von Admins gesehen und genutzt werden.
 **How to apply:** Nicht-Admins weder das Panel noch eine nutzbare Vorschauaktion
 bereitstellen; manipulierte Designdaten dürfen keine Geometrie, Kapazitäten oder
 wirtschaftlichen Ausbauaufträge verändern.
+
+Die Simulatorberechtigung meint Superadmins, nicht den allgemeinen Mitarbeiterstatus.
+
+**Why:** Der Nutzer meldete erneut, dass Test1 den Simulator sehen konnte; der Testaccount hat Mitarbeiterstatus, aber keine Superadmin-Rechte.
+
+**How to apply:** Testaccounts nicht durch Änderung ihrer Kontorechte reparieren. Mitarbeiter ohne Superadmin-Rechte müssen wie normale Manager behandelt werden.
+
+Unter der Modusauswahl keine Erklärungstexte anzeigen; den PNG-Export im Editor entfernen.
+
+**Why:** Der Nutzer verlangte ausdrücklich, die gezeigten Texte und den im Screenshot markierten PNG-Button zu entfernen.
+
+**How to apply:** Die Auswahl bleibt erhalten, aber ohne erklärende Absätze oder technische Statusberichte.

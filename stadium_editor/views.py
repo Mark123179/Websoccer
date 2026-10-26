@@ -80,7 +80,7 @@ def stadium_editor(request):
         'stadium': stadium,
         'geometry': geometry,
         'design': design.design if design else {},
-        'is_editor_admin': bool(request.user.is_staff),
+        'is_editor_admin': bool(request.user.is_superuser),
         'is_dortmund_editor': stadium.club.fm_inside_id == 907,
         'is_unity_editor': model_manifest(stadium.club.fm_inside_id) is not None,
         'is_source_seat_editor': stadium.club.fm_inside_id == 915,

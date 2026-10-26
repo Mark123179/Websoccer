@@ -211,7 +211,7 @@
     <label style="display:flex;align-items:center;gap:6px;cursor:pointer"><input type="checkbox" id="stageDay" style="accent-color:var(--cyan)"> Tag</label>
     <label style="display:flex;align-items:center;gap:6px;cursor:pointer"><input type="checkbox" id="stageFloodlight" style="accent-color:var(--cyan)"{% if stadium.club.fm_inside_id == 915 %} checked{% endif %}> Flutlicht</label>
     <label style="display:flex;align-items:center;gap:6px;cursor:pointer"><input type="checkbox" id="roofChk" checked style="accent-color:var(--cyan)"> Dach</label>
-    <button class="btn" id="btnShot" title="Aktuelle 3D-Ansicht als PNG speichern">📷 PNG</button></div>
+    </div>
   <button class="btn active" id="btnDots">⣿ PUNKTE</button>
   <div class="viewtoggle">
     <button id="btn2d" class="active">2D · BEARBEITEN</button>
@@ -248,8 +248,6 @@
           <option value="custom">Eigener Entwurf</option>
         </select>
       </label>
-      <p>Der Wechsel blendet deinen Entwurf nur aus. Im Originalmodus bleibt die gespeicherte Gestaltung erhalten.</p>
-      <div id="seatSourceStatus" role="status" aria-live="polite">Originalstandard wird geladen …</div>
       <button type="button" class="btn" id="clearSeatDesign">Eigenen Entwurf löschen</button>
     </section>
     {% endif %}
@@ -461,5 +459,5 @@ window.STADIUM_EDITOR = {
 <script src="{% static 'stadium_editor/editor_viewport.js' %}?v=1"></script>
 <script src="{% static 'stadium_editor/source_seats.js' %}?v=3"></script>
 <script src="{% static 'stadium_editor/seat_design_modes.js' %}?v=1"></script>
-<script src="{% static 'stadium_editor/editor.js' %}?v=89"></script>
+<script src="{% static 'stadium_editor/editor.js' %}?v=90"></script>
 {% endblock %}

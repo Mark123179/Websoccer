@@ -49,10 +49,23 @@ class ManagerSeatModeTests(TestCase):
         self.assertNotContains(response, 'id="btnExpand"')
         self.assertNotContains(response, 'id="expStand"')
         self.assertContains(response, "isAdmin: false")
+        self.assertNotContains(response, 'id="btnShot"')
+        self.assertNotContains(response, 'id="seatSourceStatus"')
+        self.assertNotContains(response, "Der Wechsel blendet")
+
+    def test_staff_manager_like_test_account_cannot_use_simulator(self):
+        self.user.is_staff = True
+        self.user.save(update_fields=["is_staff"])
+        response = self.client.get(reverse("stadium_editor"))
+        self.assertNotContains(response, 'id="expandPanel"')
+        self.assertNotContains(response, 'id="btnExpand"')
+        self.assertNotContains(response, 'id="expStand"')
+        self.assertContains(response, "isAdmin: false")
 
     def test_admin_retains_expansion_simulator_and_mode_selector(self):
         self.user.is_staff = True
-        self.user.save(update_fields=["is_staff"])
+        self.user.is_superuser = True
+        self.user.save(update_fields=["is_staff", "is_superuser"])
         response = self.client.get(reverse("stadium_editor"))
         self.assertContains(response, 'id="seatDesignMode"')
         self.assertContains(response, 'id="btnExpand"')
