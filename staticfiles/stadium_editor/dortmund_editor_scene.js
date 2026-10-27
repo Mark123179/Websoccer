@@ -1,8 +1,10 @@
 import * as THREE from 'three';
+import './source_seats.js?v=3';
+import './seat_design_modes.js?v=1';
 import {buildConcept, warpShell, ROOF_NAMES, SHELL_NAMES} from './dortmund_concept.js?v=49';
 import {previewSupportsMaterial, sourceOpaqueColor} from './dortmund_source_materials.js?v=2';
 import {addReconstructedFacade, reconstructedFacadeVisible, sourceFacadePreviewColor} from './dortmund_reconstructed_facade.js?v=2';
-import {buildDortmundSurroundings} from './dortmund_surroundings.js?v=58';
+import {buildDortmundSurroundings, SURROUNDINGS_AXES_DEFAULT} from './dortmund_surroundings.js?v=58';
 import {tickerCameraFrame, tickerHeightElevation, TICKER_ELEVATION, TICKER_AZIMUTH, TICKER_VIEW_OFFSET} from './dortmund_ticker_camera.js?v=3';
 import {applyStudyCamera} from './study_camera.js?v=3';
 import {TICKER_ROOF_NAMES, setTickerRoofVisibility} from './dortmund_ticker_roof.js?v=1';
@@ -87,18 +89,19 @@ export async function mountDortmundScene({
   const target = new THREE.Vector3(0, 25, 0);
    let azimuth = tickerPreview ? TICKER_AZIMUTH : .88;
    let elevation = tickerPreview ? TICKER_ELEVATION : .56, distance = 490;
-  let frame = 0, disposed = false, concept = null, colorBands = null, facade = null, environment = null, roofOn = true;
+  let frame = 0, disposed = false, concept = null, facade = null, environment = null, roofOn = true;
   let naturalLighting = null;
   let imageLayer = null, imageLighting = null, imageProfileControls = null;
   let imageProfileGeneration = 0;
   let naturalProfileControls = null;
   let naturalAttribution = null;
-  let lastWeights = '', lastColors = '';
+  let lastWeights = '';
   const geometries = [], textures = [], materials = new Map(), facadeMaterials = new Map(), cutawayMaterials = [];
   const facadeSourceParts = [], roof = [], shell = [], tickerRoof = [];
   let resizeObserver;
   let declaredLighting = null;
-  const originalMeshes = [];
+  const originalMeshes = [], seatMeshes = [];
+  let seatCoverage = null;
   let animationActive = true, lastAnimationTime = null;
   const fitCompactCamera = () => {
     const bounds = new THREE.Box3().setFromObject(world);
@@ -249,9 +252,6 @@ export async function mountDortmundScene({
     declaredLighting?.dispose();
     delete element.dataset.imageBackground;
     delete element.dataset.imageProfile;
-    if (colorBands) {
-      colorBands.traverse(object => { object.geometry?.dispose(); object.material?.dispose(); });
-    }
     geometries.forEach(item => item.dispose());
     materials.forEach(item => item.dispose());
     facadeMaterials.forEach(item => item.dispose());
@@ -331,10 +331,21 @@ export async function mountDortmundScene({
       geometry.setIndex(indices);
       geometry.computeVertexNormals();
       geometries.push(geometry);
-      const mesh = new THREE.Mesh(geometry, groupMaterials);
+      const isSeatSurface = /^C_(?:back|front|left|right)/i.test(entry.name);
+      const meshMaterials = isSeatSurface ? groupMaterials.map((material,index) => {
+        const isolated = material.clone();
+        materials.set(Symbol(`${entry.name}:${index}`),isolated);
+        return isolated;
+      }) : groupMaterials;
+      const mesh = new THREE.Mesh(geometry, meshMaterials);
       mesh.name = `ORIGINAL_${entry.name}`;
       mesh.userData.sourcePathId = entry.pathId;
       mesh.userData.sourceParts = entry.parts.filter(previewSupportsMaterial);
+      if (isSeatSurface) {
+        mesh.userData.seatSources = meshMaterials.map(material =>
+          globalThis.StadiumSeatDesignModes.captureMaterial(material));
+        seatMeshes.push(mesh);
+      }
       originalMeshes.push(mesh);
       if (naturalPackage || imageBackground) {
         mesh.castShadow = true;
@@ -360,6 +371,53 @@ export async function mountDortmundScene({
       });
     }
     facade = addReconstructedFacade(THREE, modelRoot);
+    const applySeatDesign = design => {
+      if (!design) return;
+      const custom=design.mode==='custom';
+      const blocks=(design.blocks||[]).map((block,index)=>({...block,_index:index}));
+      const key=JSON.stringify(blocks.map(block=>[block.id,block.quad,block.rows,block.seats]));
+      const axes=editorFrame?.surroundingsAxes || editorFrame?.seatAxes || editorFrame?.axes
+        || SURROUNDINGS_AXES_DEFAULT;
+      const registration=custom && axes
+        ? globalThis.StadiumSourceSeats.registration(blocks,editorFrame,axes) : null;
+      const palette=(design.palette||[]).map(hex=>new THREE.Color(hex));
+      const neutral=new THREE.Color('#606a74');
+      let covered=0,total=0;
+      for(const mesh of seatMeshes){
+        const materialsForMesh=Array.isArray(mesh.material)?mesh.material:[mesh.material];
+        materialsForMesh.forEach((material,index)=>globalThis.StadiumSeatDesignModes.setMaterialMode(
+          material,mesh.userData.seatSources[index],custom?'custom':'original'));
+        if(!custom)continue;
+        const positions=mesh.geometry.getAttribute('position');
+        if(!mesh.userData.seatAddresses || mesh.userData.seatAddressKey!==key){
+          const addresses=new Int32Array(positions.count*2).fill(-1);
+          const tier=globalThis.StadiumSourceSeats.tierOf(mesh.name.replace(/^ORIGINAL_/,''));
+          if(registration&&tier){
+            for(let vertex=0;vertex<positions.count;vertex++){
+              const hit=registration.lookup(positions.getX(vertex),positions.getZ(vertex),tier);
+              if(hit){addresses[vertex*2]=hit.block._index;addresses[vertex*2+1]=hit.index;}
+            }
+          }
+          mesh.userData.seatAddresses=addresses;
+          mesh.userData.seatAddressKey=key;
+        }
+        let colors=mesh.geometry.getAttribute('color');
+        if(!colors){
+          colors=new THREE.BufferAttribute(new Float32Array(positions.count*3),3);
+          mesh.geometry.setAttribute('color',colors);
+        }
+        const addresses=mesh.userData.seatAddresses;
+        for(let vertex=0;vertex<positions.count;vertex++){
+          const blockIndex=addresses[vertex*2],seatIndex=addresses[vertex*2+1];
+          total++;if(blockIndex>=0)covered++;
+          const colorIndex=blockIndex<0?0:registration.blocks[blockIndex].values[seatIndex];
+          const color=colorIndex>0&&palette[colorIndex]?palette[colorIndex]:neutral;
+          colors.setXYZ(vertex,color.r,color.g,color.b);
+        }
+        colors.needsUpdate=true;
+      }
+      seatCoverage=custom?{covered,total}:null;
+    };
     if (runtimeLighting) {
       const [{createDortmundRuntimeLighting}, response] = await Promise.all([
         import('./dortmund_runtime_lighting.js'),
@@ -507,7 +565,8 @@ export async function mountDortmundScene({
     };
     animate(performance.now());
     return {
-      kind: 'three', stage: {renderer, render, sceneRoot: modelRoot}, dispose,
+       kind: 'three', stage: {renderer, render, sceneRoot: modelRoot}, dispose,
+       seatCoverage:()=>seatCoverage,
       lightingEvidence: () => declaredLighting?.evidence.map(({light, ...item}) => ({
         ...item, position: light.position.toArray(),
         direction: light.target.position.clone().sub(light.position).normalize().toArray(),
@@ -530,7 +589,7 @@ export async function mountDortmundScene({
         if (animationActive) frame = requestAnimationFrame(animate);
         else cancelAnimationFrame(frame);
       },
-       update({weights, designColors, roofVisible, fullConcept, cameraPreset, orbit, day, floodlight} = {}) {
+       update({weights, seatDesign, seatMode, roofVisible, fullConcept, cameraPreset, orbit, day, floodlight} = {}) {
         if (disposed) return Promise.resolve();
          facade.group.visible = reconstructedFacadeVisible(facade.group.visible, fullConcept);
          // A scene-mode switch must restore the untouched source preview in Rundum.
@@ -553,38 +612,7 @@ export async function mountDortmundScene({
              : concept ? 'Unity-Mesh-Auszug + rekonstruierte Bestandsfassade + graue Konzeptbauteile'
              : 'Unity-Mesh-Auszug + rekonstruierte, nicht quellbelegte Bestandsfassade');
         }
-        if (designColors && JSON.stringify(designColors) !== lastColors) {
-          lastColors = JSON.stringify(designColors);
-          if (colorBands) {
-            world.remove(colorBands);
-            colorBands.traverse(object => { object.geometry?.dispose(); object.material?.dispose(); });
-          }
-          colorBands = new THREE.Group();
-          colorBands.name = 'EDITOR_DESIGN_COLOR_BANDS';
-          for (const [stand, hex] of Object.entries(designColors)) {
-            if (!sideOrder.includes(stand) || !/^#[0-9a-f]{6}$/i.test(hex)) continue;
-            const xSide = stand === 'SUED' || stand === 'NORD';
-            const sign = stand === 'SUED' || stand === 'OST' ? 1 : -1;
-            const across = xSide ? 104 : 83;
-            const radial = xSide ? 89 : 113;
-            const vertices = xSide
-              ? [sign * radial, 37, -across, sign * radial, 37, across,
-                sign * (radial + 1.3), 37, across, sign * (radial + 1.3), 37, -across]
-              : [-across, 37, sign * radial, across, 37, sign * radial,
-                across, 37, sign * (radial + 1.3), -across, 37, sign * (radial + 1.3)];
-            const geometry = new THREE.BufferGeometry();
-            geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
-            geometry.setIndex([0, 1, 2, 0, 2, 3]);
-            geometry.computeVertexNormals();
-            const mesh = new THREE.Mesh(geometry, new THREE.MeshBasicMaterial({
-              color: hex, side: THREE.DoubleSide, depthTest: false,
-            }));
-            mesh.renderOrder = 2;
-            mesh.name = `EDITOR_DESIGN_${stand}`;
-            colorBands.add(mesh);
-          }
-          world.add(colorBands);
-        }
+        if(seatDesign)applySeatDesign({...seatDesign,mode:seatMode||seatDesign.mode});
         if (typeof roofVisible === 'boolean') roofOn = roofVisible;
         roof.forEach(mesh => { mesh.visible = roofOn; });
         concept?.group.traverse(object => {
