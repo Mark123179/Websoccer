@@ -26,3 +26,18 @@ oder die Bevorzugung einer der beiden Quellen.
 bereinigte Importfassung getrennt kennzeichnen. Eine erneute Lieferung
 derselben strittigen Zuordnung ist keine fachliche Klärung und keine
 Freigabe zur Aufhebung der Einzelsperren.
+
+Für Lorient liegt inzwischen ein belastbarer externer FM-Identitätsbeleg vor;
+für Brest fehlt weiterhin eine eigene belegte FM-Zuordnung. Die ursprüngliche
+gemeinsame Quarantäne ist damit nicht mehr gleichbedeutend mit einer bei
+beiden gleichermaßen ungeklärten Identität. Quellenbericht:
+`docs/import-pilot/samba-diop-identity-resolution.md`.
+
+**Why:** Das direkt gelesene Sortitoutsi-FM26-Profil verknüpft die strittige
+Unique-ID mit vollständigem Geburtsdatum und Lorient. Das FM-Spielstartalter
+ist dagegen kein verlässlicher Vergleich zum Alter am späteren Importtag.
+
+**How to apply:** Vor einer Übernahme den Bericht und den tatsächlichen
+Workspace-Bestand prüfen. Ein fachlicher Identitätsnachweis ist kein
+Nachweis einer bereits erfolgten Datenbankkorrektur. Brest nicht automatisch
+mit freigeben; CMTracker nicht mitprojizieren.

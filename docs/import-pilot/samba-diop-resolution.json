@@ -1,0 +1,54 @@
+{
+  "checked_on": "2026-10-23",
+  "database_applied": false,
+  "database_blocker": "Neither target player, target club, related ImportIssue nor matching SourceImportRun.package_data exists in the current Workspace public schema. Neither player nor issue exists in the import_pilot schema either.",
+  "original_archive": "attached_assets/ligue1_vereinspakete_2026-10-23_1792761279706.zip",
+  "original_archive_sha256": "dec9867fd2395543072bdd9a81a8faf61ce783fdd2f7085b40712507b01eec4d",
+  "decisions": [
+    {
+      "club_tm_id": 3911,
+      "player_tm_id": 1437971,
+      "date_of_birth": "2007-05-27",
+      "original_member": "brs_vereinspaket_2026-10-23.zip",
+      "original_data_sha256": "f99b08277ee272773b1d55b0d44918e91c84f5d23b92e034f60f190d54f5be88",
+      "rejected_fmi_id": 2000381104,
+      "verified_fmi_id": null,
+      "decision": "keep_quarantine",
+      "remaining_gap": "A source linking a distinct FM unique ID directly to Samba Hane Diop, born 2007-05-27, Brest / Chateaubriant, has not been found. This does not prove absence from FM.",
+      "apply_fmi_rating": false,
+      "cmtracker_action": "unchanged"
+    },
+    {
+      "club_tm_id": 1158,
+      "player_tm_id": 1273019,
+      "date_of_birth": "2006-01-06",
+      "original_member": "fcl_vereinspaket_2026-10-23.zip",
+      "original_data_sha256": "4a25ce13da8e6ff5eeb6bb7e255c76d0443f18d98cff8fce635da365d4202193",
+      "verified_fmi_id": 2000381104,
+      "decision": "identity_verified_pending_target_database",
+      "identity_source": "https://sortitoutsi.net/football-manager-2026/person/2000381104/samba-diop",
+      "tm_source": "https://www.transfermarkt.com/samba-diop/profil/spieler/1273019",
+      "match_basis": ["unique_fm_id", "exact_date_of_birth", "club"],
+      "cmtracker_action": "unchanged",
+      "verified_original_fmi_block": {
+        "version": "26.2.0",
+        "url": "https://fminside.net/players/7-fm-26/2000381104-samba-diop",
+        "rating": 38,
+        "potential": 60,
+        "potential_range": {"min": 45, "max": 60, "code": -6},
+        "raw": {
+          "attributes": {"Crossing": 25, "Dribbling": 30, "Finishing": 40, "First Touch": 50, "Heading": 25, "Long Shots": 45, "Marking": 45, "Passing": 30, "Tackling": 50, "Technique": 40, "Aggression": 35, "Anticipation": 45, "Bravery": 40, "Composure": 30, "Concentration": 30, "Decisions": 70, "Determination": 50, "Flair": 30, "Leadership": 30, "Off the Ball": 35, "Positioning": 60, "Teamwork": 40, "Vision": 40, "Work Rate": 65, "Acceleration": 70, "Agility": 65, "Balance": 25, "Jumping Reach": 70, "Natural Fitness": 60, "Pace": 70, "Stamina": 60, "Strength": 30, "Corners": 35, "Free Kick Taking": 25, "Long Throws": 15, "Penalty Taking": 20},
+          "positions": "DM, MC",
+          "footedness": "Right",
+          "height": "187 CM",
+          "age": "19",
+          "date_of_birth": null,
+          "name": "Samba Diop",
+          "full_name": null,
+          "club": "Lorient",
+          "potential_text": "Potential between 45 and 60 (-6)"
+        }
+      }
+    }
+  ]
+}
