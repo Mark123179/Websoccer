@@ -131,3 +131,16 @@ Pakete entstehen im Chat „Verein Import Praxis“; das lokale Werkzeug ist zur
 **Why:** Der Nutzer hat diese Arbeitsteilung ausdrücklich festgelegt.
 
 **How to apply:** Kein lokales Importwerkzeug als Voraussetzung der Umstellung oder der weiteren Paketproduktion einplanen.
+
+Beim nächsten Live-Neustart den gesamten aktuellen Vereinspaketbestand
+einschließlich manueller Nachpflege berücksichtigen, nicht nur den Code oder
+ein einzelnes BVB-Paket. Die Vorbereitung ist keine Reset-Ausführungsfreigabe.
+
+**Why:** Der Nutzer verlangte alle mühsam je Verein importierten Positionen,
+Marktwertverläufe und Transferhistorien live und wählte ausdrücklich
+„Neustart mit Importdaten vorbereiten“.
+
+**How to apply:** Vollständigen Transport samt Nachpflege vor einer Löschung
+auf einer isolierten Kopie nachweisen; Originalpakete allein können
+bestätigte Korrekturen verlieren. Live-Sicherung, Wiederherstellungsprüfung
+und konkrete Reset-Freigabe bleiben separat.

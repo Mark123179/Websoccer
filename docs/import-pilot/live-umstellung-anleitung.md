@@ -1,5 +1,13 @@
 # Vereinspakete: manuelle Live-Umstellung
 
+> Aktualisierung 27.10.2026: Der Betreiber hat den Live-Altmodus und null
+> Importläufe bestätigt und einen Neustart mit dem vollständigen aktuellen
+> Importbestand **zur Vorbereitung** gewählt. Vor Ausführung unbedingt
+> [den aktuellen Vorbereitungsbericht](live-neustart-vorbereitung-2026-10-27.md)
+> beachten. Die historische Nachfüll-Reihenfolge und damalige grüne Tests
+> sind keine Freigabe für einen heutigen Reset. Ein aktuelles vollständiges
+> Transportpaket einschließlich manueller Nachpflege fehlt noch.
+
 Stand 07.10.2026. Maßgeblich: Nachträge 13 und 14. **Diese Anleitung ist Vorbereitung, keine Reset-Freigabe. Replit hat keinen Reset, keine Sicherung auf Hetzner, keinen Push/Pull und keine Umschaltung ausgeführt.**
 
 ## Was bereits erledigt ist
