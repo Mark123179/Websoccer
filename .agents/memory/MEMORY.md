@@ -148,4 +148,4 @@
 - [Native Geodaten-Importe](native-geodata-imports.md) — Größere Aufbereitungsläufe können fehlende native Bibliotheken durch Importreihenfolge verdecken; Offline-Prüfer eigenständig starten.
 - [Sitzquellen und Fangruppen](stadium-seat-source-semantics.md) — Sitz-JSON und Unity können Fangruppen unterschiedlich aufteilen; Editor-Hüllen bei Widersprüchen aus dem Originalmodell ableiten.
 - [Django Static-Finder-Misses](django-static-finder-misses.md) — Django 6.1 sammelt None als Treffer; Signatur-Kompatibilität allein verhindert keine Static-500er.
-- [Schweizer Vereinsrekorde](swiss-league-import-scope.md) — Alte Intertoto-Spiele vor 1995 ausschließen; gemischte Rekordserien nicht durch Subtraktion korrigieren.
+- [Schweizer Vereinsrekorde](swiss-league-import-scope.md) — Alten Intertoto ausschließen; historische Cup-Lücken separat prüfen, nicht nur TM-Serien neu zählen.

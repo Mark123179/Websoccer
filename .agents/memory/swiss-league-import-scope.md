@@ -35,3 +35,16 @@ alten Sommerwettbewerbe. Ein reiner Textfilter auf „Intertoto“ übersieht si
 **How to apply:** Wettbewerb und Datum gemeinsam prüfen. Serien außerdem
 nach tatsächlichem Spieldatum statt nach Spieltagsnummer ordnen und
 Elfmeterschießen ausdrücklich als eigene Ergebnisfrage ausweisen.
+
+Historische TM-Vereinsspielpläne sind keine vollständigen Pflichtspielarchive.
+Frühe Schweizer Cup-Spiele separat gegen RSSSF oder zeitgenössische Quellen
+prüfen, bevor eine Ligaserie als wettbewerbsübergreifender Rekord gilt.
+
+**Why:** Bei der Schweizer Nachprüfung fehlten sowohl unterbrechende Cupsiege
+als auch eine rekordverlängernde Cup-Niederlage in den TM-Spielplänen.
+Eine reine Neuberechnung derselben TM-Listen hätte falsche Ersatzwerte geliefert.
+
+**How to apply:** Alle ernsthaften Konkurrenzserien einschließlich
+Saisonübergängen prüfen; fehlende Cup-Siege unterbrechen, fehlende Niederlagen
+verlängern eine Serie. Erfasste Spielhistorie und tatsächliche Quellenabdeckung
+im Nachweis ausdrücklich unterscheiden.

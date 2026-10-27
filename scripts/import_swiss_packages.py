@@ -12,15 +12,16 @@ from scripts.import_additional_club_packages import (
     import_batch, m, transaction, validate_batch_players,
 )
 from game.club_import.package_validation import PackageError, read_package
+from game.club_import.swiss_winless_20261027 import RECORDS as WINLESS_RECORDS
 
 
-SOURCE = Path("attached_assets/schweiz_vereinspakete_2026-10-27_1793101337227.zip")
+SOURCE = Path("attached_assets/schweiz_vereinspakete_2026-10-27_1793106969838.zip")
 SOURCE_SHA = "4b0ae43e098ab953032ea8fcda679e9cd27ccb41c5a46f616e02e09ffe9b723d"
 OUTPUT = Path("generated-artifacts/schweiz-2026-10-27")
 OPEN_RECORDS = {
     (260, "longest_unbeaten"), (527, "longest_win_streak_coach"),
-    (434, "longest_winless"), (321, "longest_winless"),
 }
+RESOLVED_RECORDS = {(tm, "longest_winless") for tm in WINLESS_RECORDS}
 OWNER_EXCEPTIONS = {1133978: 985, 978438: 3}
 OWNER_SOURCE_IDS = {1133978: 9251, 978438: 438}
 DECISION = (
@@ -41,11 +42,19 @@ def revise_records(data):
     tm = data["club"]["ids"]["tm"]["value"]
     for record in data["records"]:
         key = record["key"]
-        if (tm, key) not in OPEN_RECORDS and not (
+        if (tm, key) not in OPEN_RECORDS | RESOLVED_RECORDS and not (
                 tm == 504 and key in ("biggest_defeat", "youngest_player")):
             continue
         original = deepcopy(record)
-        if (tm, key) in OPEN_RECORDS:
+        if (tm, key) in RESOLVED_RECORDS:
+            require(record["value_numeric"] == (20 if tm == 434 else 21)
+                    and "intertoto" in record["context"].lower(),
+                    "Expected original mixed winless record.")
+            record.update(
+                **deepcopy(WINLESS_RECORDS[tm]),
+                holder=None, opponent=None, date=None, status="belegt",
+            )
+        elif (tm, key) in OPEN_RECORDS:
             require("intertoto" in record["context"].lower(),
                     "Expected mixed Intertoto source record.")
             record.update(
@@ -135,7 +144,8 @@ def prepare():
             packages.append((path, checked_manifest, checked_data))
             paths.append(path)
     require(Counter((r["club_tm"], r["key"]) for r in changes) == Counter(
-        {key: 1 for key in OPEN_RECORDS | {(504, "biggest_defeat"), (504, "youngest_player")}}),
+        {key: 1 for key in OPEN_RECORDS | RESOLVED_RECORDS
+         | {(504, "biggest_defeat"), (504, "youngest_player")}}),
         "Approved record coverage changed.")
     require(Counter(row["player_tm"] for row in owner_evidence)
             == Counter({tm: 1 for tm in OWNER_EXCEPTIONS}),
@@ -171,6 +181,15 @@ def verify(league, paths):
         row = m.ClubRecord.objects.get(club__transfermarkt_id=tm, record_key=key, source="SEED")
         require(row.value_numeric is None and row.evidence_status == "nicht_belegt",
                 "Unverified mixed-competition record remains active.")
+    for tm, values in WINLESS_RECORDS.items():
+        row = m.ClubRecord.objects.get(
+            club__transfermarkt_id=tm, record_key="longest_winless", source="SEED")
+        require(row.value_numeric == values["value_numeric"]
+                and row.evidence_status == "belegt"
+                and str(row.period_from) == values["period_from"]
+                and str(row.period_to) == values["period_to"]
+                and row.evidence == values["sources"],
+                "Source-backed winless record differs from evidence.")
     for tm, owner in OWNER_EXCEPTIONS.items():
         player = m.Player.objects.get(transfermarkt_id=tm)
         target = 527 if tm == 1133978 else 938
@@ -198,7 +217,7 @@ def main():
                               approved_club_countries={163: "Liechtenstein"})
         verify(league, paths)
         report.update(applied=args.apply, source=provenance, club_count=12,
-                      open_records=4, record_projections_verified=True)
+                      open_records=len(OPEN_RECORDS), record_projections_verified=True)
         if not args.apply:
             transaction.set_rollback(True)
     path = OUTPUT / ("applied-report.json" if args.apply else "dry-run-report.json")

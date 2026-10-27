@@ -46,6 +46,17 @@ class SwissPreparationTests(SimpleTestCase):
                         self.assertEqual(records["biggest_defeat"]["opponent"]["tm_id"], 26)
                         self.assertEqual(records["youngest_player"]["date"], "1992-07-22")
                         self.assertEqual(records["youngest_player"]["value_numeric"], 5615)
+                    tm = source["club"]["ids"]["tm"]["value"]
+                    if tm in (434, 321):
+                        record = next(r for r in projected["records"]
+                                      if r["key"] == "longest_winless")
+                        self.assertEqual(record["value_numeric"], 16)
+                        self.assertEqual(record["status"], "belegt")
+                        self.assertEqual(record["period_from"],
+                                         "1942-11-29" if tm == 434 else "2001-11-24")
+                        self.assertFalse(any(g["ref"] == "longest_winless"
+                                             and "Ersatzwert ohne alte" in g["note"]
+                                             for g in projected["gaps"]))
             self.assertEqual(batch.SOURCE.read_bytes(), original)
             self.assertEqual(hashlib.sha256(original).hexdigest(), batch.SOURCE_SHA)
 
