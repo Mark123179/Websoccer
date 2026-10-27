@@ -37,6 +37,20 @@ Prüfung des eigentlichen Presentation-Objekts erfasste diese Konflikte.
 Modellisolierung klar als solche kennzeichnen, statt mit ausgeblendeten
 Einzelflächen ein scheinbar bereinigtes geografisches Umfeld zu liefern.
 
+## Unvollständige Grün- und Wasserpolygone zur Laufzeit
+
+Grün- und Wasserflächen mit weniger als drei Punkten dürfen beim Anzeigen
+einzeln ausgelassen werden, sofern eine sichtbare Warnung die betroffene
+Fläche benennt und die Quelldaten unverändert bleiben. Die Import-/Paketprüfung
+bleibt streng; diese Ausnahme gilt nicht für Aussparungskonflikte oder Gebäude.
+
+**Why:** Der Nutzer genehmigte ausdrücklich, dass eine solche fehlerhafte
+Einzelfläche nicht die gesamte Stadionansicht blockieren soll, ohne Punkte
+zu erfinden oder Quellen zu löschen.
+
+**How to apply:** Darstellungs-Fallback und Quellenfreigabe getrennt halten.
+Warnungen müssen neben dem Modell sichtbar bleiben, nicht nur intern vorliegen.
+
 ## Bodenöffnung und unterirdische Modellteile
 
 Die Geländeöffnung muss den sichtbar unter Geländeniveau liegenden

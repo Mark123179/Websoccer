@@ -3,10 +3,41 @@ import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import vm from 'node:vm';
 import * as THREE from '../static/stadium_editor/stage/vendor/three.module.js';
-import {editorPointToDortmund, buildDortmundSurroundings} from '../static/stadium_editor/dortmund_surroundings.js';
+import {editorPointToDortmund, buildDortmundSurroundings, createSurroundingsChecks} from '../static/stadium_editor/dortmund_surroundings.js';
 
 const square = [[0, 0], [10, 0], [10, 20], [0, 20], [0, 0]];
 const close = (a, b) => assert.ok(Math.abs(a - b) < 1e-5, `${a} != ${b}`);
+
+test('incomplete water polygon does not hide valid surroundings or mutate the source', () => {
+  const line = [[-394.8, -387.9], [-400.7, -379.3]];
+  const data = {green: [square], water: [square, line], buildings: [square]};
+  const before = JSON.stringify(data);
+  const environment = buildDortmundSurroundings(THREE, data);
+  try {
+    assert.ok(environment.group.getObjectByName('ENV_WATER'));
+    assert.ok(environment.group.getObjectByName('ENV_BUILDINGS'));
+    assert.equal(environment.group.userData.renderWarnings.length, 1);
+    assert.match(environment.group.userData.renderWarnings[0], /water\[1\].*Quelldaten unverändert/);
+    assert.equal(JSON.stringify(data), before);
+    assert.throws(() => createSurroundingsChecks(THREE, data).surface(line, 'water', 1),
+      /mindestens drei Punkte/);
+  } finally { environment.dispose(); }
+});
+
+test('closed two-point green ring is warned about; invalid positions and buildings still fail', () => {
+  const environment = buildDortmundSurroundings(THREE, {
+    green: [[[0, 0], [10, 0], [0, 0]]],
+  });
+  try {
+    assert.match(environment.group.userData.renderWarnings[0], /green\[0\]/);
+  } finally { environment.dispose(); }
+  assert.throws(() => buildDortmundSurroundings(THREE, {
+    water: [[[0, 0], [NaN, 10]]],
+  }), /ungültige Position/);
+  assert.throws(() => buildDortmundSurroundings(THREE, {
+    buildings: [[[0, 0], [10, 0]]],
+  }), /mindestens drei Punkte/);
+});
 
 test('pitch-length axis maps onto the Unity pitch-length axis, not across it', () => {
   assert.deepEqual(editorPointToDortmund([52.5, 0]), [-0, 52.5]);
@@ -130,6 +161,6 @@ test('missing map categories do not invent features; malformed supplied data fai
   assert.throws(() => editorPointToDortmund([NaN, 2]), /ungültige Position/);
   assert.throws(() => editorPointToDortmund([0, 0], {axisTheta: Infinity}), /Koordinatenrahmen/);
   assert.throws(() => buildDortmundSurroundings(THREE, {buildings: [square], buildingHeights: [0]}), /Gebäudehöhe/);
-  assert.throws(() => buildDortmundSurroundings(THREE, {green: [[]]}), /drei Punkte/);
+  assert.throws(() => createSurroundingsChecks(THREE).surface([], 'green', 0), /drei Punkte/);
   assert.throws(() => buildDortmundSurroundings(THREE, {roads: [{p: [[0, 0], [1, 1]], w: -1}]}), /Straßenbreite/);
 });

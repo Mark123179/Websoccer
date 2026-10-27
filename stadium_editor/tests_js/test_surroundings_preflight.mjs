@@ -48,7 +48,6 @@ test('every source object has production-renderer parity including drawn joins a
     {green:[editor(square(20,20))]},
     {green:[editor(square(0,0))]},
     {green:[editor(square(9,0))]},
-    {water:[[[1,2],[3,4]]]},
     {roads:[{p:editor([[-30,11],[30,11]]),w:2}]},
     // Single point: renderer draws a join even without a line segment.
     {roads:[{p:editor([[11,0]]),w:2}]},
@@ -67,6 +66,15 @@ test('every source object has production-renderer parity including drawn joins a
     finally { env?.dispose(); }
     assert.equal(inspectSurroundings(data).ok, accepted, JSON.stringify(feature));
   }
+});
+
+test('preflight rejects incomplete water even when runtime safely omits it with a warning', () => {
+  const data = {water: [[[1, 2], [3, 4]]]};
+  assert.equal(inspectSurroundings(data).ok, false);
+  const env = buildDortmundSurroundings(THREE, data);
+  try {
+    assert.match(env.group.userData.renderWarnings[0], /water\[0\]/);
+  } finally { env.dispose(); }
 });
 
 test('rotated translated frame and all valid reflected axes use the same transform', () => {

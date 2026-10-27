@@ -2,7 +2,7 @@ import * as THREE from './stage/vendor/three.module.js';
 import './source_seats.js?v=3';
 import './seat_design_modes.js?v=1';
 import {applyStudyCamera} from './study_camera.js?v=3';
-import {buildDortmundSurroundings} from './dortmund_surroundings.js?v=58';
+import {buildDortmundSurroundings} from './dortmund_surroundings.js?v=59';
 import {validateCalibration, standForCenter, tickerQuaternion} from './unity_calibration.js?v=2';
 import {mountBridgeHeightNotice} from './bridge_height_evidence.js?v=1';
 import {mountHeidenheimFloodlightVisuals} from './heidenheim_floodlight_visuals.js?v=2';
@@ -53,7 +53,8 @@ export async function mountUnityStadium({
     presentation.frame, calibration.surroundingsAxes);
   scene.add(environment.group);
   const removeBridgeNotice = mountBridgeHeightNotice(element,
-    environment.group.userData.bridgeHeightEvidence || [], environment.group.userData.bridgeHeightNotice);
+    environment.group.userData.bridgeHeightEvidence || [],
+    [environment.group.userData.bridgeHeightNotice, ...(environment.group.userData.renderWarnings || [])].filter(Boolean).join(' · '));
   const hemisphere = new THREE.HemisphereLight(0xe7f1f2, 0x344045, 1.35);
   const sun = new THREE.DirectionalLight(0xfff3d4, 1.5);
   sun.position.set(-135, 210, 100);

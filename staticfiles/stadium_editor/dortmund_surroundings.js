@@ -73,7 +73,9 @@ export function createSurroundingsChecks(THREE, data = {}, frame = {},
     if (!Array.isArray(raw)) throw new Error('Eine Umfeldfläche ist ungültig.');
     const points = raw.map(point);
     if (points.length > 1 && points[0].every((n, i) => n === points.at(-1)[i])) points.pop();
-    if (points.length < 3) throw new Error('Eine Umfeldfläche benötigt mindestens drei Punkte.');
+    if (points.length < 3) throw Object.assign(
+      new Error('Eine Umfeldfläche benötigt mindestens drei Punkte.'),
+      {code: 'DEGENERATE_SURFACE'});
     return points;
   };
   const triangulate = points => {
@@ -144,6 +146,8 @@ export function buildDortmundSurroundings(THREE, data = {}, frame = {},
   const {terrain, elevation} = checks;
   const group = new THREE.Group();
   group.name = 'EDITOR_SURROUNDINGS_3D';
+  const renderWarnings = [];
+  group.userData.renderWarnings = renderWarnings;
   group.userData.source = data.source || '';
   group.userData.treeSource = data.treeSource || '';
   const bridges = bridgeHeightEvidence(data);
@@ -195,6 +199,17 @@ export function buildDortmundSurroundings(THREE, data = {}, frame = {},
   try {
     const green = [], water = [], roads = [], walls = [], roofs = [];
     const omitted = {green: [], water: []};
+    // Only incomplete green/water polygons may be omitted at runtime.
+    // The shared preflight stays strict, as do coordinates, buildings and cutouts.
+    const checkedSurface = (raw, layer, index) => {
+      try {
+        return checks.surface(raw, layer, index);
+      } catch (error) {
+        if (error.code !== 'DEGENERATE_SURFACE') throw error;
+        renderWarnings.push(`${layer}[${index}]: Umfeldfläche mit weniger als drei Punkten nicht dargestellt. Quelldaten unverändert.`);
+        return {omitted: true};
+      }
+    };
     const greenContours = [], waterContours = [], roadContours = [], buildingContours = [];
     let radius = 450;
     const includeBounds = points => {
@@ -207,13 +222,13 @@ export function buildDortmundSurroundings(THREE, data = {}, frame = {},
       }
     };
     for (const [index, raw] of (data.green || []).entries()) {
-      const {points, faces, omitted: skip} = checks.surface(raw, 'green', index);
+      const {points, faces, omitted: skip} = checkedSurface(raw, 'green', index);
       if (skip) { omitted.green.push(index); continue; }
       includeBounds(points); surface(green, points, -.18, faces);
       lineLoop(greenContours, points, -.145);
     }
     for (const [index, raw] of (data.water || []).entries()) {
-      const {points, faces, omitted: skip} = checks.surface(raw, 'water', index);
+      const {points, faces, omitted: skip} = checkedSurface(raw, 'water', index);
       if (skip) { omitted.water.push(index); continue; }
       includeBounds(points); surface(water, points, -.16, faces);
       lineLoop(waterContours, points, -.135);

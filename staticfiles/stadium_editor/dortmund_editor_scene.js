@@ -4,7 +4,7 @@ import './seat_design_modes.js?v=1';
 import {buildConcept, warpShell, ROOF_NAMES, SHELL_NAMES} from './dortmund_concept.js?v=49';
 import {previewSupportsMaterial, sourceOpaqueColor} from './dortmund_source_materials.js?v=2';
 import {addReconstructedFacade, reconstructedFacadeVisible, sourceFacadePreviewColor} from './dortmund_reconstructed_facade.js?v=2';
-import {buildDortmundSurroundings, SURROUNDINGS_AXES_DEFAULT} from './dortmund_surroundings.js?v=58';
+import {buildDortmundSurroundings, SURROUNDINGS_AXES_DEFAULT} from './dortmund_surroundings.js?v=59';
 import {tickerCameraFrame, tickerHeightElevation, TICKER_ELEVATION, TICKER_AZIMUTH, TICKER_VIEW_OFFSET} from './dortmund_ticker_camera.js?v=3';
 import {applyStudyCamera} from './study_camera.js?v=3';
 import {TICKER_ROOF_NAMES, setTickerRoofVisibility} from './dortmund_ticker_roof.js?v=1';
@@ -278,7 +278,8 @@ export async function mountDortmundScene({
       } else environment = buildDortmundSurroundings(THREE, surroundings, editorFrame);
       scene.add(environment.group);
       removeBridgeNotice = mountBridgeHeightNotice(element,
-        environment.group.userData.bridgeHeightEvidence || [], environment.group.userData.bridgeHeightNotice);
+        environment.group.userData.bridgeHeightEvidence || [],
+        [environment.group.userData.bridgeHeightNotice, ...(environment.group.userData.renderWarnings || [])].filter(Boolean).join(' · '));
     }
     const [manifestResponse, binaryResponse] = await Promise.all([
       fetch(url('manifest.json')), fetch(url('geometry.bin')),
