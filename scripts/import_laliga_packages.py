@@ -24,6 +24,13 @@ QUARANTINE = {
     1342235: (2000395283, "FMInside-ID ebenfalls Noah Rodríguez zugeordnet."),
     1451988: (2000395283, "FMInside-ID ebenfalls Anxo Rodríguez zugeordnet."),
     790669: (2000086852, "FMInside-Zuordnung bei abweichendem Geburtsdatum ungeklärt."),
+    1064403: ((2000374246, 2000277721), "Zwei abweichende FMInside-IDs für Álvaro García."),
+}
+LOAN_OVERRIDES = {
+    1064403: ({"tm_id": 1108, "name": "Deportivo Alavés"},
+              {"tm_id": 1050, "name": "FC Villarreal"}),
+    982999: ({"tm_id": 150, "name": "Real Betis Sevilla"},
+             {"tm_id": 3709, "name": "FC Getafe"}),
 }
 
 
@@ -33,6 +40,7 @@ def prepare():
         raise PackageError("Original delivery changed; approval must be reviewed.")
     OUTPUT.mkdir(parents=True, exist_ok=True)
     paths, packages, evidence, seen = [], [], [], Counter()
+    loan_evidence = []
     totals = Counter()
     with zipfile.ZipFile(io.BytesIO(raw)) as outer:
         if len(outer.namelist()) != 20:
@@ -50,10 +58,25 @@ def prepare():
                 raise PackageError("Original club checksum mismatch.")
             for player in data["players"]:
                 tm = player["ids"]["tm"]["value"]
+                if tm in LOAN_OVERRIDES:
+                    loan_evidence.append({
+                        "club": data["club"]["name"], "tm": tm,
+                        "original_squad": dict(player["squad"]),
+                    })
+                    owner, borrower = LOAN_OVERRIDES[tm]
+                    player["squad"].update(owner_club=dict(owner), loan_club=dict(borrower))
+                    data["gaps"].append({
+                        "entity": "player", "ref": f"tm:{tm}", "field": "squad",
+                        "severity": "info",
+                        "note": "Spielerbezogen freigegebene Hauptvereins-Zuordnung: "
+                                + owner["name"] + " → " + borrower["name"]
+                                + ". Originale B-Team-Angaben bleiben im Quellenarchiv erhalten.",
+                    })
                 if tm not in QUARANTINE:
                     continue
                 expected, reason = QUARANTINE[tm]
-                if player["ids"]["fmi"]["value"] != expected:
+                expected_ids = expected if isinstance(expected, tuple) else (expected,)
+                if player["ids"]["fmi"]["value"] not in expected_ids:
                     raise PackageError("Quarantined source assignment changed.")
                 seen[tm] += 1
                 evidence.append({
@@ -87,12 +110,15 @@ def prepare():
             packages.append((path, checked_manifest, checked_data))
             paths.append(path)
             totals.update({key: len(data[key]) for key in ("players", "persons", "records", "titles")})
-    if set(seen) != set(QUARANTINE) or any(count != 1 for count in seen.values()):
-        raise PackageError("Quarantine coverage differs from the approved seven players.")
+    if set(seen) != set(QUARANTINE) or any(
+            count != (2 if tm == 1064403 else 1) for tm, count in seen.items()):
+        raise PackageError("Quarantine coverage differs from the approved eight players.")
+    if Counter(row["tm"] for row in loan_evidence) != Counter({1064403: 2, 982999: 2}):
+        raise PackageError("Approved loan exceptions do not cover both package views.")
     shared = validate_batch_players(packages)
     provenance = {
         "original_archive": str(SOURCE), "original_sha256": SOURCE_SHA,
-        "quarantine": evidence, "source_totals": dict(totals),
+        "quarantine": evidence, "loan_exceptions": loan_evidence, "source_totals": dict(totals),
         "reciprocal_loans": len(shared),
         "unique_players": len({p["ids"]["tm"]["value"] for _, _, d in packages for p in d["players"]}),
     }
@@ -106,6 +132,8 @@ def main():
     parser.add_argument("--apply", action="store_true")
     args = parser.parse_args()
     paths, provenance = prepare()
+    print(f"Prepared {len(paths)} validated packages, "
+          f"{provenance['unique_players']} unique players; starting guarded import.", flush=True)
     with transaction.atomic():
         league, _ = m.League.objects.get_or_create(
             name="LaLiga", country="Spanien",
@@ -116,6 +144,13 @@ def main():
             if (player.fm_inside_id is not None or not player.import_lock
                     or player.source_ratings.filter(source="FM").exists()):
                 raise PackageError("Quarantined FM identity or rating remains active.")
+        for tm, (owner, borrower) in LOAN_OVERRIDES.items():
+            player = m.Player.objects.get(transfermarkt_id=tm)
+            if (player.owner_club.transfermarkt_id != owner["tm_id"]
+                    or player.club.transfermarkt_id != borrower["tm_id"]
+                    or player.squad_team != "u21"
+                    or str(player.loan_until) != "2027-06-30"):
+                raise PackageError("Approved youth loan projection is incomplete.")
         expected_clubs = {read_package(path)[0]["club"]["tm_id"] for path in paths}
         if set(league.club_set.values_list("transfermarkt_id", flat=True)) != expected_clubs:
             raise PackageError("League membership differs from the complete delivery.")

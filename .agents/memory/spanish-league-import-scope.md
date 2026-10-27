@@ -24,3 +24,14 @@ bei Kayne van Oevelen liegt eine ungeklärte Geburtsdatumsabweichung vor.
 **How to apply:** Spieler nicht zusammenführen. Erneute Lieferung derselben
 Zuordnung hebt die Quarantäne nicht auf. Diese Freigabe erlaubt keine
 pauschale Gleichsetzung von Hauptvereinen und B-Mannschaften.
+
+Álvaro García von Alavés an Villarreal und Adrián Martín von Betis an
+Getafe leihen, jeweils im Nachwuchskader der Hauptvereine. Álvaros zwei
+widersprüchliche FMInside-Zuordnungen zusätzlich sperren.
+
+**Why:** Der Nutzer bestätigte ausdrücklich „Hauptvereine nutzen, Álvaros FM sperren“.
+Die jeweiligen Paketpaare nannten Hauptvereine und B-Mannschaften widersprüchlich.
+
+**How to apply:** Nur diese beiden Spieler entsprechend zuordnen; die
+Originalangaben beider Paketansichten erhalten. Keine pauschale B-Team-Regel
+und keine automatische Aufhebung von Álvaros FM-Sperre daraus ableiten.
