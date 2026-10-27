@@ -24,6 +24,19 @@ Eine bloße Anzeige „dynamisches Potenzial“ belegt keine numerische Obergren
 Diese nicht aus Sternebewertungen, verbleibender Entwicklung oder dem
 Potenzial eines ähnlich benannten Spielers ableiten.
 
+Öffentliche ID-Suchindizes können versionsübergreifend sein und Treffer mit
+leerer FM-UID enthalten. Ein internes Indexfeld `id` ist dann kein Ersatz
+für `fm_id`; ein Name-/Vereinstreffer ohne UID und Geburtstag bleibt nur ein Hinweis.
+
+**Why:** Die öffentliche FMRef-Suche enthielt einen passenden Kurznamen mit
+leerem UID-Feld sowie einen Namensvetter, der nur in einem älteren
+Community-Update statt im gesuchten FM26-Profildatenstand belegt war.
+
+**How to apply:** Kurznamensvarianten auch vereinsübergreifend prüfen,
+vollständig paginieren und Suchtreffer anschließend am versionsbezogenen
+Profil mit UID und exaktem Geburtstag bestätigen. Versionsübergreifende
+Suchtreffer und interne Indexnummern niemals als FM26-Identitätsnachweis übernehmen.
+
 **Why:** Bei der Quellenprüfung war eine Identität mit exaktem Geburtstag
 belegt, während die gelesenen öffentlichen Quellen die numerische
 Potenzialgrenze nicht belegten. Identitätsfreigabe und vollständige

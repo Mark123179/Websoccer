@@ -21,6 +21,11 @@ Damit sind **drei Zuordnungen mit identischem Geburtsdatum bestätigt**,
 und **zwei verworfene Zuordnungen ohne belegten Ersatz** dokumentiert.
 Nichtauffinden beweist nicht, dass die beiden Spieler in FM fehlen.
 
+Die [erweiterte Recherche zu Joni und Sevillas Adrián](joni-sevilla-fm-research-2026-10-27.md)
+ergänzt vereinsübergreifende Kurznamenssuchen und weitere direkte UID-/DOB-Prüfungen.
+Sie liefert einen „Jony Hernandez“-Indexeintrag bei Barcelona Atlètic, jedoch
+ohne FM-ID und Geburtstag. Beide Ersatz-IDs bleiben deshalb offen und gesperrt.
+
 ## Quellen und Beleggrenzen
 
 FMInside wurde direkt für jede vorhandene strittige ID sowie für Noahs neu
