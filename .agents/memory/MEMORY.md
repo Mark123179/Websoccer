@@ -7,12 +7,9 @@
 - [Authenticated preview screenshots](preview-screenshot-auth.md) — keep auth enforced; strict pilot screenshots use short-lived sessions without login signals, then remove them.
 - [Schreibfreie HTTP-Vorschauen](read-only-preview-isolation.md) — GET-View allein genügt nicht; globale Aufrufeffekte mit vollständigem HTTP-Datenvergleich prüfen.
 - [Scouting-System V1 decisions](scouting-system-v1.md) — Club-row lock serializes per-club money (bid locks = deadlock); earmarked bid w/o coin LOSES at settlement; never expose pool_count/strength.
-- [Europe-night map markers](europe-night-calibration.md) — placement is a hand-verified CITY_MAP_PCT table (TPS fallback); TPS has ~10px extrapolation error for Italian cities; pin positions must be verified against satellite RGB warmth (warmth=(R+G)/2-B > +20 = real city lights).
 - [Scouting world-map viewBox calibration](scouting-map-viewbox.md) — world.svg IS the Vorlage Natural-Earth SVG (vb 5.6 19.4 988.8 386.2); copy its EXACT projected continent viewBoxes; meet letterbox = intended ocean; never self-compute or force stage aspect.
-- [Tactics template-grid specificity trap](tactics-template-grid-specificity.md) — .tactics-template-grid selectors (0,2,0) override generic panel rules (0,1,0); always edit the template-grid block for height changes.
 - [Static asset cache-bust (CSS+JS)](manager-profile-css-cachebust.md) — bump ?v= on EVERY template CSS/JS edit; bump BOTH the CSS and paired JS `?v=` together or user gets stale code.
 - [Collected static parity](collected-static-parity.md) — collectstatic can skip stale committed outputs by timestamp; verify production security fixes by content.
-- [Sub-badge glyph convention](sub-badge-glyph-convention.md) — match report on-photo sub badges use ↑(on,green)/↓(off,red), not same glyph+color-only; inline "Wechsel" marker stays ⇆ on purpose.
 - [Global Calendar Architecture](global-calendar-architecture.md) — ws-game-header ist global in base.html; Kalenderdaten kommen aus context_processors.py (global_calendar); build_game_header() gibt nur title/subtitle/back_url zurück.
 - [Vorbereitungs-Ligatabelle](preparation-league-table.md) — Importierte Vereine vor Saisonstart rein lesend anzeigen; keine Saisoninitialisierung für eine Tabellenansicht.
 - [Squad/club mutation auth + CSRF](squad-csrf-and-authz.md) — session-based CSRF (no cookie); use {{ csrf_token }} in JS + @login_required + current_manager_club ownership check (not just Player club scoping).
@@ -25,7 +22,6 @@
 - [GitHub push workflow](github-token-workflow.md) — classic PAT only (fine-grained = 401); agent bash blocks .git/config → use Shell tab with $GITHUB_TOKEN; new secrets need fresh process.
 - [FMI position scraper](fmi-position-scraper.md) — fminside.net URL schema is /players/7-fm-26/{fmi_id}-{name-slug}; parse span.mobile_position for primary, span.desktop_positions for secondaries.
 - [SoFIFA per CSV statt Live-Scraping + importer resilience](sofifa-matching-and-resilience.md) — CFM-Importer scrapt SoFIFA NICHT mehr (sofifa.com UND cmtracker.net = Cloudflare-403); Werte nur via game/sofifa_import.py CSV; safe_goto verpackt Browser-Tod als PageError → is_closed_error in BEIDEN except-Zweigen prüfen.
-- [Tactics layout media-query trap](tactics-media-query-trap.md) — @media (max-width:1440px) in tactics.css overrides .tactics-template-grid columns; edit BOTH base rule and media block. .tactics-main-grid is dead CSS.
 - [Match Engine V2 Architecture](match-engine-v2-architecture.md) — tactic_compiler.py ist standalone Copy; ORM-Bridge via _build_team_dict(); xG = 1.36*(ratio**1.25); CONDITION_PLAN_MODIFIERS nicht ändern.
 - [Match Engine V2 Balancing Freeze](match-engine-v2-freeze.md) — FREEZE seit 2026-06-12; alle Konstanten eingefroren; Änderung nur mit ≥50-Saisons-Evidenz + expliziter Nutzer-Freigabe.
 - [Match-day potential draw](match-day-potential-draw.md) — random(base, pot) + form vor jedem Spiel; einmal pre-compute in simulate_match(), gleicher Wert für Simulation und Display.
@@ -34,9 +30,7 @@
 - [T009 Dismissals V1](t009-dismissals.md) — Rot/Gelb-Rot: dismissed_pids + gk_strength_override in _calculate_lineup_strength; _resolve_dismissal() TW-Sonderlogik; Verletzungs-Aufstellungssperre in ensure_default_tactic.
 - [Freshness Model V1](freshness-model-v1.md) — ausdauer liegt auf PlayerSourceRating (nicht Player); training_level/medizin_level auf Stadium (nicht Club); V1-Konstanten eingefroren.
 - [ActiveLineupState — Mid-Match Substitution Engine](active-lineup-state.md) — one-shot condition eval via resolved_idxs; bench pre-loaded; _ceil5() für Segment-Timing; FP-Faktor jetzt 0.70 auf allen Pfaden.
-- [Minutes Played + Ratings chain](minutes-played-chain.md) — _build_minutes_played_map() trackt on_min+off_min getrennt; Kette = off-on; Modifier G in _rate() zieht <45min-Einsätze zu 3.5; bench rows werden als is_sub=True in simulate_match() hinzugefügt.
 - [Ticker commentary seed + anti-repetition](ticker-commentary-seed.md) — stable_seed() via SHA-256 in ticker_commentary.py; _shuffled_pick(pool, match_seed, pool_key, event_index) für Permutation; event_index per Spieltyp in _build_combined_events via _type_ctr; aktive Spieler per Minute via _build_removed()/_active_at() in _generate_narrative_events.
-- [Matchday XI backtracking limit](matchday-xi-backtracking.md) — _find_best_lineup() hangs with large pools; MAX_CANDIDATES=5 + MAX_NODES=20_000 hard cap required; Bundesliga pools reach 200+ players across 9 fixtures.
 - [kompakt_stehen dual xGA path](kompakt-stehen-dual-xga-path.md) — defense_delta→line_multipliers gibt ~−0.028 xGA-Reduktion die compiler nicht sieht; erzeugt [ALARM] mit offensiven Linienoptionen; Freeze gilt.
 - [Per-Halbzeit Linien-Delta Design](half-tactic-line-deltas.md) — Mittelfeld/Angriff-Dropdowns nutzen separate line_* Variablen; positive Vorteile gekappt (xG≤0.06, shots≤0.08); Risiko+Frische stapeln vollständig.
 - [Default-Taktik V1 Architektur](default-tactics-v1.md) — game/default_tactics.py (pure Python); apply_default_tactic_settings() in match_readiness.py; Hook in simulate_match Schritt 1b.
@@ -64,17 +58,13 @@
 - [Stadium tile brightness normalization](stadium-tile-brightness-normalization.md) — per-image CSS brightness filter (build_stadium_brightness_map) equalizes Stadion tile vs. curated dark hub tiles.
 - [Momentum Torseiten-Konsistenz](momentum-goal-side-consistency.md) — Tor-Marker muss auf Schützenseite der Kurve liegen; Buildup-Impulse + Konsistenz-Clamp; gleichminütige Tore beider Teams überspringen.
 - [report_data backfill pattern](report-data-backfill-pattern.md) — new report_data fields missing on old SimulatedMatch rows need an _ensure_*_in_report backfill, not a template/sim fix.
-- [Bench came_on backfill](match-report-bench-sub-in-backfill.md) — green "eingewechselt" arrow needs substitution-event cross-check, not just ratings.is_sub (some old subs have no rating row at all).
 - [Scouting-Pool seeding](scouting-pool-seeding.md) — seed_scouting_pool fills clubless SCOUTABLE pool players (POOLSEED-<ISO>- prefix) so Pool>=COUNTRY_THRESHOLD(50) flips a country to scoutable; needs own PlayerStrengthProfile + keep base<84/pot<=85; GB catalog name "England" maps to GB-ENG not GB.
 - [Vereinsnews data wiring](vereinsnews-data-wiring.md) — last_match via get_last_match() not matchday order; scorers=[min,name]; MOTM from report_data; Player.age is stored IntegerField.
 - [News image compatibility](news-image-compatibility.md) — new upload restrictions must not erase historical images; validate and escape display sources separately.
 - [News cleanup safety](news-cleanup-safety.md) — destructive cleanup requires paused writers; restored/deleted news does not release migration-backup images.
 - [News archive pagination](news-archive-pagination.md) — separate article/social limits prevent starvation; stable cursors handle publication and deletion between loads.
 - [Screenshot below-the-fold verification](screenshot-below-fold-verification.md) — screenshot tool has no scroll param and no browser-use/playwright/selenium in env; verify below-fold layout via Django test client HTML fetch + DOM-order checks instead.
-- [Match-report data backfill vs template bug](match-report-data-backfill.md) — empty shirt-number badges/Auslastung were unrun idempotent seed commands (assign_shirt_numbers, seed_club_profiles), not template bugs; check DB population before assuming pipeline is broken.
-- [Match-report CSS extraction + formation parsing](match-report-css-extraction.md) — extract reference CSS from raw HTML, not screenshots; wrap conditional grid images in a permanent slot span; formation_slots() needs a dict, never the report_data display string.
 - [Spielbericht-Tabs per Hash + Linkify](match-report-tabs-linkify.md) — Tab-Screenshots via #aufstellungen/#statistik; Kommentar-Namen: erst escapen, dann Regex (längste zuerst), dann mark_safe; Altdaten ohne IDs → div-Fallback.
-- [Equal-height cards across two columns](equal-height-cards-two-columns.md) — flex-per-column can't bottom-align cards in separate flank columns; use display:contents + shared grid 1fr 1fr rows.
 - [Stadionumfeld feature](stadionumfeld-feature.md) — global singleton scene; server is real admin-gate; new state keys need STADIONUMFELD_ALLOWED_KEYS or drop silently; baufeld1.png absent from source = expected 404, dont fabricate.
 - [Template-JSON XSS trap](template-json-xss.md) — never `|safe` JSON into <script> when user text can land in it; use json_script + JSON.parse.
 - [Nation-Badge-ID Calibration](nation-badge-id-calibration.md) — Badge-Lücken 56–105/803–1434; 46 IDs korrigiert; Bild-Erkennung ±1 unzuverlässig → User-Textliste bevorzugen.
@@ -153,6 +143,7 @@
 - [Stammvereins-Quellenkonflikte](import-owner-source-conflicts.md) — Spielerbezogene Freigaben für abweichende Paket-Eigentümer; keine pauschale Gleichsetzung von Haupt-/Zweitmannschaften.
 - [Französische Vereinsimporte](french-league-import-scope.md) — Komplette Ligue 1 separat und zunächst nicht spielbar; beide Samba Diop bis zur Quellenklärung in Quarantäne.
 - [Spanische Vereinsimporte](spanish-league-import-scope.md) — LaLiga zunächst nicht spielbar; acht FM-Quarantänen und zwei spielerbezogene Hauptvereins-Leihen ausdrücklich freigegeben.
+- [Öffentliche FM-Profilprüfung](public-fm-profile-verification.md) — Extraktion kann Profilseitenleisten auslassen; Kurznamen über Kaderlinks finden, DOB derselben UID gesondert prüfen.
 - [Kölner Planregistrierung](koln-plan-registration.md) — Offizielle Namen und Fanbereiche belegen; schematische Innenaufteilung niemals als vermessene Unity-Gänge ausgeben.
 - [Native Geodaten-Importe](native-geodata-imports.md) — Größere Aufbereitungsläufe können fehlende native Bibliotheken durch Importreihenfolge verdecken; Offline-Prüfer eigenständig starten.
 - [Sitzquellen und Fangruppen](stadium-seat-source-semantics.md) — Sitz-JSON und Unity können Fangruppen unterschiedlich aufteilen; Editor-Hüllen bei Widersprüchen aus dem Originalmodell ableiten.
