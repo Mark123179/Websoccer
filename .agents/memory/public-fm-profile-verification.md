@@ -45,3 +45,16 @@ spielbare Stärkedaten sind unterschiedliche Nachweise.
 **How to apply:** Die richtige ID und belegte Werte dürfen getrennt von einer
 weiterhin nötigen Datensperre nachgepflegt werden. Unbelegte Werte bleiben
 NULL; eine fehlende Berechenbarkeit ausdrücklich als offenen Grund ausweisen.
+
+Eine aktuelle FMInside-Seite kann auch im tatsächlich sichtbaren
+Profil-Kopfbereich ausschließlich „Potential Dynamic“ anzeigen.
+Die visuelle Prüfung ersetzt deshalb keine numerische Quellenangabe.
+Ein in einem einzelnen Spielstand ausgewürfelter PA-Wert belegt nicht
+das ursprüngliche dynamische Datenbankintervall.
+
+**Why:** Eine direkte visuelle Gegenprüfung bestätigte die nichtnumerische
+Anzeige trotz vorhandener aktueller Fähigkeitszahl und Datenbankversion.
+
+**How to apply:** Bei fehlenden Grenzen einen direkten Datenbank-/Editorbeleg
+mit UID und Version anfordern; weder die Extraktionslücke noch einen
+einzelnen Spielstand als Beleg für die numerische Obergrenze behandeln.

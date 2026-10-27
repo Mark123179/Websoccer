@@ -118,6 +118,30 @@ class AdditionalClubPackageTests(TestCase):
     def test_owner_then_borrower_and_exact_repetition(self):
         self.check_import()
 
+    def test_foreign_country_requires_club_specific_approval(self):
+        self.sources[0][1]["club"]["country"] = "Liechtenstein"
+        self.write_packages()
+        before = self.snapshot()
+        with self.assertRaisesMessage(PackageError, "country does not match"):
+            import_batch(self.paths, {}, apply=True)
+        self.assertEqual(before, self.snapshot())
+        report = import_batch(
+            self.paths, {}, apply=True, approved_club_countries={1001: "Liechtenstein"})
+        self.assertTrue(report["protected_state_unchanged"])
+        profile = m.ClubPublicProfile.objects.get(club__transfermarkt_id=1001)
+        self.assertEqual(profile.city_country, "Liechtenstein")
+        self.assertEqual(profile.club.league_id, self.league.pk)
+
+    def test_country_exception_cannot_authorize_another_club(self):
+        self.sources[0][1]["club"]["country"] = "Liechtenstein"
+        self.write_packages()
+        before = self.snapshot()
+        for exceptions in ({1002: "Liechtenstein"}, {9999: "Liechtenstein"}):
+            with self.assertRaises(PackageError):
+                import_batch(self.paths, {}, apply=True,
+                             approved_club_countries=exceptions)
+            self.assertEqual(before, self.snapshot())
+
     def foreign_league(self):
         return m.League.objects.create(
             name="Premier League", country="England", level=1,

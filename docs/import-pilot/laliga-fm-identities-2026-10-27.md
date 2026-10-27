@@ -148,3 +148,31 @@ Der ursprüngliche Quarantäne-Importer bildet den historischen Ausgangszustand
 ab, nicht diesen Nachpflege-Schritt. Ihn nach der belegten manuellen Nachpflege
 nicht als aktuellen Vollimport erneut ausführen: Seine Acht-Spieler-
 Quarantäneprüfung ist mit den inzwischen bestätigten IDs absichtlich unvereinbar.
+
+## Noah: erneute Suche nach numerischem Potenzial
+
+Die direkte visuelle Prüfung der
+[FMInside-Profilseite](https://fminside.net/players/7-fm-26/2000395286-noah)
+zeigt in Datenbank **26.2.0** ausdrücklich **Current ability 35 / 100**
+und **Potential Dynamic**. Auch im sichtbaren Kopfbereich steht kein
+numerisches Potenzialintervall. Das Fehlen einer Zahl im extrahierten
+Haupttext allein war somit nicht die einzige Prüfgrundlage.
+Die lokale Aufnahme liegt unter
+`generated-artifacts/noah-potential/fminside.png` (nicht versioniert).
+
+Die erneut gelesene Sortitoutsi-Seite derselben UID bestätigt
+**2008-08-27** und zufälliges Potenzial, nennt im gelesenen Inhalt aber
+keinen numerischen PA-Wert oder Bereich. Sterne und „CA Remaining“ wurden
+ausdrücklich nicht in einen Potenzialwert umgerechnet. Die Celta-Kaderliste
+bestätigt Noahs eigenen Profil-Link, liefert in seiner Zeile jedoch ebenfalls
+keine Potenzialgrenzen. Die gezielte öffentliche Suche nach UID und Potenzial
+erbrachte keinen direkt nachprüfbaren numerischen Nachweis.
+
+**Ergebnis: weiterhin offen, nicht freigegeben.** Bei dieser erneuten Recherche
+wurden keine Datenbankwerte, Quellen-Snapshots oder Sperren verändert und
+keine Nachpflege-Skripte ausgeführt. Für den nächsten Schritt wird ein
+direkter Beleg benötigt, beispielsweise ein FM26-Pre-Game-Editor-Auszug
+mit sichtbarer UID **2000395286**, Datenbankversion und numerischem
+Potential-Ability-Wert bzw. explizitem dynamischem Intervall. Ein Screenshot
+aus einem laufenden Spiel mit bereits ausgewürfeltem PA belegt dagegen
+nicht allein die Grenzen des dynamischen Datenbankpotenzials.

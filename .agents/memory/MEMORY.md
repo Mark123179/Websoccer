@@ -140,7 +140,7 @@
 - [Historische Spieleridentitäten](historic-player-import-identities.md) — Rekord-Personen können IDs neuer Kaderspieler belegen; Bezüge erhalten und Vollständigkeit unabhängig prüfen.
 - [Zweite Bundesliga](second-league-import-scope.md) — Weitere Vereinspakete in zusätzlicher, zunächst nicht spielbarer Liga; bestehende 18er-Bundesliga nicht erweitern.
 - [Englische Vereinsimporte](english-league-import-scope.md) — Eigene, zunächst nicht spielbare Premier League im Workspace; aktive Leihspieler nicht auf Paketwerte zurücksetzen.
-- [Stammvereins-Quellenkonflikte](import-owner-source-conflicts.md) — Spielerbezogene Freigaben für abweichende Paket-Eigentümer; keine pauschale Gleichsetzung von Haupt-/Zweitmannschaften.
+- [Stammvereins-Quellenkonflikte](import-owner-source-conflicts.md) — Zugehörige U21-/Zweitmannschaften dem Hauptverein als Eigentümer zuordnen; unabhängige Vereinswechsel gesondert prüfen.
 - [Französische Vereinsimporte](french-league-import-scope.md) — Komplette Ligue 1 separat und zunächst nicht spielbar; beide Samba Diop bis zur Quellenklärung in Quarantäne.
 - [Spanische Vereinsimporte](spanish-league-import-scope.md) — LaLiga zunächst nicht spielbar; acht FM-Quarantänen und zwei spielerbezogene Hauptvereins-Leihen ausdrücklich freigegeben.
 - [Öffentliche FM-Profilprüfung](public-fm-profile-verification.md) — Extraktion kann Profilseitenleisten auslassen; Kurznamen über Kaderlinks finden, DOB derselben UID gesondert prüfen.
@@ -148,3 +148,4 @@
 - [Native Geodaten-Importe](native-geodata-imports.md) — Größere Aufbereitungsläufe können fehlende native Bibliotheken durch Importreihenfolge verdecken; Offline-Prüfer eigenständig starten.
 - [Sitzquellen und Fangruppen](stadium-seat-source-semantics.md) — Sitz-JSON und Unity können Fangruppen unterschiedlich aufteilen; Editor-Hüllen bei Widersprüchen aus dem Originalmodell ableiten.
 - [Django Static-Finder-Misses](django-static-finder-misses.md) — Django 6.1 sammelt None als Treffer; Signatur-Kompatibilität allein verhindert keine Static-500er.
+- [Schweizer Vereinsrekorde](swiss-league-import-scope.md) — Alte Intertoto-Spiele vor 1995 ausschließen; gemischte Rekordserien nicht durch Subtraktion korrigieren.

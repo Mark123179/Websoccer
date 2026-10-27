@@ -1,7 +1,22 @@
 ---
 name: Freigegebene Stammvereinskonflikte bei Vereinsimporten
-description: Einzelfallfreigaben für Hauptvereins-Eigentümerschaft trotz abweichender Zweitmannschaftsreferenz im Paket.
+description: Hauptvereine als Eigentümer zugehöriger Nachwuchs-/Zweitmannschaften und historische Einzelfallfreigaben.
 ---
+
+Bei zugehörigen Nachwuchs- und Zweitmannschaften ist der Hauptverein
+der Eigentümer: United U21 = Manchester United, Köln II = 1. FC Köln.
+Solche Konstellationen nicht wiederholt zur Freigabe vorlegen.
+
+**Why:** Der Nutzer stellte nach wiederholten Rückfragen klar:
+„Hier ist immer das selbe Problem. Köln 2, United U21 sind ja Untervereine
+des Hauptvereins. somit ist U21 = United und Köln = Köln.“
+
+**How to apply:** Bei belegter Zugehörigkeit Hauptverein als Eigentümer
+beibehalten, ursprüngliche Quellen-ID dokumentieren und keinen zusätzlichen
+Nachwuchsverein zur Umgehung anlegen. Spieleridentität und Leihziel/-ende
+weiterhin auf Widersprüche prüfen. Dies erlaubt keinen Wechsel zwischen
+unabhängigen Stammvereinen. Die früheren Einzelfallbeschränkungen unten
+sind für diese Haupt-/Untervereinskonstellation durch die Klarstellung ersetzt.
 
 Für den ausdrücklich besprochenen KSC-Leihfall die vorhandene
 Bayern-München-Eigentümerschaft (TM 27) erhalten, obwohl das KSC-Paket
@@ -12,9 +27,8 @@ Quellenabweichung als Hinweis dokumentieren; das Originalpaket bewahren.
 und Abweichung markieren“. Identische Spieleridentitäten erlauben keine
 stille Änderung des bestehenden Eigentümers.
 
-**How to apply:** Dies ist eine Einzelfallfreigabe, keine generelle
-Gleichsetzung von Haupt- und Zweitmannschaften. Bei neuen Quellkonflikten
-die Eigentümer-IDs getrennt von der Spieleridentität prüfen. Keine
+**How to apply:** Bei neuen Quellkonflikten die Eigentümer-IDs getrennt
+von der Spieleridentität prüfen. Keine
 zusätzlichen Mini-Vereine erzeugen oder vorhandene Eigentümer überschreiben,
 um einen Import ohne Rückfrage durchlaufen zu lassen.
 
@@ -25,8 +39,8 @@ als Quellenabweichung dokumentieren, nicht als Eigentümerwechsel.
 **Why:** Auf die Rückfrage zum Eigentümerkonflikt stellte der Nutzer klar:
 „Ist Leuhspieler von Dortmund zu Fürth“.
 
-**How to apply:** Diese zusätzliche Einzelfallfreigabe betrifft Benkara;
-sie erlaubt keine pauschale Gleichsetzung anderer Zweitmannschaften.
+**How to apply:** Ursprünglichen Paketbeleg erhalten; die oben festgehaltene
+Klarstellung für zugehörige Zweitmannschaften beachten.
 
 Für Stephen Mfuni Manchester City als Eigentümer beibehalten und die Leihe
 zu Coventry City übernehmen. Die Paketangabe Manchester City U21 als
@@ -34,7 +48,7 @@ Quellenabweichung dokumentieren, nicht als Eigentümerwechsel.
 
 **Why:** Der Nutzer bestätigte: „Stephen Mfuni ist geliehen von city.“
 
-**How to apply:** Auch diese Freigabe ist spielerbezogen. Den ursprünglichen
+**How to apply:** Den ursprünglichen
 Paketbeleg erhalten und keinen zusätzlichen U21-Verein zur Umgehung des
 Quellenkonflikts anlegen.
 
@@ -53,5 +67,5 @@ Straßburg übernehmen. Chelsea U21 im Paket als Quellenabweichung markieren.
 
 **Why:** Der Nutzer bestätigte ausdrücklich, Chelsea beizubehalten.
 
-**How to apply:** Spielerbezogene Ausnahme; keine allgemeine Gleichsetzung
-von Chelsea und Chelsea U21 und keinen zusätzlichen U21-Verein anlegen.
+**How to apply:** Quellenabweichung bewahren und keinen zusätzlichen
+U21-Verein anlegen.

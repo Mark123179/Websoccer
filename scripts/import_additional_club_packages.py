@@ -115,7 +115,8 @@ def validate_batch_players(packages):
     return shared
 
 
-def import_batch(paths, owner_exceptions, apply=False, *, target_league_id=None):
+def import_batch(paths, owner_exceptions, apply=False, *, target_league_id=None,
+                 approved_club_countries=None):
     packages = [(Path(path), *read_package(Path(path))) for path in paths]
     club_tms = [manifest["club"]["tm_id"] for _, manifest, _ in packages]
     if len(set(club_tms)) != len(club_tms):
@@ -130,8 +131,13 @@ def import_batch(paths, owner_exceptions, apply=False, *, target_league_id=None)
             league = m.League.objects.select_for_update().get(pk=target_league_id)
         if league.is_playable or league.competition_type != m.League.COMPETITION_TYPE_LEAGUE:
             raise PackageError("Target must be a non-playable league.")
-        if any(data["club"].get("country") != league.country for _, _, data in packages):
-            raise PackageError("Package country does not match the target league.")
+        country_exceptions = approved_club_countries or {}
+        if set(country_exceptions) - set(club_tms):
+            raise PackageError("Approved country exception is absent from the batch.")
+        for _, manifest, data in packages:
+            expected_country = country_exceptions.get(manifest["club"]["tm_id"], league.country)
+            if data["club"].get("country") != expected_country:
+                raise PackageError("Package country does not match the target league.")
         if league_started(league):
             raise PackageError("Target league has already started")
         protected = protected_queries()
