@@ -19,3 +19,16 @@ FM-Datenbankdarstellung gegenprüfen. Diese zweite Darstellung belegt den
 FM-Datenstand, nicht den tatsächlichen Geburtstag. Geburtstagsabweichungen
 gegen reale Identitätsquellen ausdrücklich als Konflikt behandeln, nicht
 durch Name, Alter oder Vereinsnähe stillschweigend übergehen.
+
+Eine bloße Anzeige „dynamisches Potenzial“ belegt keine numerische Obergrenze.
+Diese nicht aus Sternebewertungen, verbleibender Entwicklung oder dem
+Potenzial eines ähnlich benannten Spielers ableiten.
+
+**Why:** Bei der Quellenprüfung war eine Identität mit exaktem Geburtstag
+belegt, während die gelesenen öffentlichen Quellen die numerische
+Potenzialgrenze nicht belegten. Identitätsfreigabe und vollständige
+spielbare Stärkedaten sind unterschiedliche Nachweise.
+
+**How to apply:** Die richtige ID und belegte Werte dürfen getrennt von einer
+weiterhin nötigen Datensperre nachgepflegt werden. Unbelegte Werte bleiben
+NULL; eine fehlende Berechenbarkeit ausdrücklich als offenen Grund ausweisen.

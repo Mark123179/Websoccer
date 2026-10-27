@@ -1,7 +1,7 @@
 # LaLiga: Prüfung der acht gesperrten FM-Zuordnungen
 
-Stand: 27.10.2026. Quellenrecherche, noch keine Änderung an Spieler-IDs,
-Quellbewertungen oder Sperren. Produktion und Originalpakete bleiben unberührt.
+Stand: 27.10.2026. Quellenrecherche mit anschließender gezielter Workspace-
+Nachpflege; siehe Umsetzung unten. Produktion und Originalpakete bleiben unberührt.
 
 ## Ergebnis
 
@@ -89,3 +89,57 @@ die realen Paket-/TM-Geburtstage unverändert lassen und die abweichenden
 FM-Daten als Quellenkonflikt erhalten. Die beiden ungeklärten Ersatz-IDs
 nicht raten. Alle anderen Einzelsperren und beide freigegebenen
 Hauptvereins-Leihen bleiben unberührt.
+
+## Entscheidung und gespeicherte Umsetzung
+
+Der Nutzer lehnte Ausnahmen für die drei Geburtsdatums-Konflikte ausdrücklich ab:
+**„Nicht zulassen, gesperrt lassen“.** Toni Fernández, Adrián Pérez von Athletic
+und Kayne van Oevelen behalten deshalb ihre Sperren, ohne aktive FM-ID oder
+aktuelle FM-Bewertung. Auch Joni Hernández und Sevillas Adrián Pérez bleiben
+ohne belegte Ersatz-ID gesperrt.
+
+Die drei identisch im Geburtsdatum bestätigten Zuordnungen wurden ausschließlich
+an den betroffenen Spielern nachgepflegt:
+
+- **Anxo:** FM-ID 2000395283, belegte FM-Bewertung und Potenzial wiederhergestellt,
+  Stärke über den bestehenden Dienst neu berechnet, FM-Sperre aufgehoben.
+  Seine CMTracker-Bewertung blieb unverändert.
+- **Álvaro:** FM-ID 2000374246 und die belegten Werte aus der Alavés-Quellansicht
+  wiederhergestellt, Stärke neu berechnet, FM-Sperre aufgehoben.
+  Die freigegebene Hauptvereins-Leihe an Villarreal blieb unverändert.
+- **Noah:** FM-ID 2000395286 und direkt belegtes FM-Rating **35** mit den
+  zugehörigen Attributen gespeichert. Seine numerische FM-Potenzialgrenze
+  ist nicht belegt: Die gelesene Seite bestätigt nur dynamisches Potenzial.
+  Der Wert bleibt deshalb **NULL**, statt Anxos Wert oder eine Schätzung zu
+  übernehmen. Ohne numerisches Potenzial liefert die bestehende Berechnung
+  keine Stärke; Noah bleibt aus diesem neuen, ausdrücklich dokumentierten
+  Grund gesperrt. Die alten falschen ID-Zuordnungsfragen sind erledigt.
+
+Die Zuordnungen sind als belegte manuelle Nachpflege mit UID-/DOB-Quellen
+gespeichert. Quellen-Snapshots und erledigte Arbeitslisteneinträge erhalten
+die Nachvollziehbarkeit; die bisherigen Importpakete wurden nicht umgeschrieben.
+
+### Reproduktion und Prüfung
+
+`scripts/resolve_laliga_fm_identities.py` führt nur diese drei Korrekturen aus:
+
+- Probelauf mit Transaktions-Rollback:
+  `python -m scripts.resolve_laliga_fm_identities`
+- Speicherung:
+  `python -m scripts.resolve_laliga_fm_identities --apply`
+- Belege:
+  `generated-artifacts/laliga-2026-10-27/fm-corrections-dry-run.json`
+  und `fm-corrections-applied.json`.
+
+Probelauf und Speicherung bestätigten Schutzdaten-Parität und exakte
+Wiederholbarkeit der Nachpflege. Unbeteiligte Spieler, Nicht-FM-Quellwerte,
+bestehende Frische/Form, Vereine, Manager-, Saison-, Finanz- und Importdaten
+blieben unverändert. Direkte Abfragen nach dem Commit bestätigten die drei
+richtigen IDs, die zwei aufgehobenen Sperren, Noahs verbleibende Stärkesperre
+und alle fünf fortbestehenden FM-Quarantänen. LaLiga bleibt nicht spielbar
+und ohne Saison.
+
+Der ursprüngliche Quarantäne-Importer bildet den historischen Ausgangszustand
+ab, nicht diesen Nachpflege-Schritt. Ihn nach der belegten manuellen Nachpflege
+nicht als aktuellen Vollimport erneut ausführen: Seine Acht-Spieler-
+Quarantäneprüfung ist mit den inzwischen bestätigten IDs absichtlich unvereinbar.

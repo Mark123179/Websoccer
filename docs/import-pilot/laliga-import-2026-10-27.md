@@ -42,6 +42,17 @@ B-Team-Referenzen übernommen:
 Beide Leihen enden am 30.06.2027. Diese Ausnahmen erlauben keine allgemeine
 Gleichsetzung von Hauptvereinen und B-Mannschaften.
 
+## Nachfolgende FM-Quellenklärung
+
+Die anschließende gezielte Nachpflege ist separat dokumentiert:
+`docs/import-pilot/laliga-fm-identities-2026-10-27.md`.
+Anxo und Álvaro sind nach exakter UID-/Geburtsdatumsprüfung freigegeben.
+Noahs eigene ID ist korrigiert; wegen fehlenden belegten numerischen
+FM-Potenzials bleibt er gesperrt. Die fünf übrigen FM-Quarantänen bleiben bestehen;
+der Nutzer hat Geburtstagsausnahmen ausdrücklich abgelehnt.
+Die nachstehenden Acht-Spieler-Prüfungen beschreiben den ursprünglichen Import,
+nicht den späteren Nachpflege-Stand.
+
 ## Quellen und Reproduktion
 
 Die beiden gelieferten äußeren ZIP-Dateien sind bytegleich. Das Original unter
