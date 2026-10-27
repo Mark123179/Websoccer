@@ -134,7 +134,8 @@ Pakete entstehen im Chat „Verein Import Praxis“; das lokale Werkzeug ist zur
 
 Beim nächsten Live-Neustart den gesamten aktuellen Vereinspaketbestand
 einschließlich manueller Nachpflege berücksichtigen, nicht nur den Code oder
-ein einzelnes BVB-Paket. Die Vorbereitung ist keine Reset-Ausführungsfreigabe.
+ein einzelnes BVB-Paket. Ziel ist laut Nutzer „zumindest den aktuellen Stand“
+auf dem Live-Server zu haben. Die Vorbereitung ist keine Reset-Ausführungsfreigabe.
 
 **Why:** Der Nutzer verlangte alle mühsam je Verein importierten Positionen,
 Marktwertverläufe und Transferhistorien live und wählte ausdrücklich

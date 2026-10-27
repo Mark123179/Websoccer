@@ -7,6 +7,11 @@
 > beachten. Die historische Nachfüll-Reihenfolge und damalige grüne Tests
 > sind keine Freigabe für einen heutigen Reset. Ein aktuelles vollständiges
 > Transportpaket einschließlich manueller Nachpflege fehlt noch.
+> Für die aktuelle Gesamtübernahme außerdem die
+> [Server-Sicherungsprüfung](server-sicherungspruefung-2026-10-27.md) beachten:
+> alle Vereinsszenen sichern und Reset/Initialisierung/Schutzprüfung später
+> zusammen rückrollbar ausführen. Nicht die unten historische getrennte
+> Reset-/Nachfüll-Reihenfolge unverändert ausführen.
 
 Stand 07.10.2026. Maßgeblich: Nachträge 13 und 14. **Diese Anleitung ist Vorbereitung, keine Reset-Freigabe. Replit hat keinen Reset, keine Sicherung auf Hetzner, keinen Push/Pull und keine Umschaltung ausgeführt.**
 

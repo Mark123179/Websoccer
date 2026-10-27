@@ -3,6 +3,13 @@
 Stand: 27.10.2026. **Nur Vorbereitung freigegeben. Kein Reset, kein Moduswechsel,
 kein Live-Import ausgeführt. Der Stand ist noch nicht resetbereit.**
 
+Aktueller Zusatzauftrag: mindestens den tatsächlich vorhandenen Workspace-Stand
+für Live bereitstellen. Die fehlende Schweiz separat ausweisen, nicht zum
+pauschalen Hindernis für die Übernahme dieses vorhandenen Stands machen.
+Die [neue Server-Sicherungsprüfung](server-sicherungspruefung-2026-10-27.md)
+deckt sämtliche vorhandenen Vereinsszenen ab. Die alte getrennte
+Reset-/Nachfüll-Reihenfolge ist kein Ausführungsweg für die Gesamtübernahme.
+
 ## Ursache der leeren Live-Spielerprofile
 
 Der Betreiber hat vom Live-Server folgende rein lesende Ergebnisse geliefert:
@@ -89,6 +96,9 @@ ZIP-Bytes noch die Übernahme späterer manueller Nachpflege.
    die zusätzlichen Ligen nicht eigenmächtig spielbar schalten oder starten.
    Ein solches vollständiges Transportpaket wurde mit dieser Vorbereitung
    noch nicht erstellt oder abgenommen.
+   Für die spätere Gesamtübernahme Reset, Initialisierung und Schutzprüfung
+   in einer rückrollbaren Einheit vorsehen, nicht zuerst einen leeren
+   Live-Spielbestand committen.
 3. **Serverseitige Sicherungen und echte Wiederherstellung nachweisen.**
    Alle Schreiber pausieren, DB-Dump, Medien, Assets, Konfiguration und
    separate Vereins-Stadionszenen privat sichern; in eine neue Prüf-DB
