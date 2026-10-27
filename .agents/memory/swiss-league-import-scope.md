@@ -23,3 +23,15 @@ und Sions Serien ohne Sieg. Diese nicht mit den alten gemischten Werten befülle
 
 **How to apply:** Fehlende Ersatzbelege als offene Datenlücken erhalten,
 ohne deswegen andere belegte Vereinsdaten zurückzuhalten.
+
+Beim Quellenvergleich auch „International Football Cup“ und
+„IFC (Internationaler Fussballcup)“ als historische Intertoto-Bezeichnungen
+prüfen; der Quellname allein enthält nicht immer das Wort „Intertoto“.
+Den späteren UEFA-UI-Cup nicht pauschal mit ausschließen.
+
+**Why:** dbFCZ und Transfermarkt verwenden unterschiedliche Namen für die
+alten Sommerwettbewerbe. Ein reiner Textfilter auf „Intertoto“ übersieht sie.
+
+**How to apply:** Wettbewerb und Datum gemeinsam prüfen. Serien außerdem
+nach tatsächlichem Spieldatum statt nach Spieltagsnummer ordnen und
+Elfmeterschießen ausdrücklich als eigene Ergebnisfrage ausweisen.
