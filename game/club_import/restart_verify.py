@@ -1,7 +1,8 @@
-"""Import oracle restricted to a new, isolated SQLite database.
+"""Import oracle restricted to an isolated SQLite DB or disposable local PG.
 
-This is deliberately NOT a production importer. It cannot write to PostgreSQL
-or to the regular workspace database. It never calls model save hooks.
+This is deliberately NOT a production importer. PostgreSQL requires our own
+temporary socket-only cluster, never a workspace/pilot/production connection.
+It never calls model save hooks.
 """
 from collections import Counter
 from pathlib import Path
@@ -17,12 +18,16 @@ from .restart_schema import FIELDS, MODELS, structure
 
 
 def assert_isolated(require_empty=True):
-    root = (Path(settings.BASE_DIR) / "generated-artifacts" / "live-restart").resolve()
-    db = Path(connection.settings_dict["NAME"]).resolve()
-    if (not getattr(settings, "LIVE_RESTART_VERIFY_ONLY", False)
-            or connection.vendor != "sqlite"
-            or root not in db.parents or db.suffix != ".sqlite3"):
-        raise HandoffError("Replay ausschließlich in einer isolierten SQLite-Prüfdatei erlaubt.")
+    if connection.vendor == "postgresql":
+        from .restart_postgres_guard import assert_disposable_postgres
+        assert_disposable_postgres(connection, settings)
+    else:
+        root = (Path(settings.BASE_DIR) / "generated-artifacts" / "live-restart").resolve()
+        db = Path(connection.settings_dict["NAME"]).resolve()
+        if (not getattr(settings, "LIVE_RESTART_VERIFY_ONLY", False)
+                or connection.vendor != "sqlite"
+                or root not in db.parents or db.suffix != ".sqlite3"):
+            raise HandoffError("Replay ausschließlich in einer isolierten SQLite-Prüfdatei erlaubt.")
     if require_empty and any(model.objects.exists() for model in MODELS.values()):
         raise HandoffError("Prüfdatenbank enthält bereits Übernahmedaten; kein Überschreiben erlaubt.")
 
@@ -90,6 +95,11 @@ def replay(package):
                     raise HandoffError("Archiv-Provenienz stimmt nicht.")
                 changes["package_data"] = archive["stored_package_data"]
             MODELS["SourceImportRun"].objects.filter(pk=pk).update(**changes)
+        if connection.vendor == "postgresql":
+            from django.core.management.color import no_style
+            with connection.cursor() as cursor:
+                for sql in connection.ops.sequence_reset_sql(no_style(), MODELS.values()):
+                    cursor.execute(sql)
         connection.check_constraints()
         actual = {}
         reverse = {(name, pk): key for (name, key), pk in keys.items()}
@@ -146,7 +156,9 @@ def replay(package):
             "blockers": package["blockers"],
             "full_restart_ready": False,
             "limitations": [
-                "SQLite-Prüftransport, kein PostgreSQL-Server-Restore.",
+                ("Lokaler Wegwerf-PostgreSQL-Prüftransport, kein Hetzner-Restore."
+                 if connection.vendor == "postgresql"
+                 else "SQLite-Prüftransport, kein PostgreSQL-Server-Restore."),
                 "Kein produktiver Importpfad freigegeben oder ausgeführt.",
                 "Ausgeschlossene Spiel-/Account-/Bilddaten sind nicht Teil der Parität.",
                 "Schweizer Quellenbestand und tatsächlicher DB-Bestand separat beachten.",

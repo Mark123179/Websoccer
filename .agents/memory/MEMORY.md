@@ -150,3 +150,4 @@
 - [Django Static-Finder-Misses](django-static-finder-misses.md) — Django 6.1 sammelt None als Treffer; Signatur-Kompatibilität allein verhindert keine Static-500er.
 - [Schweizer Vereinsrekorde](swiss-league-import-scope.md) — Alten Intertoto ausschließen; historische Cup-Lücken separat prüfen, nicht nur TM-Serien neu zählen.
 - [Verlustfreier Datentransport](lossless-data-transport.md) — Djangos JSON-Encoder kürzt Zeitstempel auf Millisekunden; Feldparität verlangt volle Mikrosekunden.
+- [Datenpakete nach Aufgabenmerge](handoff-asset-portability.md) — Library-Metadaten und gemergte Prüfreports beweisen keine lokale ZIP; neuen Teilbestand nie als geprüftes Vollpaket ausgeben.

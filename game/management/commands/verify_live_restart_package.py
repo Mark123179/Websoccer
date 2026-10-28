@@ -8,7 +8,7 @@ from game.club_import.restart_verify import replay
 
 
 class Command(BaseCommand):
-    help = "Übernahmepaket ausschließlich in leerer isolierter SQLite-Prüfdatei nachweisen."
+    help = "Übernahmepaket ausschließlich in isolierter SQLite-Datei oder Wegwerf-PG nachweisen."
 
     def add_arguments(self, parser):
         parser.add_argument("package")

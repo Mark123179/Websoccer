@@ -4,6 +4,14 @@ Stand: 28.10.2026. **Datenpaket vollständig erstellt und auf zwei isolierten
 Prüfkopien nachgewiesen. Kein Live-Zugriff, kein Reset, kein Produktionsimport,
 keine Änderung der vorhandenen Liga-Spielbarkeit oder Stärkeformeln.**
 
+**Weiterführende Prüfung:** Der
+[PostgreSQL-Nachweis](postgresql-pruefung-2026-10-28.md) belegt inzwischen
+die verlustfreie Übernahme des direkt verfügbaren 94-Vereine-Workspace-Stands
+auf einen neuen lokalen PostgreSQL-Server mit echten Migrationen.
+Das hier beschriebene 106-Vereine-Lieferarchiv war nach dem Merge nicht als
+lokale Datei verfügbar. Der neue Nachweis gilt deshalb ausdrücklich nicht
+als PostgreSQL-Abnahme dieses vollständigen Schweizer Kombinationspakets.
+
 ## 1. Ausgangsstand und Schweizer Quelle getrennt
 
 Der schreibfreie PostgreSQL-Snapshot des Workspace enthält weiterhin:
