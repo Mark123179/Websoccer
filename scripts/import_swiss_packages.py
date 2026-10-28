@@ -17,6 +17,13 @@ from game.club_import.swiss_winless_20261027 import RECORDS as WINLESS_RECORDS
 
 SOURCE = Path("attached_assets/schweiz_vereinspakete_2026-10-27_1793106969838.zip")
 SOURCE_SHA = "4b0ae43e098ab953032ea8fcda679e9cd27ccb41c5a46f616e02e09ffe9b723d"
+# Re-uploads get a new filename. Only the already approved exact bytes may
+# serve as the default; filenames themselves never grant source approval.
+if not SOURCE.exists():
+    SOURCE = next((
+        path for path in sorted(Path("attached_assets").glob("*schweiz_vereinspakete_*.zip"))
+        if hashlib.sha256(path.read_bytes()).hexdigest() == SOURCE_SHA
+    ), SOURCE)
 OUTPUT = Path("generated-artifacts/schweiz-2026-10-27")
 OPEN_RECORDS = {
     (260, "longest_unbeaten"), (527, "longest_win_streak_coach"),
@@ -102,11 +109,13 @@ def revise_records(data):
     return changes
 
 
-def prepare():
-    raw = SOURCE.read_bytes()
+def prepare(source=None, output=None):
+    source = Path(source) if source is not None else SOURCE
+    output = Path(output) if output is not None else OUTPUT
+    raw = source.read_bytes()
     require(hashlib.sha256(raw).hexdigest() == SOURCE_SHA,
             "Original delivery changed; approval must be reviewed.")
-    OUTPUT.mkdir(parents=True, exist_ok=True)
+    output.mkdir(parents=True, exist_ok=True)
     paths, packages, changes, owner_evidence = [], [], [], []
     totals = Counter()
     with zipfile.ZipFile(io.BytesIO(raw)) as outer:
@@ -136,7 +145,7 @@ def prepare():
             manifest["data_sha256"] = hashlib.sha256(encoded).hexdigest()
             manifest["counts"]["gaps_info"] = sum(
                 gap["severity"] == "info" for gap in data["gaps"])
-            path = OUTPUT / name
+            path = output / name
             with zipfile.ZipFile(path, "w", zipfile.ZIP_DEFLATED) as archive:
                 archive.writestr("data.json", encoded)
                 archive.writestr("manifest.json", json.dumps(manifest, ensure_ascii=False))
@@ -152,7 +161,7 @@ def prepare():
             "Approved main-club loan coverage changed.")
     shared = validate_batch_players(packages)
     provenance = {
-        "original_archive": str(SOURCE), "original_sha256": SOURCE_SHA,
+        "original_archive": str(source), "original_sha256": SOURCE_SHA,
         "record_changes": changes, "source_totals": dict(totals),
         "reciprocal_loans": len(shared),
         "unique_players": len({p["ids"]["tm"]["value"] for _, _, d in packages
@@ -160,7 +169,7 @@ def prepare():
         "approved_club_countries": {"163": "Liechtenstein"},
         "owner_exceptions": owner_evidence,
     }
-    (OUTPUT / "provenance.json").write_text(
+    (output / "provenance.json").write_text(
         json.dumps(provenance, ensure_ascii=False, indent=2) + "\n")
     return paths, provenance
 

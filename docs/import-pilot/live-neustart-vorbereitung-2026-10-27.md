@@ -3,6 +3,11 @@
 Stand: 27.10.2026. **Nur Vorbereitung freigegeben. Kein Reset, kein Moduswechsel,
 kein Live-Import ausgeführt. Der Stand ist noch nicht resetbereit.**
 
+**Nachtrag 28.10.2026:** Der nachfolgende Bestand bleibt der historische
+Workspace-Nachweis. Der aktuelle kombinierte Übergabe- und Prüfstand wird
+separat in [Übernahmepaket und Paritätsnachweis](live-neustart-uebernahmepaket-2026-10-28.md)
+dokumentiert. Daraus folgt weiterhin keine Reset- oder Produktionsfreigabe.
+
 Aktueller Zusatzauftrag: mindestens den tatsächlich vorhandenen Workspace-Stand
 für Live bereitstellen. Die fehlende Schweiz separat ausweisen, nicht zum
 pauschalen Hindernis für die Übernahme dieses vorhandenen Stands machen.
